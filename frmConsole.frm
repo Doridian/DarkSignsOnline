@@ -1151,26 +1151,53 @@ Private Sub lFull_Click()
 End Sub
 
 
-Sub ManageSockError(Index As Integer)
+Sub ManageSockError(Index As Integer, Reason As String)
+    tmrTimeout(sockIndex).Enabled = False
     'on error consider retrying
-    'If SockRetries(index) < MaxSockRetries Then
-    '    SockRetries(index) = SockRetries(index) + 1
-'
-'        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-'        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-'        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-'        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-'        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+    Dim Retries As Integer
+    Retries = HttpRequests(Index).Retries
+    If Retries < basWorld.MaxSockRetries Then
+        HttpRequests(Index).Retries = Retries + 1
         
+        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+        
+        Dim Http As New MSXML2.XMLHTTP60
+        Dim HttpMethod As String
+        HttpRequests(Index).Http.abort
+        Set HttpRequests(Index).Http = Http
+
+        Dim StateHandler As clsReadyStateHandler
+        Set StateHandler = New clsReadyStateHandler
+        StateHandler.Index = Index
+        Http.OnReadyStateChange = StateHandler
+
+        Http.open HttpRequests(Index).Method, HttpRequests(Index).Url, True
+
+        If HttpRequests(Index).Method = "POST" Then
+            Http.send HttpRequests(Index).PostData
+        Else
+            Http.send
+        End If
+        tmrTimeout(Index).Enabled = True
+
+        Dim tmpS As String
+        tmpS = HttpRequests(Index).Url
+        If InStr(i(tmpS), "z_online") > 0 Then Exit Sub 'don't show these errors
+        If InStr(i(tmpS), "chat") > 0 Then Exit Sub 'don't show these errors
+        SayComm "Connection failed to [" & tmpS & "] because of " & Reason & ". Retry " & Trim(str(Retries)) & " of " & Trim(str(MaxSockRetries)) & "."
+   Else
+        SayComm "Connection failed to [" & tmpS & "] because of " & Reason & ". Retry count expired."
+        HttpRequests(Index).InUse = False
+   End If
+
+    'If SockRetries(index) < MaxSockRetries Then
 '        If InStr(i(tmpS), "z_online") > 0 Then Exit Sub 'don't show these errors
 '        If InStr(i(tmpS), "chat") > 0 Then Exit Sub 'don't show these errors
-'        SayComm "Connection failed to [" & tmpS & "]. Retry " & Trim(str(SockRetries(index))) & " of " & Trim(str(MaxSockRetries)) & "."
-        
-'    Else
-        'too many retries, cancel it
-        
-'        SayComm "Connection failed to [" & tmpS & "]. Retry count expired."
-'    End If
+
 End Sub
 
 
@@ -1302,7 +1329,7 @@ End Sub
 Private Sub tmrTimeout_Timer(Index As Integer)
     If basWorld.HttpRequests(Index).InUse Then
         basWorld.HttpRequests(Index).Http.abort
-        ManageSockError Index
+        ManageSockError Index, "Timeout"
     End If
     
     tmrTimeout(Index).Enabled = False

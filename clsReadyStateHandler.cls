@@ -20,8 +20,13 @@ Attribute OnReadyStateChange.VB_UserMemId = 0
     Dim HttpRequest As basWorld.HttpRequest
     HttpRequest = basWorld.HttpRequests(Index)
     If HttpRequest.Http.readyState = 4 Then
-        basWorld.Process HttpRequest.Http.responseText, HttpRequest.Url, HttpRequest.consoleID, Index
         frmConsole.tmrTimeout(Index).Enabled = False
+        If HttpRequest.Http.Status < 200 Or HttpRequest.Http.Status > 499 Then
+            frmConsole.ManageSockError Index, "HTTP Status " & str(HttpRequest.Http.Status)
+            Exit Sub
+        End If
+
+        basWorld.Process HttpRequest.Http.responseText, HttpRequest.Url, HttpRequest.consoleID, Index
         basWorld.HttpRequests(Index).InUse = False
     End If
 End Sub
