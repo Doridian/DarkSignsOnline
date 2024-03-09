@@ -98,7 +98,6 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
     Next
         
     sUrl = Trim(Replace(sUrl, "&&", "&"))
-    
     sUrl = Replace(sUrl, " ", "%20")
 
     HttpRequests(sockIndex).Url = sUrl
@@ -116,7 +115,7 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
     Http.OnReadyStateChange = StateHandler
 
     If IsCustomDownload <= 0 Then
-        sUrl = API_Server + API_Path
+        sUrl = API_Server + API_Path + sUrl
     End If
     
     If UsePost = True Then
@@ -220,13 +219,10 @@ End Sub
 Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Integer, ByVal Index As Integer)
     
  
-    'process incoming data that winsocks download
-
-    s = Trim(s)
-    If Mid(s, 1, 4) = "HTTP" And InStr(s, vbCrLf & vbCrLf) > 0 Then s = Mid(s, InStr(s, vbCrLf & vbCrLf) + 4, Len(s))
+    'process incoming data that winhttp download
     s = Replace(s, "<end>", "")
     s = Trim(s)
-    
+
     'don't replace this if data is encrypted
     If InStr(Mid(i(s), 1, 20), "encrypted") = 0 Then
         s = Replace(s, vbCr, vbCrLf)
@@ -249,9 +245,6 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
         Vars(IsCustomDownload).VarValue = Bracketize(s, True)
         Exit Sub
     End If
-    
-    
-    
     
     Dim cCode As String
     'MsgBox s
