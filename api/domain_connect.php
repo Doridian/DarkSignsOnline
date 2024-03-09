@@ -7,25 +7,24 @@
 	{
 		
 		
-		$port = preg($_REQUEST['port'], "[^0-9]");
+		$port = $db->real_escape_string($_REQUEST['port'], "[^0-9]");
 
 		if ($port < 1 || $port > 65536)
 		{
 			die('Error: Port number must be between 1 and 65536.<end>');
 		}
-		$d = preg($_REQUEST['d'], '[^a-zA-Z0-9.-]');
+		$d = $db->real_escape_string($_REQUEST['d'], '[^a-zA-Z0-9.-]');
 		$d = strtolower($d); 
 		
 		$temp = getDomainInfo($d);
 
 		if ($temp[0] > 0)
 		{
-			$exists = mysql_query("SELECT code FROM domainscripts WHERE domain_id='$temp[0]' AND port='$port'");
-			if (mysql_num_rows($exists) == 1)
+			$exists = $db->query("SELECT code FROM domainscripts WHERE domain_id='$temp[0]' AND port='$port'");
+			if ($db->num_rows($exists) == 1)
 			{
-				$code = mysql_fetch_row($exists);
-				
-				echo $d.'_'.$port.'::'.dEscape($code[0]);
+				$code = $db->fetch_row($exists);
+				echo $d.'_'.$port.'::'.$code[0];
 			}
 			else
 			{
@@ -49,12 +48,12 @@
 		{
 
 	
-		$result = mysql_query("SELECT * from domain_scripts where domain='$d' and port='$port'");
+		$result = $db->query("SELECT * from domain_scripts where domain='$d' and port='$port'");
 
-		if (mysql_num_rows($result)==1){
+		if ($db->num_rows($result)==1){
 		//found, send the script!
 
-		while($row = mysql_fetch_array( $result )) {
+		while($row = $db->fetch_array( $result )) {
 		$script = trim($row['script']);
 		}
 

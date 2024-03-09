@@ -1,7 +1,7 @@
 <?
 	include "function.php";
 
-	$returnwith = preg($_GET['returnwith'], "[^0-9]");
+	$returnwith = $db->real_escape_string($_GET['returnwith'], "[^0-9]");
 	
 	if ($returnwith == "")
 		$returnwith = 2000;
@@ -10,7 +10,7 @@
 	
 	if ($auth == '1001')
 	{
-		$data = preg($_GET['data']);
+		$data = $db->real_escape_string($_GET['data']);
 		
 		$data = explode('.', $data);
 		

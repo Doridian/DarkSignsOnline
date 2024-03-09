@@ -1,32 +1,26 @@
 <?php
-	//LAYOUT OF mysql_config.php:
-    //$connect = mysql_connect('localhost', 'USER', 'PASS') or die ('9999');
-    //$db = mysql_select_db('DB') or die('9998');
-	//---------------------------------------------------
-	
-	include('mysql_config.php');
-	
+	include_once('mysql_config.php');
+	global $db;
+
 	global $user, $auth;
 	
-	$u = preg($_REQUEST['u']);
-	$p = preg($_REQUEST['p']);
-	
-	
-	$user = mysql_fetch_array(mysql_query("SELECT * FROM users WHERE username='$u' AND password='$p'"));
-	
-	
-	$auth;
-	$auth_result = mysql_query("SELECT * FROM users WHERE username='$u' AND password='$p' AND active='1'") or die("Query Failed");  
-	if (mysql_num_rows($auth_result) == 1)
+	$u = $db->real_escape_string($_REQUEST['u']);
+	$p = $db->real_escape_string($_REQUEST['p']);
+
+	$res = $db->query("SELECT * FROM users WHERE username='$u' AND password='$p'");
+	$user = $res->fetch_array();
+
+	$auth_result = $db->query("SELECT * FROM users WHERE username='$u' AND password='$p' AND active='1'") or die("9998");  
+	if ($auth_result->num_rows == 1)
 	{
-		//mysql_query("UPDATE users SET lastseen='$cdate' WHERE username='$u' AND password='$p'");
+		//$db->query("UPDATE users SET lastseen='$cdate' WHERE username='$u' AND password='$p'");
 		// account is active
 		$auth = '1001';
 	}
 	else
 	{
-		$auth_result = mysql_query("SELECT * FROM users WHERE username='$u' and password='$p' AND active='0'") or die("Query Failed");  
-		if (mysql_num_rows($auth_result) == 1)
+		$auth_result = $db->query("SELECT * FROM users WHERE username='$u' and password='$p' AND active='0'") or die("9997");  
+		if ($auth_result->num_rows == 1)
 		{
 			//account disabled
 			$auth = '1003';
@@ -37,32 +31,11 @@
 			$auth = '1002';
 		}
 	}
-	
-	function preg($text = "", $restrict = "[^a-zA-Z0-9.,\-]")
-	{
-		return preg_replace("'$restrict'", "", $text);
-	}
-			
-	function eEscape($text)
-	{
-		if (get_magic_quotes_gpc())
-			$text = stripslashes($text);
-
-		$text = mysql_real_escape_string($text);
-		$text = addcslashes($text, '%_');
-		return $text;
-	}
-	
-	function dEscape($text)
-	{
-		$text = stripslashes($text);
-		//$text = strip_tags($text);
-		return $text;
-	}
 
 	// Rewritten.
 	function validIP($ip)
 	{
+		global $db;
 		$domain = explode('.', $ip);
 		$domain[0] = intval($domain[0]);
 		$domain[1] = intval($domain[1]);
@@ -82,26 +55,27 @@
 	// Rewritten.
 	function getDomainInfo($domain)
 	{
+		global $db;
 		$domain = explode('.', $domain);
 		
 		$result = null;
 		
 		if (sizeof($domain) == 2)
 		{
-			$result = mysql_query("SELECT d.id, ipt.owner FROM domain AS d, iptable AS ipt WHERE d.name='".$domain[0]."' AND d.ext='".$domain[1]."' AND d.id=ipt.id");
+			$result = $db->query("SELECT d.id, ipt.owner FROM domain AS d, iptable AS ipt WHERE d.name='".$domain[0]."' AND d.ext='".$domain[1]."' AND d.id=ipt.id");
 		}
 		else if (sizeof($domain) == 3)
 		{
-			$result = mysql_query("SELECT s.id, ipt.owner FROM subdomain AS s, iptable AS ipt, domain AS d WHERE d.name='".$domain[1]."' AND d.ext='".$domain[2]."' AND d.id=s.hostid AND s.name='".$domain[0]."' AND s.id=ipt.id");
+			$result = $db->query("SELECT s.id, ipt.owner FROM subdomain AS s, iptable AS ipt, domain AS d WHERE d.name='".$domain[1]."' AND d.ext='".$domain[2]."' AND d.id=s.hostid AND s.name='".$domain[0]."' AND s.id=ipt.id");
 		}
 		else if (sizeof($domain) == 4)
 		{
-			$result = mysql_query("SELECT id, owner FROM iptable WHERE ip='$domain[0].$domain[1].$domain[2].$domain[3]'");
+			$result = $db->query("SELECT id, owner FROM iptable WHERE ip='$domain[0].$domain[1].$domain[2].$domain[3]'");
 		}
 		
-		if ($result && mysql_num_rows($result) == 1)
+		if ($result && $result->num_rows == 1)
 		{
-			return mysql_fetch_row($result);
+			return $result->fetch_row();
 		}
 		else
 		{
@@ -112,8 +86,9 @@
 	// Rewritten
 	function domain_exists($domain, $ext)
 	{
-		$result = mysql_query("SELECT id FROM domain WHERE name='$domain' AND ext='$ext'");
-		if (mysql_num_rows($result) == 1)
+		global $db;
+		$result = $db->query("SELECT id FROM domain WHERE name='$domain' AND ext='$ext'");
+		if ($result->num_rows == 1)
 		{
 			return true;
 		}
@@ -126,10 +101,11 @@
 	// Rewritten
 	function getDomainId($domain, $ext)
 	{
-		$result = mysql_query("SELECT id FROM domain WHERE name='$domain' AND ext='$ext'");
-		if (mysql_num_rows($result) == 1)
+		global $db;
+		$result = $db->query("SELECT id FROM domain WHERE name='$domain' AND ext='$ext'");
+		if ($result->num_rows == 1)
 		{
-			return mysql_result($result, 0);			
+			return $result->result(0);			
 		}
 		else
 		{
@@ -140,14 +116,15 @@
 	// Rewritten
 	function subdomain_exists($sub, $domain, $ext)
 	{
+		global $db;
 		// This is without the .com bit.
 		$domain_id = getDomainId($domain, $ext);
 		
 		if ($domain_id < 0)
 			return false;
 			
-		$result = mysql_query("SELECT id FROM subdomain WHERE hostid='$domain_id' AND name='$sub'") or die('DIED');
-		if (mysql_num_rows($result) == 1)
+		$result = $db->query("SELECT id FROM subdomain WHERE hostid='$domain_id' AND name='$sub'") or die('DIED');
+		if ($db->num_rows($result) == 1)
 		{
 			return true;
 		}
@@ -160,10 +137,11 @@
 	// rewritten.
 	function getOwner($domain, $ext)
 	{
-		$result = mysql_query("SELECT i.owner FROM domain AS d, iptable AS i WHERE d.name='$domain' AND d.ext='$ext' AND d.id=i.id");
-		if (mysql_num_rows($result) == 1)
+		global $db;
+		$result = $db->query("SELECT i.owner FROM domain AS d, iptable AS i WHERE d.name='$domain' AND d.ext='$ext' AND d.id=i.id");
+		if ($db->num_rows($result) == 1)
 		{
-			return mysql_result($result, 0);			
+			return $db->result($result, 0);			
 		}
 		else
 		{
@@ -174,6 +152,7 @@
 	// Rewritten.
 	function auth_subowner_or_owner($domain)
 	{
+		global $db;
         if ($auth == '1001')
         {
 			$ip = getip($domain);
@@ -183,9 +162,9 @@
 				return '1003';
 			}
 			
-			$result = mysql_query("SELECT owner FROM iptable WHERE ip='$ip' and owner='$user[id]'") or die('QUERY FAILED');
+			$result = $db->query("SELECT owner FROM iptable WHERE ip='$ip' and owner='$user[id]'") or die('QUERY FAILED');
 			
-			if (mysql_num_rows($result) == 1)
+			if ($db->num_rows($result) == 1)
 			{
 				//it's the owner, allow it
 				return "1001";
@@ -198,7 +177,7 @@
 			else
 			{
 				//check subowners
-				$subowners = mysql_fetch_array(mysql_query("SELECT subowners FROM domains WHERE domain='$d'"));
+				$subowners = $db->fetch_array($db->query("SELECT subowners FROM domains WHERE domain='$d'"));
 
 				if (strstr($subowners[0], ':'.$u.':'))
 				{
@@ -220,6 +199,7 @@
 
 function grab_from_users($field, $usern="")
 {
+	global $db;
         global $u;
         global $p;
         
@@ -236,7 +216,7 @@ function grab_from_users($field, $usern="")
                 
         if ($auth == '1001')
         {
-                $result = mysql_fetch_array(mysql_query("SELECT $field FROM users WHERE username='$usern' AND enabled='1'")) or die('Query Error');  
+                $result = $db->fetch_array($db->query("SELECT $field FROM users WHERE username='$usern' AND enabled='1'")) or die('Query Error');  
                 return $result[0];
         }
         else
@@ -250,9 +230,10 @@ function domainauth($d){
         global $u;
         global $p;
         
+		global $db;
         if (auth($u,$p)=="1001"){
 
-                if (mysql_num_rows(mysql_query("SELECT ind from domains where domain='$d' and owner='$u'"))>0){
+                if ($db->num_rows($db->query("SELECT ind from domains where domain='$d' and owner='$u'"))>0){
                         return "1001";
                 }else{
                         if (strtolower($u)=="admin"){
@@ -261,7 +242,7 @@ function domainauth($d){
                                 return "1002";
                         }
                 }
-                while($row = mysql_fetch_array( $result )) {$ret = trim($row[$field]);}
+                while($row = $db->fetch_array( $result )) {$ret = trim($row[$field]);}
                 return $ret;
         }else{
                 return "1002";
@@ -273,13 +254,14 @@ function grab_from_domains($field, $domain){
 
 
 
+	global $db;
         global $u;
         global $p;
         
         if (auth($u,$p)=="1001"){
 
-                $result=mysql_query("SELECT $field from domains where domain='$domain'")or die(mysql_error());  
-                while($row = mysql_fetch_array( $result )) {$ret = trim($row[$field]);}
+                $result=$db->query("SELECT $field from domains where domain='$domain'")or die($db->error);  
+                while($row = $db->fetch_array( $result )) {$ret = trim($row[$field]);}
                 return $ret;
         }else{
                 return "Access Denied.";
@@ -291,6 +273,7 @@ function get_domain_file($d,$filename){
 
 
 
+	global $db;
         global $u;
         global $p;
         
@@ -300,9 +283,9 @@ function get_domain_file($d,$filename){
         if (domainauth($d)=="1001"){
         
 
-                $result = mysql_query("SELECT * from domains where domain='$d'");
+                $result = $db->query("SELECT * from domains where domain='$d'");
 
-                        while($row = mysql_fetch_array( $result )) {
+                        while($row = $db->fetch_array( $result )) {
                                 $files = $row['files'];
 
                                 if (strlen($files)){
@@ -343,6 +326,7 @@ function get_domain_file_by_index($d,$fileindex){
 
 
 
+	global $db;
         global $u;
         global $p;
         
@@ -351,9 +335,9 @@ function get_domain_file_by_index($d,$fileindex){
 
         
 
-                $result = mysql_query("SELECT * from domains where domain='$d'");
+                $result = $db->query("SELECT * from domains where domain='$d'");
 
-                        while($row = mysql_fetch_array( $result )) {
+                        while($row = $db->fetch_array( $result )) {
                                 $files = $row['files'];
 
                                 if (strlen($files)){
@@ -388,15 +372,16 @@ function count_domain_files($d){
 
 
 
+	global $db;
         global $u;
         global $p;
         
         $d=getdomain($d);
         
 
-                $result = mysql_query("SELECT * from domains where domain='$d'");
+                $result = $db->query("SELECT * from domains where domain='$d'");
 
-                        while($row = mysql_fetch_array( $result )) {
+                        while($row = $db->fetch_array( $result )) {
                                 $files = $row['files'];
                                 if (strlen($files)){
                                         $filestuff=split(":----:",$files);
@@ -413,15 +398,16 @@ function filekey($d,$tmps){
         
         //$tmps is the line, e.g. SERVER WRITE file.dat ($tmps generally isn't used unless bug testing)
         
+		global $db;
         global $encodekey;
         
         $newkey=$vercode=rand(1,1000).rand(1,1000).rand(1,1000).rand(1,1000).rand(1,1000);
         
 
         //validate the new key into the database
-        $result = mysql_query("SELECT filekeys from domains where domain='$d'");
+        $result = $db->query("SELECT filekeys from domains where domain='$d'");
 
-                while($row = mysql_fetch_array( $result )) {
+                while($row = $db->fetch_array( $result )) {
                         $filekeys = $filekeys.$row['filekeys'];
                 }
         
@@ -433,7 +419,7 @@ function filekey($d,$tmps){
         $filekeys=$filekeys.":".$newkey2.":\n";
 
 
-        $result = mysql_query("UPDATE domains set filekeys='$filekeys' where domain='$d'");
+        $result = $db->query("UPDATE domains set filekeys='$filekeys' where domain='$d'");
                 
         //return the short key, it wil be converted to a long key by the client
         return $newkey;
@@ -447,6 +433,7 @@ function write_domain_file($d,$filename,$filedata,$appendifexists){
 
 
 
+	global $db;
         global $u;
         global $p;
         
@@ -455,12 +442,10 @@ function write_domain_file($d,$filename,$filedata,$appendifexists){
         
         //if (domainauth($d)=="1001"){ ----------
 
-                //mysql_connect("localhost", $mysql_username, $mysql_password)or die(mysql_error());
-                //mysql_select_db($mysql_database) or die(mysql_error());
-                $result2 = mysql_query("SELECT * FROM domains where domain='$d'") or die(mysql_error());  
+                $result2 = $db->query("SELECT * FROM domains where domain='$d'") or die($db->error);  
                 
 
-                        while($row = mysql_fetch_array( $result2 )) {
+                        while($row = $db->fetch_array( $result2 )) {
                                 $files = $row['files'];
 
                                 if (strlen($files)){
@@ -499,7 +484,7 @@ function write_domain_file($d,$filename,$filedata,$appendifexists){
                                 }
                                 
 
-                        $result = mysql_query("UPDATE domains set files='$alldata' where domain='$d'");
+                        $result = $db->query("UPDATE domains set files='$alldata' where domain='$d'");
                         
                         }
                 
@@ -514,6 +499,7 @@ function delete_domain_file($d,$filename){
 
 
 
+	global $db;
         global $u;
         global $p;
         
@@ -522,12 +508,10 @@ function delete_domain_file($d,$filename){
         
         //if (domainauth($d)=="1001"){ ----------
 
-                //mysql_connect("localhost", $mysql_username, $mysql_password)or die(mysql_error());
-                //mysql_select_db($mysql_database) or die(mysql_error());
-                $result2 = mysql_query("SELECT * FROM domains where domain='$d'") or die(mysql_error());  
+                $result2 = $db->query("SELECT * FROM domains where domain='$d'") or die($db->error);  
                 
                         $removed=0;
-                        while($row = mysql_fetch_array( $result2 )) {
+                        while($row = $db->fetch_array( $result2 )) {
                                 $files = $row['files'];
 
                                 if (strlen($files)){
@@ -556,7 +540,7 @@ function delete_domain_file($d,$filename){
                                 }
                                 
 
-                        $result = mysql_query("UPDATE domains set files='$alldata' where domain='$d'");
+                        $result = $db->query("UPDATE domains set files='$alldata' where domain='$d'");
                         
                         if ($removed==1){
                                 return "File System Updated.";
@@ -574,6 +558,7 @@ function download_domain_file($d,$filename){
 
 
 
+	global $db;
         global $u;
         global $p;
         
@@ -582,13 +567,11 @@ function download_domain_file($d,$filename){
 
         if (auth_subowner_or_owner($d)=="1001"){ 
 
-                //mysql_connect("localhost", $mysql_username, $mysql_password)or die(mysql_error());
-                //mysql_select_db($mysql_database) or die(mysql_error());
-                $result2 = mysql_query("SELECT * FROM domains where domain='$d'") or die(mysql_error());  
+                $result2 = $db->query("SELECT * FROM domains where domain='$d'") or die($db->error);  
 
 
                         $filefound=0;
-                        while($row = mysql_fetch_array( $result2 )) {
+                        while($row = $db->fetch_array( $result2 )) {
                                 $files = $row['files'];
 
                                 if (strlen($files)){
@@ -641,14 +624,15 @@ function get_domain_file_no_auth_required($d,$filename){
 
 
 
+	global $db;
         global $u;
         global $p;
         
         $filename=trim(strtolower($filename));$d=getdomain($d);
-                $result2 = mysql_query("SELECT * FROM domains where domain='$d'") or die(mysql_error());  
+                $result2 = $db->query("SELECT * FROM domains where domain='$d'") or die($db->error);  
 
                         $filefound=0;
-                        while($row = mysql_fetch_array( $result2 )) {
+                        while($row = $db->fetch_array( $result2 )) {
                                 $files = $row['files'];
 
                                 if (strlen($files)){
@@ -692,15 +676,16 @@ function get_domain_file_no_auth_required($d,$filename){
 
 function listdomains(){
 
+	global $db;
         global $user;
         global $u;
         global $p;
         if (auth()=="1001"){
         
-                $result = mysql_query("SELECT dom.name AS dname, dom.ext AS dext FROM iptable AS ipt, domain AS dom WHERE ipt.owner='$user[id]' AND dom.id = ipt.id");
+                $result = $db->query("SELECT dom.name AS dname, dom.ext AS dext FROM iptable AS ipt, domain AS dom WHERE ipt.owner='$user[id]' AND dom.id = ipt.id");
                 echo "2001";
                 //echo "SELECT dom.name AS dname, dom.ext AS dext FROM iptable AS ipt, domain AS dom WHERE ipt.owner='$user[id]' AND dom.id = ipt.id";
-                while($row = mysql_fetch_array( $result )) {
+                while($row = $db->fetch_array( $result )) {
                         $tmps="$row[dname].$row[dext]";
                         echo $tmps."newline";
                 }
@@ -714,26 +699,27 @@ function listdomains(){
 	// Rewritten.
 	function getip($server)
 	{
+		global $db;
 		$svr = explode('.', $server);
 		if (count($svr) == 2)
 		{
-			$result = mysql_query("SELECT ipt.ip AS ip FROM iptable AS ipt, domain AS dom WHERE dom.name='$svr[0]' AND dom.ext='$svr[1]' AND ipt.id = dom.id");			
+			$result = $db->query("SELECT ipt.ip AS ip FROM iptable AS ipt, domain AS dom WHERE dom.name='$svr[0]' AND dom.ext='$svr[1]' AND ipt.id = dom.id");			
 		}
 		else if (count($svr) == 3)
 		{
-			$result = mysql_query("SELECT ipt.ip AS ip FROM iptable AS ipt, domain AS dom, subdomain AS sub WHERE dom.name='$svr[1]' AND dom.ext='$svr[2]' AND sub.name='$svr[0]' AND sub.hostid = dom.id AND ipt.id = sub.id");				
+			$result = $db->query("SELECT ipt.ip AS ip FROM iptable AS ipt, domain AS dom, subdomain AS sub WHERE dom.name='$svr[1]' AND dom.ext='$svr[2]' AND sub.name='$svr[0]' AND sub.hostid = dom.id AND ipt.id = sub.id");				
 		}
 		else if (count($svr) == 4)
 		{
-			$result = mysql_query("SELECT ip FROM iptable WHERE ip='$svr[0].$svr[1].$svr[2].$svr[3]'");			
+			$result = $db->query("SELECT ip FROM iptable WHERE ip='$svr[0].$svr[1].$svr[2].$svr[3]'");			
 		}
 
 		// Everything went fine.
 		if (count($svr) >= 2 && count($svr) <= 4)
 		{
-			if (mysql_num_rows($result) == 1)
+			if ($db->num_rows($result) == 1)
 			{
-				return mysql_result($result, 0);
+				return $db->result($result, 0);
 			}
 			else // domain dosnt exist.
 			{
@@ -750,27 +736,28 @@ function listdomains(){
 	// re-written
 	function getdomain($server)
 	{
+		global $db;
 		$svr = explode('.', $server);
 		if (count($svr) == 2)
 		{
-			$result = mysql_query("SELECT name, ext FROM domain WHERE name='$svr[0]' AND ext='$svr[1]' AND active=1");
+			$result = $db->query("SELECT name, ext FROM domain WHERE name='$svr[0]' AND ext='$svr[1]' AND active=1");
 		}
 		else if (count($svr) == 3)
 		{
-			$result = mysql_query("SELECT sub.name AS sname, dom.name AS dname, dom.ext AS ext FROM domain AS dom, subdomain AS sub WHERE dom.name='$svr[1]' AND dom.ext='$svr[2]' AND sub.name='$svr[0]' AND sub.hostid = dom.id AND sub.active=1");				
+			$result = $db->query("SELECT sub.name AS sname, dom.name AS dname, dom.ext AS ext FROM domain AS dom, subdomain AS sub WHERE dom.name='$svr[1]' AND dom.ext='$svr[2]' AND sub.name='$svr[0]' AND sub.hostid = dom.id AND sub.active=1");				
 		}
 		else if (count($svr) == 4)
 		{
-			$result = mysql_query("SELECT id, regtype FROM iptable WHERE ip='$svr[0].$svr[1].$svr[2].$svr[3]' AND active=1");			
+			$result = $db->query("SELECT id, regtype FROM iptable WHERE ip='$svr[0].$svr[1].$svr[2].$svr[3]' AND active=1");			
 		}
 
 		// Everything went fine.
 		//echo count($svr);
 		if (count($svr) >= 2 && count($svr) <= 4)
 		{
-			if (mysql_num_rows($result) == 1)
+			if ($db->num_rows($result) == 1)
 			{
-				$data = mysql_fetch_array($result);
+				$data = $db->fetch_array($result);
 				if (count($svr) == 2)
 				{
 					return $data['name'].'.'.$data['ext'];				
@@ -783,12 +770,12 @@ function listdomains(){
 				{
 					if ($data['regtype'] == 'SUBDOMAIN')
 					{
-						$data = mysql_fetch_array(mysql_query("SELECT sub.name AS sname, dom.name AS dname, dom.ext AS ext FROM domain AS dom, subdomain AS sub WHERE sub.id='$data[id]' AND dom.id=sub.hostid AND sub.active=1"));
+						$data = $db->fetch_array($db->query("SELECT sub.name AS sname, dom.name AS dname, dom.ext AS ext FROM domain AS dom, subdomain AS sub WHERE sub.id='$data[id]' AND dom.id=sub.hostid AND sub.active=1"));
 						return $data['sname'].'.'.$data['dname'].'.'.$data['ext'];				
 					}
 					else if ($data['regtype'] == 'DOMAIN')
 					{
-						$data = mysql_fetch_array(mysql_query("SELECT name, ext FROM domain WHERE id='$data[id]'  AND active=1"));
+						$data = $db->fetch_array($db->query("SELECT name, ext FROM domain WHERE id='$data[id]'  AND active=1"));
 						return $data['name'].'.'.$data['ext'];
 					}
 					else
@@ -797,7 +784,7 @@ function listdomains(){
 						
 					}
 				}
-				//return mysql_result($result, 0);
+				//return $db->result($result, 0);
 			}
 			else // domain dosnt exist.
 			{
@@ -813,8 +800,9 @@ function listdomains(){
 	// Re-written.
 	function username_exists($username)
 	{
-		$result = mysql_query("SELECT username FROM users WHERE username='$username'");
-		if (mysql_num_rows($result) == 0)
+		global $db;
+		$result = $db->query("SELECT username FROM users WHERE username='$username'");
+		if ($db->num_rows($result) == 0)
 		{
 			return false;
 		}
@@ -827,10 +815,11 @@ function listdomains(){
         
         function domain_owner($owner, $domain, $ext)
         {
+			global $db;
                 // This is without the .com bit.
-                $result = mysql_query("SELECT * FROM domain WHERE owner='$owner' AND name='$domain' AND ext='$ext'") or die('DIED');
+                $result = $db->query("SELECT * FROM domain WHERE owner='$owner' AND name='$domain' AND ext='$ext'") or die('DIED');
                 echo $owner;
-                if (mysql_num_rows($result) == 0)
+                if ($db->num_rows($result) == 0)
                 {
                         return false;
                 }
@@ -843,10 +832,10 @@ function listdomains(){
 	// Re-written
 	function userToId($username)
 	{
-		$result = mysql_query("SELECT id FROM users WHERE username='$username'");
-		if (mysql_num_rows($result) == 1)
+		$result = $db->query("SELECT id FROM users WHERE username='$username'");
+		if ($db->num_rows($result) == 1)
 		{
-			return mysql_result($result, 0);
+			return $db->result($result, 0);
 		}
 		else
 		{
@@ -857,10 +846,11 @@ function listdomains(){
 	// Re-written
 	function idToUser($id)
 	{
-		$result = mysql_query("SELECT username FROM users WHERE id='$id'");
-		if (mysql_num_rows($result) == 1)
+		global $db;
+		$result = $db->query("SELECT username FROM users WHERE id='$id'");
+		if ($db->num_rows($result) == 1)
 		{
-			return mysql_result($result, 0);
+			return $db->result($result, 0);
 		}
 		else
 		{
@@ -872,10 +862,11 @@ function listdomains(){
 	// Rewritten.
 	function getCash($user_id)
 	{
-		$result = mysql_query("SELECT cash FROM users WHERE id='$user_id'");
-		if (mysql_num_rows($result) == 1)
+		global $db;
+		$result = $db->query("SELECT cash FROM users WHERE id='$user_id'");
+		if ($db->num_rows($result) == 1)
 		{
-			return mysql_result($result, 0);
+			return $db->result($result, 0);
 		}
 		else
 		{
@@ -886,6 +877,7 @@ function listdomains(){
 	// Rewritten.
 	function transaction($fromuser, $touser, $description, $amount, $returnkeycodeinstead = 0)
 	{
+		global $db;
 		$from_id = userToId($fromuser);
 		$to_id = userToId($touser);
 		$description = addslashes($description);
@@ -905,8 +897,8 @@ function listdomains(){
 				}
 				else
 				{
-					mysql_query("UPDATE users SET cash=cash-$amount WHERE id=$from_id");
-					mysql_query("UPDATE users SET cash=cash+$amount WHERE id=$to_id");
+					$db->query("UPDATE users SET cash=cash-$amount WHERE id=$from_id");
+					$db->query("UPDATE users SET cash=cash+$amount WHERE id=$to_id");
 					$status = 'COMPLETE';
 				}
 			}
@@ -937,7 +929,7 @@ function listdomains(){
 		
 		$time = time();
 		$ip = $_SERVER['REMOTE_ADDR'];
-		mysql_query("INSERT INTO transactions (fromid, toid, amount, description, vercode, `time`, status, ip) VALUES ($from_id, $to_id, $amount, '$description', '$vercode', '$time', '$status', '$ip')") or die (mysql_error());
+		$db->query("INSERT INTO transactions (fromid, toid, amount, description, vercode, `time`, status, ip) VALUES ($from_id, $to_id, $amount, '$description', '$vercode', '$time', '$status', '$ip')") or die ($db->error);
 
 		if ($returnkeycodeinstead == 1)
 		{

@@ -3,26 +3,16 @@
 	//----------------------------------------------------------------------------------------------------------
 	//NOTE - when modifying this script, consider that you may need to modify domain_download.php as well!!!
 	//----------------------------------------------------------------------------------------------------------
-	
-	
-require("config.php");
 
-
-
-
-
-//before doing anything, check the key
-mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-
-
-
+include_once('mysql_config.php');
+global $db;
 
 //if it wants to write or append or serverfile, check for a keycode
 if (isset($write) || isset($append) || isset($fileserver)){
 //if (isset($write) || isset($append) || isset($fileserver)){
 	
-	$result = mysql_query("SELECT filekeys from domains where domain='$d'");
-	while($row = mysql_fetch_array( $result )) {	$filekeys = $filekeys.$row['filekeys'];	}
+	$result = $db->query("SELECT filekeys from domains where domain='$d'");
+	while($row = $db->fetch_array( $result )) {	$filekeys = $filekeys.$row['filekeys'];	}
 	
 
 	$keycode = str_replace("--and--","&",$keycode);
@@ -33,7 +23,7 @@ if (isset($write) || isset($append) || isset($fileserver)){
 	if (strstr($filekeys,$keycode)){
 		//file key found, remove it from the db and continue
 		$filekeys=str_replace($keycode,"",$filekeys);
-		//$result = mysql_query("UPDATE domains set filekeys='$filekeys' where domain='$d'");
+		//$result = $db->query("UPDATE domains set filekeys='$filekeys' where domain='$d'");
 		
 	}else{
 		//access denied

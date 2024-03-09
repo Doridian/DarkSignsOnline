@@ -1,12 +1,13 @@
 <?
 	include("function.php");
+	include_once('mysql_config.php');
+	global $db;
 
-	$action = preg($_REQUEST['action']);
+	$action = $db->real_escape_string($_REQUEST['action']);
 	
 // gota look into this...
 if (isset($verify)){
-        mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-        mysql_query("UPDATE users SET emailverified='1' where emailverifycode='$verify'");
+        $db->query("UPDATE users SET emailverified='1' where emailverifycode='$verify'");
         die("Your account has been verified!");
 }
 
@@ -60,10 +61,9 @@ if (isset($transfer)){
 
 if (isset($transferstatus)){
 if (auth()=="1001"){
-        mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-        $result = mysql_query("SELECT status from transactions where vercode='$transferstatus'");
-        if (mysql_num_rows($result)==1){
-                while($row = mysql_fetch_array( $result )) {$status = $row['status'];die("$status<end>");}
+        $result = $db->query("SELECT status from transactions where vercode='$transferstatus'");
+        if ($db->num_rows($result)==1){
+                while($row = $db->fetch_array( $result )) {$status = $row['status'];die("$status<end>");}
         }
         die("NOT-FOUND<end>");
 }else{
@@ -73,10 +73,9 @@ if (auth()=="1001"){
 
 if (isset($transferamount)){
 if (auth()=="1001"){
-        mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-        $result = mysql_query("SELECT amount from transactions where vercode='$transferamount'");
-        if (mysql_num_rows($result)==1){
-                while($row = mysql_fetch_array( $result )) {$ss = $row['amount'];die("$ss<end>");}
+        $result = $db->query("SELECT amount from transactions where vercode='$transferamount'");
+        if ($db->num_rows($result)==1){
+                while($row = $db->fetch_array( $result )) {$ss = $row['amount'];die("$ss<end>");}
         }
         die("NOT-FOUND<end>");
 }else{
@@ -87,10 +86,9 @@ if (auth()=="1001"){
 
 if (isset($transferdescription)){
 if (auth()=="1001"){
-        mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-        $result = mysql_query("SELECT description from transactions where vercode='$transferdescription'");
-        if (mysql_num_rows($result)==1){
-                while($row = mysql_fetch_array( $result )) {$ss = $row['description'];die("$ss<end>");}
+        $result = $db->query("SELECT description from transactions where vercode='$transferdescription'");
+        if ($db->num_rows($result)==1){
+                while($row = $db->fetch_array( $result )) {$ss = $row['description'];die("$ss<end>");}
         }
         die("NOT-FOUND<end>");
 }else{
@@ -102,10 +100,9 @@ if (auth()=="1001"){
 
 if (isset($transfertousername)){
 if (auth()=="1001"){
-        mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-        $result = mysql_query("SELECT tousername from transactions where vercode='$transfertousername'");
-        if (mysql_num_rows($result)==1){
-                while($row = mysql_fetch_array( $result )) {$ss = $row['tousername'];die("$ss<end>");}
+        $result = $db->query("SELECT tousername from transactions where vercode='$transfertousername'");
+        if ($db->num_rows($result)==1){
+                while($row = $db->fetch_array( $result )) {$ss = $row['tousername'];die("$ss<end>");}
         }
         die("NOT-FOUND<end>");
 }else{
@@ -115,10 +112,9 @@ if (auth()=="1001"){
 
 if (isset($transferfromusername)){
 if (auth()=="1001"){
-        mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-        $result = mysql_query("SELECT fromusername from transactions where vercode='$transferfromusername'");
-        if (mysql_num_rows($result)==1){
-                while($row = mysql_fetch_array( $result )) {$ss = $row['fromusername'];die("$ss<end>");}
+        $result = $db->query("SELECT fromusername from transactions where vercode='$transferfromusername'");
+        if ($db->num_rows($result)==1){
+                while($row = $db->fetch_array( $result )) {$ss = $row['fromusername'];die("$ss<end>");}
         }
         die("NOT-FOUND<end>");
 }else{
@@ -128,10 +124,9 @@ if (auth()=="1001"){
 
 if (isset($transferdate)){
 if (auth()=="1001"){
-        mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-        $result = mysql_query("SELECT createdate from transactions where vercode='$transferdate'");
-        if (mysql_num_rows($result)==1){
-                while($row = mysql_fetch_array( $result )) {$ss = $row['createdate'];die("$ss<end>");}
+        $result = $db->query("SELECT createdate from transactions where vercode='$transferdate'");
+        if ($db->num_rows($result)==1){
+                while($row = $db->fetch_array( $result )) {$ss = $row['createdate'];die("$ss<end>");}
         }
         die("NOT-FOUND<end>");
 }else{
@@ -141,10 +136,9 @@ if (auth()=="1001"){
 
 if (isset($transfertime)){
 if (auth()=="1001"){
-        mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-        $result = mysql_query("SELECT createtime from transactions where vercode='$transfertime'");
-        if (mysql_num_rows($result)==1){
-                while($row = mysql_fetch_array( $result )) {$ss = $row['createtime'];die("$ss<end>");}
+        $result = $db->query("SELECT createtime from transactions where vercode='$transfertime'");
+        if ($db->num_rows($result)==1){
+                while($row = $db->fetch_array( $result )) {$ss = $row['createtime'];die("$ss<end>");}
         }
         die("NOT-FOUND<end>");
 }else{

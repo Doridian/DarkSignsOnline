@@ -1,21 +1,26 @@
 <?
 	$htmltitle="Create a new account";
 	include("_top.php");
-?>
+	include_once('function.php');
+	include_once('mysql_config.php');
+	global $db;
 
 
-<?
+	if (isset($_POST['username'])){
+		$username=trim($_POST['username']);
+		$password=trim($_POST['password']);
+		$email=trim($_POST['email']);
+		$dobday=trim($_POST['dobday']);
+		$dobmonth=trim($_POST['dobmonth']);
+		$dobyear=trim($_POST['dobyear']);
 
-	if (isset($username)){
 		$username=str_replace(" ","-",trim($username));
-		//attempt to create the account
-		mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
 		//check if email already exists
-		if (mysql_num_rows(mysql_query("SELECT ind from users where email='$email'"))>0){
+		if ($db->query("SELECT ind from users where email='$email'")->num_rows>0){
 			die("The email address <b>$email</b> already exists in the database. Please try again.");
 		}
 		//check if username already exists
-		if (mysql_num_rows(mysql_query("SELECT ind from users where username='$username'"))>0){
+		if ($db->query("SELECT ind from users where username='$username'")->num_rows>0){
 			die("The username <b>$username</b> already exists in the database. Please try again.");
 		}
 		if (strstr($username,"_")){die("Error, please don't use underscore characters like _ in your username.");}
@@ -57,8 +62,13 @@
 		if (strlen($password)<6){die("Your password should be at least 6 characters long.");}
 		//insert the data
 		
+		$username = $db->real_escape_string($username);
+		$password = $db->real_escape_string($password);
+		$email = $db->real_escape_string($email);
+		$dobday = $db->real_escape_string($dobday);
+		$dobmonth = $db->real_escape_string($dobmonth);
+		$dobyear = $db->real_escape_string($dobyear);
 
-			$ind=mysql_num_rows(mysql_query("SELECT ind from users"))+1;
 			$ctime = addslashes(date('h:i A'));$ctime=str_replace("zz0","","zz".$ctime);$ctime=str_replace("zz","",$ctime);
 			$cdate =trim( str_replace(" 0"," "," ".date('dS \of F Y')));
 			$ahostname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
@@ -73,7 +83,7 @@
 			if (trim(strtolower($dobmonth))=="september"){$dobmonth="9";}if (trim(strtolower($dobmonth))=="october"){$dobmonth="10";}
 			if (trim(strtolower($dobmonth))=="november"){$dobmonth="11";}if (trim(strtolower($dobmonth))=="december"){$dobmonth="12";}
 			
-			$mysql_string="INSERT into users (ind, username, password, email, createdate, createtime, ip, hostname, lastseen, enabled, expiredate, dobday, dobmonth, dobyear, tagline, publicemail, timestamp, emailverifycode, emailverified, cash) VALUES ('$ind', '$username', '$password', '$email', '$cdate', '$ctime', '$aip', '$ahostname', '$cdate', '1', 'Beta Testing', '$dobday', '$dobmonth', '$dobyear', '', '', '$timestamp', '$vercode', '0', '200')";
+			$mysql_string="INSERT into users (username, password, email, createdate, createtime, ip, hostname, lastseen, enabled, expiredate, dobday, dobmonth, dobyear, tagline, publicemail, timestamp, emailverifycode, emailverified, cash) VALUES ('$username', '$password', '$email', '$cdate', '$ctime', '$aip', '$ahostname', '$cdate', '1', 'Beta Testing', '$dobday', '$dobmonth', '$dobyear', '', '', '$timestamp', '$vercode', '0', '200')";
 			
 			$dom = "$username.usr";				
 			$d=$dom;$d=strtolower($d);   $d=str_replace("http://","",$d);   $d=str_replace("www.","",$d);
@@ -88,11 +98,25 @@
 			$d=trim($d);$dom=$d;
 			
 			//also register the default domain name
-			register_domain($username, $dom);
 			
 		//echo "$mysql_string<br><br>";
 		
-		mysql_query($mysql_string)or die(mysql_error());
+		$res = $db->query($mysql_string) or die($db->error);
+
+		$randomip;
+		$query;
+		do
+		{
+			$randomip = rand(1,255).".".rand(1,255).".".rand(1,255).".".rand(1,255);
+			$query = $db->query("SELECT * FROM iptable WHERE ip='$randomip'");
+		} while ($query->num_rows != 0);
+	
+		if (sizeof($domain) == 2)
+		{
+			$res = $db->query("INSERT INTO iptable (owner, ip) VALUES ($res->insert_id, '$randomip')");
+			$id = $db->insert_id;
+			$db->query("INSERT INTO domain (id, name, ext, time, ip) VALUES ($id, '".$domain[0]."', '".$domain[1]."', '".time()."', '".$_SERVER['REMOTE_ADDR']."')") or die($db->error); 
+		}
 
 		
 		$headers = "From: Dark Signs Online <do-not-reply@darksigns.com>\r\n" ;
@@ -100,7 +124,7 @@
 		mail("$email","$username, verify your Dark Signs Account","Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\n$api_path/?verify=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttp://www.darksignsonline.com/","$headers");
 		
 		echo "<center><br><br><font size='4' color='orange' face='arial'><b>Your account has been created!</b><br>Check your email address for more information.</font></center>";
-		
+		exit;
 	}
 
 ?>

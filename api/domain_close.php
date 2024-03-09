@@ -1,7 +1,9 @@
 <?php
 	include_once "function.php";
+	include_once('mysql_config.php');
+	global $db;
 
-	$returnwith = preg($_GET['returnwith'], "[^0-9]");
+	$returnwith = $db->real_escape_string($_GET['returnwith'], "[^0-9]");
 	
 	// If user is this dumb.. then.. you know..
 	// $d = str_replace("http://", "", str_replace("www.","",trim($d)));
@@ -30,18 +32,16 @@ if (auth()=="1001"){
 	$originaldomain=trim($d);
 	$d=getdomain($d); //make sure its a domain name so mysql can identify it
 
-
-	mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-	$result=mysql_query("SELECT ind from domains where domain='$d' and owner='$u'")or die(mysql_error());  
+	$result=$db->query("SELECT ind from domains where domain='$d' and owner='$u'")or die($db->error);  
 	
 	
 	if (strtolower($u)=="admin"){}else{
 		//only ADMIN can download from anyone's domain name!
-		if (mysql_num_rows($result)==1){}else{
+		if ($db->num_rows($result)==1){}else{
 		
 			//check subowners
-			$result2=mysql_query("SELECT subowners from domains where domain='$d'");
-				while($row = mysql_fetch_array( $result2 )) {
+			$result2=$db->query("SELECT subowners from domains where domain='$d'");
+				while($row = $db->fetch_array( $result2 )) {
 					$subowners = strtolower($row['subowners']);
 				}
 				
@@ -62,10 +62,10 @@ if (auth()=="1001"){
 
 	//is it a domain?
 	if (domain_exists($d)){
-		if (mysql_num_rows(mysql_query("SELECT port from domain_scripts where domain='$d' and port='$port'"))>0){
+		if ($db->num_rows($db->query("SELECT port from domain_scripts where domain='$d' and port='$port'"))>0){
 			//is there already a script on this port? replace it
-			$result = mysql_query("DELETE FROM domain_scripts WHERE domain='$d' and port='$port'");
-			//$result = mysql_query("UPDATE domain_scripts SET script='$filedata' where domain='$d' and port='$port'");
+			$result = $db->query("DELETE FROM domain_scripts WHERE domain='$d' and port='$port'");
+			//$result = $db->query("UPDATE domain_scripts SET script='$filedata' where domain='$d' and port='$port'");
 		}else{
 			//no script exists.
 			die("No script is active on this port.<end>");

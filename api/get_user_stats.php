@@ -1,7 +1,7 @@
 <?php
 	include_once "function.php";
 	
-	$returnwith = preg($_GET['returnwith'], "[^0-9]");
+	$returnwith = $db->real_escape_string($_GET['returnwith'], "[^0-9]");
 
 	if ($returnwith == "")
 	{
