@@ -4,14 +4,11 @@ $returnwith=trim($returnwith);
 echo $returnwith;
 
 
-require("config.php");
+include_once('mysql_config.php');
+global $db;
 
 $u=trim($u);
 $p=trim($p);
-
-
-//mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-//$result=mysql_query("SELECT cash from users where username='$u' and password='$p'")or die(mysql_error());  
 
 
 if (auth()=="1001"){

@@ -3,7 +3,7 @@
 	
 	if ($auth == '1001')
 	{
-		$action = preg($_REQUEST['action']);
+		$action = $db->real_escape_string($_REQUEST['action']);
 		
 		if ($action == 'upload')
 		{
@@ -67,14 +67,14 @@
 			//    $d=getdomain($d);
 			   
 			
-			$result = mysql_query('SELECT * FROM domainfolder WHERE domain='.$data.' AND parent=0');
+			$result = $db->query('SELECT * FROM domainfolder WHERE domain='.$data.' AND parent=0');
 			
-			echo mysql_num_rows($result);
+			echo $db->num_rows($result);
 			echo "A";
 			/*
-						$result = mysql_query("SELECT * from domains where domain='$d'");
+						$result = $db->query("SELECT * from domains where domain='$d'");
 
-								while($row = mysql_fetch_array( $result )) {
+								while($row = $db->fetch_array( $result )) {
 										$files = $row['files'];
 										if (strlen($files)){
 												$filestuff=split(":----:",$files);

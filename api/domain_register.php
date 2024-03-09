@@ -7,7 +7,7 @@
 	
 	if ($auth == '1001')
 	{
-		$d = strtolower(preg($_POST['d']));
+		$d = strtolower($db->real_escape_string($_POST['d']));
 
 		$temp = getDomainInfo($d);
 		
@@ -45,14 +45,14 @@
 							do
 							{
 								$randomip = rand(1,255).".".rand(1,255).".".rand(1,255).".".rand(1,255);
-								$query = mysql_query("SELECT * FROM iptable WHERE ip='$randomip'");
-							} while (mysql_num_rows($query) != 0);
+								$query = $db->query("SELECT * FROM iptable WHERE ip='$randomip'");
+							} while ($db->num_rows($query) != 0);
 						
 							if (sizeof($domain) == 2)
 							{
-								mysql_query("INSERT INTO iptable (owner, ip) VALUES ($user[id], '$randomip')");
-								$id = mysql_insert_id();
-								mysql_query("INSERT INTO domain (id, name, ext, time, ip) VALUES ($id, '".$domain[0]."', '".$domain[1]."', '".time()."', '".$_SERVER['REMOTE_ADDR']."')") or die(mysql_error()); 
+								$db->query("INSERT INTO iptable (owner, ip) VALUES ($user[id], '$randomip')");
+								$id = $db->insert_id;
+								$db->query("INSERT INTO domain (id, name, ext, time, ip) VALUES ($id, '".$domain[0]."', '".$domain[1]."', '".time()."', '".$_SERVER['REMOTE_ADDR']."')") or die($db->error); 
 							}
 
 							die('Registration complete for '.$d.', you have been charged $'.$price[$ext].'<end>');
@@ -96,14 +96,14 @@
 							do
 							{
 								$randomip = rand(1,255).".".rand(1,255).".".rand(1,255).".".rand(1,255);
-								$query = mysql_query("SELECT * FROM iptable WHERE ip='$randomip'");
-							} while (mysql_num_rows($query) != 0);
+								$query = $db->query("SELECT * FROM iptable WHERE ip='$randomip'");
+							} while ($db->num_rows($query) != 0);
 						
-							mysql_query("INSERT INTO iptable (owner, ip, regtype) VALUES ($user[id], '$randomip', 'SUBDOMAIN')");
+							$db->query("INSERT INTO iptable (owner, ip, regtype) VALUES ($user[id], '$randomip', 'SUBDOMAIN')");
 
-							$id = mysql_insert_id();
+							$id = $db->insert_id;
 							
-							mysql_query("INSERT INTO subdomain (id, hostid, name, time, ip) VALUES ($id, $temp2[0], '".$domain[0]."', '".time()."', '".$_SERVER['REMOTE_ADDR']."')") or die(mysql_error()); 
+							$db->query("INSERT INTO subdomain (id, hostid, name, time, ip) VALUES ($id, $temp2[0], '".$domain[0]."', '".time()."', '".$_SERVER['REMOTE_ADDR']."')") or die($db->error); 
 
 							die('Registration complete for '.$d.', you have been charged $'.$price.'<end>');
 						}
@@ -130,7 +130,7 @@
 				if ($domain[0] >= 0 && $domain[0] < 256 && $domain[1] >= 0 && $domain[1] < 256 && $domain[2] >= 0 && $domain[2] < 256 && $domain[3] >= 0 && $domain[3] < 256)
 				{
 					// IP is valid.
-					$ip_exists = mysql_num_rows(mysql_query("SELECT id FROM iptable WHERE ip='$domain[0].$domain[1].$domain[2].$domain[3]'"));
+					$ip_exists = $db->num_rows($db->query("SELECT id FROM iptable WHERE ip='$domain[0].$domain[1].$domain[2].$domain[3]'"));
 					
 					if ($ip_exists == 0)
 					{
@@ -144,8 +144,8 @@
 						{
 							if (transaction($user['username'], 'bank', 'Domain Registration: '.$domain[0].'.'.$domain[1].'.'.$domain[2].'.'.$domain[3], $price))
 							{
-								mysql_query("INSERT INTO iptable (owner, ip, regtype) VALUES ($user[id], '$domain[0].$domain[1].$domain[2].$domain[3]', 'IP')");
-								if (mysql_error())
+								$db->query("INSERT INTO iptable (owner, ip, regtype) VALUES ($user[id], '$domain[0].$domain[1].$domain[2].$domain[3]', 'IP')");
+								if ($db->error)
 								{
 									die('A server error occured. Please report this to BigBob85 via DSO forums.<end>');
 								}

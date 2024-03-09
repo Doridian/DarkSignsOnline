@@ -1,6 +1,7 @@
 <?
 
-require("config.php");
+include_once('mysql_config.php');
+global $db;
 
 
 $u=trim($u);
@@ -33,16 +34,15 @@ if (auth()=="1001"){
 	$d=getdomain($d); //make sure its a domain name so mysql can identify it
 
 
-	mysql_connect("localhost", $mysql_username, $mysql_password); mysql_select_db($mysql_database);
-	$result=mysql_query("SELECT ind from domains where domain='$d' and owner='$u'")or die(mysql_error());  
+	$result=$db->query("SELECT ind from domains where domain='$d' and owner='$u'")or die($db->error);  
 	
 	if (strtolower($u)=="admin"){}else{
 		//only ADMIN can download from anyone's domain name!
-		if (mysql_num_rows($result)==1){}else{
+		if ($db->num_rows($result)==1){}else{
 		
 			//check subowners
-			$result2=mysql_query("SELECT subowners from domains where domain='$d'");
-				while($row = mysql_fetch_array( $result2 )) {
+			$result2=$db->query("SELECT subowners from domains where domain='$d'");
+				while($row = $db->fetch_array( $result2 )) {
 					$subowners = strtolower($row['subowners']);
 				}
 				
@@ -64,11 +64,11 @@ if (auth()=="1001"){
 	//is it a domain?
 	if (domain_exists($d)){
 		
-		$result=mysql_query("SELECT script from domain_scripts where domain='$d' and port='$port'");
+		$result=$db->query("SELECT script from domain_scripts where domain='$d' and port='$port'");
 	
-		if (mysql_num_rows($result)>0){
+		if ($db->num_rows($result)>0){
 			//grab the file to download!
-			while($row = mysql_fetch_array( $result )) {		$script = $row['script'];			}
+			while($row = $db->fetch_array( $result )) {		$script = $row['script'];			}
 
 			$script=str_replace("\n","*- -*",$script);
 			$script=str_replace("\r","",$script);

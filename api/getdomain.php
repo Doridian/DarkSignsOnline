@@ -3,7 +3,7 @@
 
 	if ($auth == '1001')
 	{
-		$data = preg($_REQUEST['data']);
+		$data = $db->real_escape_string($_REQUEST['data']);
 		$domain = getdomain($data);
 		
 		//echo $domain;

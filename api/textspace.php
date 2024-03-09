@@ -3,25 +3,25 @@
 	
 	if ($auth == '1001')
 	{
-		$action = preg($_REQUEST['action']);
+		$action = $db->real_escape_string($_REQUEST['action']);
 		if ($action == 'download')
 		{
-			$data = preg($_REQUEST['data']);
-			$result = mysql_query("SELECT `text` FROM textspace WHERE chan='$data' ORDER BY rev DESC LIMIT 1") or die(mysql_error());;
-			if (mysql_num_rows($result) == 1)
+			$data = $db->real_escape_string($_REQUEST['data']);
+			$result = $db->query("SELECT `text` FROM textspace WHERE chan='$data' ORDER BY rev DESC LIMIT 1") or die($db->error);;
+			if ($db->num_rows($result) == 1)
 			{
-				die('4501'.mysql_result($result, 0));
+				die('4501'.$db->result($result, 0));
 			}
 			else
 			{
 				die('4501  <end>');				
 			}
-			while($row = mysql_fetch_array( $result )) {$textdata=$row['data'];}
+			while($row = $db->fetch_array( $result )) {$textdata=$row['data'];}
 			
 		}
 		else if ($action == 'upload')
 		{
-			$chan = preg($_REQUEST['chan'], "[^0-9]");
+			$chan = $db->real_escape_string($_REQUEST['chan'], "[^0-9]");
 			if ($chan == "")
 			{
 				die('4500Invalid channel.<end>');						
@@ -35,16 +35,16 @@
 			$data = $_REQUEST['data']; // Get some error checking.
 			$time = time();
 			//echo 'XXXZ         '.$chan;
-			$result = mysql_query("SELECT rev FROM textspace WHERE chan=$chan ORDER BY rev DESC LIMIT 1");
-			if (mysql_num_rows($result) == 0)
+			$result = $db->query("SELECT rev FROM textspace WHERE chan=$chan ORDER BY rev DESC LIMIT 1");
+			if ($db->num_rows($result) == 0)
 			{
-				//$result = mysql_query("INSERT INTO `textspace` (`rev`, `chan`, `user`, `lastupdate`, `text`, `active`) VALUES (1, $chan, 1, 1234, 'test', 1);") or die('X '.mysql_error().' (B)');
-				$result = mysql_query("INSERT INTO textspace (`rev`, `chan`, `user`, `lastupdate`, `text`, `active`) VALUES (1, $chan, $user[id], $time, '$data', 1)") or die('X '.mysql_error().' (B)');
+				//$result = $db->query("INSERT INTO `textspace` (`rev`, `chan`, `user`, `lastupdate`, `text`, `active`) VALUES (1, $chan, 1, 1234, 'test', 1);") or die('X '.$db->error.' (B)');
+				$result = $db->query("INSERT INTO textspace (`rev`, `chan`, `user`, `lastupdate`, `text`, `active`) VALUES (1, $chan, $user[id], $time, '$data', 1)") or die('X '.$db->error.' (B)');
 			}
 			else
 			{
-				$rev = mysql_result($result, 0)+1;
-				$result = mysql_query("INSERT INTO textspace (`rev`, `chan`, `user`, `lastupdate`, `text`) VALUES ($rev, $chan, $user[id], $time, '$data')") or die('X '.mysql_error().' (C)');
+				$rev = $db->result($result, 0)+1;
+				$result = $db->query("INSERT INTO textspace (`rev`, `chan`, `user`, `lastupdate`, `text`) VALUES ($rev, $chan, $user[id], $time, '$data')") or die('X '.$db->error.' (C)');
 				
 			}
 			

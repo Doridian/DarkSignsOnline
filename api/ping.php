@@ -3,8 +3,8 @@
 	
 	if ($auth == '1001')
 	{
-		$domain = preg($_POST['domain']);
-		$port = preg($_POST['port'], "[^0-9]");
+		$domain = $db->real_escape_string($_POST['domain']);
+		$port = $db->real_escape_string($_POST['port'], "[^0-9]");
 		
 		$temp = getDomainInfo($domain);
 		if ($temp[0] > 0)
@@ -15,12 +15,12 @@
 			}
 			else
 			{
-				$query = mysql_query("SELECT domain_id FROM domainscripts WHERE domain_id=$temp[0] AND port=$port");
+				$query = $db->query("SELECT domain_id FROM domainscripts WHERE domain_id=$temp[0] AND port=$port");
 				
-				//list($isport) = mysql_fetch_row(mysql_query('SELECT code FROM domainscripts WHERE domain_id = "'.$temp[0].'" AND port = "'.$port.'";'));
+				//list($isport) = $db->fetch_row($db->query('SELECT code FROM domainscripts WHERE domain_id = "'.$temp[0].'" AND port = "'.$port.'";'));
 				//if (!empty($isport))
 				
-				if (mysql_num_rows($query) == 1)
+				if ($db->num_rows($query) == 1)
 				{
 					echo 1;
 				}

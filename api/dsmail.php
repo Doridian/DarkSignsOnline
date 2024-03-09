@@ -1,7 +1,7 @@
 <?php
 	include_once "function.php";
 
-	$returnwith = preg($_REQUEST['returnwith'], "[^0-9]");
+	$returnwith = $db->real_escape_string($_REQUEST['returnwith'], "[^0-9]");
 	if (empty($returnwith))
 	{
 		$returnwith = '7000';
@@ -11,23 +11,23 @@
 	
 	if ($auth == '1001')
 	{
-		$action = preg($_REQUEST['action']);
+		$action = $db->real_escape_string($_REQUEST['action']);
 		if ($action == 'inbox')
 		{
 			
-			$last = preg($_REQUEST['last'], "[^0-9]");
+			$last = $db->real_escape_string($_REQUEST['last'], "[^0-9]");
 			
 			if (empty($last))
 			{
 				$last = '0';
 			}
-			$result = mysql_query("SELECT mail_id,user_id, from_id, subject, message, time FROM dsminbox WHERE user_id='{$user['id']}' AND mail_id > $last ORDER BY mail_id ASC");
+			$result = $db->query("SELECT mail_id,user_id, from_id, subject, message, time FROM dsminbox WHERE user_id='{$user['id']}' AND mail_id > $last ORDER BY mail_id ASC");
 		
 			
-			if (mysql_error())
-				echo mysql_error();
+			if ($db->error)
+				echo $db->error;
 			
-			while ($mail = mysql_fetch_array($result))
+			while ($mail = $db->fetch_array($result))
 			{
 				echo 'X_'.$mail['mail_id'].chr(7).idToUser($mail['from_id']).chr(7).$mail['subject'].chr(7).$mail['message'].chr(7).$mail['time']."\n";
 			}
@@ -35,7 +35,7 @@
 		else if ($action == 'send')
 		{
 			$from = $user['id'];
-			$to = preg($_REQUEST['to']);
+			$to = $db->real_escape_string($_REQUEST['to']);
 			$toArr = explode(',', $to);
 			
 			if (sizeof($toArr) > 10)
@@ -61,23 +61,23 @@
 			
 			if ($safeSend)
 			{
-				$sub = preg($_REQUEST['subject'], "[^a-zA-Z0-9., \-]");
-				$msg = preg($_REQUEST['message'], "[^a-zA-Z0-9., ".chr(6)."\-]");
+				$sub = $db->real_escape_string($_REQUEST['subject'], "[^a-zA-Z0-9., \-]");
+				$msg = $db->real_escape_string($_REQUEST['message'], "[^a-zA-Z0-9., ".chr(6)."\-]");
 				
 				foreach ($nameID as $id)
 				{
-					$result = mysql_query("SELECT MAX(mail_id) FROM dsminbox WHERE user_id=$id");
+					$result = $db->query("SELECT MAX(mail_id) FROM dsminbox WHERE user_id=$id");
 					$mail_id = 1;
-					if (mysql_num_rows($result) == 1)
+					if ($db->num_rows($result) == 1)
 					{
-						$mail_id = mysql_result($result, 0)+1;
+						$mail_id = $db->result($result, 0)+1;
 					}
-					mysql_query("INSERT INTO dsminbox (user_id, from_id, mail_id, status, subject, message, time, ip) VALUES ($id, {$user['id']}, $mail_id, 0, '$sub', '$msg', ".time().", '".$_SERVER['REMOTE_ADDR']."')");
+					$db->query("INSERT INTO dsminbox (user_id, from_id, mail_id, status, subject, message, time, ip) VALUES ($id, {$user['id']}, $mail_id, 0, '$sub', '$msg', ".time().", '".$_SERVER['REMOTE_ADDR']."')");
 					
-					if (mysql_error())
+					if ($db->error)
 					{
 						$safeSend = false;
-						echo mysql_error();
+						echo $db->error;
 						break;
 					}
 				}
