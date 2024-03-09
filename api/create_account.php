@@ -85,23 +85,12 @@
 			
 			$mysql_string="INSERT into users (username, password, email, createdate, createtime, ip, hostname, lastseen, enabled, expiredate, dobday, dobmonth, dobyear, tagline, publicemail, timestamp, emailverifycode, emailverified, cash) VALUES ('$username', '$password', '$email', '$cdate', '$ctime', '$aip', '$ahostname', '$cdate', '1', 'Beta Testing', '$dobday', '$dobmonth', '$dobyear', '', '', '$timestamp', '$vercode', '0', '200')";
 			
-			$dom = "$username.usr";				
-			$d=$dom;$d=strtolower($d);   $d=str_replace("http://","",$d);   $d=str_replace("www.","",$d);
-			$d=str_replace("!","",$d);$d=str_replace("@","",$d);$d=str_replace("#","",$d);$d=str_replace("$","",$d);
-			$d=str_replace("%","",$d);$d=str_replace("^","",$d);$d=str_replace("&","",$d);$d=str_replace("*","",$d);
-			$d=str_replace("(","",$d);$d=str_replace(")","",$d);$d=str_replace("_","",$d);$d=str_replace("+","",$d);
-			$d=str_replace("=","",$d);$d=str_replace("[","",$d);$d=str_replace("{","",$d);$d=str_replace("}","",$d);
-			$d=str_replace("]","",$d);$d=str_replace("\\","",$d);$d=str_replace("|","",$d);$d=str_replace("$","",$d);
-			$d=str_replace(":","",$d);$d=str_replace(";","",$d);$d=str_replace("\"","",$d);$d=str_replace("'","",$d);
-			$d=str_replace(",","",$d);$d=str_replace("<","",$d);$d=str_replace("/","",$d);$d=str_replace(">","",$d);
-			$d=str_replace("?","",$d);$d=str_replace("`","",$d);$d=str_replace("~","",$d);
-			$d=trim($d);$dom=$d;
-			
 			//also register the default domain name
 			
 		//echo "$mysql_string<br><br>";
 		
 		$res = $db->query($mysql_string) or die($db->error);
+		$userid = $db->insert_id;
 
 		$randomip;
 		$query;
@@ -110,17 +99,13 @@
 			$randomip = rand(1,255).".".rand(1,255).".".rand(1,255).".".rand(1,255);
 			$query = $db->query("SELECT * FROM iptable WHERE ip='$randomip'");
 		} while ($query->num_rows != 0);
-	
-		if (sizeof($domain) == 2)
-		{
-			$res = $db->query("INSERT INTO iptable (owner, ip) VALUES ($res->insert_id, '$randomip')");
-			$id = $db->insert_id;
-			$db->query("INSERT INTO domain (id, name, ext, time, ip) VALUES ($id, '".$domain[0]."', '".$domain[1]."', '".time()."', '".$_SERVER['REMOTE_ADDR']."')") or die($db->error); 
-		}
 
-		
-		$headers = "From: Dark Signs Online <do-not-reply@darksigns.com>\r\n" ;
-			
+		$res = $db->query("INSERT INTO iptable (owner, ip) VALUES ($userid, '$randomip')") or die($db->error);
+		$id = $db->insert_id;
+		$db->query("INSERT INTO domain (id, name, ext, time, ip) VALUES ($id, '".$username."', 'usr', '".time()."', '".$_SERVER['REMOTE_ADDR']."')") or die($db->error); 
+
+		$headers = "From: Dark Signs Online <do-not-reply@darksignsonline.com>\r\n" ;
+
 		mail("$email","$username, verify your Dark Signs Account","Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\n$api_path/?verify=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttp://www.darksignsonline.com/","$headers");
 		
 		echo "<center><br><br><font size='4' color='orange' face='arial'><b>Your account has been created!</b><br>Check your email address for more information.</font></center>";

@@ -7,11 +7,11 @@
 	{
 		
 		
-		$port = $db->real_escape_string($_REQUEST['port'], "[^0-9]");
+		$port = (int)$_REQUEST['port'];
 
 		if ($port < 1 || $port > 65536)
 		{
-			die('Error: Port number must be between 1 and 65536.<end>');
+			die('not found<end>');
 		}
 		$d = $db->real_escape_string($_REQUEST['d'], '[^a-zA-Z0-9.-]');
 		$d = strtolower($d); 
@@ -29,15 +29,15 @@
 			else
 			{
 				//die('Domain does not have a script on that port.');
-				die('not found');
+				echo 'not found';
 			}
 		}
 		else
 		{
 			//die('Domain does not exist.<end>');
-			die('not found');
+			echo 'not found';
 		}
-				
+
 		/*
 	
 		$d = getdomain($_GET['d']); //make sure its a domain name so mysql can identify it

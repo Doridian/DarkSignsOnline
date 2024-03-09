@@ -50,7 +50,7 @@
 						
 							if (sizeof($domain) == 2)
 							{
-								$db->query("INSERT INTO iptable (owner, ip) VALUES ($user[id], '$randomip')");
+								$db->query("INSERT INTO iptable (owner, ip) VALUES ($user[id], '$randomip')") or die($db->error);
 								$id = $db->insert_id;
 								$db->query("INSERT INTO domain (id, name, ext, time, ip) VALUES ($id, '".$domain[0]."', '".$domain[1]."', '".time()."', '".$_SERVER['REMOTE_ADDR']."')") or die($db->error); 
 							}
