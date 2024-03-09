@@ -32,7 +32,7 @@ if (auth()=="1001"){
 	$originaldomain=trim($d);
 	$d=getdomain($d); //make sure its a domain name so mysql can identify it
 
-	$result=$db->query("SELECT ind from domains where domain='$d' and owner='$u'")or die($db->error);  
+	$result=$db->query("SELECT id from domains where domain='$d' and owner='$u'")or die($db->error);  
 	
 	
 	if (strtolower($u)=="admin"){}else{

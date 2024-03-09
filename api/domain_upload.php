@@ -1,11 +1,12 @@
 <?
 	include_once 'function.php';
-	
+	global $auth;
+
 	echo '2003';
 		
 	if ($auth == '1001')
 	{
-		$port = $db->real_escape_string($_POST['port'], "[^0-9]");
+		$port = (int)$_POST['port'];
 		if ($port < 1 || $port > 65536)
 		{
 			die("Error: Port number must be between 1 and 65536.<end>");
@@ -33,6 +34,8 @@
 			}
 			else
 			{
+				print_r($user);
+				print_r($temp);
 				die('Restricted access.<end>');
 			}
 		}

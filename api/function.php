@@ -3,6 +3,7 @@
 	global $db;
 
 	global $user, $auth;
+	global $auth_data;
 	
 	$u = $db->real_escape_string($_REQUEST['u']);
 	$p = $db->real_escape_string($_REQUEST['p']);
@@ -13,6 +14,7 @@
 	$auth_result = $db->query("SELECT * FROM users WHERE username='$u' AND password='$p' AND active='1'") or die("9998");  
 	if ($auth_result->num_rows == 1)
 	{
+		$auth_data = $auth_result->fetch_array();
 		//$db->query("UPDATE users SET lastseen='$cdate' WHERE username='$u' AND password='$p'");
 		// account is active
 		$auth = '1001';
@@ -62,24 +64,32 @@
 		
 		if (sizeof($domain) == 2)
 		{
-			$result = $db->query("SELECT d.id, ipt.owner FROM domain AS d, iptable AS ipt WHERE d.name='".$domain[0]."' AND d.ext='".$domain[1]."' AND d.id=ipt.id");
+			$result = $db->query("SELECT d.id, ipt.owner, d.subowners FROM domain AS d, iptable AS ipt WHERE d.name='".$domain[0]."' AND d.ext='".$domain[1]."' AND d.id=ipt.id");
 		}
 		else if (sizeof($domain) == 3)
 		{
-			$result = $db->query("SELECT s.id, ipt.owner FROM subdomain AS s, iptable AS ipt, domain AS d WHERE d.name='".$domain[1]."' AND d.ext='".$domain[2]."' AND d.id=s.hostid AND s.name='".$domain[0]."' AND s.id=ipt.id");
+			$result = $db->query("SELECT s.id, ipt.owner, d.subowners FROM subdomain AS s, iptable AS ipt, domain AS d WHERE d.name='".$domain[1]."' AND d.ext='".$domain[2]."' AND d.id=s.hostid AND s.name='".$domain[0]."' AND s.id=ipt.id");
 		}
 		else if (sizeof($domain) == 4)
 		{
-			$result = $db->query("SELECT id, owner FROM iptable WHERE ip='$domain[0].$domain[1].$domain[2].$domain[3]'");
+			$result = $db->query("SELECT id, owner, '' FROM iptable WHERE ip='$domain[0].$domain[1].$domain[2].$domain[3]'");
 		}
-		
+		else
+		{
+			return array(-1, -1, '');
+		}
+
+		if (!$result) {
+			die($db->error);
+		}
+
 		if ($result && $result->num_rows == 1)
 		{
 			return $result->fetch_row();
 		}
 		else
 		{
-			return array(-1, -1);
+			return array(-1, -1, '');
 		}
 	}
 	
@@ -233,7 +243,7 @@ function domainauth($d){
 		global $db;
         if (auth($u,$p)=="1001"){
 
-                if ($db->num_rows($db->query("SELECT ind from domains where domain='$d' and owner='$u'"))>0){
+                if ($db->num_rows($db->query("SELECT id from domains where domain='$d' and owner='$u'"))>0){
                         return "1001";
                 }else{
                         if (strtolower($u)=="admin"){
