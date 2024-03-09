@@ -1,11 +1,7 @@
 Attribute VB_Name = "basWorld"
 Option Explicit
 
-'Public Const API_Server = "www.darksignsonline.com" 'e.g. "www.darksignsonline.com"
-'Public Const API_Path = "/api/" 'e.g. "/api/"
-
-'Public Const API_Server = "localhost" 'e.g. "www.darksignsonline.com"
-Public Const API_Server = "dso.doridian.de" 'e.g. "www.darksignsonline.com"
+Public Const API_Server = "https://darksignsonline.com" 'e.g. "www.darksignsonline.com"
 Public Const API_Path = "/api/" 'e.g. "/api/"
 
 'Public Const IRC_Server = "irc.dal.net"
@@ -17,29 +13,29 @@ Public Const IRC_Port = "6667"
 Public userIP As String
 Public referals(0 To 3) As String
 
-
 Public UsersOnline As String 'in the format of :user1::user2::user3:
-Public SockRetries(0 To 99) As Integer
-Public SockPostOrGet(0 To 99) As String
-Public SockPostData(0 To 99) As String
-Public SockServer(0 To 99) As String
-Public SockPort(0 To 99) As Integer
-Public SockPath(0 To 99) As String
-Public SockIsCustomUserDownload(0 To 99) As Integer
-Public InData(0 To 99) As String
-Public SockConsole(0 To 99) As Integer
-Public Const MaxSocks = 29
+
 Public Const MaxSockRetries = 3
 Public Const TimeOutSeconds = 8
 
 Public Authorized As Boolean
+
+Public Type HttpRequest
+    Http As New MSXML2.XMLHTTP60
+    InUse As Boolean
+    consoleID As Integer
+    IsCustomDownload As Integer
+    Url As String
+End Type
+
+Public HttpRequests(1 To 30) As HttpRequest
 
 Public Comms(1 To 49) As String
 
 Public Sub LoginNow(ByVal consoleID As Integer)
     Dim isBad As Boolean
     isBad = False
-    
+
     If Authorized = True Then
         Say consoleID, "You are already logged in and authorized as " & myUsername & ".{green}", False
         Exit Sub
@@ -85,202 +81,84 @@ End Sub
 
 
 Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer) As Integer
-    
-
     If InStr(i(sUrl), "auth.php") = 0 And Authorized = False Then
         Say consoleID, "You must be logged in to do that!{36 center orange impact nobold}", False
         Say consoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}", False
         RunPage = 0
         Exit Function
     End If
-        
-        
+    
+    Dim sockIndex As Integer
+    Dim n As Integer
+    For n = 1 To UBound(HttpRequests)
+        If Not HttpRequests(n).InUse Then
+            sockIndex = n
+            Exit For
+        End If
+    Next
         
     sUrl = Trim(Replace(sUrl, "&&", "&"))
     
     sUrl = Replace(sUrl, " ", "%20")
-    
-    
-    Dim sockIndex As Integer
-    sockIndex = NextEmptySock
-    
-    SockRetries(sockIndex) = 0
-    InData(sockIndex) = ""
-    SockConsole(sockIndex) = consoleID
+
+    HttpRequests(sockIndex).Url = sUrl
+    HttpRequests(sockIndex).InUse = True
+    HttpRequests(sockIndex).consoleID = consoleID
+    HttpRequests(sockIndex).IsCustomDownload = IsCustomDownload
+
+    Dim Http As New MSXML2.XMLHTTP60
+    Dim HttpMethod As String
+    Set HttpRequests(sockIndex).Http = Http
+
+    Dim StateHandler As clsReadyStateHandler
+    Set StateHandler = New clsReadyStateHandler
+    StateHandler.Index = sockIndex
+    Http.OnReadyStateChange = StateHandler
+
+    If IsCustomDownload <= 0 Then
+        sUrl = API_Server + API_Path
+    End If
     
     If UsePost = True Then
-        'if postdata is short, use get
-        If InStr(PostData, vbCrLf) = 0 And Len(PostData) < 200 Then
-            SockPostOrGet(sockIndex) = "GET"
-            'SockPostData(sockIndex) = URLEncode(PostData)
-            
-            PostData = Trim(PostData)
-            PostData = Replace(PostData, " ", "%20")
-            PostData = Replace(PostData, "+", "--plus--")
-            
-            'PostData = Replace(PostData, "&", "--and--") 'this one screws up URL
-        
-        
-            SockPostData(sockIndex) = PostData
-            sUrl = sUrl & "?" & PostData
-        Else
-            SockPostOrGet(sockIndex) = "POST"
-            'SockPostData(sockIndex) = URLEncode(PostData)
-            
-            PostData = Trim(PostData)
-            PostData = Replace(PostData, " ", "%20")
-            PostData = Replace(PostData, "+", "--plus--")
-            'PostData = Replace(PostData, "&", "--and--") 'this one screws up URL
-
-            SockPostData(sockIndex) = PostData
-        End If
+        HttpMethod = "POST"
     Else
-        SockPostOrGet(sockIndex) = "GET"
-        SockPostData(sockIndex) = ""
+        HttpMethod = "GET"
     End If
-    
-    If IsCustomDownload > 0 Then
-        SockIsCustomUserDownload(sockIndex) = IsCustomDownload
-        If InStr(sUrl, "/") = 0 Then sUrl = sUrl & "/"
-        SockServer(sockIndex) = Mid(sUrl, 1, InStr(sUrl, "/") - 1)
-        SockPath(sockIndex) = Mid(sUrl, InStr(sUrl, "/"), Len(sUrl))
-    Else
-        SockIsCustomUserDownload(sockIndex) = 0
-        SockServer(sockIndex) = API_Server
-        SockPath(sockIndex) = API_Path
-    End If
-    
 
-    frmConsole.tmrTimeout(sockIndex).Enabled = False
-    frmConsole.tmrTimeout(sockIndex).Tag = "0"
+    Http.open HttpMethod, sUrl, True
+
+    If UsePost = True Then
+        PostData = Trim(PostData)
+        PostData = Replace(PostData, " ", "%20")
+        PostData = Replace(PostData, "+", "--plus--")
+        'PostData = Replace(PostData, "&", "--and--") 'this one screws up URL
+        Http.send PostData
+    Else
+        Http.send
+    End If
+    'SockPort(sockIndex) = 80
+
+    frmConsole.tmrTimeout(sockIndex).Interval = TimeOutSeconds * 1000
     frmConsole.tmrTimeout(sockIndex).Enabled = True
     
-    frmConsole.Sock(sockIndex).Close
-    
-    If IsCustomDownload > 0 Then
-        frmConsole.Sock(sockIndex).Tag = SockPath(sockIndex)
-    Else
-        frmConsole.Sock(sockIndex).Tag = SockPath(sockIndex) & sUrl
-    End If
+    'If Right(SockServer(sockIndex), 1) = "?" Then
+    '    SockServer(sockIndex) = Mid(SockServer(sockIndex), 1, Len(SockServer(sockIndex)) - 1)
+    'End If
     
     
-    SockPort(sockIndex) = 80
-    
-    
-    If Right(SockServer(sockIndex), 1) = "?" Then
-        SockServer(sockIndex) = Mid(SockServer(sockIndex), 1, Len(SockServer(sockIndex)) - 1)
-    End If
-    
-    
-    If InStr(frmConsole.Sock(sockIndex).Tag, ".php?") And Len(SockPostData(sockIndex)) > 2 Then
-        SockPostData(sockIndex) = Mid(frmConsole.Sock(sockIndex).Tag, InStr(frmConsole.Sock(sockIndex).Tag, "?") + 1, Len(frmConsole.Sock(sockIndex).Tag))
-        frmConsole.Sock(sockIndex).Tag = Mid(frmConsole.Sock(sockIndex).Tag, 1, InStr(frmConsole.Sock(sockIndex).Tag, "?") - 1)
-        SockPostOrGet(sockIndex) = "POST"
-    End If
-        
-        
+    'If InStr(frmConsole.Sock(sockIndex).Tag, ".php?") And Len(SockPostData(sockIndex)) > 2 Then
+    '    SockPostData(sockIndex) = Mid(frmConsole.Sock(sockIndex).Tag, InStr(frmConsole.Sock(sockIndex).Tag, "?") + 1, Len(frmConsole.Sock(sockIndex).Tag))
+    '    frmConsole.Sock(sockIndex).Tag = Mid(frmConsole.Sock(sockIndex).Tag, 1, InStr(frmConsole.Sock(sockIndex).Tag, "?") - 1)
+    '    SockPostOrGet(sockIndex) = "POST"
+    'End If
         
     'MsgBox SockServer(sockIndex) & vbCrLf & vbCrLf & SockPort(sockIndex) & _
-    vbCrLf & vbCrLf & SockPath(sockIndex), , sockIndex
+    'vbCrLf & vbCrLf & SockPath(sockIndex), , sockIndex
 
     'MsgBox SockServer(sockIndex) & vbCrLf & vbCrLf & _
-    frmConsole.Sock(sockIndex).Tag & vbCrLf & vbCrLf & SockPostData(sockIndex)
-    
+    'frmConsole.Sock(sockIndex).Tag & vbCrLf & vbCrLf & SockPostData(sockIndex)
 
-    
-    frmConsole.Sock(sockIndex).Connect SockServer(sockIndex), SockPort(sockIndex)
-    
-
-    RunPage = sockIndex
-End Function
-
-Public Function RunPageNew(ByVal sUrl As String, ByVal consoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer) As Integer
-    
-    Dim sockIndex As Integer
-    sockIndex = NextEmptySock
-    
-    SockRetries(sockIndex) = 0
-    InData(sockIndex) = ""
-    SockConsole(sockIndex) = consoleID
-    
-
-    SockPostOrGet(sockIndex) = "POST"
-    'SockPostData(sockIndex) = URLEncode(PostData)
-    
-       
-    If IsCustomDownload > 0 Then
-        SockIsCustomUserDownload(sockIndex) = IsCustomDownload
-        If InStr(sUrl, "/") = 0 Then sUrl = sUrl & "/"
-        SockServer(sockIndex) = Mid(sUrl, 1, InStr(sUrl, "/") - 1)
-        SockPath(sockIndex) = Mid(sUrl, InStr(sUrl, "/"), Len(sUrl))
-    Else
-        SockIsCustomUserDownload(sockIndex) = 0
-        SockServer(sockIndex) = API_Server
-        SockPath(sockIndex) = API_Path
-    End If
-    
-
-    frmConsole.tmrTimeout(sockIndex).Enabled = False
-    frmConsole.tmrTimeout(sockIndex).Tag = "0"
-    frmConsole.tmrTimeout(sockIndex).Enabled = True
-    
-    frmConsole.Sock(sockIndex).Close
-    
-    If IsCustomDownload > 0 Then
-        frmConsole.Sock(sockIndex).Tag = SockPath(sockIndex)
-    Else
-        frmConsole.Sock(sockIndex).Tag = SockPath(sockIndex) & sUrl
-    End If
-    
-    
-    SockPort(sockIndex) = 80
-    
-    
-    If Right(SockServer(sockIndex), 1) = "?" Then
-        SockServer(sockIndex) = Mid(SockServer(sockIndex), 1, Len(SockServer(sockIndex)) - 1)
-    End If
-    
-    
-    If InStr(frmConsole.Sock(sockIndex).Tag, ".php?") And Len(SockPostData(sockIndex)) > 2 Then
-        SockPostData(sockIndex) = Mid(frmConsole.Sock(sockIndex).Tag, InStr(frmConsole.Sock(sockIndex).Tag, "?") + 1, Len(frmConsole.Sock(sockIndex).Tag))
-        frmConsole.Sock(sockIndex).Tag = Mid(frmConsole.Sock(sockIndex).Tag, 1, InStr(frmConsole.Sock(sockIndex).Tag, "?") - 1)
-        SockPostOrGet(sockIndex) = "POST"
-    End If
-        
-        
-        
-    'MsgBox SockServer(sockIndex) & vbCrLf & vbCrLf & SockPort(sockIndex) & _
-    vbCrLf & vbCrLf & SockPath(sockIndex), , sockIndex
-
-    'MsgBox SockServer(sockIndex) & vbCrLf & vbCrLf & _
-    frmConsole.Sock(sockIndex).Tag & vbCrLf & vbCrLf & SockPostData(sockIndex)
-    
-
-    
-    frmConsole.Sock(sockIndex).Connect SockServer(sockIndex), SockPort(sockIndex)
-    
-
-    RunPageNew = sockIndex
-End Function
-
-Public Function NextEmptySock()
-    Dim n As Integer
-    For n = 1 To frmConsole.Sock.Count - 1
-        If frmConsole.Sock(n).state = sckClosed Then
-            NextEmptySock = n
-            GoTo zxc
-        End If
-    Next n
-    
-    MsgBox "You have reached your maximum number of simultaneous connections!" & _
-    vbCrLf & vbCrLf & "You may have a script running that is unintentionally using too many connections." & vbCrLf & vbCrLf & _
-    "Check GOTO and @ placements, as well as IF statements!", vbCritical, "Warning"
-    
-    'choose a random sock from 1 -> if all are full (which they shouldn't be)
-    Randomize
-    NextEmptySock = Int(Rnd * frmConsole.Sock.Count - 2) + 1
-    
-zxc:
+    RunPage = n
 End Function
 
 Public Function myUsername() As String
@@ -364,9 +242,11 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
     
     
 
-    If SockIsCustomUserDownload(Index) > 0 Then
+    Dim IsCustomDownload As Integer
+    IsCustomDownload = basWorld.HttpRequests(Index).IsCustomDownload
+    If IsCustomDownload > 0 Then
         'put the data into a variable!
-        Vars(SockIsCustomUserDownload(Index)).VarValue = Bracketize(s, True)
+        Vars(IsCustomDownload).VarValue = Bracketize(s, True)
         Exit Sub
     End If
     

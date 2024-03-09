@@ -3,7 +3,7 @@ Object = "{248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0"; "MSWINSCK.OCX"
 Begin VB.Form frmConsole 
    AutoRedraw      =   -1  'True
    BackColor       =   &H001B1410&
-   BorderStyle     =   0  'Kein
+   BorderStyle     =   0  'None
    Caption         =   "DSD Console"
    ClientHeight    =   9705
    ClientLeft      =   0
@@ -26,11 +26,17 @@ Begin VB.Form frmConsole
    MinButton       =   0   'False
    ScaleHeight     =   9705
    ScaleWidth      =   11475
-   StartUpPosition =   3  'Windows-Standard
+   StartUpPosition =   3  'Windows Default
+   Begin VB.Timer tmrTimeout 
+      Enabled         =   0   'False
+      Index           =   0
+      Left            =   9480
+      Top             =   7440
+   End
    Begin VB.PictureBox ChatBox 
-      Appearance      =   0  '2D
+      Appearance      =   0  'Flat
       BackColor       =   &H80000005&
-      BorderStyle     =   0  'Kein
+      BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
       Height          =   6855
       Left            =   360
@@ -51,7 +57,7 @@ Begin VB.Form frmConsole
          Width           =   165
       End
       Begin VB.TextBox txtStatus 
-         Appearance      =   0  '2D
+         Appearance      =   0  'Flat
          BackColor       =   &H001B1410&
          BeginProperty Font 
             Name            =   "Verdana"
@@ -67,21 +73,21 @@ Begin VB.Form frmConsole
          Left            =   120
          Locked          =   -1  'True
          MultiLine       =   -1  'True
-         ScrollBars      =   2  'Vertikal
+         ScrollBars      =   2  'Vertical
          TabIndex        =   32
          TabStop         =   0   'False
          Top             =   120
          Width           =   44695
       End
       Begin VB.TextBox txtChat 
-         Appearance      =   0  '2D
+         Appearance      =   0  'Flat
          BackColor       =   &H001B1410&
          ForeColor       =   &H00FFFFFF&
          Height          =   1215
          Left            =   120
          Locked          =   -1  'True
          MultiLine       =   -1  'True
-         ScrollBars      =   2  'Vertikal
+         ScrollBars      =   2  'Vertical
          TabIndex        =   31
          TabStop         =   0   'False
          Top             =   1320
@@ -89,7 +95,7 @@ Begin VB.Form frmConsole
          Width           =   3375
       End
       Begin VB.ListBox lstUsers 
-         Appearance      =   0  '2D
+         Appearance      =   0  'Flat
          BackColor       =   &H003D2E27&
          ForeColor       =   &H0000FF00&
          Height          =   4590
@@ -100,15 +106,10 @@ Begin VB.Form frmConsole
          Top             =   1440
          Width           =   1815
       End
-      Begin VB.Timer timTimeout 
-         Interval        =   15000
-         Left            =   7920
-         Top             =   960
-      End
       Begin VB.PictureBox TBox 
-         Appearance      =   0  '2D
+         Appearance      =   0  'Flat
          BackColor       =   &H00000000&
-         BorderStyle     =   0  'Kein
+         BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
          Height          =   495
          Left            =   360
@@ -133,7 +134,7 @@ Begin VB.Form frmConsole
             EndProperty
             Height          =   375
             Left            =   7545
-            Style           =   1  'Grafisch
+            Style           =   1  'Graphical
             TabIndex        =   29
             TabStop         =   0   'False
             Top             =   60
@@ -141,7 +142,7 @@ Begin VB.Form frmConsole
          End
          Begin VB.TextBox txtChatMsg 
             BackColor       =   &H003D2E27&
-            BorderStyle     =   0  'Kein
+            BorderStyle     =   0  'None
             ForeColor       =   &H00FFFFFF&
             Height          =   285
             Left            =   240
@@ -152,7 +153,7 @@ Begin VB.Form frmConsole
          End
          Begin VB.Shape s3 
             BackColor       =   &H003D2E27&
-            BackStyle       =   1  'Undurchsichtig
+            BackStyle       =   1  'Opaque
             BorderStyle     =   0  'Transparent
             Height          =   495
             Left            =   240
@@ -161,10 +162,10 @@ Begin VB.Form frmConsole
          End
       End
       Begin VB.PictureBox IRC 
-         Appearance      =   0  '2D
+         Appearance      =   0  'Flat
          AutoRedraw      =   -1  'True
          BackColor       =   &H001B1410&
-         BorderStyle     =   0  'Kein
+         BorderStyle     =   0  'None
          ForeColor       =   &H00FFFFFF&
          Height          =   3015
          Left            =   480
@@ -261,10 +262,10 @@ Begin VB.Form frmConsole
       End
    End
    Begin VB.PictureBox MiniMenu 
-      Appearance      =   0  '2D
+      Appearance      =   0  'Flat
       AutoSize        =   -1  'True
       BackColor       =   &H00000000&
-      BorderStyle     =   0  'Kein
+      BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
       Height          =   480
       Left            =   2640
@@ -336,7 +337,7 @@ Begin VB.Form frmConsole
          Width           =   240
       End
       Begin VB.Shape consoleShape 
-         BackStyle       =   1  'Undurchsichtig
+         BackStyle       =   1  'Opaque
          BorderStyle     =   0  'Transparent
          Height          =   135
          Left            =   2280
@@ -372,21 +373,6 @@ Begin VB.Form frmConsole
          Width           =   6135
       End
    End
-   Begin VB.Timer tmrTimeout 
-      Enabled         =   0   'False
-      Index           =   0
-      Interval        =   1000
-      Left            =   8280
-      Top             =   7320
-   End
-   Begin MSWinsockLib.Winsock Sock 
-      Index           =   0
-      Left            =   7800
-      Top             =   7320
-      _ExtentX        =   741
-      _ExtentY        =   741
-      _Version        =   393216
-   End
    Begin VB.DirListBox Dir1 
       Height          =   1170
       Left            =   6240
@@ -421,9 +407,9 @@ Begin VB.Form frmConsole
       Top             =   5280
    End
    Begin VB.PictureBox Stats 
-      Appearance      =   0  '2D
+      Appearance      =   0  'Flat
       BackColor       =   &H0047362C&
-      BorderStyle     =   0  'Kein
+      BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
       Height          =   495
       Left            =   0
@@ -434,10 +420,10 @@ Begin VB.Form frmConsole
       Top             =   0
       Width           =   8055
       Begin VB.PictureBox ExitBox 
-         Appearance      =   0  '2D
+         Appearance      =   0  'Flat
          AutoSize        =   -1  'True
          BackColor       =   &H80000005&
-         BorderStyle     =   0  'Kein
+         BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
          Height          =   300
          Left            =   6720
@@ -467,11 +453,11 @@ Begin VB.Form frmConsole
       End
       Begin VB.Shape Shape1 
          BackColor       =   &H000000FF&
-         BackStyle       =   1  'Undurchsichtig
+         BackStyle       =   1  'Opaque
          BorderStyle     =   0  'Transparent
          Height          =   255
          Left            =   120
-         Shape           =   4  'Gerundetes Rechteck
+         Shape           =   4  'Rounded Rectangle
          Top             =   120
          Width           =   120
       End
@@ -488,10 +474,10 @@ Begin VB.Form frmConsole
       End
    End
    Begin VB.PictureBox Comm 
-      Appearance      =   0  '2D
+      Appearance      =   0  'Flat
       AutoRedraw      =   -1  'True
       BackColor       =   &H002D211C&
-      BorderStyle     =   0  'Kein
+      BorderStyle     =   0  'None
       BeginProperty Font 
          Name            =   "Verdana"
          Size            =   8.25
@@ -540,7 +526,7 @@ Begin VB.Form frmConsole
          Width           =   57750
       End
       Begin VB.Label lCommTime 
-         Alignment       =   1  'Rechts
+         Alignment       =   1  'Right Justify
          BackStyle       =   0  'Transparent
          Caption         =   "00:00"
          BeginProperty Font 
@@ -565,7 +551,7 @@ Begin VB.Form frmConsole
    Begin VB.PictureBox Sidebar 
       AutoSize        =   -1  'True
       BackColor       =   &H00000000&
-      BorderStyle     =   0  'Kein
+      BorderStyle     =   0  'None
       Height          =   2415
       Left            =   240
       ScaleHeight     =   2415
@@ -644,7 +630,7 @@ Sub CommSmaller()
 End Sub
 
 
-Sub SetConsoleActive(ByVal consoleID As Integer)
+Sub SetConsoleActive(ByVal ConsoleID As Integer)
     
     Print_Console True
 
@@ -652,7 +638,7 @@ Sub SetConsoleActive(ByVal consoleID As Integer)
     consoleShape.Height = 60
     consoleShape.Top = MiniMenu.Height - consoleShape.Height - 60
     
-    Select Case consoleID
+    Select Case ConsoleID
         Case 1: consoleShape.Left = 90
         Case 2: consoleShape.Left = 320
         Case 3: consoleShape.Left = 540
@@ -788,14 +774,14 @@ Public Sub ToggleConsoleFull()
         End If
 End Sub
 
-Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
+Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
  Dim tmpS As String, tmpInputString As String, tmpS2 As String, iTmp As Long, tmpS3 As String, tmpSP As String, globalITMP As Long, firstParam As Boolean
- tmpS = Console(consoleID, CurrentLine(consoleID)).Caption
- If autoCompActive(consoleID) = True Then
-    tmpS = autoCompLast(consoleID)
+ tmpS = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
+ If autoCompActive(ConsoleID) = True Then
+    tmpS = autoCompLast(ConsoleID)
  Else
-    autoCompLast(consoleID) = tmpS
-    autoILast(consoleID) = 0
+    autoCompLast(ConsoleID) = tmpS
+    autoILast(ConsoleID) = 0
  End If
  iTmp = InStr(tmpS, ">")
  If iTmp > 0 Then
@@ -813,7 +799,7 @@ Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
   tmpInputString = tmpInputString & Mid(tmpS, 1, iTmp)
   tmpS = Trim(Mid(tmpS, iTmp + 1))
  End If
- tmpS2 = App.Path & "\user" & cPrefix(consoleID) & cPath(consoleID)
+ tmpS2 = App.Path & "\user" & cPrefix(ConsoleID) & cPath(ConsoleID)
  tmpS = Replace(tmpS, "/", "\")
  iTmp = InStrRev(tmpS, "\")
  If iTmp > 0 Then
@@ -824,7 +810,7 @@ Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
  On Error GoTo acSubEnd1
  tmpS3 = Dir(tmpS2 & tmpS & "*", vbDirectory)
  If tmpS3 = "" Then GoTo acSubEnd1
- While tmpS3 = "." Or tmpS3 = ".." Or globalITMP < autoILast(consoleID)
+ While tmpS3 = "." Or tmpS3 = ".." Or globalITMP < autoILast(ConsoleID)
   If tmpS3 <> "." And tmpS3 <> ".." Then
     globalITMP = globalITMP + 1
   End If
@@ -839,16 +825,16 @@ Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
   Else
    tmpS3 = tmpS3 & " "
   End If
-   Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpSP & tmpS3 & "_"
-   autoCompActive(consoleID) = True
-   autoILast(consoleID) = autoILast(consoleID) + 1
+   Console(ConsoleID, CurrentLine(ConsoleID)).Caption = tmpInputString & tmpSP & tmpS3 & "_"
+   autoCompActive(ConsoleID) = True
+   autoILast(ConsoleID) = autoILast(ConsoleID) + 1
    Exit Sub
  End If
 acSubEnd1:
  If firstParam = False Then GoTo acSubEnd3
  tmpS3 = Dir(App.Path & "\user\system\commands\" & tmpS & "*")
  On Error GoTo acSubEnd2
- While globalITMP < autoILast(consoleID)
+ While globalITMP < autoILast(ConsoleID)
   tmpS3 = ""
   globalITMP = globalITMP + 1
   tmpS3 = Dir()
@@ -857,9 +843,9 @@ acSubEnd1:
  On Error GoTo 0
  If tmpS3 <> "" Then
   If LCase(Right(tmpS3, 3)) = ".ds" Then tmpS3 = Mid(tmpS3, 1, Len(tmpS3) - 3)
-  Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpS3 & " _"
-  autoCompActive(consoleID) = True
-  autoILast(consoleID) = autoILast(consoleID) + 1
+  Console(ConsoleID, CurrentLine(ConsoleID)).Caption = tmpInputString & tmpS3 & " _"
+  autoCompActive(ConsoleID) = True
+  autoILast(ConsoleID) = autoILast(ConsoleID) + 1
   Exit Sub
  End If
 acSubEnd2:
@@ -872,7 +858,7 @@ acSubEnd2:
      On Error GoTo acSubEnd3
      tmpS3 = Dir(App.Path & "\user" & sPath & "\" & tmpS & "*")
      globalITMP = globalITMP + 1
-     While globalITMP < autoILast(consoleID)
+     While globalITMP < autoILast(ConsoleID)
         tmpS3 = ""
         globalITMP = globalITMP + 1
         tmpS3 = Dir()
@@ -881,16 +867,16 @@ acSubEnd2:
      On Error GoTo 0
      If tmpS3 <> "" Then
          If LCase(Right(tmpS3, 3)) = ".ds" Then tmpS3 = Mid(tmpS3, 1, Len(tmpS3) - 3)
-         Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpS3 & " _"
-         autoCompActive(consoleID) = True
-         autoILast(consoleID) = autoILast(consoleID) + 1
+         Console(ConsoleID, CurrentLine(ConsoleID)).Caption = tmpInputString & tmpS3 & " _"
+         autoCompActive(ConsoleID) = True
+         autoILast(ConsoleID) = autoILast(ConsoleID) + 1
          Exit Sub
      End If
  Next iTmp
 acSubEnd3:
  If fromAC = False Then
-    autoILast(consoleID) = 0
-    AutoComplete consoleID, True
+    autoILast(ConsoleID) = 0
+    AutoComplete ConsoleID, True
  End If
 End Sub
 
@@ -924,21 +910,17 @@ End Sub
 
 
 Private Sub Form_Load()
+    Dim n As Integer
+    For n = 1 To UBound(basWorld.HttpRequests)
+        Load tmrTimeout(n)
+        tmrTimeout(n).Tag = 0
+    Next
     
     curMsg = 0
     connected = False
     chatToStatus = RegLoad("ChatView", False)
     ActiveConsole = 1
     MusicFileIndex = -1
-    
-    Dim n As Integer
-    For n = 1 To MaxSocks
-        Load Sock(n)
-        Sock(n).Close
-        
-        Load tmrTimeout(n)
-        tmrTimeout(n).Tag = 0
-    Next n
     
     
     
@@ -1168,133 +1150,29 @@ Private Sub lFull_Click()
     ToggleConsoleFull
 End Sub
 
-Private Sub Sock_Connect(Index As Integer)
-    'On Error GoTo zxc
-    
-        Dim s As String
-        
-        If i(SockPostOrGet(Index)) = "post" Then
-        
-            s = "POST " & Sock(Index).Tag & " HTTP/1.0" & vbCrLf
-            s = s & "Host: " & SockServer(Index) & vbCrLf
-            s = s & "Content-Type: application/x-www-form-urlencoded" & vbCrLf
-            s = s & "Content-Length: " & Trim(str(Len(SockPostData(Index)))) & vbCrLf & vbCrLf
-            s = s & SockPostData(Index)
- 
-
-
-        Else
-    
-            s = "GET " & Sock(Index).Tag & " HTTP/1.0" & vbCrLf
-            s = s & "Host: " & SockServer(Index) & vbCrLf
-            s = s & "User-agent: DarkSignsOnline" & vbCrLf
-            s = s & vbCrLf
-        
-        
-        
-        End If
-        
-        
-        
-        
-        Sock(Index).SendData s
-        
-        DoEvents
-        
-        
-    
-    Exit Sub
-zxc:
-
-
-
-
-    ManageSockError Index
-    
-End Sub
 
 Sub ManageSockError(Index As Integer)
-    Dim tmpS As String
-    tmpS = Sock(Index).Tag
-    tmpS = Replace(tmpS, API_Path, "")
-    tmpS = Replace(tmpS, ".php", "")
-    If InStr(tmpS, "?") > 0 Then tmpS = Mid(tmpS, 1, InStr(tmpS, "?") - 1)
-    
     'on error consider retrying
-    If SockRetries(Index) < MaxSockRetries Then
-        tmrTimeout(Index).Tag = 0
-        tmrTimeout(Index).Enabled = False
-        tmrTimeout(Index).Enabled = True
-        InData(Index) = ""
-    
-        SockRetries(Index) = SockRetries(Index) + 1
+    'If SockRetries(index) < MaxSockRetries Then
+    '    SockRetries(index) = SockRetries(index) + 1
+'
+'        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+'        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+'        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+'        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+'        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
         
+'        If InStr(i(tmpS), "z_online") > 0 Then Exit Sub 'don't show these errors
+'        If InStr(i(tmpS), "chat") > 0 Then Exit Sub 'don't show these errors
+'        SayComm "Connection failed to [" & tmpS & "]. Retry " & Trim(str(SockRetries(index))) & " of " & Trim(str(MaxSockRetries)) & "."
         
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        
-        Sock(Index).Close
-        Sock(Index).Connect SockServer(Index), SockPort(Index)
-        
-        If InStr(i(tmpS), "z_online") > 0 Then Exit Sub 'don't show these errors
-        If InStr(i(tmpS), "chat") > 0 Then Exit Sub 'don't show these errors
-        SayComm "Connection failed to [" & tmpS & "]. Retry " & Trim(str(SockRetries(Index))) & " of " & Trim(str(MaxSockRetries)) & "."
-        
-    Else
-        tmrTimeout(Index).Tag = 0
-        tmrTimeout(Index).Enabled = False
-    
+'    Else
         'too many retries, cancel it
-        Sock(Index).Close
         
-        SayComm "Connection failed to [" & tmpS & "]. Retry count expired."
-    End If
+'        SayComm "Connection failed to [" & tmpS & "]. Retry count expired."
+'    End If
 End Sub
 
-Private Sub Sock_DataArrival(Index As Integer, ByVal bytesTotal As Long)
-    
-    'On Error GoTo zxc:
-    
-    Dim newData As String
-    Sock(Index).GetData newData
-    
-    'reset timeout, data is downloading fine...
-    tmrTimeout(Index).Tag = 0
-    
-    
-    
-    InData(Index) = InData(Index) & newData
-      
-    If InStr(LCase(InData(Index)), "<end>") > 0 Or Sock(Index).state = 8 Then
-        'download complete, process the data!
-        Sock(Index).Close
-        tmrTimeout(Index).Enabled = False
-        
-        Dim tmpS As String
-        tmpS = Sock(Index).Tag
-        tmpS = Replace(tmpS, API_Path, "")
-        tmpS = Replace(tmpS, ".php", "")
-        
-        If InStr(tmpS, "?") > 0 Then
-            tmpS = Mid(tmpS, 1, InStr(tmpS, "?") - 1)
-        End If
-    
-        Process InData(Index), tmpS, SockConsole(Index), Index
-    End If
-      
-      
-    Exit Sub
-zxc:
-    
-    
-    SayComm "Oops 101 - What were you doing? A small error has taken place. Sorry. Really.", SockConsole(Index)
-    
-    ManageSockError Index
-    
-End Sub
 
 Private Sub Stats_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
     If x > (Stats.Width - 120) And y < 60 Then
@@ -1389,7 +1267,6 @@ Private Sub tmrPrint_Timer()
     Console(13).Caption & vbCrLf & _
     Console(14).Caption
     
-    'Label3.Caption = NextEmptySock
     'Text1 = InData(1)
 
 End Sub
@@ -1406,52 +1283,29 @@ Private Sub tmrStart_Timer()
     
 End Sub
 
-Public Sub Start_Console(ByVal consoleID As Integer)
+Public Sub Start_Console(ByVal ConsoleID As Integer)
     
-    Reset_Console consoleID
+    Reset_Console ConsoleID
 
 
-    If consoleID = 1 Then
+    If ConsoleID = 1 Then
         'run the primary startup script
-        Run_Script "\system\startup.ds", consoleID, "", "BOOT"
+        Run_Script "\system\startup.ds", ConsoleID, "", "BOOT"
     Else
-        Run_Script "\system\newconsole.ds", consoleID, "", "BOOT"
+        Run_Script "\system\newconsole.ds", ConsoleID, "", "BOOT"
     End If
     
     
 End Sub
 
-Private Sub tmrTimeout_Timer(Index As Integer)
-    tmrTimeout(Index).Tag = Trim(str(Val(tmrTimeout(Index).Tag) + 1))
-    
-    'SayComm tmrTimeout(Index).Tag & "/" & TimeOutSeconds
-    
-    If Val(tmrTimeout(Index).Tag) >= TimeOutSeconds Then
-        'timeout reached!
-        
 
+Private Sub tmrTimeout_Timer(Index As Integer)
+    If basWorld.HttpRequests(Index).InUse Then
+        basWorld.HttpRequests(Index).Http.abort
         ManageSockError Index
     End If
     
-    If Sock(Index).state = 8 Then
-        'download complete, process the data!
-            Sock(Index).Close
-            tmrTimeout(Index).Enabled = False
-        
-            Dim tmpS As String
-            tmpS = Sock(Index).Tag
-            tmpS = Replace(tmpS, API_Path, "")
-            tmpS = Replace(tmpS, ".php", "")
-            
-            If InStr(tmpS, "?") > 0 Then
-                tmpS = Mid(tmpS, 1, InStr(tmpS, "?") - 1)
-            End If
-        
-            Process InData(Index), tmpS, SockConsole(Index), Index
-
-    End If
-    
-    
+    tmrTimeout(Index).Enabled = False
 End Sub
 
 Private Sub tmrWait_Timer(Index As Integer)
@@ -1923,18 +1777,18 @@ AllDone:
 End Sub
 
 
-Public Sub ChatSend(ByVal s As String, ByVal consoleID As Integer)
+Public Sub ChatSend(ByVal s As String, ByVal ConsoleID As Integer)
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
     s = Trim(s)
     If Len(s) > 0 Then
         send "PRIVMSG " + channel$ + " :" + s
         displaychat "<" + MyIRCName + ">  " + s
     Else
-        ShowHelp "chatview", consoleID
+        ShowHelp "chatview", ConsoleID
     End If
 End Sub
 
-Public Sub ChatView(ByVal s As String, ByVal consoleID As Integer)
+Public Sub ChatView(ByVal s As String, ByVal ConsoleID As Integer)
     s = Trim(LCase(s))
     If s = "on" Then
         chatToStatus = True
@@ -1945,6 +1799,6 @@ Public Sub ChatView(ByVal s As String, ByVal consoleID As Integer)
         RegSave "CHATVIEW", False
         SayComm "Chatview is now disabled."
     Else
-       ShowHelp "chatview", consoleID
+       ShowHelp "chatview", ConsoleID
     End If
 End Sub
