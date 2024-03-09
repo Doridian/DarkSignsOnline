@@ -776,11 +776,11 @@ zz2:
         Credentials, VarIndex, consoleID)
         
         VarVal = "[loading]"
-    ElseIf Mid(i(VarVal), 1, 5) = "hash(" Then
-        VarVal = KillDirectFunctionSides(VarVal)
-        VarVal = RemoveSurroundingQuotes(VarVal)
-        VarVal = Trim(VarVal)
-        VarVal = MD5_string(VarVal)
+    'ElseIf Mid(i(VarVal), 1, 5) = "hash(" Then
+    '    VarVal = KillDirectFunctionSides(VarVal)
+    '    VarVal = RemoveSurroundingQuotes(VarVal)
+    '    VarVal = Trim(VarVal)
+    '    VarVal = MD5_string(VarVal)
     ElseIf Mid(i(VarVal), 1, 8) = "dirlist(" Then
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = RemoveSurroundingQuotes(VarVal)
@@ -844,17 +844,17 @@ zz2:
         Else
             VarVal = 0
         End If
-    ElseIf Mid(i(VarVal), 1, 9) = "filehash(" Then
-        
-        VarVal = KillDirectFunctionSides(VarVal)
-        'MsgBox VarVal
-        VarVal = RemoveSurroundingQuotes(VarVal)
-        
-        VarVal = f_File(VarVal & ", 1", consoleID)
-        VarVal = Trim(VarVal)
-        If VarVal <> "*FILE-ERROR*" Then
-            VarVal = MD5_string(VarVal)
-        End If
+    'ElseIf Mid(i(VarVal), 1, 9) = "filehash(" Then
+    '
+    '    VarVal = KillDirectFunctionSides(VarVal)
+    '    'MsgBox VarVal
+    '    VarVal = RemoveSurroundingQuotes(VarVal)
+    '
+    '    VarVal = f_File(VarVal & ", 1", consoleID)
+    '    VarVal = Trim(VarVal)
+    '    If VarVal <> "*FILE-ERROR*" Then
+    '        VarVal = MD5_string(VarVal)
+    '    End If
     ElseIf Mid(i(VarVal), 1, 6) = "time()" Then '--------- doing 4
         sockIndex = DownloadURL(API_Server & API_Path & "time.php", VarIndex, consoleID)
         VarVal = "[loading]"

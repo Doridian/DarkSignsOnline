@@ -630,7 +630,7 @@ Sub CommSmaller()
 End Sub
 
 
-Sub SetConsoleActive(ByVal ConsoleID As Integer)
+Sub SetConsoleActive(ByVal consoleID As Integer)
     
     Print_Console True
 
@@ -638,7 +638,7 @@ Sub SetConsoleActive(ByVal ConsoleID As Integer)
     consoleShape.Height = 60
     consoleShape.Top = MiniMenu.Height - consoleShape.Height - 60
     
-    Select Case ConsoleID
+    Select Case consoleID
         Case 1: consoleShape.Left = 90
         Case 2: consoleShape.Left = 320
         Case 3: consoleShape.Left = 540
@@ -774,14 +774,14 @@ Public Sub ToggleConsoleFull()
         End If
 End Sub
 
-Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
+Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
  Dim tmpS As String, tmpInputString As String, tmpS2 As String, iTmp As Long, tmpS3 As String, tmpSP As String, globalITMP As Long, firstParam As Boolean
- tmpS = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
- If autoCompActive(ConsoleID) = True Then
-    tmpS = autoCompLast(ConsoleID)
+ tmpS = Console(consoleID, CurrentLine(consoleID)).Caption
+ If autoCompActive(consoleID) = True Then
+    tmpS = autoCompLast(consoleID)
  Else
-    autoCompLast(ConsoleID) = tmpS
-    autoILast(ConsoleID) = 0
+    autoCompLast(consoleID) = tmpS
+    autoILast(consoleID) = 0
  End If
  iTmp = InStr(tmpS, ">")
  If iTmp > 0 Then
@@ -799,7 +799,7 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
   tmpInputString = tmpInputString & Mid(tmpS, 1, iTmp)
   tmpS = Trim(Mid(tmpS, iTmp + 1))
  End If
- tmpS2 = App.Path & "\user" & cPrefix(ConsoleID) & cPath(ConsoleID)
+ tmpS2 = App.Path & "\user" & cPrefix(consoleID) & cPath(consoleID)
  tmpS = Replace(tmpS, "/", "\")
  iTmp = InStrRev(tmpS, "\")
  If iTmp > 0 Then
@@ -810,7 +810,7 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
  On Error GoTo acSubEnd1
  tmpS3 = Dir(tmpS2 & tmpS & "*", vbDirectory)
  If tmpS3 = "" Then GoTo acSubEnd1
- While tmpS3 = "." Or tmpS3 = ".." Or globalITMP < autoILast(ConsoleID)
+ While tmpS3 = "." Or tmpS3 = ".." Or globalITMP < autoILast(consoleID)
   If tmpS3 <> "." And tmpS3 <> ".." Then
     globalITMP = globalITMP + 1
   End If
@@ -825,16 +825,16 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
   Else
    tmpS3 = tmpS3 & " "
   End If
-   Console(ConsoleID, CurrentLine(ConsoleID)).Caption = tmpInputString & tmpSP & tmpS3 & "_"
-   autoCompActive(ConsoleID) = True
-   autoILast(ConsoleID) = autoILast(ConsoleID) + 1
+   Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpSP & tmpS3 & "_"
+   autoCompActive(consoleID) = True
+   autoILast(consoleID) = autoILast(consoleID) + 1
    Exit Sub
  End If
 acSubEnd1:
  If firstParam = False Then GoTo acSubEnd3
  tmpS3 = Dir(App.Path & "\user\system\commands\" & tmpS & "*")
  On Error GoTo acSubEnd2
- While globalITMP < autoILast(ConsoleID)
+ While globalITMP < autoILast(consoleID)
   tmpS3 = ""
   globalITMP = globalITMP + 1
   tmpS3 = Dir()
@@ -843,9 +843,9 @@ acSubEnd1:
  On Error GoTo 0
  If tmpS3 <> "" Then
   If LCase(Right(tmpS3, 3)) = ".ds" Then tmpS3 = Mid(tmpS3, 1, Len(tmpS3) - 3)
-  Console(ConsoleID, CurrentLine(ConsoleID)).Caption = tmpInputString & tmpS3 & " _"
-  autoCompActive(ConsoleID) = True
-  autoILast(ConsoleID) = autoILast(ConsoleID) + 1
+  Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpS3 & " _"
+  autoCompActive(consoleID) = True
+  autoILast(consoleID) = autoILast(consoleID) + 1
   Exit Sub
  End If
 acSubEnd2:
@@ -858,7 +858,7 @@ acSubEnd2:
      On Error GoTo acSubEnd3
      tmpS3 = Dir(App.Path & "\user" & sPath & "\" & tmpS & "*")
      globalITMP = globalITMP + 1
-     While globalITMP < autoILast(ConsoleID)
+     While globalITMP < autoILast(consoleID)
         tmpS3 = ""
         globalITMP = globalITMP + 1
         tmpS3 = Dir()
@@ -867,16 +867,16 @@ acSubEnd2:
      On Error GoTo 0
      If tmpS3 <> "" Then
          If LCase(Right(tmpS3, 3)) = ".ds" Then tmpS3 = Mid(tmpS3, 1, Len(tmpS3) - 3)
-         Console(ConsoleID, CurrentLine(ConsoleID)).Caption = tmpInputString & tmpS3 & " _"
-         autoCompActive(ConsoleID) = True
-         autoILast(ConsoleID) = autoILast(ConsoleID) + 1
+         Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpS3 & " _"
+         autoCompActive(consoleID) = True
+         autoILast(consoleID) = autoILast(consoleID) + 1
          Exit Sub
      End If
  Next iTmp
 acSubEnd3:
  If fromAC = False Then
-    autoILast(ConsoleID) = 0
-    AutoComplete ConsoleID, True
+    autoILast(consoleID) = 0
+    AutoComplete consoleID, True
  End If
 End Sub
 
@@ -1283,16 +1283,16 @@ Private Sub tmrStart_Timer()
     
 End Sub
 
-Public Sub Start_Console(ByVal ConsoleID As Integer)
+Public Sub Start_Console(ByVal consoleID As Integer)
     
-    Reset_Console ConsoleID
+    Reset_Console consoleID
 
 
-    If ConsoleID = 1 Then
+    If consoleID = 1 Then
         'run the primary startup script
-        Run_Script "\system\startup.ds", ConsoleID, "", "BOOT"
+        Run_Script "\system\startup.ds", consoleID, "", "BOOT"
     Else
-        Run_Script "\system\newconsole.ds", ConsoleID, "", "BOOT"
+        Run_Script "\system\newconsole.ds", consoleID, "", "BOOT"
     End If
     
     
@@ -1703,7 +1703,7 @@ Sub PrintAll()
     Dim tmpY As Long
     tmpY = IRC.Height - 240
     
-    Dim maxChatTextSize As Integer
+    Dim maxChatTextSize As Long
     Dim n As Long, n2 As Integer, tmpS As String, s As String
     
     maxChatTextSize = IRC.Width - 840
@@ -1777,18 +1777,18 @@ AllDone:
 End Sub
 
 
-Public Sub ChatSend(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub ChatSend(ByVal s As String, ByVal consoleID As Integer)
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
     s = Trim(s)
     If Len(s) > 0 Then
         send "PRIVMSG " + channel$ + " :" + s
         displaychat "<" + MyIRCName + ">  " + s
     Else
-        ShowHelp "chatview", ConsoleID
+        ShowHelp "chatview", consoleID
     End If
 End Sub
 
-Public Sub ChatView(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub ChatView(ByVal s As String, ByVal consoleID As Integer)
     s = Trim(LCase(s))
     If s = "on" Then
         chatToStatus = True
@@ -1799,6 +1799,6 @@ Public Sub ChatView(ByVal s As String, ByVal ConsoleID As Integer)
         RegSave "CHATVIEW", False
         SayComm "Chatview is now disabled."
     Else
-       ShowHelp "chatview", ConsoleID
+       ShowHelp "chatview", consoleID
     End If
 End Sub

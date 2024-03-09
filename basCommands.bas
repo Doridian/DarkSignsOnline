@@ -1219,7 +1219,6 @@ Public Sub SetPassword(ByVal s As String, ByVal consoleID As Integer)
     End If
     
     s = Trim(s)
-    s = basMD5.MD5_string(s)
     RegSave "mypassworddev", s
     
     Dim tmpU As String, tmpP As String
