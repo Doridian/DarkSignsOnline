@@ -657,7 +657,7 @@ Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
         
         
         'upload the freaking file!!
-        tempStrA = Replace(tempStrA, "=", "--equals--")
+        'tempStrA = Replace(tempStrA, "=", "--equals--")
         RunPage "domain_upload.php", consoleID, True, _
         "port=" & Trim(sPort) & _
         "&d=" & sDomain & _

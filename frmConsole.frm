@@ -1178,6 +1178,7 @@ Sub ManageSockError(Index As Integer, Reason As String)
         Http.open HttpRequests(Index).Method, HttpRequests(Index).Url, True
 
         If HttpRequests(Index).Method = "POST" Then
+            Http.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
             Http.send HttpRequests(Index).PostData
         Else
             Http.send

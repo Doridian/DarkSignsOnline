@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Private Const Equals As Byte = 61    'Asc("=")
+Private Const Equals As Byte = 44    'Asc(",")
 
 Private Const Mask1 As Byte = 3      '00000011
 Private Const Mask2 As Byte = 15     '00001111
@@ -29,14 +29,6 @@ Private Const Shift6 As Byte = 64
 Private Base64Lookup() As Byte
 Private Base64Reverse() As Byte
 
-Public Function EncodeString(Text As String) As String
-
-   Dim Data() As Byte
-   
-   Data = StrConv(Text, vbFromUnicode)
-   EncodeString = EncodeByteArray(Data)
-
-End Function
 
 Public Function EncodeByteArray(Data() As Byte) As String
 
@@ -106,14 +98,6 @@ Public Function EncodeByteArray(Data() As Byte) As String
 
 End Function
 
-Public Function DecodeToString(EncodedText As String) As String
-
-   Dim Data() As Byte
-   
-   Data = DecodeToByteArray(EncodedText)
-   DecodeToString = StrConv(Data, vbUnicode)
-
-End Function
 
 Public Function DecodeToByteArray(EncodedText As String) As Byte()
 
@@ -135,7 +119,7 @@ Public Function DecodeToByteArray(EncodedText As String) As Byte()
 
    Dim CharCount As Long
 
-   EncodedData = StrConv(Replace$(Replace$(EncodedText, vbCrLf, ""), "=", ""), vbFromUnicode)
+   EncodedData = StrConv(Replace$(Replace$(EncodedText, vbCrLf, ""), ",", ""), vbFromUnicode)
 
    EncodedLength = UBound(EncodedData) + 1
    DataLength = (EncodedLength \ 4) * 3
@@ -183,7 +167,7 @@ Private Sub Class_Initialize()
    
    ReDim Base64Reverse(255)
    
-   Base64Lookup = StrConv("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", vbFromUnicode)
+   Base64Lookup = StrConv("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.", vbFromUnicode)
    
    For l = 0 To 63
       Base64Reverse(Base64Lookup(l)) = l

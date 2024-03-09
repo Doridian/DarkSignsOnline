@@ -11,7 +11,7 @@ Public ConsoleScrollInt(1 To 4) As Integer
 
 Public ConsolePaused(1 To 4) As Boolean
 
-Private Base64 As Base64Class
+Private Base64 As New Base64Class
 
 Public Type ConsoleLine
     Caption As String
