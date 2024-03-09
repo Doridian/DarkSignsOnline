@@ -1,0 +1,7 @@
+SAY *** MATRIX.com ***{impact nobold 48}
+ SAY display logins.txt...
+SAY Parameter 1 is , 2 is  lol
+$myfile = fileserver(94114997676140401799, matrix.com, logins.txt,1,A	QF'
+waitfor $myfile
+WRITE \tmp.dat $myfile
+display tmp.dat

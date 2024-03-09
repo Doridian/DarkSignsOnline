@@ -1,0 +1,56 @@
+<script>
+	
+	function validate()
+	{
+		var error = false;
+		
+		if (document.getElementById('aInp').value == "")
+		{
+			error = true;
+			document.getElementById('aTxt').style.color = "#FF0000";	
+		}
+		else
+		{
+			document.getElementById('aTxt').style.color = "#000000";
+		}
+		
+		if (document.getElementById('bInp').value == "")
+		{
+			error = true;
+			document.getElementById('bTxt').style.color = "#FF0000";	
+		}
+		else
+		{
+			document.getElementById('bTxt').style.color = "#000000";
+		}
+		
+		if (document.getElementById('cInp').value == "")
+		{
+			error = true;
+			document.getElementById('cTxt').style.color = "#FF0000";	
+		}
+		else
+		{
+			document.getElementById('cTxt').style.color = "#000000";
+		}
+		
+		if (error)
+		{
+			document.getElementById('error').innerHTML = "An error occoured. Please check fields in red.";
+		}
+		else
+		{
+			alert("DATA OK!");
+			// I dont know how to redirect data to the next page with POST data.
+		}
+	}
+
+</script>
+<form onSubmit="validate(); return false;">
+	<div id='error'></div><br>
+	<div id='aTxt'>A</div> <input type="text" id="aInp" /><br>
+	<div id='bTxt'>B</div> <input type="text" id="bInp" /><br>
+	<div id='cTxt'>C</div> <input type="text" id="cInp" /><br>
+	<input type="submit" value="submit" />
+</form>
+	
