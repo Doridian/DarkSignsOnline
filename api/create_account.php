@@ -16,11 +16,11 @@
 
 		$username=str_replace(" ","-",trim($username));
 		//check if email already exists
-		if ($db->query("SELECT ind from users where email='$email'")->num_rows>0){
+		if ($db->query("SELECT id from users where email='$email'")->num_rows>0){
 			die("The email address <b>$email</b> already exists in the database. Please try again.");
 		}
 		//check if username already exists
-		if ($db->query("SELECT ind from users where username='$username'")->num_rows>0){
+		if ($db->query("SELECT id from users where username='$username'")->num_rows>0){
 			die("The username <b>$username</b> already exists in the database. Please try again.");
 		}
 		if (strstr($username,"_")){die("Error, please don't use underscore characters like _ in your username.");}

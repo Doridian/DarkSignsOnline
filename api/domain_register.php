@@ -1,6 +1,7 @@
 <?php
 
 	include_once 'function.php';
+	global $auth;
 	
 	// Return code for domain register.
 	echo '2000';
@@ -80,7 +81,7 @@
 					$temp2 = getDomainInfo($domain[1].'.'.$domain[2]);
 					if ($temp2[1] != $user['id'])
 					{
-						die($temp[1].'  '.$user['id'].'  You must be the owner of the full domain to register a sub domain.');
+						die($temp[1].'  '.$user['id'].'  You must be the owner of the full domain to register a sub domain.<end>');
 					}
 					else if ($price > $user['cash'])
 					{
