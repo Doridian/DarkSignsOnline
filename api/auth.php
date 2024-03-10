@@ -13,4 +13,3 @@
 		echo $ip;
 	}
 	echo '<end>';
-?>
