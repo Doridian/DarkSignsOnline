@@ -1,9 +1,9 @@
 <?php
 	include_once "function.php";
 	
-	$returnwith = $db->real_escape_string($_GET['returnwith'], "[^0-9]");
+	$returnwith = (string)(int)$_GET['returnwith'];
 
-	if ($returnwith == "")
+	if ($returnwith == "0")
 	{
 		// Default returnwith is 2000
 		$returnwith = "2000";
@@ -13,7 +13,6 @@
 	if ($auth == '1001')
 	{
 		echo 'STATS: You have $'.number_format(getCash($user['id'])).'.';
-		
 		echo 'newline';
 	}
 	else

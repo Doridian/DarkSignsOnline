@@ -1,8 +1,8 @@
 <?php
 	include_once "function.php";
 
-	$returnwith = $db->real_escape_string($_REQUEST['returnwith'], "[^0-9]");
-	if (empty($returnwith))
+	$returnwith = (string)(int)$_REQUEST['returnwith'];
+	if ($returnwith === '0')
 	{
 		$returnwith = '7000';
 	}

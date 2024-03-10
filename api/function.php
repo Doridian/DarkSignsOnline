@@ -874,9 +874,9 @@ function listdomains(){
 	{
 		global $db;
 		$result = $db->query("SELECT cash FROM users WHERE id='$user_id'");
-		if ($db->num_rows($result) == 1)
+		if ($result->num_rows === 1)
 		{
-			return $db->result($result, 0);
+			return $result->fetch_row()[0];
 		}
 		else
 		{

@@ -16,7 +16,7 @@ echo $returnwith;
 
 
 
-$port=trim($port);
+$port=(int)$port;
 if ($port < 1 || $port > 65536){die("Error: Port number must be between 1 and 65536.<end>"); }
 
 
