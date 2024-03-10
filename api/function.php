@@ -355,7 +355,6 @@ function get_domain_file_by_index($d, $fileindex)
 			return ""; //no such file exists dude!!
 		}
 	}
-
 }
 
 
@@ -378,7 +377,7 @@ function count_domain_files($d)
 		$files = $row['files'];
 		if (strlen($files)) {
 			$filestuff = explode(":----:", $files);
-			return(count($filestuff) - 1);
+			return (count($filestuff) - 1);
 		} else {
 			return "0"; //no such file exists dude!!
 		}
@@ -416,9 +415,6 @@ function filekey($d, $tmps)
 
 	//return the short key, it wil be converted to a long key by the client
 	return $newkey;
-
-
-
 }
 
 
@@ -469,9 +465,6 @@ function write_domain_file($d, $filename, $filedata, $appendifexists)
 			} else {
 				$alldata = $alldata . ":----:$filename:---:$filedata";
 			}
-
-
-
 		} else {
 			//no such file exists dude!! write it
 			$alldata = $alldata . ":----:$filename:---:$filedata";
@@ -479,7 +472,6 @@ function write_domain_file($d, $filename, $filedata, $appendifexists)
 
 
 		$result = $db->query("UPDATE domains set files='$alldata' where domain='$d'");
-
 	}
 
 	//}else{
@@ -526,8 +518,6 @@ function delete_domain_file($d, $filename)
 					} else {
 						$alldata = $alldata . ":----:$sfilename:---:$sfiledata";
 					}
-
-
 				}
 			}
 
@@ -542,8 +532,6 @@ function delete_domain_file($d, $filename)
 		} else {
 			return "File Not Found.";
 		}
-
-
 	}
 }
 
@@ -585,8 +573,6 @@ function download_domain_file($d, $filename)
 							$filefound = 1;
 							$alldata = $alldata . str_replace("\n", "*- -*", $sfiledata);
 						}
-
-
 					}
 				}
 
@@ -596,13 +582,10 @@ function download_domain_file($d, $filename)
 				} else {
 					return "File Not Found: " . strtoupper($filename);
 				}
-
 			}
 		}
 
 		return "File Not Found: " . strtoupper($filename);
-
-
 	} else {
 		return "Not Authorized: " . strtoupper($d);
 	}
@@ -651,12 +634,10 @@ function get_domain_file_no_auth_required($d, $filename)
 			} else {
 				return "File Not Found: " . strtoupper($filename);
 			}
-
 		}
 	}
 
 	return "File Not Found: " . strtoupper($filename);
-
 }
 
 
@@ -671,7 +652,7 @@ function listdomains()
 	global $db;
 	global $auth;
 	global $auth_data;
-	if ($auth== "1001") {
+	if ($auth == "1001") {
 
 		$result = $db->query("SELECT dom.name AS dname, dom.ext AS dext FROM iptable AS ipt, domain AS dom WHERE ipt.owner='$auth_data[id]' AND dom.id = ipt.id");
 		echo "2001";
@@ -680,7 +661,6 @@ function listdomains()
 			$tmps = "$row[dname].$row[dext]";
 			echo $tmps . "newline";
 		}
-
 	}
 }
 
@@ -710,7 +690,6 @@ function getip($server)
 	} else // invalid syntax.
 	{
 		return '0';
-
 	}
 }
 
@@ -745,7 +724,6 @@ function getdomain($server)
 					return $data['name'] . '.' . $data['ext'];
 				} else {
 					return $svr[0] . '.' . $svr[1] . '.' . $svr[2] . '.' . $svr[3];
-
 				}
 			}
 			//return $db->result($result, 0);
@@ -866,12 +844,6 @@ function transaction($fromuser, $touser, $description, $amount, $returnkeycodein
 
 	if ($returnkeycodeinstead == 1) {
 		return $vercode;
-	} else {
-		if ($status == 'COMPLETE') {
-			return true;
-		} else {
-			return false;
-		}
 	}
+		return $status == 'COMPLETE';
 }
-?>
