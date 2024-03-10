@@ -325,7 +325,7 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
             frmConsole.Shape1.BackColor = iOrange: DoEvents
             SayComm "Unable to log in. Please check your username and password."
                 
-            MsgBox "Your username and password was denied by the server." & vbCrLf & vbCrLf & "Username: " & myUsername & vbCrLf & "Password: " & myPassword & vbCrLf & vbCrLf & "If the information above is not correct, use the USERNAME command to change your username, or the PASSWORD command to change your password. Then type LOGIN again. Contact us if you continue to experience problems." & vbCrLf & vbCrLf & "http://www.darksignsonline.com", vbCritical, "Account Information"
+            MsgBox "Your username and password was denied by the server." & vbCrLf & vbCrLf & "Username: " & myUsername & vbCrLf & "Password: [hidden]" & vbCrLf & vbCrLf & "If the information above is not correct, use the USERNAME command to change your username, or the PASSWORD command to change your password. Then type LOGIN again. Contact us if you continue to experience problems." & vbCrLf & vbCrLf & "http://www.darksignsonline.com", vbCritical, "Account Information"
                 
         
         Case "1003" 'account disabled
