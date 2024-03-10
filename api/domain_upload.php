@@ -13,14 +13,14 @@
 		}
 		
 		
-		$d = $db->real_escape_string($_POST['d']);
+		$d = $_POST['d'];
 		$temp = getDomainInfo($d);
 		
 		if ($temp[0] > 0)
 		{
 			if ($user['id'] == $temp[1])
 			{
-				$code = $db->real_escape_string($_POST['filedata']);
+				$code = $_POST['filedata'];
 				$db->query("INSERT INTO domainscripts VALUES ($temp[0], $port, '$code', '".$_SERVER['REMOTE_ADDR']."', ".time().") ON DUPLICATE KEY UPDATE code='$code', ip='".$_SERVER['REMOTE_ADDR']."', time=".time().";");
 			
 				if ($db->error)

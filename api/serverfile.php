@@ -3,7 +3,7 @@
 	
 	if ($auth == '1001')
 	{
-		$action = $db->real_escape_string($_REQUEST['action']);
+		$action = $_REQUEST['action'];
 		
 		if ($action == 'upload')
 		{

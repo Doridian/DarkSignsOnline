@@ -11,21 +11,17 @@
 	
 	if ($auth == '1001')
 	{
-		$action = $db->real_escape_string($_REQUEST['action']);
+		$action = $_REQUEST['action'];
 		if ($action == 'inbox')
 		{
 			
-			$last = $db->real_escape_string($_REQUEST['last'], "[^0-9]");
-			
-			if (empty($last))
-			{
-				$last = '0';
-			}
+			$last = (string)(int)$_REQUEST['last'];
 			$result = $db->query("SELECT mail_id,user_id, from_id, subject, message, time FROM dsminbox WHERE user_id='{$user['id']}' AND mail_id > $last ORDER BY mail_id ASC");
 		
 			
-			if ($db->error)
-				echo $db->error;
+			if ($db->error) {
+				die($db->error . '<end>');
+			}
 			
 			while ($mail = $db->fetch_array($result))
 			{
@@ -35,7 +31,7 @@
 		else if ($action == 'send')
 		{
 			$from = $user['id'];
-			$to = $db->real_escape_string($_REQUEST['to']);
+			$to = $_REQUEST['to'];
 			$toArr = explode(',', $to);
 			
 			if (sizeof($toArr) > 10)
@@ -61,8 +57,8 @@
 			
 			if ($safeSend)
 			{
-				$sub = $db->real_escape_string($_REQUEST['subject'], "[^a-zA-Z0-9., \-]");
-				$msg = $db->real_escape_string($_REQUEST['message'], "[^a-zA-Z0-9., ".chr(6)."\-]");
+				$sub = preg_replace("[^a-zA-Z0-9., \-]", "", $_REQUEST['subject']);
+				$msg = preg_replace("[^a-zA-Z0-9., ".chr(6)."\-]", "", $_REQUEST['message']);
 				
 				foreach ($nameID as $id)
 				{

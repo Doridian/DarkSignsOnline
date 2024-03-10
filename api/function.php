@@ -1,12 +1,16 @@
 <?php
+	if (!isset($rewrite_done)) {
+		die('Not rewritten yet');
+	}
+
 	include_once('mysql_config.php');
 	global $db;
 
 	global $user, $auth;
 	global $auth_data;
 	
-	$u = $db->real_escape_string($_REQUEST['u']);
-	$p = $db->real_escape_string($_REQUEST['p']);
+	$u = $_REQUEST['u'];
+	$p = $_REQUEST['p'];
 
 	$res = $db->query("SELECT * FROM users WHERE username='$u' AND password='$p'");
 	$user = $res->fetch_array();
@@ -890,7 +894,6 @@ function listdomains(){
 		global $db;
 		$from_id = userToId($fromuser);
 		$to_id = userToId($touser);
-		$description = addslashes($description);
 		$vercode = rand(100,999).rand(100,999).rand(100,999).rand(100,999).rand(100,999);
 								
 		if ($from_id > 0 && $to_id > 0 && $from_id != $to_id)

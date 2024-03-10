@@ -1,8 +1,9 @@
 <?
+	$rewrite_done = true;
+
 	$htmltitle="Create a new account";
 	include("_top.php");
 	include_once('function.php');
-	include_once('mysql_config.php');
 	global $db;
 
 
@@ -16,11 +17,17 @@
 
 		$username=str_replace(" ","-",trim($username));
 		//check if email already exists
-		if ($db->query("SELECT id from users where email='$email'")->num_rows>0){
+		$stmt = $db->prepare("SELECT id from users where email=?");
+		$stmt->bind_param('s', $email);
+		$stmt->execute();
+		if ($stmt->get_result()->num_rows>0){
 			die("The email address <b>$email</b> already exists in the database. Please try again.");
 		}
 		//check if username already exists
-		if ($db->query("SELECT id from users where username='$username'")->num_rows>0){
+		$stmt = $db->prepare("SELECT id from users where username=?");
+		$stmt->bind_param('s', $username);
+		$stmt->execute();
+		if ($stmt->get_result()->num_rows>0){
 			die("The username <b>$username</b> already exists in the database. Please try again.");
 		}
 		if (strstr($username,"_")){die("Error, please don't use underscore characters like _ in your username.");}
@@ -61,53 +68,60 @@
 		//check password length
 		if (strlen($password)<6){die("Your password should be at least 6 characters long.");}
 		//insert the data
-		
-		$username = $db->real_escape_string($username);
-		$password = $db->real_escape_string($password);
-		$email = $db->real_escape_string($email);
-		$dobday = $db->real_escape_string($dobday);
-		$dobmonth = $db->real_escape_string($dobmonth);
-		$dobyear = $db->real_escape_string($dobyear);
 
-			$ctime = addslashes(date('h:i A'));$ctime=str_replace("zz0","","zz".$ctime);$ctime=str_replace("zz","",$ctime);
-			$cdate =trim( str_replace(" 0"," "," ".date('dS \of F Y')));
-			$ahostname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
-			$aip = $_SERVER['REMOTE_ADDR'];
-			$vercode=rand(1,1000).rand(1,1000).rand(1,1000).rand(1,1000);
-			$timestamp=time();
-			
-			if (trim(strtolower($dobmonth))=="january"){$dobmonth="1";}if (trim(strtolower($dobmonth))=="february"){$dobmonth="2";}
-			if (trim(strtolower($dobmonth))=="march"){$dobmonth="3";}if (trim(strtolower($dobmonth))=="april"){$dobmonth="4";}
-			if (trim(strtolower($dobmonth))=="may"){$dobmonth="5";}if (trim(strtolower($dobmonth))=="june"){$dobmonth="6";}
-			if (trim(strtolower($dobmonth))=="july"){$dobmonth="7";}if (trim(strtolower($dobmonth))=="august"){$dobmonth="8";}
-			if (trim(strtolower($dobmonth))=="september"){$dobmonth="9";}if (trim(strtolower($dobmonth))=="october"){$dobmonth="10";}
-			if (trim(strtolower($dobmonth))=="november"){$dobmonth="11";}if (trim(strtolower($dobmonth))=="december"){$dobmonth="12";}
-			
-			$mysql_string="INSERT into users (username, password, email, createdate, createtime, ip, hostname, lastseen, enabled, expiredate, dobday, dobmonth, dobyear, tagline, publicemail, timestamp, emailverifycode, emailverified, cash) VALUES ('$username', '$password', '$email', '$cdate', '$ctime', '$aip', '$ahostname', '$cdate', '1', 'Beta Testing', '$dobday', '$dobmonth', '$dobyear', '', '', '$timestamp', '$vercode', '0', '200')";
-			
-			//also register the default domain name
-			
-		//echo "$mysql_string<br><br>";
+		$ctime = date('h:i A');$ctime=str_replace("zz0","","zz".$ctime);$ctime=str_replace("zz","",$ctime);
+		$cdate =trim( str_replace(" 0"," "," ".date('dS \of F Y')));
+		$ahostname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
+		$aip = $_SERVER['REMOTE_ADDR'];
+		$vercode=rand(1,1000).rand(1,1000).rand(1,1000).rand(1,1000);
+		$timestamp=time();
 		
-		$res = $db->query($mysql_string) or die($db->error);
+		if (trim(strtolower($dobmonth))=="january"){$dobmonth="1";}if (trim(strtolower($dobmonth))=="february"){$dobmonth="2";}
+		if (trim(strtolower($dobmonth))=="march"){$dobmonth="3";}if (trim(strtolower($dobmonth))=="april"){$dobmonth="4";}
+		if (trim(strtolower($dobmonth))=="may"){$dobmonth="5";}if (trim(strtolower($dobmonth))=="june"){$dobmonth="6";}
+		if (trim(strtolower($dobmonth))=="july"){$dobmonth="7";}if (trim(strtolower($dobmonth))=="august"){$dobmonth="8";}
+		if (trim(strtolower($dobmonth))=="september"){$dobmonth="9";}if (trim(strtolower($dobmonth))=="october"){$dobmonth="10";}
+		if (trim(strtolower($dobmonth))=="november"){$dobmonth="11";}if (trim(strtolower($dobmonth))=="december"){$dobmonth="12";}
+			
+
+		$stmt = $db->prepare("INSERT INTO users (username, password, email, createdate, createtime, ip, hostname, lastseen, enabled, expiredate, dobday, dobmonth, dobyear, tagline, publicemail, timestamp, emailverifycode, emailverified, cash) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+		if (!$stmt) {
+			echo "Error: ".$stmt->error;
+		}
+		$one = 1;
+		$beta_testing = 'Beta Testing';
+		$empty = '';
+		$zero = 0;
+		$cash = 200;
+		$stmt->bind_param('ssssssssisiiissisii', $username, $password, $email, $cdate, $ctime, $aip, $ahostname, $cdate, $one, $beta_testing, $dobday, $dobmonth, $dobyear, $empty, $empty, $timestamp, $vercode, $zero, $cash);
+		$stmt->execute();
+		$res = $stmt->get_result();
 		$userid = $db->insert_id;
 
 		$randomip;
-		$query;
+		$res;
+		$stmt = $db->prepare("SELECT * FROM iptable WHERE ip=?");
 		do
 		{
 			$randomip = rand(1,255).".".rand(1,255).".".rand(1,255).".".rand(1,255);
-			$query = $db->query("SELECT * FROM iptable WHERE ip='$randomip'");
-		} while ($query->num_rows != 0);
+			$stmt->bind_param('s', $randomip);
+			$stmt->execute();
+			$res = $stmt->get_result();
+		} while ($res->num_rows != 0);
 
-		$res = $db->query("INSERT INTO iptable (owner, ip) VALUES ($userid, '$randomip')") or die($db->error);
+		$stmt = $db->prepare("INSERT INTO iptable (owner, ip) VALUES (?, ?)");
+		$stmt->bind_param('is', $userid, $randomip);
+		$stmt->execute();
 		$id = $db->insert_id;
-		$db->query("INSERT INTO domain (id, name, ext, time, ip) VALUES ($id, '".$username."', 'usr', '".time()."', '".$_SERVER['REMOTE_ADDR']."')") or die($db->error); 
+		$stmt = $db->prepare("INSERT INTO domain (id, name, ext, time, ip) VALUES (?, ?, ?, ?, ?)");
+		$usr = 'usr';
+		$stmt->bind_param('issis', $id, $username, $usr, $timestamp, $aip);
+		$stmt->execute();
 
 		$headers = "From: Dark Signs Online <do-not-reply@darksignsonline.com>\r\n" ;
 
-		mail("$email","$username, verify your Dark Signs Account","Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\n$api_path/?verify=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttp://www.darksignsonline.com/","$headers");
-		
+		mail($email,"$username, verify your Dark Signs Account","Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\n$api_path/?verify=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttp://www.darksignsonline.com/","$headers");
+
 		echo "<center><br><br><font size='4' color='orange' face='arial'><b>Your account has been created!</b><br>Check your email address for more information.</font></center>";
 		exit;
 	}

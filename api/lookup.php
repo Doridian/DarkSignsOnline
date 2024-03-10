@@ -1,16 +1,16 @@
 <?
 	include "function.php";
 
-	$returnwith = $db->real_escape_string($_GET['returnwith'], "[^0-9]");
+	$returnwith = (string)(int)$_GET['returnwith'];
 	
-	if ($returnwith == "")
+	if ($returnwith === "0")
 		$returnwith = 2000;
 	
 	echo $returnwith;
 	
 	if ($auth == '1001')
 	{
-		$data = $db->real_escape_string($_GET['data']);
+		$data = $_GET['data'];
 		
 		$data = explode('.', $data);
 		

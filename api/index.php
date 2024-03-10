@@ -1,9 +1,8 @@
 <?
-	include("function.php");
-	include_once('mysql_config.php');
+	include_once("function.php");
 	global $db;
 
-	$action = $db->real_escape_string($_REQUEST['action']);
+	$action = $_REQUEST['action'];
 	
 // gota look into this...
 if (isset($verify)){
