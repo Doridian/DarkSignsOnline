@@ -4,7 +4,7 @@
 	$type = $db->real_escape_string($_GET['type'], "[^a-z]");
 	if ($auth == '1001')
 	{
-		echo 2001;
+		echo '2001';
 		if ($type == 'domain')
 		{
 			$loopQuery = $db->query("SELECT i.id, d.name, d.ext FROM iptable AS i, domain AS d WHERE i.owner='$user[id]' AND i.regtype='DOMAIN' AND d.id=i.id");
