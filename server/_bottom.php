@@ -6,8 +6,7 @@
     <strong>Dark Signs Online version
       <?php echo file_get_contents('api/gitrev.txt'); ?>
     </strong><br />
-    Copyright &copy; 2008-
-    <?php echo date('Y'); ?> Dark Signs Online<br />
+    Copyright &copy; 2008 Dark Signs Online<br />
     <a href="/index.php">Home</a>
     |
     <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/chatlog.php">Live Chat Log
