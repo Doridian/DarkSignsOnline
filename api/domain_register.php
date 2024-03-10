@@ -2,10 +2,28 @@
 
 	include_once 'function.php';
 	global $auth;
+
+	$price = [];
+	// List of prices.
+	$price['com'] = 120;
+	$price['net'] = 80;
+	$price['org'] = 80;
+	$price['edu'] = 299;
+	$price['mil'] = 1499;
+	$price['gov'] = 1499;
+	$price['dsn'] = 12999;
 	
 	// Return code for domain register.
 	echo '2000';
-	
+
+	if (isset($_REQUEST['prices'])) {
+		$outprices = [];
+		foreach ($price AS $ext => $cost) {
+			$outprices[] = $ext . ': $' . $cost;
+		}
+		die(implode(', ', $outprices) . '<end>');
+	}
+
 	if ($auth == '1001')
 	{
 		$d = strtolower($db->real_escape_string($_POST['d']));
@@ -14,14 +32,6 @@
 		
 		if ($temp[0] == -1)
 		{
-			// List of prices.
-			$price['com'] = 120;
-			$price['net'] = 80;
-			$price['org'] = 80;
-			$price['edu'] = 299;
-			$price['mil'] = 1499;
-			$price['gov'] = 1499;
-			$price['dsn'] = 12999;
 			
 			$domain = explode('.', $d);			
 			
