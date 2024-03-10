@@ -11,7 +11,7 @@ $u=trim($u);
 $p=trim($p);
 
 
-if (auth()=="1001"){
+if ($auth=="1001"){
 	
 	$amount2=number_format($amount);
 	
@@ -31,7 +31,3 @@ if (auth()=="1001"){
 	echo "Not Authorized, Access Denied.";
 	die("<end>");
 }
-
-
-
-?>

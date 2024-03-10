@@ -59,7 +59,7 @@ if (isset($transfer)){
 
 
 if (isset($transferstatus)){
-if (auth()=="1001"){
+if ($auth=="1001"){
         $result = $db->query("SELECT status from transactions where vercode='$transferstatus'");
         if ($db->num_rows($result)==1){
                 while($row = $db->fetch_array( $result )) {$status = $row['status'];die("$status<end>");}
@@ -71,7 +71,7 @@ if (auth()=="1001"){
 
 
 if (isset($transferamount)){
-if (auth()=="1001"){
+if ($auth=="1001"){
         $result = $db->query("SELECT amount from transactions where vercode='$transferamount'");
         if ($db->num_rows($result)==1){
                 while($row = $db->fetch_array( $result )) {$ss = $row['amount'];die("$ss<end>");}
@@ -84,7 +84,7 @@ if (auth()=="1001"){
 
 
 if (isset($transferdescription)){
-if (auth()=="1001"){
+if ($auth=="1001"){
         $result = $db->query("SELECT description from transactions where vercode='$transferdescription'");
         if ($db->num_rows($result)==1){
                 while($row = $db->fetch_array( $result )) {$ss = $row['description'];die("$ss<end>");}
@@ -98,7 +98,7 @@ if (auth()=="1001"){
 
 
 if (isset($transfertousername)){
-if (auth()=="1001"){
+if ($auth=="1001"){
         $result = $db->query("SELECT tousername from transactions where vercode='$transfertousername'");
         if ($db->num_rows($result)==1){
                 while($row = $db->fetch_array( $result )) {$ss = $row['tousername'];die("$ss<end>");}
@@ -110,7 +110,7 @@ if (auth()=="1001"){
 
 
 if (isset($transferfromusername)){
-if (auth()=="1001"){
+if ($auth=="1001"){
         $result = $db->query("SELECT fromusername from transactions where vercode='$transferfromusername'");
         if ($db->num_rows($result)==1){
                 while($row = $db->fetch_array( $result )) {$ss = $row['fromusername'];die("$ss<end>");}
@@ -122,7 +122,7 @@ if (auth()=="1001"){
 
 
 if (isset($transferdate)){
-if (auth()=="1001"){
+if ($auth=="1001"){
         $result = $db->query("SELECT createdate from transactions where vercode='$transferdate'");
         if ($db->num_rows($result)==1){
                 while($row = $db->fetch_array( $result )) {$ss = $row['createdate'];die("$ss<end>");}
@@ -134,7 +134,7 @@ if (auth()=="1001"){
 
 
 if (isset($transfertime)){
-if (auth()=="1001"){
+if ($auth=="1001"){
         $result = $db->query("SELECT createtime from transactions where vercode='$transfertime'");
         if ($db->num_rows($result)==1){
                 while($row = $db->fetch_array( $result )) {$ss = $row['createtime'];die("$ss<end>");}

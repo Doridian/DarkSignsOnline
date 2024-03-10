@@ -58,7 +58,7 @@ $d=getdomain($d);
 
 
 
-if (auth()=="1001"){
+if ($auth=="1001"){
 	
 
 
