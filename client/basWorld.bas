@@ -388,7 +388,7 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
                 'Dim EncodedText As String
             
                 
-                WriteClean App.Path & "\user\system\tempDown64.dat", s
+                'WriteClean App.Path & "\user\system\tempDown64.dat", s
                 's = StrConv(DecodeBase64(s), vbFromUnicode)
                 Dim b64 As Base64Class
                 Set b64 = New Base64Class

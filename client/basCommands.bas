@@ -649,9 +649,9 @@ Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
             'tempStrA = GetFile(App.Path & "\user\" & s)
             bf.sInitBF "z123" & sDomain & "_" & sPort & "456"
             bf.sStringEncrypt sFileData, tempStrB
-            WriteFile App.Path & "\user\system\tempUpEnc.dat", tempStrB
+            'WriteFile App.Path & "\user\system\tempUpEnc.dat", tempStrB
             tempStrA = EncodeBase64(StrConv(tempStrB, vbFromUnicode))
-            WriteFile App.Path & "\user\system\tempUp64.dat", tempStrA
+            'WriteFile App.Path & "\user\system\tempUp64.dat", tempStrA
         
         
         
