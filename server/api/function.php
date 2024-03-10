@@ -30,12 +30,14 @@ $res = $stmt->get_result();
 $user = $res->fetch_array();
 
 if (!$user) {
+	// bad username or password
 	login_failure('1002');
 } else if ($user['active'] === 1) {
-	$auth_data = $user;
 	// account is active
+	$auth_data = $user;
 	$auth = '1001';
 } else {
+	// account disabled
 	login_failure('1003');
 }
 
