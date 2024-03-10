@@ -1,7 +1,7 @@
 <?php
 	include_once "function.php";
 
-	$type = $db->real_escape_string($_GET['type'], "[^a-z]");
+	$type = $_GET['type'];
 	if ($auth == '1001')
 	{
 		echo '2001';
