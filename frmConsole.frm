@@ -207,7 +207,7 @@ Begin VB.Form frmConsole
    Begin VB.FileListBox FileMusic 
       Height          =   240
       Left            =   8760
-      Pattern         =   "*.dsa"
+      Pattern         =   "*.mp3"
       TabIndex        =   24
       TabStop         =   0   'False
       Top             =   64800

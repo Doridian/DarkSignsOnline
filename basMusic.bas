@@ -74,6 +74,7 @@ Public Sub CheckMusic()
             NextMusicIndex
             
             tmpFile = .FileMusic.Path & "\" & .FileMusic.List(MusicFileIndex)
+            SayComm "Next track: " & tmpFile
     
             StopMusic
             mciSendString "open """ & tmpFile & """ type mpegvideo alias dsomusic", vbNullString, 0, 0
