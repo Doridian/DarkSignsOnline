@@ -1,7 +1,7 @@
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+    - main
 
 name: Deploy website
 
@@ -11,9 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
-    - name: 📂 Sync files
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+    - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
         server: arcticfox.doridian.net
         username: dsonline
@@ -22,7 +20,7 @@ jobs:
         server-dir: /public_html/
         security: strict
         protocol: ftps
-        port: 990
+        port: 21
         exclude: |
             **/.git*
             **/.git*/**
