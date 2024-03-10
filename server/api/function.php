@@ -3,7 +3,7 @@ if (!isset($rewrite_done)) {
 	die('Not rewritten yet');
 }
 
-include_once('mysql_config.php');
+require_once('mysql_config.php');
 global $db;
 
 global $user, $auth;
