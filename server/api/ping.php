@@ -3,7 +3,7 @@
 	
 	if ($auth == '1001')
 	{
-		$domain = $_POST['domain']);
+		$domain = $_POST['domain'];
 		$port = (int)$_POST['port'];
 
 		$temp = getDomainInfo($domain);
