@@ -9,10 +9,15 @@ global $db;
 global $user, $auth;
 global $auth_data;
 
+function login_failure($code) {
+	header('WWW-Authenticate: Basic realm="DSO API"');
+	header('HTTP/1.0 401 Unauthorized');
+	die($code . '<end>');
+
+}
+
 if (empty($_SERVER['PHP_AUTH_USER'])) {
-    header('WWW-Authenticate: Basic realm="DSO API"');
-    header('HTTP/1.0 401 Unauthorized');
-    die('1002Please log in.<end>');
+	login_failure('1002');
 }
 
 $u = $_SERVER['PHP_AUTH_USER'];
@@ -25,15 +30,13 @@ $res = $stmt->get_result();
 $user = $res->fetch_array();
 
 if (!$user) {
-	//bad username or password
-	$auth = '1002';
+	login_failure('1002');
 } else if ($user['active'] === 1) {
 	$auth_data = $user;
 	// account is active
 	$auth = '1001';
 } else {
-	//account disabled
-	$auth = '1003';
+	login_failure('1003');
 }
 
 function validIP($ip)
