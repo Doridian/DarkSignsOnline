@@ -18,8 +18,8 @@ jobs:
         server: arcticfox.doridian.net
         username: dsonline
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./server
-        server-dir: /public_html
+        local-dir: ./server/
+        server-dir: /public_html/
         security: strict
         protocol: ftps
         port: 990
