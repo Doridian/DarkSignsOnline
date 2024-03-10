@@ -3,9 +3,9 @@
 	
 	if ($auth == '1001')
 	{
-		$domain = $db->real_escape_string($_POST['domain']);
-		$port = $db->real_escape_string($_POST['port'], "[^0-9]");
-		
+		$domain = $_POST['domain']);
+		$port = (int)$_POST['port'];
+
 		$temp = getDomainInfo($domain);
 		if ($temp[0] > 0)
 		{

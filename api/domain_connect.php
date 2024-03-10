@@ -12,7 +12,7 @@
 		{
 			die('not found<end>');
 		}
-		$d = $db->real_escape_string($_REQUEST['d']);
+		$d = $_REQUEST['d'];
 		$d = strtolower($d); 
 		$temp = getDomainInfo($d);
 

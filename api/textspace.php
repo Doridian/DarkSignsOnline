@@ -3,10 +3,10 @@
 	
 	if ($auth == '1001')
 	{
-		$action = $db->real_escape_string($_REQUEST['action']);
+		$action = $_REQUEST['action'];
 		if ($action == 'download')
 		{
-			$data = $db->real_escape_string($_REQUEST['data']);
+			$data = $_REQUEST['data'];
 			$result = $db->query("SELECT `text` FROM textspace WHERE chan='$data' ORDER BY rev DESC LIMIT 1") or die($db->error);;
 			if ($db->num_rows($result) == 1)
 			{
@@ -21,16 +21,16 @@
 		}
 		else if ($action == 'upload')
 		{
-			$chan = $db->real_escape_string($_REQUEST['chan'], "[^0-9]");
-			if ($chan == "")
-			{
-				die('4500Invalid channel.<end>');						
-			}
+			$chan = $_REQUEST['chan'];
 			else if ($chan == '001')
 			{
 				die('4500Modification Denied.<end>');
 			}
-			$chan = intval($chan);
+			$chan = (int)$chan;
+			if ($chan === 0)
+			{
+				die('4500Invalid channel.<end>');
+			}
 		
 			$data = $_REQUEST['data']; // Get some error checking.
 			$time = time();

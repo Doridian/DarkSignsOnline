@@ -3,7 +3,7 @@
 
 	if ($auth == '1001')
 	{
-		$data = $db->real_escape_string($_REQUEST['data']);
+		$data = $_REQUEST['data'];
 		$ip = getip($data);
 		
 		if ($ip == 0)

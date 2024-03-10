@@ -3,14 +3,14 @@
 	include_once('mysql_config.php');
 	global $db;
 
-	$returnwith = $db->real_escape_string($_GET['returnwith'], "[^0-9]");
+	$returnwith = (string)(int)$_GET['returnwith'];
 	
 	// If user is this dumb.. then.. you know..
 	// $d = str_replace("http://", "", str_replace("www.","",trim($d)));
 
 
 
-if (trim($returnwith)==""){$returnwith="2000";}
+if (trim($returnwith)=="0"){$returnwith="2000";}
 echo $returnwith;
 
 

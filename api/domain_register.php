@@ -26,7 +26,7 @@
 
 	if ($auth == '1001')
 	{
-		$d = strtolower($db->real_escape_string($_POST['d']));
+		$d = strtolower($_POST['d']);
 
 		$temp = getDomainInfo($d);
 		

@@ -21,7 +21,7 @@
 		}
 		else if ($type == 'subdomain')
 		{
-			$domain = $db->real_escape_string($_GET['domain']);
+			$domain = $_GET['domain'];
 			$domain = explode('.', $domain);
 			if (sizeof($domain) == 2)
 			{
