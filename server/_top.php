@@ -77,7 +77,7 @@
                             |
                             <s
                               ><a
-                                href="/api/create_account.php"
+                                href="/create_account.php"
                                 >Sign up</a
                               >
                               (free!)</s
