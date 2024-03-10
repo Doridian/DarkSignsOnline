@@ -9,6 +9,8 @@ global $db;
 
 
 if (isset($_POST['username'])) {
+	die('Registrations are currently closed');
+
 	$username = trim($_POST['username']);
 	$password = trim($_POST['password']);
 	$email = trim($_POST['email']);
