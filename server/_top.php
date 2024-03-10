@@ -72,9 +72,9 @@
                     <div align="left" class="style11">
                       <a href="/">Home</a>
                       |
-                      <s><a href="/create_account.php">Sign up (soon!)</a></s>
+                      <a href="/create_account.php">Sign up (soon!)</a>
                       |
-                      <s><a href="/download.php">Download (soon!)</a></s>
+                      <a href="/download.php">Download (soon!)</a>
                       |
                       <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/">Discussion
                         Forum (archive.org)</a>
