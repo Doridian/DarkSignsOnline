@@ -1175,7 +1175,7 @@ Sub ManageSockError(Index As Integer, Reason As String)
         StateHandler.Index = Index
         Http.OnReadyStateChange = StateHandler
 
-        Http.open HttpRequests(Index).Method, HttpRequests(Index).Url, True
+        Http.open HttpRequests(Index).Method, HttpRequests(Index).Url, True, HttpRequests(Index).Username, HttpRequests(Index).Password
 
         If HttpRequests(Index).Method = "POST" Then
             Http.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
@@ -1225,7 +1225,7 @@ End Sub
 
 Public Sub KeepOnline()
     If Authorized = True Then
-        RunPage "z_online.php?get" & Credentials, ActiveConsole
+        RunPage "z_online.php?get=1", ActiveConsole
     End If
 End Sub
 

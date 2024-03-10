@@ -696,7 +696,7 @@ Sub DownloadOne()
     lStatus.Caption = "Downloading to \downloads\" & Trim(KillBadDirChars(LV.SelectedItem.ListSubItems(4).Text)) & "..."
     
     
-    RunPage "file_database.php?returnwith=4304&getfile=" & sID & Credentials, 5, False, "", False
+    RunPage "file_database.php?returnwith=4304&getfile=" & sID, 5, False, "", False
         
     
     
@@ -755,7 +755,6 @@ Sub UploadIt()
     "&version=" & Trim(MaskAnd(txtVersion)) & _
     "&description=" & MaskAnd(sDescription) & _
     "&shortfilename=" & MaskAnd(sShortFileName) & _
-    Credentials & _
     "&filedata=" & MaskAnd(sFileData)
 
 
@@ -840,7 +839,7 @@ Private Sub Command8_Click()
     lStatus.Caption = "Removing..."
     
 
-    RunPage "file_database.php?returnwith=4303&removenow=" & sID & Credentials, 5, False, "", False
+    RunPage "file_database.php?returnwith=4303&removenow=" & sID, 5, False, "", False
     
 End Sub
 
@@ -1005,7 +1004,7 @@ Sub UpdateResults()
     
     lStatus.Caption = "Updating..."
     
-    RunPage "file_database.php?returnwith=4301&getcategory=" & sCategory & Credentials, 5, False, "", False
+    RunPage "file_database.php?returnwith=4301&getcategory=" & sCategory, 5, False, "", False
     
     
 End Sub
@@ -1016,7 +1015,7 @@ Sub LoadScriptsToRemove()
     On Error GoTo zxc
     
     List2.Clear
-    RunPage "file_database.php?returnwith=4302&getforremoval=a" & Credentials, 5, False, "", False
+    RunPage "file_database.php?returnwith=4302&getforremoval=a", 5, False, "", False
     
     
     Exit Sub
@@ -1074,7 +1073,7 @@ Sub LoadList3()
     TS.Text = "Loading..."
     tsl.Caption = ss & "..."
     
-    RunPage "index.php?textspacedownload=" & Trim(Mid(ss, InStr(ss, " "), 99)) & Credentials, ActiveConsole, False, "", False
+    RunPage "index.php?textspacedownload=" & Trim(Mid(ss, InStr(ss, " "), 99)), ActiveConsole, False, "", False
     
 End Sub
 
@@ -1108,7 +1107,7 @@ Private Sub tsc_Click()
     tsl.Caption = "Updating..."
     
     Dim PostData As String
-    PostData = "textspaceupload=" & Trim(Mid(ss, InStr(ss, " "), 99)) & Credentials & "&textdata=" & Replace(TS.Text, "&", "--and--")
+    PostData = "textspaceupload=" & Trim(Mid(ss, InStr(ss, " "), 99)) & "&textdata=" & Replace(TS.Text, "&", "--and--")
     PostData = Replace(PostData, vbCrLf, "*- -*")
     PostData = Replace(PostData, "#", "--hash--")
 

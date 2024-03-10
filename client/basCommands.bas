@@ -482,17 +482,17 @@ End Sub
 
 Public Sub ListMyDomains(ByVal consoleID As Integer)
     SayComm "Downloading domain list..."
-    RunPage "my_domains.php?type=domain" & Credentials, consoleID, False, "", 0
+    RunPage "my_domains.php?type=domain", consoleID, False, "", 0
 End Sub
 
 Public Sub ListMySubDomains(ByVal domain As String, ByVal consoleID As Integer)
     SayComm "Downloading subdomain list..."
-    RunPage "my_domains.php?domain=" & domain & "&type=subdomain" & Credentials, consoleID, False, "", 0
+    RunPage "my_domains.php?domain=" & domain & "&type=subdomain", consoleID, False, "", 0
 End Sub
 
 Public Sub ListMyIPs(ByVal consoleID As Integer)
     SayComm "Downloading IP list..."
-    RunPage "my_domains.php?type=ip" & Credentials, consoleID, False, "", 0
+    RunPage "my_domains.php?type=ip", consoleID, False, "", 0
 End Sub
 
 
@@ -603,8 +603,7 @@ Public Sub ConnectToDomain(ByVal s As String, ByVal consoleID As Integer)
     
     RunPage "domain_connect.php?params=" & sParams & _
     "&d=" & sDomain & _
-    "&port=" & sPort & _
-    Credentials, consoleID
+    "&port=" & sPort, consoleID
     
 
 
@@ -661,8 +660,7 @@ Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
         RunPage "domain_upload.php", consoleID, True, _
         "port=" & Trim(sPort) & _
         "&d=" & sDomain & _
-        "&filedata=" & tempStrA & _
-        Credentials
+        "&filedata=" & tempStrA
         
         SayComm "Attempting to upload: " & UCase(sDomain) & ":" & i(sPort), consoleID
         
@@ -698,8 +696,7 @@ Public Sub CloseDomainPort(ByVal s As String, ByVal consoleID As Integer)
   
     RunPage "domain_close.php", consoleID, True, _
     "port=" & Trim(sPort) & _
-    "&d=" & sDomain & _
-     Credentials
+    "&d=" & sDomain
         
     SayComm "Attempting to close port : " & UCase(sDomain) & ":" & i(sPort), consoleID
         
@@ -738,8 +735,7 @@ Public Sub DownloadFromDomain(ByVal s As String, ByVal consoleID As Integer)
         "returnwith=4400" & _
         "&port=" & Trim(sPort) & _
         "&d=" & sDomain & _
-        "&filename=" & sFilename & _
-        Credentials
+        "&filename=" & sFilename
         
         SayComm "Attempting to download: " & UCase(sDomain) & ":" & i(sPort), consoleID
         
@@ -775,19 +771,19 @@ Public Sub SubOwners(ByVal s As String, ByVal consoleID As Integer)
         'list the domain names
            
             RunPage "index.php", consoleID, True, _
-            "returnwith=2001&listprivileges=" & Trim(sDomain) & Credentials
+            "returnwith=2001&listprivileges=" & Trim(sDomain)
 
     ElseIf Mid(i(s), 1, 4) = "add " Then
         sUsername = Trim(Mid(s, 5, Len(s)))
             
             RunPage "index.php", consoleID, True, _
-            "returnwith=2001&addprivileges=" & Trim(sDomain) & "&username=" & sUsername & Credentials
+            "returnwith=2001&addprivileges=" & Trim(sDomain) & "&username=" & sUsername
 
     ElseIf Mid(i(s), 1, 7) = "remove " Then
         sUsername = Trim(Mid(s, 8, Len(s)))
         
              RunPage "index.php", consoleID, True, _
-            "returnwith=2001&removeprivileges=" & Trim(sDomain) & "&username=" & sUsername & Credentials
+            "returnwith=2001&removeprivileges=" & Trim(sDomain) & "&username=" & sUsername
 
     Else
         SayError "Invalid Parameters.", consoleID
@@ -823,8 +819,8 @@ Public Sub RegisterDomain(ByVal s As String, ByVal consoleID As Integer)
     Say consoleID, "{lgreen 10}The result will be posted to the COMM.", False
     
     
-    'RunPage "domain_register.php?returnwith=2000&d=" & Trim(s) & Credentials, consoleID
-    RunPage "domain_register.php", consoleID, True, "d=" & s & Credentials
+    'RunPage "domain_register.php?returnwith=2000&d=" & Trim(s), consoleID
+    RunPage "domain_register.php", consoleID, True, "d=" & s
     
 End Sub
 
@@ -861,7 +857,7 @@ Public Sub UnRegisterDomain(ByVal s As String, ByVal consoleID As Integer)
     
     
     RunPage "domain_register.php", consoleID, True, _
-    "returnwith=2000&unregisterdomain=" & Trim(sDomain) & "&pw=" & sPass & Credentials
+    "returnwith=2000&unregisterdomain=" & Trim(sDomain) & "&pw=" & sPass
     
 End Sub
 
@@ -944,8 +940,7 @@ Public Sub ServerCommand_Append(s As String, sKey As String, sDomain As String, 
     sPostData = "append=" & sFilename & _
         "&keycode=" & sKey & _
         "&d=" & sDomain & _
-        "&filedata=" & sFileData & _
-        Credentials
+        "&filedata=" & sFileData
     
     RunPage "domain_filesystem.php", consoleID, True, sPostData, 0
 
@@ -966,8 +961,7 @@ Public Sub ServerCommand_Write(s As String, sKey As String, sDomain As String, B
     sPostData = "write=" & sFilename & _
         "&keycode=" & sKey & _
         "&d=" & sDomain & _
-        "&filedata=" & sFileData & _
-        Credentials
+        "&filedata=" & sFileData
         
     RunPage "domain_filesystem.php", consoleID, True, sPostData, 0
 
@@ -1023,8 +1017,7 @@ Public Sub TransferMoney(ByVal s As String, ByVal consoleID As Integer)
         "returnwith=2000" & _
         "&to=" & Trim(sTo) & _
         "&amount=" & Trim(sAmount) & _
-        "&description=" & Trim(sDescription) & _
-        Credentials
+        "&description=" & Trim(sDescription)
     
     End If
     
@@ -1044,7 +1037,7 @@ Public Sub Lookup(ByVal s As String, ByVal consoleID As Integer)
     End If
     
     
-    RunPage "lookup.php?returnwith=2000&d=" & Trim(s) & Credentials, consoleID
+    RunPage "lookup.php?returnwith=2000&d=" & Trim(s), consoleID
     
 End Sub
 
@@ -1121,7 +1114,7 @@ End Function
 Public Sub ShowStats(ByVal consoleID As Integer)
     
     SayComm "Downloading stats..."
-    RunPage "get_user_stats.php?returnwith=2000" & Credentials, consoleID
+    RunPage "get_user_stats.php?returnwith=2000", consoleID
 
 End Sub
 

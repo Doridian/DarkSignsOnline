@@ -72,7 +72,7 @@ Private Sub btnSend_Click()
    
    toSend = "action=send&returnwith=7002&to=" & Me.msgTo & _
         "&subject=" & Me.msgSubject & _
-        "&message=" & Replace(Me.msgBody.Text, vbNewLine, Chr(6)) & Credentials
+        "&message=" & Replace(Me.msgBody.Text, vbNewLine, Chr(6))
    
    RunPage "dsmail.php", consoleID, True, toSend
    

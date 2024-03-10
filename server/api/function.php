@@ -9,8 +9,14 @@ global $db;
 global $user, $auth;
 global $auth_data;
 
-$u = $_REQUEST['u'];
-$p = $_REQUEST['p'];
+if (empty($_SERVER['PHP_AUTH_USER'])) {
+    header('WWW-Authenticate: Basic realm="DSO API"');
+    header('HTTP/1.0 401 Unauthorized');
+    die('1002Please log in.<end>');
+}
+
+$u = $_SERVER['PHP_AUTH_USER'];
+$p = $_SERVER['PHP_AUTH_PW'];
 
 $stmt = $db->prepare("SELECT * FROM users WHERE username=? AND password=?");
 $stmt->bind_param('ss', $u, $p);

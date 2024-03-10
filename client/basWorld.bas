@@ -31,6 +31,9 @@ Public Type HttpRequest
     Method As String
     Url As String
     PostData As String
+    
+    Username As String
+    Password As String
 End Type
 
 Public HttpRequests(1 To 30) As HttpRequest
@@ -62,10 +65,8 @@ Public Sub LoginNow(ByVal consoleID As Integer)
     
         
         SayComm "Logging in..."
-        
-        
-        RunPage "auth.php?u=" & Trim(myUsername) & "&p=" & Trim(myPassword), consoleID
-        
+
+        RunPage "auth.php", consoleID, True, ""
     End If
 End Sub
 
@@ -111,6 +112,8 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
     HttpRequests(sockIndex).Retries = 0
     HttpRequests(sockIndex).consoleID = consoleID
     HttpRequests(sockIndex).IsCustomDownload = IsCustomDownload
+    HttpRequests(sockIndex).Username = myUsername
+    HttpRequests(sockIndex).Password = myPassword
 
     Dim Http As New MSXML2.XMLHTTP60
     Dim HttpMethod As String
@@ -133,7 +136,7 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
     HttpRequests(sockIndex).Method = HttpMethod
     HttpRequests(sockIndex).Url = sUrl
 
-    Http.open HttpMethod, sUrl, True
+    Http.open HttpMethod, sUrl, True, myUsername, myPassword
 
     If HttpMethod = "POST" Then
         PostData = Trim(PostData)
@@ -308,9 +311,9 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
             
             frmConsole.ConnectIRC
             'get stats
-            'RunPage "get_user_stats.php?returnwith=2000&fromlogin" & Credentials, consoleID
+            'RunPage "get_user_stats.php?returnwith=2000&fromlogin", consoleID
             'get recent chat data
-            'RunPage "chat.php?get" & Credentials, ActiveConsole
+            'RunPage "chat.php?get=1", ActiveConsole
             'mark as online
             'frmConsole.KeepOnline
             
@@ -634,6 +637,3 @@ Public Function MaskAnd(ByVal s As String) As String
     MaskAnd = Replace(s, "&", "--and--")
 End Function
 
-Public Function Credentials() As String
-    Credentials = "&u=" & Trim(myUsername) & "&p=" & myPassword
-End Function
