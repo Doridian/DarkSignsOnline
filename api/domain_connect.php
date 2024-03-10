@@ -1,4 +1,5 @@
 <?
+	$rewrite_done = true;
 	include_once 'function.php';
 	global $auth;
 
@@ -18,7 +19,10 @@
 
 		if ($temp[0] > 0)
 		{
-			$exists = $db->query("SELECT code FROM domainscripts WHERE domain_id='$temp[0]' AND port=$port") or die($db->error);
+			$stmt = $db->prepare("SELECT code FROM domainscripts WHERE domain_id = ? AND port = ?");
+			$stmt->bind_param('ii', $temp[0], $port);
+			$stmt->execute();
+			$exists = $stmt->get_result();
 			if ($exists->num_rows == 1)
 			{
 				$code = $exists->fetch_row();

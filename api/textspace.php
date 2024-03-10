@@ -22,7 +22,7 @@
 		else if ($action == 'upload')
 		{
 			$chan = $_REQUEST['chan'];
-			else if ($chan == '001')
+			if ($chan == '001')
 			{
 				die('4500Modification Denied.<end>');
 			}
