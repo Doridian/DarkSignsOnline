@@ -7,7 +7,7 @@
       <?php echo file_get_contents('api/gitrev.txt'); ?>
     </strong><br />
     Copyright &copy; 2008-
-    <?php date('Y'); ?> Dark Signs Online<br />
+    <?php echo date('Y'); ?> Dark Signs Online<br />
     <a href="/index.php">Home</a>
     |
     <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/chatlog.php">Live Chat Log
