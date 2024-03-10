@@ -2205,7 +2205,7 @@ Public Sub ShowHelp(sP, ByVal consoleID As Integer)
         Say consoleID, "-", False
         Say consoleID, "{center orange nobold 14}- Check the latest prices in the COMM window. -", False
         'say consoleID, "-", False
-        RunPage "domain_register.php?returnwith=2000&prices", consoleID
+        RunPage "domain_register.php?returnwith=2000&prices=1", consoleID
         
          
     Case "unregister"

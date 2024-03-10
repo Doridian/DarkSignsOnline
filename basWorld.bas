@@ -94,6 +94,7 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
     End If
     
     Dim sockIndex As Integer
+    sockIndex = -1
     Dim n As Integer
     For n = 1 To UBound(HttpRequests)
         If Not HttpRequests(n).InUse Then
