@@ -7,6 +7,9 @@ concurrency:
 
 name: Deploy website
 
+permissions:
+  contents: read
+
 jobs:
   web-deploy:
     name: Deploy website

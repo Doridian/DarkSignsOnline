@@ -7,6 +7,9 @@ concurrency:
 
 name: Build client
 
+permissions:
+  contents: write
+
 jobs:
   build-client:
     name: Build client
