@@ -36,6 +36,7 @@ jobs:
         Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\Project1.vbp","/outdir",".\dist\" -Wait -PassThru
         cd ".\dist"
         ..\client\mkdirs.bat
+        Set-PSDebug -Trace 0
         Compress-Archive -Path * -Destination ..\client.zip
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
