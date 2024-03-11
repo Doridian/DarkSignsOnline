@@ -14,16 +14,14 @@ jobs:
     - name: Download VB6 prefix
       run: |
         mkdir ".\vb6"
-        Invoke-WebRequest -Uri "https://download.microsoft.com/download/3/a/5/3a5925ac-e779-4b1c-bb01-af67dc2f96fc/VisualBasic6-KB896559-v1-ENU.exe" -OutFile ".\vb6\vb6run.exe"
-        .\vb6\vb6run /Q
-        Invoke-WebRequest -Uri "https://f0x.es/f/H04jwZJAz-?dl=1" -OutFile ".\vb6\vb6.zip"
+        Invoke-WebRequest -Uri "https://f0x.es/f/0xy5Z49z1V?dl=1" -OutFile ".\vb6\vb6.zip"
         Expand-Archive -Path ".\vb6\vb6.zip" -DestinationPath ".\vb6"
         reg import ".\vb6\vb6.reg"
+        Start-Process -FilePath ".\vb6\vb6runplus.exe" -ArgumentList "/silent" -Wait -PassThru
     - name: Build client
       run: |
         mkdir ".\dist"
-        .\vb6\vb6.exe /make ".\client\Project1.vbp" /outdir ".\dist\"
-        dir ".\dist\"
+        Start-Process -FilePath ".\vb6\vb6.exe" -ArgumentList "/make",".\client\Project1.vbp","/outdir",".\dist\" -Wait -PassThru
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
