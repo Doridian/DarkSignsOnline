@@ -27,3 +27,4 @@ jobs:
       with:
         name: client
         path: dist/
+        if-no-files-found: error
