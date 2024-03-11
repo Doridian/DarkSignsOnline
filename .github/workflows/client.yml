@@ -22,6 +22,7 @@ jobs:
       run: |
         mkdir ".\dist"
         Start-Process -FilePath ".\vb6\vb6.exe" -ArgumentList "/make",".\client\Project1.vbp","/outdir",".\dist\" -Wait -PassThru
+        ..\client\mkdirs.bat
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
