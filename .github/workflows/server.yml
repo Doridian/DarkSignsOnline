@@ -1,7 +1,5 @@
 on:
-  push:
-    branches:
-    - main
+  push: {}
 
 name: Deploy website
 
@@ -13,6 +11,7 @@ jobs:
     - uses: actions/checkout@v4
     - run: git rev-parse HEAD > server/api/gitrev.txt
     - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      if: github.ref == 'refs/heads/main'
       with:
         server: arcticfox.doridian.net
         username: dsonline

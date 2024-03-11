@@ -1,8 +1,6 @@
 on:
-  push:
-    branches:
-    - main
-  
+  - push
+
 name: Build client
 
 jobs:
@@ -26,6 +24,7 @@ jobs:
         ..\client\mkdirs.bat
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
+      if: github.ref == 'refs/heads/main'
       with:
         name: client
         path: dist/
