@@ -13,14 +13,14 @@ jobs:
     - uses: actions/checkout@v4
     - name: Download VB6 prefix
       run: |
-        mkdir "C:\vb6"
-        Invoke-WebRequest -Uri "https://f0x.es/f/H04jwZJAz-?dl=1" -OutFile "C:\vb6\vb6.zip"
-        Expand-Archive -Path "C:\vb6\vb6.zip" -DestinationPath "C:\vb6"
-        reg import "C:\vb6\vb6.reg"
+        mkdir ".\vb6"
+        Invoke-WebRequest -Uri "https://f0x.es/f/H04jwZJAz-?dl=1" -OutFile ".\vb6\vb6.zip"
+        Expand-Archive -Path ".\vb6\vb6.zip" -DestinationPath ".\vb6"
+        reg import ".\vb6\vb6.reg"
     - name: Build client
       run: |
         mkdir "$(pwd)\dist"
-        "C:\vb6\vb6.exe" /make "$(pwd)\client\Project1.vbp" /outdir "$(pwd)\dist\"
+        .\vb6\vb6.exe /make "$(pwd)\client\Project1.vbp" /outdir "$(pwd)\dist\"
         dir "$(pwd)\dist\"
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
