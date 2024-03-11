@@ -14,7 +14,7 @@ jobs:
     - name: Download VB6 prefix
       run: |
         mkdir ".\vb6"
-        Invoke-WebRequest -Uri "https://f0x.es/f/0xy5Z49z1V?dl=1" -OutFile ".\vb6\vb6.zip"
+        Invoke-WebRequest -Uri "${{ secrets.VB6_URL }}" -OutFile ".\vb6\vb6.zip"
         Expand-Archive -Path ".\vb6\vb6.zip" -DestinationPath ".\vb6"
         reg import ".\vb6\vb6.reg"
         Start-Process -FilePath ".\vb6\vb6runplus.exe" -ArgumentList "/silent" -Wait -PassThru
