@@ -1,6 +1,5 @@
 <?php
 	include_once "function.php";
-	include_once('mysql_config.php');
 	global $db;
 
 	$returnwith = (string)(int)$_GET['returnwith'];

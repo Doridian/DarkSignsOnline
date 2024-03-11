@@ -31,4 +31,4 @@ jobs:
         exclude: |
             **/.git*
             **/.git*/**
-            **/mysql_config.php
+            **/config.php

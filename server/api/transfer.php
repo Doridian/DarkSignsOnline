@@ -4,7 +4,7 @@ $returnwith=trim($returnwith);
 echo $returnwith;
 
 
-include_once('mysql_config.php');
+include_once('function.php');
 global $db;
 
 $u=trim($u);

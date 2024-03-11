@@ -4,7 +4,7 @@
 	//NOTE - when modifying this script, consider that you may need to modify domain_download.php as well!!!
 	//----------------------------------------------------------------------------------------------------------
 
-include_once('mysql_config.php');
+include_once('function.php');
 global $db;
 
 //if it wants to write or append or serverfile, check for a keycode
