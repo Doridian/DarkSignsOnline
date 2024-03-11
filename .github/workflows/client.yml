@@ -20,10 +20,13 @@ jobs:
       run: |
         mkdir "C:\vb6"
         Invoke-WebRequest -Uri "https://archive.org/download/VisualBasic6Portable/Visual%20Basic%206%20Portable.exe" -OutFile "C:\vb6\vb6_portable.exe"
-        Extract-7Zip -Path "C:\vb6\vb6_portable.exe" -DestinationPath "C:\vb6"
-        Start-DownloadWithRetry -Url "https://altushost-swe.dl.sourceforge.net/project/vb6extendedruntime/Visual%20Basic%206.0%20Runtime%20Plus%202.2.zip" -Name "vb6runtime.zip" -DownloadPath "C:\vb6"
-        Extract-7Zip -Path "C:\vb6\vb6runtime.zip" -DestinationPath "C:\vb6"
+        Invoke-WebRequest -Uri "https://altushost-swe.dl.sourceforge.net/project/vb6extendedruntime/Visual%20Basic%206.0%20Runtime%20Plus%202.2.zip" -OutFile "C:\vb6\vb6runtime.zip"
+        C:
+        cd "C:\vb6"
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6_portable.exe"
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6runtime.zip"
         Start-Process -FilePath "C:\vb6\VB6 Runtime Plus 2.2.exe" -ArgumentList "/silent" -Wait -PassThru
+        D:
         reg import ".\.github\vb6.reg"
     - name: Build client
       run: |
