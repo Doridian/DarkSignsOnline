@@ -20,15 +20,15 @@ jobs:
       run: |
         mkdir "$HOME/.wine32"
         cd "$HOME/.wine32"
-        wget "${{ secrets.VB6_URL }}" -O data.tar.bz2
-        tar -xvjf data.tar.bz2
+        wget -q "${{ secrets.VB6_URL }}" -O data.tar.bz2
+        tar -xjf data.tar.bz2
         rm -f data.tar.bz2
     - name: Build client
       run: |
         export WINEPREFIX="$HOME/.wine32"
         export WINEARCH=win32
         mkdir -p "$HOME/dist/"
-        wine32 "$HOME/.wine32/drive_c/Program Files/Microsoft Visual Studio/VB98/vb6.exe" /make client/*.vbp /outdir "$HOME/dist/"
+        wine "$HOME/.wine32/drive_c/Program Files/Microsoft Visual Studio/VB98/vb6.exe" /make client/*.vbp /outdir "$HOME/dist/"
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
