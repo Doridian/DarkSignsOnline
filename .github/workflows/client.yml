@@ -42,3 +42,5 @@ jobs:
       with:
         tag_name: latest
         files: client.zip
+        fail_on_unmatched_files: true
+        prerelease: true
