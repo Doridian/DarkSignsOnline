@@ -43,6 +43,7 @@ jobs:
       run: |
         Set-PSDebug -Trace 1
         $ErrorActionPreference = 'Stop'
+        Remove-MpPreference -ExclusionPath (Get-MpPreference).ExclusionPath
         Start-MpScan -ScanPath ".\dist" -ScanType CustomScan
         if(![System.IO.File]::Exists(".\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
