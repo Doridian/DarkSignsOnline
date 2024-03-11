@@ -27,18 +27,18 @@ jobs:
       run: |
         export WINEPREFIX="$HOME/.wine32"
         export WINEARCH=win32
-        mkdir -p "$HOME/dist/"
+        mkdir -p "$(pwd)/dist/"
 
         Xvfb :0 -auth ~/.Xauthority -screen 0 1024x768x24 >/dev/null 2>/dev/null &
         XVFB_PID=$!
         sleep 3
 
-        DISPLAY=:0 wine "$HOME/.wine32/drive_c/Program Files/Microsoft Visual Studio/VB98/vb6.exe" /make client/*.vbp /outdir "$HOME/dist/"
+        DISPLAY=:0 wine "$HOME/.wine32/drive_c/Program Files/Microsoft Visual Studio/VB98/vb6.exe" /make client/*.vbp /outdir "$(pwd)/dist/"
 
         sleep 1
         kill $XVFB_PID
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: client.exe
-        path: client/*.exe
+        name: client
+        path: dist/
