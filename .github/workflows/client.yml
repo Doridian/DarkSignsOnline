@@ -44,11 +44,12 @@ jobs:
         Set-PSDebug -Trace 1
         $ErrorActionPreference = 'Stop'
         Remove-MpPreference -ExclusionPath (Get-MpPreference).ExclusionPath
-        Start-MpScan -ScanPath ".\dist" -ScanType CustomScan
+        Start-Process -FilePath "C:\Program Files\Windows Defender\MpCmdRun.exe" -ArgumentList "-SignatureUpdate","-http" -Wait -PassThru
+        Start-Process -FilePath "C:\Program Files\Windows Defender\MpCmdRun.exe" -ArgumentList "-Scan","-ScanType","3","-File",".\dist\dso.exe" -Wait -PassThru
         if(![System.IO.File]::Exists(".\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
         }
-        Start-MpScan -ScanPath ".\client.zip" -ScanType CustomScan
+        Start-Process -FilePath "C:\Program Files\Windows Defender\MpCmdRun.exe" -ArgumentList "-Scan","-ScanType","3","-File",".\client.zip" -Wait -PassThru
         if(![System.IO.File]::Exists(".\client.zip")) {
           throw (New-Object System.IO.FileNotFoundException("client.zip not found. Defender likely nabbed it...", $path))
         }
