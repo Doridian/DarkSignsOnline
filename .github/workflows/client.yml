@@ -8,35 +8,18 @@ name: Build client
 jobs:
   build-client:
     name: Build client
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Install Wine32
+    - name: Download VB6 prefix
       run: |
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends xvfb xauth x11-utils x11-xserver-utils wine wine32:i386
-    - name: Download VB6 Wine prefix
-      run: |
-        mkdir "$HOME/.wine32"
-        cd "$HOME/.wine32"
-        wget -q "${{ secrets.VB6_URL }}" -O data.tar.bz2
-        tar -xjf data.tar.bz2
-        rm -f data.tar.bz2
+        mkdir "C:\vb6"
+        Invoke-WebRequest -Uri "https://f0x.es/f/H04jwZJAz-?dl=1" -OutFile "C:\vb6\vb6.zip"
+        Expand-Archive -Path "C:\vb6\vb6.zip" -DestinationPath "C:\vb6"
+        reg import "C:\vb6\vb6.reg"
     - name: Build client
       run: |
-        export WINEPREFIX="$HOME/.wine32"
-        export WINEARCH=win32
-        mkdir -p "$(pwd)/dist/"
-
-        Xvfb :0 -auth ~/.Xauthority -screen 0 1024x768x24 >/dev/null 2>/dev/null &
-        XVFB_PID=$!
-        sleep 3
-
-        DISPLAY=:0 wine "$HOME/.wine32/drive_c/Program Files/Microsoft Visual Studio/VB98/vb6.exe" /make client/*.vbp /outdir "$(pwd)/dist/"
-
-        sleep 1
-        kill $XVFB_PID
+        & "C:\vb6\vb6.exe" /make client\Project1.vbp /outdir "$(pwd)/dist/"
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
