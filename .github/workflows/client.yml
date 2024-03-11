@@ -23,8 +23,8 @@ jobs:
         Invoke-WebRequest -Uri "https://altushost-swe.dl.sourceforge.net/project/vb6extendedruntime/Visual%20Basic%206.0%20Runtime%20Plus%202.2.zip" -OutFile "C:\vb6\vb6runtime.zip"
         C:
         cd "C:\vb6"
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6_portable.exe"
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6runtime.zip"
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6_portable.exe" -Wait -PassThru
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6runtime.zip" -Wait -PassThru
         Start-Process -FilePath "C:\vb6\VB6 Runtime Plus 2.2.exe" -ArgumentList "/silent" -Wait -PassThru
         D:
         reg import ".\.github\vb6.reg"
