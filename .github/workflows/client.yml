@@ -15,7 +15,7 @@ jobs:
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get install -y --no-install-recommends wine wine32:i386
+        sudo apt-get install -y --no-install-recommends xvfb xauth x11-utils x11-xserver-utils wine wine32:i386
     - name: Download VB6 Wine prefix
       run: |
         mkdir "$HOME/.wine32"
@@ -28,7 +28,15 @@ jobs:
         export WINEPREFIX="$HOME/.wine32"
         export WINEARCH=win32
         mkdir -p "$HOME/dist/"
-        wine "$HOME/.wine32/drive_c/Program Files/Microsoft Visual Studio/VB98/vb6.exe" /make client/*.vbp /outdir "$HOME/dist/"
+
+        Xvfb :0 -auth ~/.Xauthority -screen 0 1024x768x24 >/dev/null 2>/dev/null &
+        XVFB_PID=$!
+        sleep 3
+
+        DISPLAY=:0 wine "$HOME/.wine32/drive_c/Program Files/Microsoft Visual Studio/VB98/vb6.exe" /make client/*.vbp /outdir "$HOME/dist/"
+
+        sleep 1
+        kill $XVFB_PID
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
