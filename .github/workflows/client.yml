@@ -19,10 +19,9 @@ jobs:
         reg import ".\vb6\vb6.reg"
     - name: Build client
       run: |
-        mkdir "$(pwd)\dist"
-        .\vb6\vb6.exe /make "$(pwd)\client\Project1.vbp" /outdir "$(pwd)\dist\"
-        dir "$(pwd)\dist\"
-        dir "$(pwd)"
+        mkdir ".\dist"
+        .\vb6\vb6.exe /make ".\client\Project1.vbp" /outdir ".\dist\"
+        dir ".\dist\"
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
