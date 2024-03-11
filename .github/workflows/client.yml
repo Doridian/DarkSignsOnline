@@ -26,10 +26,16 @@ jobs:
         Start-Process -FilePath ".\vb6\vb6.exe" -ArgumentList "/make",".\client\Project1.vbp","/outdir",".\dist\" -Wait -PassThru
         cd ".\dist"
         ..\client\mkdirs.bat
+        Compress-Archive -Path dist/* -Destination client.zip
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
-      if: github.ref == 'refs/heads/main'
       with:
         name: client
         path: dist/
         if-no-files-found: error
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: github.ref == 'refs/heads/main'
+      with:
+        tag_name: latest
+        files: client.zip
