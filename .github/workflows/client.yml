@@ -19,6 +19,7 @@ jobs:
     - name: Setup VB6 from public sources
       run: |
         Set-PSDebug -Trace 1
+        $ErrorActionPreference = 'Stop'
         mkdir "C:\vb6"
         Invoke-WebRequest -Uri "https://archive.org/download/VisualBasic6Portable/Visual%20Basic%206%20Portable.exe" -OutFile "C:\vb6\vb6_portable.exe"
         Invoke-WebRequest -Uri "https://altushost-swe.dl.sourceforge.net/project/vb6extendedruntime/Visual%20Basic%206.0%20Runtime%20Plus%202.2.zip" -OutFile "C:\vb6\vb6runtime.zip"
@@ -32,11 +33,24 @@ jobs:
     - name: Build client
       run: |
         Set-PSDebug -Trace 1
+        $ErrorActionPreference = 'Stop'
         mkdir ".\dist"
         Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\Project1.vbp","/outdir",".\dist\" -Wait -PassThru
         cd ".\dist"
         ..\client\mkdirs.bat
         Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "a","..\client.zip","*" -Wait -PassThru
+    - name: Ensure Defender doesn't false-positive us
+      run: |
+        Set-PSDebug -Trace 1
+        $ErrorActionPreference = 'Stop'
+        Start-MpScan -ScanPath ".\dist" -ScanType CustomScan
+        if(![System.IO.File]::Exists(".\dist\dso.exe")) {
+          throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
+        }
+        Start-MpScan -ScanPath ".\client.zip" -ScanType CustomScan
+        if(![System.IO.File]::Exists(".\client.zip")) {
+          throw (New-Object System.IO.FileNotFoundException("client.zip not found. Defender likely nabbed it...", $path))
+        }
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
