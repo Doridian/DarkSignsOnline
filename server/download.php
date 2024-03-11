@@ -8,12 +8,12 @@
     <table width="60%" border="0">
         <tr>
             <td width="34%">
-                <font face="Verdana" size="2"><strong>Beta Version 0.90.0</strong><br />
-                    Updated: ?th March, 2024</font>
+                <font face="Verdana" size="2"><strong>Latest build</strong><br />
+                    Updated Regularily</font>
             </td>
             <td width="66%">
                 <div align="right"><a
-                        href="#">Download (coming soon)</a><br /></div>
+                        href="https://github.com/Doridian/DarkSignsOnline/releases/download/latest/client.zip">Download</a><br /></div>
             </td>
         </tr>
         <tr>
