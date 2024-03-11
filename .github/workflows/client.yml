@@ -12,7 +12,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Install Wine32
-      run: sudo apt-get install wine32
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install wine32
     - name: Download VB6 Wine prefix
       run: |
         mkdir "$HOME/.wine32"
@@ -22,6 +25,8 @@ jobs:
         rm -f data.tar.bz2
     - name: Build client
       run: |
+        export WINEPREFIX="$HOME/.wine32"
+        export WINEARCH=win32
         mkdir -p "$HOME/dist/"
         wine32 "$HOME/.wine32/drive_c/Program Files/Microsoft Visual Studio/VB98/vb6.exe" /make client/*.vbp /outdir "$HOME/dist/"
     - name: Upload build artifacts
