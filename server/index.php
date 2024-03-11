@@ -47,8 +47,8 @@
           </table>
 
           <font face="verdana" size="1">
-            <a href="/create_account.php"><strong><s>Create
-                  a new account</s></strong></a>
+            <a href="/create_account.php"><strong>Create
+                  a new account</strong></a>
           </font>
         </form>
         &nbsp;

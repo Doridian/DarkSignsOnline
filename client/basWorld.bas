@@ -1,13 +1,10 @@
 Attribute VB_Name = "basWorld"
 Option Explicit
 
-Public Const API_Server = "https://darksignsonline.com" 'e.g. "www.darksignsonline.com"
+Public Const API_Server = "https://darksignsonline.com" 'e.g. "https://darksignsonline.com"
 Public Const API_Path = "/api/" 'e.g. "/api/"
 
-'Public Const IRC_Server = "irc.dal.net"
-'Public Const IRC_Server = "irc.chatchannel.org"
-'Public Const IRC_Server = "irc.tacoz.net"
-Public Const IRC_Server = "irc.freenode.net"
+Public Const IRC_Server = "irc.libera.chat"
 Public Const IRC_Port = "6667"
 
 Public userIP As String
