@@ -1,6 +1,10 @@
 on:
   - push
 
+concurrency:
+  group: client-${{ github.ref }}
+  cancel-in-progress: true
+
 name: Build client
 
 jobs:

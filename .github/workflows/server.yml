@@ -1,5 +1,9 @@
 on:
-  push: {}
+  - push
+
+concurrency:
+  group: server-${{ github.ref }}
+  cancel-in-progress: true
 
 name: Deploy website
 
