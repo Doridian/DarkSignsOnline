@@ -15,7 +15,7 @@ jobs:
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get install --no-install-recommends wine32
+        sudo apt-get install -y --no-install-recommends wine:i386 wine32:i386
     - name: Download VB6 Wine prefix
       run: |
         mkdir "$HOME/.wine32"
