@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Download VB6 prefix
+    - name: Setup VB6 from public sources
       run: |
         Set-PSDebug -Trace 1
         mkdir "C:\vb6"
@@ -36,8 +36,7 @@ jobs:
         Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\Project1.vbp","/outdir",".\dist\" -Wait -PassThru
         cd ".\dist"
         ..\client\mkdirs.bat
-        Set-PSDebug -Trace 0
-        Compress-Archive -Path * -Destination ..\client.zip
+        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "a","..\client.zip","*" -Wait -PassThru
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
