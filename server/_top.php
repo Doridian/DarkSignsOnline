@@ -19,7 +19,7 @@
     <!--DWLayoutTable-->
     <tbody>
       <tr>
-        <td width="40" height="187" valign="top" bgcolor="#000000">
+        <td width="40" height="187" valign="top">
           <br />
           <br />
           <br />

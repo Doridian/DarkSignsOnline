@@ -2,8 +2,8 @@
     require('_top.php');
 
     function get_release_client($release) {
-        foreach (json_decode($release['assets']) AS $asset) {
-            if ($asset['name'] !== 'client.zip') {
+        foreach (json_decode($release->assets) AS $asset) {
+            if ($asset->name !== 'client.zip') {
                 continue;
             }
             return $asset;
@@ -24,7 +24,7 @@
                 if (empty($client)) {
                     continue;
                 }
-                $name = $release['name'];
+                $name = $release->name;
                 if ($name === 'main' || $name === 'latest') {
                     $name = 'Latest';
                 }
@@ -32,11 +32,11 @@
         <tr>
             <td width="34%">
                 <font face="Verdana" size="2"><strong><?php echo htmlentities($name); ?></strong><br />
-                    Updated <?php echo htmlentities($client['updated_at']); ?></font>
+                    Updated <?php echo htmlentities($client->updated_at); ?></font>
             </td>
             <td width="66%">
                 <div align="right"><a
-                        href="<?php echo htmlentities($client['browser_download_url']); ?>">Download</a><br /></div>
+                        href="<?php echo htmlentities($client->browser_download_url); ?>">Download</a><br /></div>
             </td>
         </tr>
         <?php } ?>
