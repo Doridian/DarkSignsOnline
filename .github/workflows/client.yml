@@ -71,12 +71,21 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Remove-MpPreference -ExclusionPath (Get-MpPreference).ExclusionPath
         Set-PSDebug -Trace 1
+
+        Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
         & "C:\Program Files\Windows Defender\MpCmdRun.exe" -SignatureUpdate -http
-        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File ".\dist\dso.exe"
+        Get-Content "$env:TEMP\MpCmdRun.log"
+
+        Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
+        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$(pwd)\dist\dso.exe"
+        Get-Content "$env:TEMP\MpCmdRun.log"
         if(![System.IO.File]::Exists(".\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
         }
-        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File ".\client.zip"
+
+        Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
+        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$(pwd)\client.zip"
+        Get-Content "$env:TEMP\MpCmdRun.log"
         if(![System.IO.File]::Exists(".\client.zip")) {
           throw (New-Object System.IO.FileNotFoundException("client.zip not found. Defender likely nabbed it...", $path))
         }
