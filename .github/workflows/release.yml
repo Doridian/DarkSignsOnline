@@ -45,7 +45,7 @@ jobs:
     - name: Print some debug stuff
       run: |
         set -x
-        echo '${{ steps.mainline_release.outputs.assets }}' | jq -r '. | select(.name == "client.zip") | .updated_at'
+        echo '${{ steps.mainline_release.outputs.assets }}' | jq -r '.[] | select(.name == "client.zip") | .updated_at'
 
     - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       name: Deploy website with FTPS
