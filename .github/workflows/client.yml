@@ -6,7 +6,7 @@ on:
 
 concurrency:
   group: client-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/') }}
 
 name: Build client
 
@@ -19,7 +19,15 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v3
+      id: changes
+      with:
+        filters: |
+          client:
+            - 'client/**'
+            - '.github/workflows/client.yml'
     - name: Download VB6 from public sources
+      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
@@ -31,12 +39,14 @@ jobs:
         Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6_portable.exe" -Wait -PassThru
         Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6runtime.zip" -Wait -PassThru
     - name: Install VB6 runtime
+      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
         Start-Process -FilePath "C:\vb6\VB6 Runtime Plus 2.2.exe" -ArgumentList "/silent" -Wait -PassThru
         reg import ".\.github\vb6.reg"
     - name: Build client
+      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
@@ -46,6 +56,7 @@ jobs:
         ..\client\mkdirs.bat
         Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "a","..\client.zip","*" -Wait -PassThru
     - name: Ensure Defender doesn't false-positive us
+      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       run: |
         $ErrorActionPreference = 'Stop'
         Remove-MpPreference -ExclusionPath (Get-MpPreference).ExclusionPath
@@ -60,6 +71,7 @@ jobs:
           throw (New-Object System.IO.FileNotFoundException("client.zip not found. Defender likely nabbed it...", $path))
         }
     - name: Upload build artifacts
+      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       uses: actions/upload-artifact@v4
       with:
         name: client
@@ -67,7 +79,7 @@ jobs:
         if-no-files-found: error
     - name: Release mainline
       uses: softprops/action-gh-release@v2
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' && steps.changes.outputs.client == 'true'
       with:
         tag_name: latest
         files: client.zip
