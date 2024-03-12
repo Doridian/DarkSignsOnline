@@ -7,8 +7,7 @@
         <br />
         <font face="Georgia, Times New Roman, Times, serif" size="3">The most recent messages are shown first</font>
         <br />
-        <br />
-
+    </p>
     <table width="700" border="0">
         <tr>
             <td>
@@ -221,7 +220,5 @@
     </table>
     <br />
     <br />
-    <br />
-    </p>
 </span>
 <?php require('_bottom.php'); ?>

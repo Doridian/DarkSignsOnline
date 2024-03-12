@@ -1,4 +1,4 @@
-<?
+<?php
 	include "function.php";
 
 	$returnwith = (string)(int)$_GET['returnwith'];

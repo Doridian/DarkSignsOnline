@@ -1,4 +1,4 @@
-<?
+<?php
 
 	//----------------------------------------------------------------------------------------------------------
 	//NOTE - when modifying this script, consider that you may need to modify domain_download.php as well!!!

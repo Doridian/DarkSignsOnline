@@ -1,4 +1,4 @@
-<?
+<?php
 
 $rewrite_done = true;
 
@@ -303,7 +303,7 @@ if (isset($_POST['username'])) {
 			</td>
 			<td bgcolor="#004488">
 				<div align="left"><select name="dobday">
-						<?
+						<?php
 
 						for ($x = 1; $x < 32; $x++) {
 							echo "<option>$x</option>";
@@ -326,7 +326,7 @@ if (isset($_POST['username'])) {
 						<option>December</option>
 					</select>
 					<select name="dobyear">
-						<?
+						<?php
 
 						for ($x = 2023; $x > 1900; $x--) {
 							echo "<option>$x</option>";
@@ -368,5 +368,4 @@ if (isset($_POST['username'])) {
 </form>
 <br />
 <br />
-<?
-require "_bottom.php";
+<?php require("_bottom.php");

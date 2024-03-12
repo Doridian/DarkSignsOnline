@@ -2,7 +2,7 @@
 <span class="style5"><br />
     <p><br />
         <font face="Georgia, Times New Roman, Times, serif" size="+3">Conditions </font><br />
-        <br />
+    </p>
     <table width="80%" border="0">
         <tr>
             <td>
@@ -36,7 +36,5 @@
     </table>
     <br />
     <br />
-    <br />
-    </p>
 </span>
 <?php require('_bottom.php'); ?>
