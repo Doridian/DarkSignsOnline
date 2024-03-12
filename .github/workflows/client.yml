@@ -41,7 +41,7 @@ jobs:
         Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6runtime.zip" -Wait -PassThru
     - name: Install VB6 runtime
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
-      timeout-minutes: 2
+      timeout-minutes: 5
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
