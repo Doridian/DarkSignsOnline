@@ -26,6 +26,7 @@ jobs:
           client:
             - 'client/**'
             - '.github/workflows/client.yml'
+    # Build process
     - name: Download VB6 from public sources
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       timeout-minutes: 2
@@ -74,6 +75,29 @@ jobs:
         if(![System.IO.File]::Exists(".\client.zip")) {
           throw (New-Object System.IO.FileNotFoundException("client.zip not found. Defender likely nabbed it...", $path))
         }
+    #  Artifact handlers
+    - name: Upload build artifacts
+      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-artifact@v4
+      with:
+        name: client
+        path: dist/
+        if-no-files-found: error
+    - name: Release mainline
+      uses: softprops/action-gh-release@v2
+      if: github.ref == 'refs/heads/main' && steps.changes.outputs.client == 'true'
+      with:
+        tag_name: latest
+        files: client.zip
+        fail_on_unmatched_files: true
+        prerelease: true
+    - name: Release tag
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: client.zip
+        fail_on_unmatched_files: true
+    # Failure handlers
     - name: Take failure screenshot
       if: failure()
       run: |
@@ -110,24 +134,3 @@ jobs:
         name: desktop.png
         path: desktop.png
         if-no-files-found: error
-    - name: Upload build artifacts
-      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
-      uses: actions/upload-artifact@v4
-      with:
-        name: client
-        path: dist/
-        if-no-files-found: error
-    - name: Release mainline
-      uses: softprops/action-gh-release@v2
-      if: github.ref == 'refs/heads/main' && steps.changes.outputs.client == 'true'
-      with:
-        tag_name: latest
-        files: client.zip
-        fail_on_unmatched_files: true
-        prerelease: true
-    - name: Release tag
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: client.zip
-        fail_on_unmatched_files: true
