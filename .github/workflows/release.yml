@@ -17,27 +17,12 @@ jobs:
   client:
     uses: ./.github/workflows/client.yml
     secrets: inherit
-  server:
-    uses: ./.github/workflows/server.yml
-    secrets: inherit
   deploy:
-    needs: [client, server]
+    needs: [client]
     runs-on: ubuntu-latest
     steps:
-    - name: Release mainline
-      uses: softprops/action-gh-release@v2
-      if: github.ref == 'refs/heads/main'
-      with:
-        tag_name: latest
-        files: client.zip
-        fail_on_unmatched_files: true
-        prerelease: true
-    - name: Release tag
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: client.zip
-        fail_on_unmatched_files: true
+    - uses: actions/checkout@v4
+    - run: ./.github/build-server.sh
 
     - uses: joutvhu/get-release@v1
       name: Get latest tagged release
