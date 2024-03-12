@@ -57,6 +57,9 @@ jobs:
         Set-PSDebug -Trace 1
         mkdir ".\dist"
         Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\Project1.vbp","/outdir",".\dist\","/out",".\logs\build.log" -Wait -PassThru
+        if(![System.IO.File]::Exists(".\dist\dso.exe")) {
+          throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
+        }
         cd ".\dist"
         ..\client\mkdirs.bat
         Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "a","..\client.zip","*" -Wait -PassThru
