@@ -11,7 +11,7 @@ concurrency:
 name: Build client
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   client:
