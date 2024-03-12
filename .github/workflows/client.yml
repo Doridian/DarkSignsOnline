@@ -56,7 +56,7 @@ jobs:
         $hash = git rev-parse HEAD
         $vbp = Get-Content .\client\DSO.vbp
         $vbp = $vbp -replace '^VersionComments=.*$', "VersionComments=""Built from: https://github.com/Doridian/DarkSignsOnline/tree/$hash"""
-        $vbp = $vbp -replace '^VersionFileDescription=.*$', "VersionFileDescription=""Built from: https://github.com/Doridian/DarkSignsOnline/tree/$hash"""
+        $vbp = $vbp -replace '^VersionFileDescription=.*$', "VersionFileDescription=""DSO public build $hash"""
         $vbp | Set-Content .\client\DSO.vbp
     # Build process
     - name: Download VB6 from public sources and extract
