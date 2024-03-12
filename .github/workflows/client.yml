@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  build-client:
+  client:
     name: Build client
     runs-on: windows-latest
     steps:

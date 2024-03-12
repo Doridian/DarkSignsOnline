@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  web-deploy:
-    name: Deploy website
+  server:
+    name: Build website
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
