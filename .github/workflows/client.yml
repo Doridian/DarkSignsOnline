@@ -33,6 +33,7 @@ jobs:
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
+        mkdir ".\logs"
         mkdir "C:\vb6"
         Invoke-WebRequest -Uri "https://archive.org/download/VisualBasic6Portable/Visual%20Basic%206%20Portable.exe" -OutFile "C:\vb6\vb6_portable.exe"
         Invoke-WebRequest -Uri "https://altushost-swe.dl.sourceforge.net/project/vb6extendedruntime/Visual%20Basic%206.0%20Runtime%20Plus%202.2.zip" -OutFile "C:\vb6\vb6runtime.zip"
@@ -55,10 +56,16 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
         mkdir ".\dist"
-        Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\Project1.vbp","/outdir",".\dist\" -Wait -PassThru
+        Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\Project1.vbp","/outdir",".\dist\","/out",".\logs\build.log" -Wait -PassThru
         cd ".\dist"
         ..\client\mkdirs.bat
         Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "a","..\client.zip","*" -Wait -PassThru
+    - name: Show build log
+      if: always()
+      run: |
+        Write-Host "----- BEGIN LOG -----"
+        Get-Content .\logs\build.log
+        Write-Host "----- END   LOG -----"
     - name: Ensure Defender doesn't false-positive us
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       timeout-minutes: 2
@@ -97,40 +104,10 @@ jobs:
       with:
         files: client.zip
         fail_on_unmatched_files: true
-    # Failure handlers
-    - name: Take failure screenshot
-      if: failure()
-      run: |
-        $Script:showWindowAsync = Add-Type -MemberDefinition @"
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
-        "@ -Name "Win32ShowWindowAsync" -Namespace Win32Functions -PassThru
-
-        $null = $showWindowAsync::ShowWindowAsync((Get-Process -Id $pid).MainWindowHandle, 2)
-
-        Add-Type -AssemblyName System.Windows.Forms,System.Drawing
-
-        $screens = [Windows.Forms.Screen]::AllScreens
-
-        $top    = ($screens.Bounds.Top    | Measure-Object -Minimum).Minimum
-        $left   = ($screens.Bounds.Left   | Measure-Object -Minimum).Minimum
-        $right  = ($screens.Bounds.Right  | Measure-Object -Maximum).Maximum
-        $bottom = ($screens.Bounds.Bottom | Measure-Object -Maximum).Maximum
-
-        $bounds   = [Drawing.Rectangle]::FromLTRB($left, $top, $right, $bottom)
-        $bmp      = New-Object System.Drawing.Bitmap ([int]$bounds.width), ([int]$bounds.height)
-        $graphics = [Drawing.Graphics]::FromImage($bmp)
-
-        $graphics.CopyFromScreen($bounds.Location, [Drawing.Point]::Empty, $bounds.size)
-
-        $bmp.Save(".\desktop.png")
-
-        $graphics.Dispose()
-        $bmp.Dispose()
-    - name: Upload failure screenshot
-      if: failure()
+    #  Always/Failure handlers
+    - name: Upload build logs
+      if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: desktop.png
-        path: desktop.png
-        if-no-files-found: error
+        name: logs
+        path: logs/
