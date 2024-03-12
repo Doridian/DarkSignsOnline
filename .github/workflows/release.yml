@@ -18,7 +18,7 @@ jobs:
     uses: ./.github/workflows/client.yml
     secrets: inherit
   deploy:
-    needs: [client]
+    #needs: [client]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -44,6 +44,12 @@ jobs:
       run: |
         set -x
         echo "${{ steps.mainline_release.outputs.assets[0].updated_at }}"
+        echo "${{ steps.mainline_release.outputs.assets[0] }}"
+        echo "${{ steps.mainline_release.outputs.assets }}"
+        echo "${{ steps.mainline_release.outputs.created_at }}"
+        echo "${{ steps.mainline_release.outputs.published_at }}"
+        echo "${{ steps.mainline_release.outputs }}"
+        echo "${{ steps.mainline_release.outputs }}"
         echo "${{ steps.mainline_release.outputs }}"
         echo "${{ steps.tagged_release.outputs }}"
 
