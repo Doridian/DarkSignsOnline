@@ -30,26 +30,15 @@
                 }
         ?>
         <tr>
-            <td width="34%">
+            <td width="100%">
                 <font face="Verdana" size="2"><strong><?php echo htmlentities($name); ?></strong><br />
                     Updated <?php echo htmlentities($client->updated_at); ?></font>
             </td>
-            <td width="66%">
-                <div align="right"><a
-                        href="<?php echo htmlentities($client->browser_download_url); ?>">Download</a><br /></div>
+            <td>
+                <a href="<?php echo htmlentities($client->browser_download_url); ?>">Download</a>
             </td>
         </tr>
         <?php } ?>
-        <tr>
-            <td>&nbsp;</td>
-            <td>
-                <div align="center">
-                    <font face="Georgia" size="3"><br />
-                        <br />
-                    </font>
-                </div>
-            </td>
-        </tr>
     </table>
     <br />
     <br />
