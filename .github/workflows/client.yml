@@ -26,6 +26,37 @@ jobs:
           client:
             - 'client/**'
             - '.github/workflows/client.yml'
+    # Reconfigure VBP version information
+    - name: Add version info if this is a tag
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        $ErrorActionPreference = 'Stop'
+        Set-PSDebug -Trace 1
+        $version = $env:GITHUB_REF -replace 'refs/tags/', ''
+        # Remove possible v* prefix
+        $version = $version -replace '^v', ''
+        $version = $version -replace '^V', ''
+        # Error if version is not a valid version
+        if($version -notmatch '^\d+\.\d+\.\d+$') {
+          throw (New-Object System.ArgumentException("Invalid version format: $version"))
+        }
+        # Split version
+        $version = $version -split '\.'
+
+        $vbp = Get-Content .\client\DSO.vbp
+        $vbp = $vbp -replace '^MajorVer=.*$', "MajorVer=$($version[0])"
+        $vbp = $vbp -replace '^MinorVer=.*$', "MinorVer=$($version[1])"
+        $vbp = $vbp -replace '^RevisionVer=.*$', "RevisionVer=$($version[2])"
+        $vbp | Set-Content .\client\DSO.vbp
+    - name: Add git hash to the version info
+      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
+      run: |
+        $ErrorActionPreference = 'Stop'
+        Set-PSDebug -Trace 1
+        $hash = git rev-parse HEAD
+        $vbp = Get-Content .\client\DSO.vbp
+        $vbp = $vbp -replace '^VersionComments=.*$', "VersionComments=""Built from: https://github.com/Doridian/DarkSignsOnline/tree/$hash"""
+        $vbp | Set-Content .\client\DSO.vbp
     # Build process
     - name: Download VB6 from public sources and extract
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
