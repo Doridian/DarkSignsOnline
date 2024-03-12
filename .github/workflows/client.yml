@@ -57,9 +57,7 @@ jobs:
         Set-PSDebug -Trace 1
         mkdir ".\dist"
         Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\dist\","/out",".\logs\build.log" -Wait -PassThru
-        Write-Host "----- BEGIN LOG -----"
         Get-Content .\logs\build.log
-        Write-Host "----- END   LOG -----"
         if(![System.IO.File]::Exists(".\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
         }
