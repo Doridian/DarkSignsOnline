@@ -27,7 +27,7 @@ jobs:
             - 'client/**'
             - '.github/workflows/client.yml'
     # Build process
-    - name: Download VB6 from public sources
+    - name: Download VB6 from public sources and extract
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       timeout-minutes: 2
       run: |
@@ -39,8 +39,8 @@ jobs:
         Invoke-WebRequest -Uri "https://altushost-swe.dl.sourceforge.net/project/vb6extendedruntime/Visual%20Basic%206.0%20Runtime%20Plus%202.2.zip" -OutFile "C:\vb6\vb6runtime.zip"
         C:
         cd "C:\vb6"
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6_portable.exe" -Wait -PassThru
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x","C:\vb6\vb6runtime.zip" -Wait -PassThru
+        & "C:\Program Files\7-Zip\7z.exe" x "C:\vb6\vb6_portable.exe"
+        & "C:\Program Files\7-Zip\7z.exe" x "C:\vb6\vb6runtime.zip"
     - name: Install VB6 runtime
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       timeout-minutes: 5
@@ -63,7 +63,7 @@ jobs:
         }
         cd ".\dist"
         ..\client\mkdirs.bat
-        Start-Process -FilePath "C:\Program Files\7-Zip\7z.exe" -ArgumentList "a","..\client.zip","*" -Wait -PassThru
+        & "C:\Program Files\7-Zip\7z.exe" a "..\client.zip" *
     - name: Ensure Defender doesn't false-positive us
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       timeout-minutes: 2
@@ -71,12 +71,12 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Remove-MpPreference -ExclusionPath (Get-MpPreference).ExclusionPath
         Set-PSDebug -Trace 1
-        Start-Process -FilePath "C:\Program Files\Windows Defender\MpCmdRun.exe" -ArgumentList "-SignatureUpdate","-http" -Wait -PassThru
-        Start-Process -FilePath "C:\Program Files\Windows Defender\MpCmdRun.exe" -ArgumentList "-Scan","-ScanType","3","-File",".\dist\dso.exe" -Wait -PassThru
+        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -SignatureUpdate -http
+        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File ".\dist\dso.exe"
         if(![System.IO.File]::Exists(".\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
         }
-        Start-Process -FilePath "C:\Program Files\Windows Defender\MpCmdRun.exe" -ArgumentList "-Scan","-ScanType","3","-File",".\client.zip" -Wait -PassThru
+        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File ".\client.zip"
         if(![System.IO.File]::Exists(".\client.zip")) {
           throw (New-Object System.IO.FileNotFoundException("client.zip not found. Defender likely nabbed it...", $path))
         }
