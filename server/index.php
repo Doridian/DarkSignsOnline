@@ -104,7 +104,7 @@
     related things, please let me know. I would love to have
     them for the archive.<br />
     E-Mail:
-    <a href="mailto:darksignsonline@doridian.net">darksignsonline@doridian.net</a><br />
+    <a href="mailto:doridian@darksignsonline.com">doridian@darksignsonline.com</a><br />
     Fedi:
     <a href="https://furry.engineer/@Doridian">@furry.engineer@Doridian</a></span><br /><br />
 
