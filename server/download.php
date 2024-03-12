@@ -10,16 +10,6 @@
         }
         return null;
     }
-
-    function get_release_date($release) {
-        foreach (json_decode($release['assets']) AS $asset) {
-            if ($asset['name'] !== 'client.zip') {
-                continue;
-            }
-            return $asset['updated_at'];
-        }
-        return 'N/A';
-    }
 ?>
 <br /><span class="style5"><br />
     <p><br />
@@ -34,15 +24,19 @@
                 if (empty($client)) {
                     continue;
                 }
+                $name = $release['name'];
+                if ($name === 'main' || $name === 'latest') {
+                    $name = 'Latest';
+                }
         ?>
         <tr>
             <td width="34%">
-                <font face="Verdana" size="2"><strong><?php echo htmlentities($release['name']); ?></strong><br />
+                <font face="Verdana" size="2"><strong><?php echo htmlentities($name); ?></strong><br />
                     Updated <?php echo htmlentities($client['updated_at']); ?></font>
             </td>
             <td width="66%">
                 <div align="right"><a
-                        href="<?php echo htmlentities($asset['browser_download_url']); ?>">Download</a><br /></div>
+                        href="<?php echo htmlentities($client['browser_download_url']); ?>">Download</a><br /></div>
             </td>
         </tr>
         <?php } ?>

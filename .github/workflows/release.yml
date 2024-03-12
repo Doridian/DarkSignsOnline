@@ -46,9 +46,9 @@ jobs:
       run: |
         set -x
         echo '[' > server/releases.json
-        echo '  ${{ steps.mainline_release.outputs.assets }}' >> server/releases.json
+        echo '  ${{ toJSON(steps.mainline_release.outputs) }}' >> server/releases.json
         echo ',' >> server/releases.json
-        echo '  ${{ steps.tagged_release.outputs.assets }}' >> server/releases.json
+        echo '  ${{ toJSON(steps.tagged_release.outputs) }}' >> server/releases.json
         echo ']' >> server/releases.json
 
     - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
