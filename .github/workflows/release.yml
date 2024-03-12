@@ -48,8 +48,7 @@ jobs:
         dir: "server/"
         json: |
           [
-            ${{ toJSON(steps.tagged_release.outputs) }}
-            ,
+            ${{ toJSON(steps.tagged_release.outputs) }},
             ${{ toJSON(steps.mainline_release.outputs) }}
           ]
     - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
