@@ -48,7 +48,7 @@ jobs:
         dir: "server/"
         json: |
           [
-            ${{ steps.tagged_release.outputs }}
+            ${{ toJSON(steps.tagged_release.outputs) }}
             ,
             ${{ toJSON(steps.mainline_release.outputs) }}
           ]
