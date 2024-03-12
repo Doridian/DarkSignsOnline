@@ -80,6 +80,7 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
         Start-Process -FilePath "C:\vb6\VB6 Runtime Plus 2.2.exe" -ArgumentList "/silent" -Wait -PassThru
+        # Found on https://github.com/ericsqxd/mapx_new/blob/master/reg
         reg import ".\.github\vb6.reg"
     - name: Build client
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
