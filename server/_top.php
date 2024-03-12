@@ -3,73 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Dark Signs Online</title>
-    <style type="text/css">
-      body,
-      td,
-      th {
-        color: #FFFFFF;
-      }
-
-      body {
-        background-color: #141414;
-        margin-left: 0px;
-        margin-top: 0px;
-        margin-right: 0px;
-        margin-bottom: 0px;
-      }
-
-      a:link {
-        color: #1DBBF8;
-      }
-
-      a:visited {
-        color: #1DBBF8;
-      }
-
-      a:hover {
-        color: #1DBBF8;
-      }
-
-      a:active {
-        color: #1DBBF8;
-      }
-
-      .style5 {
-        font-family: Georgia, "Times New Roman", Times, serif;
-        font-size: 36px;
-      }
-
-      .style9 {
-        font-size: 24px
-      }
-
-      .style3 {
-        font-family: Verdana, Arial, Helvetica, sans-serif;
-        font-size: 10px;
-      }
-
-      .style11 {
-        font-family: Georgia, "Times New Roman", Times, serif;
-        font-size: 18px;
-      }
-
-      .style12 {
-        color: #FF3300
-      }
-
-      .style13 {
-        color: #FFCC00;
-        font-size: 16px;
-      }
-
-      .style16 {
-        font-size: 18px
-      }
-
-      .style17 {
-        color: #FFCC00
-      }
-    </style>
+    <link href="/main.css" rel="stylesheet" type="text/css" />
   </head>
 
 <body>
