@@ -20,7 +20,7 @@ jobs:
     uses: ./.github/workflows/client.yml
     secrets: inherit
   deploy:
-    #needs: [client]
+    needs: [client]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -45,7 +45,11 @@ jobs:
     - name: Print some debug stuff
       run: |
         set -x
-        echo '${{ steps.mainline_release.outputs.assets }}' | jq -r '.[] | select(.name == "client.zip") | .updated_at'
+        echo '[' > server/releases.json
+        echo '  ${{ steps.mainline_release.outputs.assets }}' >> server/releases.json
+        echo ',' >> server/releases.json
+        echo '  ${{ steps.tagged_release.outputs.assets }}' >> server/releases.json
+        echo ']' >> server/releases.json
 
     - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       name: Deploy website with FTPS
