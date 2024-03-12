@@ -2,7 +2,9 @@ on:
   push:
     branches:
       - main
-    tags: []
+    tags-ignore:
+      - latest
+      - main
 
 concurrency:
   group: release-${{ github.ref }}
@@ -24,18 +26,18 @@ jobs:
     - uses: actions/checkout@v4
     - run: ./.github/build-server.sh
 
-    - uses: joutvhu/get-release@v1
+    - uses: cardinalby/git-get-release-action@v1
       name: Get latest tagged release
       id: tagged_release
       with:
         latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - uses: joutvhu/get-release@v1
+    - uses: cardinalby/git-get-release-action@v1
       name: Get latest mainline release
       id: mainline_release
       with:
-        tag_name: latest
+        tag: latest
         prerelease: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
