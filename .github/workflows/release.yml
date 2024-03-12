@@ -1,0 +1,77 @@
+on:
+  push:
+    branches:
+      - main
+    tags: []
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+name: Release
+
+permissions:
+  contents: write
+
+jobs:
+  client:
+    uses: ./.github/workflows/client.yml
+    secrets: inherit
+  server:
+    uses: ./.github/workflows/server.yml
+    secrets: inherit
+  deploy:
+    needs: [client, server]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Release mainline
+      uses: softprops/action-gh-release@v2
+      if: github.ref == 'refs/heads/main'
+      with:
+        tag_name: latest
+        files: client.zip
+        fail_on_unmatched_files: true
+        prerelease: true
+    - name: Release tag
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: client.zip
+        fail_on_unmatched_files: true
+
+    - uses: joutvhu/get-release@v1
+      name: Get latest tagged release
+      id: tagged_release
+      with:
+        latest: true
+    - uses: joutvhu/get-release@v1
+      name: Get latest mainline release
+      id: mainline_release
+      with:
+        tag_name: latest
+        prerelease: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Print some debug stuff
+      run: |
+        set -x
+        echo "${{ steps.mainline_release.outputs.assets[0].updated_at }}"
+        echo "${{ steps.mainline_release.outputs }}"
+        echo "${{ steps.tagged_release.outputs }}"
+
+    - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      name: Deploy website with FTPS
+      with:
+        server: arcticfox.doridian.net
+        username: dsonline
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./server/
+        server-dir: /public_html/
+        security: strict
+        protocol: ftps
+        port: 21
+        exclude: |
+            **/.git*
+            **/.git*/**
+            **/config.php

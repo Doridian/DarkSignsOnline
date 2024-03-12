@@ -1,5 +1,8 @@
 on:
-  - push
+  push:
+    branches-ignore:
+      - main
+  workflow_call: {}
 
 concurrency:
   group: client-${{ github.ref }}
@@ -8,7 +11,7 @@ concurrency:
 name: Build client
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build-client:
@@ -62,11 +65,3 @@ jobs:
         name: client
         path: dist/
         if-no-files-found: error
-    - name: Release
-      uses: softprops/action-gh-release@v2
-      if: github.ref == 'refs/heads/main'
-      with:
-        tag_name: latest
-        files: client.zip
-        fail_on_unmatched_files: true
-        prerelease: true

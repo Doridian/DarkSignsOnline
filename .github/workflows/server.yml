@@ -1,5 +1,8 @@
 on:
-  - push
+  push:
+    branches-ignore:
+      - main
+  workflow_call: {}
 
 concurrency:
   group: server-${{ github.ref }}
@@ -17,18 +20,3 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - run: git rev-parse HEAD > server/api/gitrev.txt
-    - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-      if: github.ref == 'refs/heads/main'
-      with:
-        server: arcticfox.doridian.net
-        username: dsonline
-        password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./server/
-        server-dir: /public_html/
-        security: strict
-        protocol: ftps
-        port: 21
-        exclude: |
-            **/.git*
-            **/.git*/**
-            **/config.php
