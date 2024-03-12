@@ -78,9 +78,9 @@ jobs:
       if: failure()
       run: |
         $Script:showWindowAsync = Add-Type -MemberDefinition @"
-          [DllImport("user32.dll")]
-          public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
-          "@ -Name "Win32ShowWindowAsync" -Namespace Win32Functions -PassThru
+        [DllImport("user32.dll")]
+        public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+        "@ -Name "Win32ShowWindowAsync" -Namespace Win32Functions -PassThru
 
         $null = $showWindowAsync::ShowWindowAsync((Get-Process -Id $pid).MainWindowHandle, 2)
 
