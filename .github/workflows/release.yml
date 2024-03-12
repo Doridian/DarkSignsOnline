@@ -29,6 +29,8 @@ jobs:
       id: tagged_release
       with:
         latest: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - uses: joutvhu/get-release@v1
       name: Get latest mainline release
       id: mainline_release
