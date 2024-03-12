@@ -41,16 +41,17 @@ jobs:
         prerelease: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Print some debug stuff
-      run: |
-        set -x
-        echo '[' > server/releases.json
-        echo '  ${{ toJSON(steps.tagged_release.outputs) }}' >> server/releases.json
-        echo ',' >> server/releases.json
-        echo '  ${{ toJSON(steps.mainline_release.outputs) }}' >> server/releases.json
-        echo ']' >> server/releases.json
-
+    - name: Generate releases.json
+      uses: jsdaniell/create-json@v1.2.3
+      with:
+        name: "releases.json"
+        dir: "server/"
+        json: |
+          [
+            ${{ steps.tagged_release.outputs }}
+            ,
+            ${{ toJSON(steps.mainline_release.outputs) }}
+          ]
     - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       name: Deploy website with FTPS
       with:
