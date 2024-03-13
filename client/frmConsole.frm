@@ -1164,23 +1164,24 @@ Sub ManageSockError(Index As Integer, Reason As String)
         DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
         DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
         
-        Dim Http As New MSXML2.XMLHTTP60
+        Dim Requestor As New clsHttpRequestor
         Dim HttpMethod As String
-        HttpRequests(Index).Http.abort
-        Set HttpRequests(Index).Http = Http
+        HttpRequests(Index).Requestor.Abort
+        Set HttpRequests(Index).Requestor = Requestor
 
-        Dim StateHandler As clsReadyStateHandler
-        Set StateHandler = New clsReadyStateHandler
-        StateHandler.Index = Index
-        Http.OnReadyStateChange = StateHandler
+        Requestor.Index = Index
+        Requestor.consoleID = HttpRequests(Index).consoleID
+        Requestor.Url = HttpRequests(Index).Url
 
-        Http.open HttpRequests(Index).Method, HttpRequests(Index).Url, True, HttpRequests(Index).Username, HttpRequests(Index).Password
+        Requestor.HttpRequest.Open_ HttpRequests(Index).Method, HttpRequests(Index).Url, True
+
+        Requestor.HttpRequest.SetCredentials HttpRequests(Index).UserName, HttpRequests(Index).Password, 0
 
         If HttpRequests(Index).Method = "POST" Then
-            Http.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
-            Http.Send HttpRequests(Index).PostData
+            Requestor.HttpRequest.SetRequestHeader "Content-Type", "application/x-www-form-urlencoded"
+            Requestor.HttpRequest.Send HttpRequests(Index).PostData
         Else
-            Http.Send
+            Requestor.HttpRequest.Send
         End If
         tmrTimeout(Index).Enabled = True
 
@@ -1328,7 +1329,7 @@ End Sub
 
 Private Sub tmrTimeout_Timer(Index As Integer)
     If basWorld.HttpRequests(Index).InUse Then
-        basWorld.HttpRequests(Index).Http.abort
+        basWorld.HttpRequests(Index).Requestor.HttpRequest.Abort
         ManageSockError Index, "Timeout"
     End If
     
