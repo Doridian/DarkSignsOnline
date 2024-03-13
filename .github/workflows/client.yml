@@ -29,6 +29,7 @@ jobs:
             - 'client/**'
             - '.github/workflows/client.yml'
             - '.gitmodules'
+            - 'LICENSE'
     # Reconfigure VBP version information
     - name: Add version info if this is a tag
       if: startsWith(github.ref, 'refs/tags/')
