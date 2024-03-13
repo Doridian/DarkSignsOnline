@@ -1,5 +1,5 @@
 .DS_Store
-/dist
+/client/dist
 /logs
 /client.zip
 /server/LICENSE

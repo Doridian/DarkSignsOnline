@@ -102,17 +102,17 @@ jobs:
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
-        mkdir ".\dist"
-        Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\dist\","/out",".\logs\build.log" -Wait -PassThru
+        mkdir ".\client\dist"
+        Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\build.log" -Wait -PassThru
         Get-Content .\logs\build.log
-        if(![System.IO.File]::Exists(".\dist\dso.exe")) {
+        if(![System.IO.File]::Exists(".\client\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Build failure?", $path))
         }
-        cd ".\dist"
-        ..\client\mkdirs.bat
+        cd ".\client\dist"
+        ..\mkdirs.bat
         Copy-Item ..\libs\VbAsyncSocket\LICENSE .\LICENSE-VbAsyncSocket.txt
         Copy-Item ..\..\LICENSE .\LICENSE.txt
-        & "C:\Program Files\7-Zip\7z.exe" a -tzip "..\client.zip" -r * "-x!dso.pdb"
+        & "C:\Program Files\7-Zip\7z.exe" a -tzip "..\..\client.zip" -r * "-x!dso.pdb"
     - name: Ensure Defender doesn't false-positive us
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       timeout-minutes: 2
@@ -126,7 +126,7 @@ jobs:
         Get-Content "$env:TEMP\MpCmdRun.log"
 
         Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
-        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$(pwd)\dist\dso.exe"
+        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$(pwd)\client\dist\dso.exe"
         Get-Content "$env:TEMP\MpCmdRun.log"
         if(![System.IO.File]::Exists(".\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
@@ -144,7 +144,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: client
-        path: dist/
+        path: client/dist/
         if-no-files-found: error
     - name: Release mainline
       uses: softprops/action-gh-release@v2
