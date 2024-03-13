@@ -29,15 +29,9 @@ Begin VB.Form frmConsole
    Begin DSO.ctxWinsock sockIRC 
       Left            =   960
       Top             =   7080
-      _ExtentX        =   847
-      _ExtentY        =   847
-      Protocol        =   2
-   End
-   Begin VB.Timer tmrTimeout 
-      Enabled         =   0   'False
-      Index           =   0
-      Left            =   9480
-      Top             =   7440
+      _extentx        =   847
+      _extenty        =   847
+      protocol        =   2
    End
    Begin VB.PictureBox ChatBox 
       Appearance      =   0  'Flat
@@ -629,7 +623,7 @@ Sub CommSmaller()
 End Sub
 
 
-Sub SetConsoleActive(ByVal consoleID As Integer)
+Sub SetConsoleActive(ByVal ConsoleID As Integer)
     
     Print_Console True
 
@@ -637,7 +631,7 @@ Sub SetConsoleActive(ByVal consoleID As Integer)
     consoleShape.Height = 60
     consoleShape.Top = MiniMenu.Height - consoleShape.Height - 60
     
-    Select Case consoleID
+    Select Case ConsoleID
         Case 1: consoleShape.Left = 90
         Case 2: consoleShape.Left = 320
         Case 3: consoleShape.Left = 540
@@ -773,14 +767,14 @@ Public Sub ToggleConsoleFull()
         End If
 End Sub
 
-Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
+Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
  Dim tmpS As String, tmpInputString As String, tmpS2 As String, iTmp As Long, tmpS3 As String, tmpSP As String, globalITMP As Long, firstParam As Boolean
- tmpS = Console(consoleID, CurrentLine(consoleID)).Caption
- If autoCompActive(consoleID) = True Then
-    tmpS = autoCompLast(consoleID)
+ tmpS = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
+ If autoCompActive(ConsoleID) = True Then
+    tmpS = autoCompLast(ConsoleID)
  Else
-    autoCompLast(consoleID) = tmpS
-    autoILast(consoleID) = 0
+    autoCompLast(ConsoleID) = tmpS
+    autoILast(ConsoleID) = 0
  End If
  iTmp = InStr(tmpS, ">")
  If iTmp > 0 Then
@@ -798,7 +792,7 @@ Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
   tmpInputString = tmpInputString & Mid(tmpS, 1, iTmp)
   tmpS = Trim(Mid(tmpS, iTmp + 1))
  End If
- tmpS2 = App.Path & "\user" & cPrefix(consoleID) & cPath(consoleID)
+ tmpS2 = App.Path & "\user" & cPrefix(ConsoleID) & cPath(ConsoleID)
  tmpS = Replace(tmpS, "/", "\")
  iTmp = InStrRev(tmpS, "\")
  If iTmp > 0 Then
@@ -809,7 +803,7 @@ Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
  On Error GoTo acSubEnd1
  tmpS3 = Dir(tmpS2 & tmpS & "*", vbDirectory)
  If tmpS3 = "" Then GoTo acSubEnd1
- While tmpS3 = "." Or tmpS3 = ".." Or globalITMP < autoILast(consoleID)
+ While tmpS3 = "." Or tmpS3 = ".." Or globalITMP < autoILast(ConsoleID)
   If tmpS3 <> "." And tmpS3 <> ".." Then
     globalITMP = globalITMP + 1
   End If
@@ -824,16 +818,16 @@ Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
   Else
    tmpS3 = tmpS3 & " "
   End If
-   Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpSP & tmpS3 & "_"
-   autoCompActive(consoleID) = True
-   autoILast(consoleID) = autoILast(consoleID) + 1
+   Console(ConsoleID, CurrentLine(ConsoleID)).Caption = tmpInputString & tmpSP & tmpS3 & "_"
+   autoCompActive(ConsoleID) = True
+   autoILast(ConsoleID) = autoILast(ConsoleID) + 1
    Exit Sub
  End If
 acSubEnd1:
  If firstParam = False Then GoTo acSubEnd3
  tmpS3 = Dir(App.Path & "\user\system\commands\" & tmpS & "*")
  On Error GoTo acSubEnd2
- While globalITMP < autoILast(consoleID)
+ While globalITMP < autoILast(ConsoleID)
   tmpS3 = ""
   globalITMP = globalITMP + 1
   tmpS3 = Dir()
@@ -842,9 +836,9 @@ acSubEnd1:
  On Error GoTo 0
  If tmpS3 <> "" Then
   If LCase(Right(tmpS3, 3)) = ".ds" Then tmpS3 = Mid(tmpS3, 1, Len(tmpS3) - 3)
-  Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpS3 & " _"
-  autoCompActive(consoleID) = True
-  autoILast(consoleID) = autoILast(consoleID) + 1
+  Console(ConsoleID, CurrentLine(ConsoleID)).Caption = tmpInputString & tmpS3 & " _"
+  autoCompActive(ConsoleID) = True
+  autoILast(ConsoleID) = autoILast(ConsoleID) + 1
   Exit Sub
  End If
 acSubEnd2:
@@ -857,7 +851,7 @@ acSubEnd2:
      On Error GoTo acSubEnd3
      tmpS3 = Dir(App.Path & "\user" & sPath & "\" & tmpS & "*")
      globalITMP = globalITMP + 1
-     While globalITMP < autoILast(consoleID)
+     While globalITMP < autoILast(ConsoleID)
         tmpS3 = ""
         globalITMP = globalITMP + 1
         tmpS3 = Dir()
@@ -866,16 +860,16 @@ acSubEnd2:
      On Error GoTo 0
      If tmpS3 <> "" Then
          If LCase(Right(tmpS3, 3)) = ".ds" Then tmpS3 = Mid(tmpS3, 1, Len(tmpS3) - 3)
-         Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpS3 & " _"
-         autoCompActive(consoleID) = True
-         autoILast(consoleID) = autoILast(consoleID) + 1
+         Console(ConsoleID, CurrentLine(ConsoleID)).Caption = tmpInputString & tmpS3 & " _"
+         autoCompActive(ConsoleID) = True
+         autoILast(ConsoleID) = autoILast(ConsoleID) + 1
          Exit Sub
      End If
  Next iTmp
 acSubEnd3:
  If fromAC = False Then
-    autoILast(consoleID) = 0
-    AutoComplete consoleID, True
+    autoILast(ConsoleID) = 0
+    AutoComplete ConsoleID, True
  End If
 End Sub
 
@@ -909,12 +903,6 @@ End Sub
 
 
 Private Sub Form_Load()
-    Dim n As Integer
-    For n = 1 To UBound(basWorld.HttpRequests)
-        Load tmrTimeout(n)
-        tmrTimeout(n).Tag = 0
-    Next
-    
     curMsg = 0
     connected = False
     chatToStatus = RegLoad("ChatView", False)
@@ -1079,7 +1067,7 @@ Private Sub Form_Unload(Cancel As Integer)
 End Sub
 
 
-Private Sub IRC_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub IRC_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
     On Error Resume Next
     txtChatMsg.SetFocus
 End Sub
@@ -1150,60 +1138,8 @@ Private Sub lFull_Click()
 End Sub
 
 
-Sub ManageSockError(Index As Integer, Reason As String)
-    tmrTimeout(sockIndex).Enabled = False
-    'on error consider retrying
-    Dim Retries As Integer
-    Retries = HttpRequests(Index).Retries
-    If Retries < basWorld.MaxSockRetries Then
-        HttpRequests(Index).Retries = Retries + 1
-        
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        
-        Dim Requestor As New clsHttpRequestor
-        Dim HttpMethod As String
-        HttpRequests(Index).Requestor.Abort
-        Set HttpRequests(Index).Requestor = Requestor
-
-        Requestor.Index = Index
-        Requestor.consoleID = HttpRequests(Index).consoleID
-        Requestor.Url = HttpRequests(Index).Url
-
-        Requestor.HttpRequest.Open_ HttpRequests(Index).Method, HttpRequests(Index).Url, True
-
-        Requestor.HttpRequest.SetCredentials HttpRequests(Index).UserName, HttpRequests(Index).Password, 0
-
-        If HttpRequests(Index).Method = "POST" Then
-            Requestor.HttpRequest.SetRequestHeader "Content-Type", "application/x-www-form-urlencoded"
-            Requestor.HttpRequest.Send HttpRequests(Index).PostData
-        Else
-            Requestor.HttpRequest.Send
-        End If
-        tmrTimeout(Index).Enabled = True
-
-        Dim tmpS As String
-        tmpS = HttpRequests(Index).Url
-        If InStr(i(tmpS), "z_online") > 0 Then Exit Sub 'don't show these errors
-        If InStr(i(tmpS), "chat") > 0 Then Exit Sub 'don't show these errors
-        SayComm "Connection failed to [" & tmpS & "] because of " & Reason & ". Retry " & Trim(str(Retries)) & " of " & Trim(str(MaxSockRetries)) & "."
-   Else
-        SayComm "Connection failed to [" & tmpS & "] because of " & Reason & ". Retry count expired."
-        HttpRequests(Index).InUse = False
-   End If
-
-    'If SockRetries(index) < MaxSockRetries Then
-'        If InStr(i(tmpS), "z_online") > 0 Then Exit Sub 'don't show these errors
-'        If InStr(i(tmpS), "chat") > 0 Then Exit Sub 'don't show these errors
-
-End Sub
-
-
-Private Sub Stats_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
-    If X > (Stats.Width - 120) And Y < 60 Then
+Private Sub Stats_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
+    If x > (Stats.Width - 120) And y < 60 Then
         Unload Me
     End If
 End Sub
@@ -1311,30 +1247,21 @@ Private Sub tmrStart_Timer()
     
 End Sub
 
-Public Sub Start_Console(ByVal consoleID As Integer)
+Public Sub Start_Console(ByVal ConsoleID As Integer)
     
-    Reset_Console consoleID
+    Reset_Console ConsoleID
 
 
-    If consoleID = 1 Then
+    If ConsoleID = 1 Then
         'run the primary startup script
-        Run_Script "\system\startup.ds", consoleID, "", "BOOT"
+        Run_Script "\system\startup.ds", ConsoleID, "", "BOOT"
     Else
-        Run_Script "\system\newconsole.ds", consoleID, "", "BOOT"
+        Run_Script "\system\newconsole.ds", ConsoleID, "", "BOOT"
     End If
     
     
 End Sub
 
-
-Private Sub tmrTimeout_Timer(Index As Integer)
-    If basWorld.HttpRequests(Index).InUse Then
-        basWorld.HttpRequests(Index).Requestor.HttpRequest.Abort
-        ManageSockError Index, "Timeout"
-    End If
-    
-    tmrTimeout(Index).Enabled = False
-End Sub
 
 Private Sub tmrWait_Timer(Index As Integer)
     tmrWait(Index).Enabled = False
@@ -1467,29 +1394,29 @@ Sub processCommand()
                     Case "JOIN" 'if someone joined
                         displaychat "** " + from$ + " has joined " + processParam(params$) + " **"     'display it
                         'check if the user is already in the list
-                        X% = -1  'start checking from the first user (-1 + 1 = 0)
+                        x% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            X% = X% + 1     'increase x% with 1
-                            If X% = lstUsers.ListCount Then 'if the user is not found ...
-                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            x% = x% + 1     'increase x% with 1
+                            If x% = lstUsers.ListCount Then 'if the user is not found ...
+                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
+                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
                         'if x% = -1, the user was not found in the list, so we can add him
-                        If X% = -1 Then lstUsers.AddItem (from$)    'add this user to the user list
+                        If x% = -1 Then lstUsers.AddItem (from$)    'add this user to the user list
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "QUIT" 'if someone disconnected
                         displaychat "** " + from$ + " has quit IRC (" + processParam(params$) + ") **"    'display it
                         'check if the user is already in the list
-                        X% = -1  'start checking from the first user (-1 + 1 = 0)
+                        x% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            X% = X% + 1     'increase x% with 1
-                            If X% = lstUsers.ListCount Then 'if the user is not found ...
-                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            x% = x% + 1     'increase x% with 1
+                            If x% = lstUsers.ListCount Then 'if the user is not found ...
+                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
-                        If X% > -1 Then lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
+                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
+                        If x% > -1 Then lstUsers.RemoveItem (x%)    'if we found a matching user in the list, remove it
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "NICK" 'if someone changed his nickname
                         If from$ = nick$ Then
@@ -1498,31 +1425,31 @@ Sub processCommand()
                         End If
                         displaychat "** " + from$ + " changed his nickname to " + processParam(params$) + " **"    'display it
                         'check if the user is already in the list
-                        X% = -1  'start checking from the first user (-1 + 1 = 0)
+                        x% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            X% = X% + 1     'increase x% with 1
-                            If X% = lstUsers.ListCount Then 'if the user is not found ...
-                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            x% = x% + 1     'increase x% with 1
+                            If x% = lstUsers.ListCount Then 'if the user is not found ...
+                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
-                        If X% > -1 Then
-                            lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
+                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
+                        If x% > -1 Then
+                            lstUsers.RemoveItem (x%)    'if we found a matching user in the list, remove it
                             lstUsers.AddItem (processParam(params$))    'and add the new nick
                         End If
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "PART" ' if someone left the channel
                         displaychat "** " + from$ + " has left " + params$ + " **"    'display it
                         'check if the user is allready in the list
-                        X% = -1  'start checking from the first user (-1 + 1 = 0)
+                        x% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            X% = X% + 1
-                            If X% = lstUsers.ListCount Then 'if the user is not found ...
-                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            x% = x% + 1
+                            If x% = lstUsers.ListCount Then 'if the user is not found ...
+                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
-                        If X% > -1 Then lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
+                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
+                        If x% > -1 Then lstUsers.RemoveItem (x%)    'if we found a matching user in the list, remove it
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "MODE"     'if someone sets the mode on someone
                         displaychat "** " + from$ + " sets mode " + processParam(processRest(params$)) + " on " + processParam(params$) + " **" 'display the mode change
@@ -1542,16 +1469,16 @@ Sub processCommand()
                             'Do Until Left$(nick2$, 1) <> "@" And Left$(nick2$, 1) <> "+"  'cut of the @ and + flags at the beginning ...
                                 'nick2$ = Right(nick2$, Len(nick2$) - 1) 'cut of the first character
                             'Loop
-                            X% = -1  'start checking from the first user (-1 + 1 = 0)
+                            x% = -1  'start checking from the first user (-1 + 1 = 0)
                             Do
-                                X% = X% + 1     'increase x% with 1
-                                If X% = lstUsers.ListCount Then 'if the user is not found ...
-                                    X% = -1     'set the user to be removed to -1 (ERROR :-) )
+                                x% = x% + 1     'increase x% with 1
+                                If x% = lstUsers.ListCount Then 'if the user is not found ...
+                                    x% = -1     'set the user to be removed to -1 (ERROR :-) )
                                     Exit Do     'exit the loop
                                 End If
-                            Loop Until lstUsers.List(X%) = nick2$    'loop until we find the user
+                            Loop Until lstUsers.List(x%) = nick2$    'loop until we find the user
                             'if x% = -1, the user was not found in the list, so we can add him
-                            If X% = -1 Then lstUsers.AddItem (nick2$)    'add this user to the user list
+                            If x% = -1 Then lstUsers.AddItem (nick2$)    'add this user to the user list
                         Loop Until othernicks$ = ""     'loop through all the received nicknames
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "376"    'end of the motd
@@ -1630,13 +1557,13 @@ Private Sub sockIRC_Connect()   'as soon as we're connected to the server:
 End Sub
 
 Private Sub sockIRC_DataArrival(ByVal bytesTotal As Long)
-    Dim X As Long
+    Dim x As Long
     Dim ArrivedData$
     sockIRC.GetData ArrivedData$, vbString
 
     Dim temp$
-    For X& = 1 To bytesTotal    'get every byte we received, but only one at a time
-        temp$ = Mid(ArrivedData$, X, 1)
+    For x& = 1 To bytesTotal    'get every byte we received, but only one at a time
+        temp$ = Mid(ArrivedData$, x, 1)
         If temp$ = Chr$(10) Then    'if we received a newline character (this is the end of the message)
             processCommand  'process the entire command
             data$ = ""      'clear the data$
@@ -1808,18 +1735,18 @@ AllDone:
 End Sub
 
 
-Public Sub ChatSend(ByVal s As String, ByVal consoleID As Integer)
+Public Sub ChatSend(ByVal s As String, ByVal ConsoleID As Integer)
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
     s = Trim(s)
     If Len(s) > 0 Then
         Send "PRIVMSG " + channel$ + " :" + s
         displaychat "<" + MyIRCName + ">  " + s
     Else
-        ShowHelp "chatview", consoleID
+        ShowHelp "chatview", ConsoleID
     End If
 End Sub
 
-Public Sub ChatView(ByVal s As String, ByVal consoleID As Integer)
+Public Sub ChatView(ByVal s As String, ByVal ConsoleID As Integer)
     s = Trim(LCase(s))
     If s = "on" Then
         chatToStatus = True
@@ -1830,6 +1757,6 @@ Public Sub ChatView(ByVal s As String, ByVal consoleID As Integer)
         RegSave "CHATVIEW", False
         SayComm "Chatview is now disabled."
     Else
-       ShowHelp "chatview", consoleID
+       ShowHelp "chatview", ConsoleID
     End If
 End Sub

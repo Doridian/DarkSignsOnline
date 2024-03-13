@@ -17,24 +17,6 @@ Public Const TimeOutSeconds = 8
 
 Public Authorized As Boolean
 
-Public Type HttpRequest
-    Requestor As clsHttpRequestor
-    InUse As Boolean
-    ConsoleID As Integer
-    IsCustomDownload As Integer
-
-    Retries As Integer
-    
-    Method As String
-    Url As String
-    PostData As String
-    
-    UserName As String
-    Password As String
-End Type
-
-Public HttpRequests(1 To 30) As HttpRequest
-
 Public Comms(1 To 49) As String
 
 Public Sub LoginNow(ByVal ConsoleID As Integer)
@@ -90,68 +72,37 @@ Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Option
         RunPage = 0
         Exit Function
     End If
-    
-    Dim sockIndex As Integer
-    sockIndex = -1
-    Dim n As Integer
-    For n = 1 To UBound(HttpRequests)
-        If Not HttpRequests(n).InUse Then
-            sockIndex = n
-            Exit For
-        End If
-    Next
-    frmConsole.tmrTimeout(sockIndex).Enabled = False
-    HttpRequests(sockIndex).InUse = True
  
     sUrl = Trim(Replace(sUrl, "&&", "&"))
     sUrl = Replace(sUrl, " ", "%20")
 
-    HttpRequests(sockIndex).Retries = 0
-    HttpRequests(sockIndex).ConsoleID = ConsoleID
-    HttpRequests(sockIndex).IsCustomDownload = IsCustomDownload
-    HttpRequests(sockIndex).UserName = myUsername
-    HttpRequests(sockIndex).Password = myPassword
-
-    Dim HttpMethod As String
+    Dim Requestor As New clsHttpRequestor
+    Requestor.ConsoleID = ConsoleID
+    Requestor.IsCustomDownload = IsCustomDownload
+    Requestor.UserName = myUsername
+    Requestor.Password = myPassword
 
     If IsCustomDownload <= 0 Then
         sUrl = API_Server + API_Path + sUrl
     End If
     
-    If UsePost = True Then
-        HttpMethod = "POST"
-    Else
-        HttpMethod = "GET"
-    End If
-
-    Dim Requestor As New clsHttpRequestor
-    Requestor.Index = sockIndex
-    HttpRequests(sockIndex).Method = HttpMethod
-    HttpRequests(sockIndex).Url = sUrl
     Requestor.Url = sUrl
-    Requestor.ConsoleID = ConsoleID
-    Set HttpRequests(sockIndex).Requestor = Requestor
 
-    Requestor.HttpRequest.Open_ HttpMethod, sUrl, True
-
-    Requestor.HttpRequest.SetCredentials myUsername, myPassword, 0
-    If HttpMethod = "POST" Then
+    If UsePost = True Then
+        Requestor.Method = "POST"
         PostData = Trim(PostData)
         PostData = Replace(PostData, " ", "%20")
         PostData = Replace(PostData, "+", "--plus--")
         'PostData = Replace(PostData, "&", "--and--") 'this one screws up URL
-        HttpRequests(sockIndex).PostData = PostData
-        Requestor.HttpRequest.SetRequestHeader "Content-Type", "application/x-www-form-urlencoded"
-        Requestor.HttpRequest.Send PostData
+        Requestor.PostData = PostData
     Else
-        HttpRequests(sockIndex).PostData = ""
-        Requestor.HttpRequest.Send
+        Requestor.Method = "GET"
+        Requestor.PostData = ""
     End If
 
-    frmConsole.tmrTimeout(sockIndex).Interval = TimeOutSeconds * 1000
-    frmConsole.tmrTimeout(sockIndex).Enabled = True
 
-    RunPage = n
+    Requestor.Send
+    RunPage = 1
 End Function
 
 Public Function myUsername() As String
@@ -210,9 +161,7 @@ AllDone:
 End Sub
 
 
-Public Sub Process(ByVal s As String, sSource As String, ByVal ConsoleID As Integer, ByVal Index As Integer)
-    
- 
+Public Sub Process(ByVal s As String, sSource As String, ByVal ConsoleID As Integer, ByVal IsCustomDownload As Integer)
     'process incoming data that winhttp download
     s = Replace(s, "<end>", "")
     s = Trim(s)
@@ -228,12 +177,7 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal ConsoleID As Inte
     Else
         'it's encrypted, don't screw up the data
     End If
-        
-    
-    
 
-    Dim IsCustomDownload As Integer
-    IsCustomDownload = basWorld.HttpRequests(Index).IsCustomDownload
     If IsCustomDownload > 0 Then
         'put the data into a variable!
         Vars(IsCustomDownload).VarValue = Bracketize(s, True)
