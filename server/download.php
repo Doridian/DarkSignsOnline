@@ -35,7 +35,8 @@ function get_release_client($release)
                 <td width="100%">
                     <font face="Verdana" size="2"><strong><?php echo htmlentities($name); ?></strong><br />
                         Updated <?php echo htmlentities($client->updated_at); ?><br />
-                        <a href="<?php echo htmlentities($release->tarball_url); ?>">Source code</a></font>
+                        <a href="https://github.com/Doridian/DarkSignsOnline/tree/<?php echo htmlentities($release->name); ?>/client">Source code</a>
+                    </font>
                 </td>
                 <td>
                     <a href="<?php echo htmlentities($client->browser_download_url); ?>">Download</a>
