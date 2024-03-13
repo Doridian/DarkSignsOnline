@@ -24,6 +24,7 @@ Class=cHttpRequest; libs\VbAsyncSocket\contrib\cHttpRequest.cls
 IconForm="frmConsole"
 Startup="frmConsole"
 HelpFile=""
+NoControlUpgrade=1
 Title="Dark Signs Online"
 ExeName32="dso.exe"
 Path32="dist"
