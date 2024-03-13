@@ -1,7 +1,7 @@
 <?php
   function format_github_link($rev) {
     $rev = trim($rev);
-    return '<a href="https://github.com/Doridian/DarkSignsOnline/tree/' . htmlentities($rev) . '">View source code @' . htmlentities($rev) . '</a>';
+    return '<a href="https://github.com/Doridian/DarkSignsOnline/tree/' . htmlentities($rev) . '">' . htmlentities($rev) . '</a>';
   }
 ?>
 <br />
