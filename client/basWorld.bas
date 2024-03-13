@@ -5,7 +5,7 @@ Public Const API_Server = "https://darksignsonline.com" 'e.g. "https://darksigns
 Public Const API_Path = "/api/" 'e.g. "/api/"
 
 Public Const IRC_Server = "irc.libera.chat"
-Public Const IRC_Port = "6667"
+Public Const IRC_Port = "6697"
 
 Public userIP As String
 Public referals(0 To 3) As String
@@ -74,10 +74,10 @@ Public Sub LogoutNow(ByVal consoleID As Integer)
     SayComm "You have been logged out."
     
     If frmConsole.getConnected Then
-        frmConsole.send "QUIT :www.darksignsonline.com, Dark Signs Online"    'send the quit message
+        frmConsole.Send "QUIT :www.darksignsonline.com, Dark Signs Online"    'send the quit message
         frmConsole.lstUsers.Clear  'clear the list entries
         frmConsole.display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
-        frmConsole.sockIRC.Close   'close the connection
+        frmConsole.sockIRC.Close_   'close the connection
         frmConsole.setConnected False
     End If
 End Sub
@@ -142,10 +142,10 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
         'PostData = Replace(PostData, "&", "--and--") 'this one screws up URL
         HttpRequests(sockIndex).PostData = PostData
         Http.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
-        Http.send PostData
+        Http.Send PostData
     Else
         HttpRequests(sockIndex).PostData = ""
-        Http.send
+        Http.Send
     End If
     'SockPort(sockIndex) = 80
 
@@ -285,10 +285,10 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
             SayComm "You have been authorized as " & myUsername & "."
             SayComm "Welcome to the Dark Signs Network!"
             SayComm "Dark Signs Online - PreRelease Build 1337"
-            If command <> "" Then
+            If Command <> "" Then
                 Dim CLine As ConsoleLine
                 CLine = Console_Line_Defaults
-                CLine.Caption = command
+                CLine.Caption = Command
                 Run_Command CLine, consoleID
             End If
             
@@ -299,10 +299,10 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
             
             
             If frmConsole.getConnected Then
-                frmConsole.send "QUIT :www.darksignsonline.com, Dark Signs Online"    'send the quit message
+                frmConsole.Send "QUIT :www.darksignsonline.com, Dark Signs Online"    'send the quit message
                 frmConsole.lstUsers.Clear  'clear the list entries
                 frmConsole.display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
-                frmConsole.sockIRC.Close   'close the connection
+                frmConsole.sockIRC.Close_   'close the connection
             End If
             
             

@@ -1,5 +1,4 @@
 VERSION 5.00
-Object = "{248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0"; "MSWINSCK.OCX"
 Begin VB.Form frmConsole 
    AutoRedraw      =   -1  'True
    BackColor       =   &H001B1410&
@@ -27,6 +26,13 @@ Begin VB.Form frmConsole
    ScaleHeight     =   9705
    ScaleWidth      =   11475
    StartUpPosition =   3  'Windows Default
+   Begin DSO.ctxWinsock sockIRC 
+      Left            =   960
+      Top             =   7080
+      _ExtentX        =   847
+      _ExtentY        =   847
+      Protocol        =   2
+   End
    Begin VB.Timer tmrTimeout 
       Enabled         =   0   'False
       Index           =   0
@@ -180,13 +186,6 @@ Begin VB.Form frmConsole
          Interval        =   500
          Left            =   9840
          Top             =   8160
-      End
-      Begin MSWinsockLib.Winsock sockIRC 
-         Left            =   9240
-         Top             =   720
-         _ExtentX        =   741
-         _ExtentY        =   741
-         _Version        =   393216
       End
       Begin VB.Label cSize 
          AutoSize        =   -1  'True
@@ -601,7 +600,7 @@ Dim chatToStatus As Boolean
 Dim oldnick$    'the backup if the nick change failed
 Dim nick$       'our global nickname var
 Dim channel$    'our channel var
-Dim Data$       'the var that will hold the data of a single command
+Dim data$       'the var that will hold the data of a single command
 Dim MyRandNum$
 Dim connected As Boolean  'this var will be used to check if we timed out, and will be set to true if get connected
 '--------------------------------------------------------------
@@ -903,8 +902,8 @@ Public Function getConnected()
     getConnected = connected
 End Function
 
-Public Sub setConnected(value As Boolean)
-    connected = value
+Public Sub setConnected(Value As Boolean)
+    connected = Value
 End Sub
 
 
@@ -960,7 +959,7 @@ Private Sub Form_Load()
 End Sub
 
 Sub ConnectIRC()
-    sockIRC.Connect IRC_Server, IRC_Port 'connect to the server --------
+    sockIRC.Connect IRC_Server, IRC_Port, ucsSckSupportTls12 + ucsSckSupportTls13
 End Sub
 
 Sub LoadIRC()
@@ -1066,10 +1065,10 @@ Private Sub Form_Unload(Cancel As Integer)
             Cancel = 1  'cancel the unload
             Exit Sub    'exit the sub
         End If
-        send "QUIT :www.darksignsonline.com, Dark Signs Online"    'send the quit message
+        Send "QUIT :www.darksignsonline.com, Dark Signs Online"    'send the quit message
         lstUsers.Clear  'clear the list entries
         display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
-        sockIRC.Close   'close the connection
+        sockIRC.Close_   'close the connection
     End If
     '------------------------------------------
     
@@ -1080,7 +1079,7 @@ Private Sub Form_Unload(Cancel As Integer)
 End Sub
 
 
-Private Sub IRC_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub IRC_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
     On Error Resume Next
     txtChatMsg.SetFocus
 End Sub
@@ -1179,9 +1178,9 @@ Sub ManageSockError(Index As Integer, Reason As String)
 
         If HttpRequests(Index).Method = "POST" Then
             Http.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
-            Http.send HttpRequests(Index).PostData
+            Http.Send HttpRequests(Index).PostData
         Else
-            Http.send
+            Http.Send
         End If
         tmrTimeout(Index).Enabled = True
 
@@ -1202,8 +1201,8 @@ Sub ManageSockError(Index As Integer, Reason As String)
 End Sub
 
 
-Private Sub Stats_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
-    If x > (Stats.Width - 120) And y < 60 Then
+Private Sub Stats_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    If X > (Stats.Width - 120) And Y < 60 Then
         Unload Me
     End If
 End Sub
@@ -1403,7 +1402,7 @@ Sub displaychat(Msg$)   'display a message in the chat field:
     txtChat.SelLength = 0                'make sure nothing is displayed as "selected"
 End Sub
 
-Sub send(Msg$)  'send a message to the IRC server
+Sub Send(Msg$)  'send a message to the IRC server
 On Error GoTo oops  'if an error occures, goto the oops label
     'display ">> " + msg$    ' display the text in the main field
     sockIRC.SendData Msg$ + vbCrLf  'send the data, along with a cariage return and a line feed
@@ -1418,34 +1417,34 @@ Sub processCommand()
 
     ' the next line will reply to the PING message of the server
     ' preventing us from going idle and being kicked
-    If InStr(Data$, "PING") > 0 Then
+    If InStr(data$, "PING") > 0 Then
         Dim params$    ' parameters that will be filtered from the pong message
-        params$ = Right$(Data$, Len(Data$) - (InStr(Data$, "PING") + 4))
+        params$ = Right$(data$, Len(data$) - (InStr(data$, "PING") + 4))
             'take the paramaters from the right of the message starting from the first character after the PING message
-        send "PONG " + params$   ' send the pong message to the server, together with the parameters
+        Send "PONG " + params$   ' send the pong message to the server, together with the parameters
         display "PING? PONG!"
     End If
     
     'This section processes all other commands
-    If Left$(Data$, 1) = ":" Then   'if the message starts with a colon (standard IRC message)
-        Dim pos%, pos2%    '2 position variables we need to extract the nickname of whoever that issued the command
+    If Left$(data$, 1) = ":" Then   'if the message starts with a colon (standard IRC message)
+        Dim Pos%, pos2%    '2 position variables we need to extract the nickname of whoever that issued the command
         Dim from$, rest$    'these will hold the sender of the command and the rest of the message
-        Dim command$        'this will hold the type of the command (eg.: PRIVMSG)
+        Dim Command$        'this will hold the type of the command (eg.: PRIVMSG)
         params$ = ""        'and the parameters
-        pos% = InStr(Data$, " ")    'get the position of the first space character
-        If pos% > 0 Then    'if a space is found
-            pos2% = InStr(Data$, "!")   'search for an exclamation mark
-            If pos% < pos2% Or pos2% <= 0 Then pos2% = pos%   'if a space is found AFTER the space, it should not be used
-            from$ = Mid$(Data$, 2, pos2% - 2)   'parse the sender, starting from the second character (after the ":")
-            rest$ = Mid$(Data$, pos% + 1, Len(Data$) - pos2%)  'parse the rest of the message starting from the first character AFTER the first space
+        Pos% = InStr(data$, " ")    'get the position of the first space character
+        If Pos% > 0 Then    'if a space is found
+            pos2% = InStr(data$, "!")   'search for an exclamation mark
+            If Pos% < pos2% Or pos2% <= 0 Then pos2% = Pos%   'if a space is found AFTER the space, it should not be used
+            from$ = Mid$(data$, 2, pos2% - 2)   'parse the sender, starting from the second character (after the ":")
+            rest$ = Mid$(data$, Pos% + 1, Len(data$) - pos2%)  'parse the rest of the message starting from the first character AFTER the first space
             rest$ = Replace(rest$, Chr(2), "")
             
             'IMPORTANT: pos% is now used to hold the first space in (!) rest$ (!), *NOT* in data$
-            pos% = InStr(rest$, " ")   'get the position of the first space in rest$
-            If pos% > 0 Then    'if we found a space
-                command$ = Left$(rest$, pos% - 1)   'the part before this space is the type of command
-                params$ = Right$(rest$, Len(rest$) - pos%)   'the rest are parameters
-                Select Case command$    'base your actions on the type of command
+            Pos% = InStr(rest$, " ")   'get the position of the first space in rest$
+            If Pos% > 0 Then    'if we found a space
+                Command$ = Left$(rest$, Pos% - 1)   'the part before this space is the type of command
+                params$ = Right$(rest$, Len(rest$) - Pos%)   'the rest are parameters
+                Select Case Command$    'base your actions on the type of command
                     Case "NOTICE"   'if it's a notice
                         displaychat ">> " + from$ + "  " + params$ 'display it
                     Case "PRIVMSG"  'if it's a private message
@@ -1467,29 +1466,29 @@ Sub processCommand()
                     Case "JOIN" 'if someone joined
                         displaychat "** " + from$ + " has joined " + processParam(params$) + " **"     'display it
                         'check if the user is already in the list
-                        x% = -1  'start checking from the first user (-1 + 1 = 0)
+                        X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            x% = x% + 1     'increase x% with 1
-                            If x% = lstUsers.ListCount Then 'if the user is not found ...
-                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            X% = X% + 1     'increase x% with 1
+                            If X% = lstUsers.ListCount Then 'if the user is not found ...
+                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
+                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
                         'if x% = -1, the user was not found in the list, so we can add him
-                        If x% = -1 Then lstUsers.AddItem (from$)    'add this user to the user list
+                        If X% = -1 Then lstUsers.AddItem (from$)    'add this user to the user list
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "QUIT" 'if someone disconnected
                         displaychat "** " + from$ + " has quit IRC (" + processParam(params$) + ") **"    'display it
                         'check if the user is already in the list
-                        x% = -1  'start checking from the first user (-1 + 1 = 0)
+                        X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            x% = x% + 1     'increase x% with 1
-                            If x% = lstUsers.ListCount Then 'if the user is not found ...
-                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            X% = X% + 1     'increase x% with 1
+                            If X% = lstUsers.ListCount Then 'if the user is not found ...
+                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
-                        If x% > -1 Then lstUsers.RemoveItem (x%)    'if we found a matching user in the list, remove it
+                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
+                        If X% > -1 Then lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "NICK" 'if someone changed his nickname
                         If from$ = nick$ Then
@@ -1498,31 +1497,31 @@ Sub processCommand()
                         End If
                         displaychat "** " + from$ + " changed his nickname to " + processParam(params$) + " **"    'display it
                         'check if the user is already in the list
-                        x% = -1  'start checking from the first user (-1 + 1 = 0)
+                        X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            x% = x% + 1     'increase x% with 1
-                            If x% = lstUsers.ListCount Then 'if the user is not found ...
-                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            X% = X% + 1     'increase x% with 1
+                            If X% = lstUsers.ListCount Then 'if the user is not found ...
+                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
-                        If x% > -1 Then
-                            lstUsers.RemoveItem (x%)    'if we found a matching user in the list, remove it
+                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
+                        If X% > -1 Then
+                            lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
                             lstUsers.AddItem (processParam(params$))    'and add the new nick
                         End If
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "PART" ' if someone left the channel
                         displaychat "** " + from$ + " has left " + params$ + " **"    'display it
                         'check if the user is allready in the list
-                        x% = -1  'start checking from the first user (-1 + 1 = 0)
+                        X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            x% = x% + 1
-                            If x% = lstUsers.ListCount Then 'if the user is not found ...
-                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            X% = X% + 1
+                            If X% = lstUsers.ListCount Then 'if the user is not found ...
+                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
-                        If x% > -1 Then lstUsers.RemoveItem (x%)    'if we found a matching user in the list, remove it
+                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
+                        If X% > -1 Then lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "MODE"     'if someone sets the mode on someone
                         displaychat "** " + from$ + " sets mode " + processParam(processRest(params$)) + " on " + processParam(params$) + " **" 'display the mode change
@@ -1542,21 +1541,21 @@ Sub processCommand()
                             'Do Until Left$(nick2$, 1) <> "@" And Left$(nick2$, 1) <> "+"  'cut of the @ and + flags at the beginning ...
                                 'nick2$ = Right(nick2$, Len(nick2$) - 1) 'cut of the first character
                             'Loop
-                            x% = -1  'start checking from the first user (-1 + 1 = 0)
+                            X% = -1  'start checking from the first user (-1 + 1 = 0)
                             Do
-                                x% = x% + 1     'increase x% with 1
-                                If x% = lstUsers.ListCount Then 'if the user is not found ...
-                                    x% = -1     'set the user to be removed to -1 (ERROR :-) )
+                                X% = X% + 1     'increase x% with 1
+                                If X% = lstUsers.ListCount Then 'if the user is not found ...
+                                    X% = -1     'set the user to be removed to -1 (ERROR :-) )
                                     Exit Do     'exit the loop
                                 End If
-                            Loop Until lstUsers.List(x%) = nick2$    'loop until we find the user
+                            Loop Until lstUsers.List(X%) = nick2$    'loop until we find the user
                             'if x% = -1, the user was not found in the list, so we can add him
-                            If x% = -1 Then lstUsers.AddItem (nick2$)    'add this user to the user list
+                            If X% = -1 Then lstUsers.AddItem (nick2$)    'add this user to the user list
                         Loop Until othernicks$ = ""     'loop through all the received nicknames
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "376"    'end of the motd
                         display "<" + from$ + "> " + rest$ 'display the unprocessed message
-                        send "JOIN " + channel$ 'join the channel
+                        Send "JOIN " + channel$ 'join the channel
                     Case "431"  'if we failed to change the nickname
                         nick$ = oldnick$    'change it back to the old one
                         display "<!> Failed changing nickname (You have to supply a nickname)" 'let them know that it failed
@@ -1623,24 +1622,27 @@ Private Sub sockIRC_Connect()   'as soon as we're connected to the server:
     connected = True    'set connected to true (cancel the timeout procedure)
     display "> Connected to server !"
     
-    send "PASS none"    ' according to the rfc it's better to send this before sending a nick / user
-    send "NICK " + nick$    ' send the nick message
-    send "USER " & nick$ & " " & "127.0.0.1" & "DSO Game Player"   ' the user message
+    Send "PASS none"    ' according to the rfc it's better to send this before sending a nick / user
+    Send "NICK " + nick$    ' send the nick message
+    Send "USER " & nick$ & " " & "127.0.0.1" & "DSO Game Player"   ' the user message
         ' USER <username>            <hostname>       <servername>    <real name>
 End Sub
 
 Private Sub sockIRC_DataArrival(ByVal bytesTotal As Long)
-    Dim x As Long
+    Dim X As Long
+    Dim ArrivedData$
+    sockIRC.GetData ArrivedData$, vbString
 
-    For x& = 1 To bytesTotal    'get every byte we received, but only one at a time
-        Dim temp$   'this variable will be used to store one byte of data
-        sockIRC.GetData temp$, vbString, 1  'get 1 byte out of the data stream and store it in temp$
+    Dim temp$
+    For X& = 1 To bytesTotal    'get every byte we received, but only one at a time
+        temp$ = Mid(ArrivedData$, X, 1)
         If temp$ = Chr$(10) Then    'if we received a newline character (this is the end of the message)
             processCommand  'process the entire command
-            Data$ = ""      'clear the data$
+            data$ = ""      'clear the data$
+        'if we received a newline character or a carriage return, dont add them to the message
+        ElseIf temp$ <> Chr$(13) Then
+            data$ = data$ + temp$
         End If
-        If Not (Asc(temp$) = 10 Or Asc(temp$) = 13) Then Data$ = Data$ + temp$
-            'if we received a newline character or a carriage return, dont add them to the message
     Next
 End Sub
 Private Sub IRCTxtList(newText As String)
@@ -1665,18 +1667,18 @@ Private Sub cmdChat_Click()
     If Left(Trim(txtChatMsg.Text), 1) = "/" Then
         If Left(Trim(txtChatMsg.Text), 2) = "//" Then
             IRCTxtList Trim(Mid(txtChatMsg.Text, 1))
-            send "PRIVMSG " + channel$ + " :" + Trim(Mid(txtChatMsg.Text, 2))    'send the message to the channel
+            Send "PRIVMSG " + channel$ + " :" + Trim(Mid(txtChatMsg.Text, 2))    'send the message to the channel
             displaychat "<" + MyIRCName + ">  " + Trim(Mid(txtChatMsg.Text, 2)) 'display the message
         Else
             IRCCommand = LCase(Left(txtChatMsg.Text, InStr(txtChatMsg.Text, " ")))
             If IRCCommand = "/me " Then
                 IRCTxtList "/me " + Trim(Mid(txtChatMsg.Text, 4))
-                send "PRIVMSG " + channel$ + " :" + Chr(1) + "ACTION " + Trim(Mid(txtChatMsg.Text, 4)) + Chr(1)
+                Send "PRIVMSG " + channel$ + " :" + Chr(1) + "ACTION " + Trim(Mid(txtChatMsg.Text, 4)) + Chr(1)
                 displaychat "* " + MyIRCName + " " + Trim(Mid(txtChatMsg.Text, 4))
             ElseIf IRCCommand = "/nick " Then
                 Msg = Trim(Mid(txtChatMsg.Text, 6))
                 If Msg <> "" Then
-                    send "NICK " & Trim(Msg)
+                    Send "NICK " & Trim(Msg)
                     IRCTxtList "/nick" + Trim(Msg)
                 Else
                     display "Error in syntax."
@@ -1687,7 +1689,7 @@ Private Sub cmdChat_Click()
                 PMName = Trim(Mid(Msg, 1, InStr(Msg, " ")))
                 If PMName <> "" Then
                     PMMsg = Trim(Mid(Msg, InStr(Msg, " ")))
-                    send "PRIVMSG " & PMName & " :" & PMMsg
+                    Send "PRIVMSG " & PMName & " :" & PMMsg
                     IRCTxtList "/msg " & PMName & " " & PMMsg
                     displaychat ">" + MyIRCName + "< " + PMMsg
                 Else
@@ -1700,7 +1702,7 @@ Private Sub cmdChat_Click()
         End If
     Else
         IRCTxtList Trim(txtChatMsg.Text)
-        send "PRIVMSG " + channel$ + " :" + Trim(txtChatMsg.Text)    'send the message to the channel
+        Send "PRIVMSG " + channel$ + " :" + Trim(txtChatMsg.Text)    'send the message to the channel
         displaychat "<" + MyIRCName + ">  " + Trim(txtChatMsg.Text) 'display the message
     End If
     
@@ -1713,7 +1715,7 @@ End Sub
 Private Sub cmdPriv_Click()
     If Trim(txtPrivMsg.Text) = "" Or Trim(txtTarget.Text) = "" Then Exit Sub    'if there is no target or message, exit
     displaychat "    <" + MyIRCName + "> (" + Trim(txtTarget.Text) + ")  " + Trim(txtPrivMsg.Text)
-    send "PRIVMSG " + Trim(txtTarget.Text) + " :" + Trim(txtPrivMsg.Text)   'send the message
+    Send "PRIVMSG " + Trim(txtTarget.Text) + " :" + Trim(txtPrivMsg.Text)   'send the message
     txtPrivMsg.Text = ""    'clear the field
     txtPrivMsg.SetFocus     'give the focus back to the message field
 End Sub
@@ -1809,7 +1811,7 @@ Public Sub ChatSend(ByVal s As String, ByVal consoleID As Integer)
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
     s = Trim(s)
     If Len(s) > 0 Then
-        send "PRIVMSG " + channel$ + " :" + s
+        Send "PRIVMSG " + channel$ + " :" + s
         displaychat "<" + MyIRCName + ">  " + s
     Else
         ShowHelp "chatview", consoleID

@@ -1,10 +1,16 @@
+<?php
+  function format_github_link($rev) {
+    $rev = trim($rev);
+    return '<a href="https://github.com/Doridian/DarkSignsOnline/tree/' . htmlentities($rev) . '">View source code @' . htmlentities($rev) . '</a>';
+  }
+?>
 <br />
 <br />
 <center>
   <br />
   <span class="style3"><span class="style5">. . . </span><br />
     <strong>Dark Signs Online version
-      <?php echo file_get_contents('api/gitrev.txt'); ?>
+      <?php echo format_github_link(file_get_contents('api/gitrev.txt')); ?>
     </strong><br />
     Copyright &copy; 2008 Dark Signs Online<br />
     <a href="/index.php">Home</a>

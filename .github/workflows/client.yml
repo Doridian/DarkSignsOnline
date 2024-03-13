@@ -19,6 +19,8 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: true
     - uses: dorny/paths-filter@v3
       id: changes
       with:
@@ -107,6 +109,8 @@ jobs:
         }
         cd ".\dist"
         ..\client\mkdirs.bat
+        Copy-Item ..\libs\VbAsyncSocket\LICENSE .\LICENSE-VbAsyncSocket.txt
+        Copy-Item ..\..\LICENSE .\LICENSE.txt
         & "C:\Program Files\7-Zip\7z.exe" a -tzip "..\client.zip" -r * "-x!dso.pdb"
     - name: Ensure Defender doesn't false-positive us
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
@@ -149,6 +153,13 @@ jobs:
         files: client.zip
         fail_on_unmatched_files: true
         prerelease: true
+    - name: Tag Repo
+      uses: richardsimko/update-tag@v1
+      if: github.ref == 'refs/heads/main' && steps.changes.outputs.client == 'true'
+      with:
+        tag_name: latest
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Release tag
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')

@@ -1,0 +1,3 @@
+[submodule "client/libs/VbAsyncSocket"]
+	path = client/libs/VbAsyncSocket
+	url = https://github.com/wqweto/VbAsyncSocket.git
