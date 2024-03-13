@@ -17,31 +17,58 @@ Public Url As String
 Public Method As String
 Public UserName As String
 Public Password As String
-Public ConsoleID As Integer
+Public consoleID As Integer
 Public IsCustomDownload As Integer
 Public PostData As String
 
-Private Aborted As Boolean
+Private Done As Boolean
+Private DoneForever As Boolean
 Private Retries As Integer
 Private WithEvents HttpRequest As cHttpRequest
 Attribute HttpRequest.VB_VarHelpID = -1
 
 Private Sub Class_Initialize()
-    Set HttpRequest = New cHttpRequest
-    Aborted = False
+    Set HttpRequest = Nothing
+    Done = True
+    DoneForever = False
     Retries = 0
 End Sub
 
+Public Function SafeToDelete() As Boolean
+    SafeToDelete = DoneForever Or (HttpRequest Is Nothing)
+End Function
+
+Private Sub SetDoneForever()
+    DoneForever = True
+    Done = True
+    basWorld.CleanHttpRequests
+End Sub
+
 Public Sub Abort()
-    Aborted = True
-    HttpRequest.Abort
+    SetDoneForever
+    Abort_
+End Sub
+
+Private Sub Abort_()
+    If Done Then
+        Exit Sub
+    End If
+    If Not (HttpRequest Is Nothing) Then
+        HttpRequest.Abort
+    End If
+    Done = True
 End Sub
 
 Public Sub Send()
-    Abort
+    If DoneForever Then
+        Exit Sub
+    End If
+
+    Abort_
     Set HttpRequest = New cHttpRequest
+
     HttpRequest.SetTimeouts basWorld.TimeOutSeconds * 1000, basWorld.TimeOutSeconds * 1000, basWorld.TimeOutSeconds * 1000, basWorld.TimeOutSeconds * 1000
-    Aborted = False
+    Done = False
 
     HttpRequest.Open_ Method, Url, True
     HttpRequest.SetCredentials UserName, Password, 0
@@ -55,29 +82,34 @@ Public Sub Send()
 End Sub
 
 Private Sub HttpRequest_OnError(ByVal ErrorNumber As Long, ByVal ErrorDescription As String)
-    If Aborted Then
+    If Done Then
         Exit Sub
     End If
-    Aborted = True
+    Done = True
     
     ManageSockError "Socket error code " & str(ErrorNumber) & " = " & ErrorDescription
 End Sub
 
 Private Sub HttpRequest_OnResponseFinished()
-    If Aborted Then
+    If Done Then
         Exit Sub
     End If
-    Aborted = True
+    Done = True
 
     If HttpRequest.Status < 200 Or HttpRequest.Status > 499 Then
         ManageSockError "HTTP Status " & str(HttpRequest.Status)
         Exit Sub
     End If
 
-    basWorld.Process HttpRequest.ResponseText, Url, ConsoleID, IsCustomDownload
+    SetDoneForever
+    basWorld.Process HttpRequest.ResponseText, Url, consoleID, IsCustomDownload
 End Sub
 
 Private Sub ManageSockError(Reason As String)
+    If DoneForever Then
+        Exit Sub
+    End If
+
     'on error consider retrying
     If Retries < basWorld.MaxSockRetries Then
         Retries = Retries + 1
@@ -95,6 +127,7 @@ Private Sub ManageSockError(Reason As String)
         SayComm "Connection failed to [" & Url & "] because of " & Reason & ". Retry " & Trim(str(Retries)) & " of " & Trim(str(basWorld.MaxSockRetries)) & "."
    Else
         SayComm "Connection failed to [" & Url & "] because of " & Reason & ". Retry count expired."
+        SetDoneForever
    End If
 End Sub
 
