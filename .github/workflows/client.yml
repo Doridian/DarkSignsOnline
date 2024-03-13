@@ -128,7 +128,7 @@ jobs:
         Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
         & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$(pwd)\client\dist\dso.exe"
         Get-Content "$env:TEMP\MpCmdRun.log"
-        if(![System.IO.File]::Exists(".\dist\dso.exe")) {
+        if(![System.IO.File]::Exists(".\client\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
         }
 
