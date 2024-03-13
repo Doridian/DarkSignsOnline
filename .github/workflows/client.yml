@@ -35,10 +35,12 @@ jobs:
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
+
         $version = $env:GITHUB_REF -replace 'refs/tags/', ''
         # Remove possible v* prefix
         $version = $version -replace '^v', ''
         $version = $version -replace '^V', ''
+
         # Error if version is not a valid version
         if($version -notmatch '^\d+\.\d+\.\d+$') {
           throw (New-Object System.ArgumentException("Invalid version format: $version"))
@@ -56,6 +58,7 @@ jobs:
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
+
         $hash = git rev-parse HEAD
         $vbp = Get-Content .\client\DSO.vbp
         $vbp = $vbp -replace '^VersionComments=.*$', "VersionComments=""Built from: https://github.com/Doridian/DarkSignsOnline/tree/$hash"""
@@ -68,6 +71,7 @@ jobs:
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
+
         mkdir ".\logs"
         mkdir "C:\vb6"
 
@@ -102,6 +106,7 @@ jobs:
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
+
         mkdir ".\client\dist"
         Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\build.log" -Wait -PassThru
         Get-Content .\logs\build.log
