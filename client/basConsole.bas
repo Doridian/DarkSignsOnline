@@ -993,9 +993,9 @@ Public Function propertySpace_Color(ByVal s As String) As Long
     If InStr(s, "dred") Then propertySpace_Color = iDarkRed
     
     If InStr(s, "rgb:") Then
-        Dim error, R, G, b
+        Dim Error, R, G, b
         
-        error = False
+        Error = False
         
         'Dim sTmp As String
 
@@ -1025,18 +1025,18 @@ Public Function propertySpace_Color(ByVal s As String) As Long
             b = CInt(b)
         
             If R < 0 Or R > 255 Then
-                error = True
+                Error = True
             End If
             
             If G < 0 Or G > 255 Then
-                error = True
+                Error = True
             End If
             
             If b < 0 Or b > 255 Then
-                error = True
+                Error = True
             End If
             
-            If error = False Then
+            If Error = False Then
                 propertySpace_Color = RGB(R, G, b)
             End If
         End If
@@ -1069,9 +1069,18 @@ Public Sub LoadLimitedCommands()
 End Sub
 
 Public Function EncodeBase64(ByRef arrData() As Byte) As String
+    If LBound(arrData) = UBound(arrData) Then
+        EncodeBase64 = ""
+        Exit Function
+    End If
     EncodeBase64 = Base64.EncodeByteArray(arrData)
 End Function
 
 Public Function DecodeBase64(ByVal strData As String) As Byte()
+    If Len(strData) = 0 Then
+        Dim EmptyData(0 To 0) As Byte
+        DecodeBase64 = EmptyData
+        Exit Function
+    End If
     DecodeBase64 = Base64.DecodeToByteArray(strData)
 End Function

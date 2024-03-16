@@ -27,5 +27,4 @@ if (empty ($code)) {
 	die ('not found');
 }
 
-$code = $exists->fetch_row();
 echo $d . '_' . $port . '::' . $code[0];

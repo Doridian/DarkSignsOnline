@@ -347,7 +347,7 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
                 'Dim EncodedText As String
             
                 Dim b64decoded() As Byte
-                b64decoded = basConsole.Base64.DecodeToByteArray(s)
+                b64decoded = basConsole.DecodeBase64(s)
              '  Set b64 = Nothing
                 
                 
