@@ -26,7 +26,7 @@ if (isset ($_REQUEST['prices'])) {
 	die (implode(', ', $outprices) . '');
 }
 
-$d = strtolower($_POST['d']);
+$d = strtolower($_REQUEST['d']);
 
 $temp = getDomainInfo($d);
 
