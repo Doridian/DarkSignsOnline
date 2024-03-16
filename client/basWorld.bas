@@ -30,6 +30,10 @@ Public Sub CleanHttpRequests()
     Dim MadeChanges As Boolean
     Dim NewHttpRequests() As clsHttpRequestor
 
+    If UBound(HttpRequests) < 1 Then
+        Exit Sub
+    End If
+
     ReDim NewHttpRequests(1 To UBound(HttpRequests))
     Y = 0
     For X = 1 To UBound(HttpRequests)
