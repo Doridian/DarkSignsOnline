@@ -3,7 +3,7 @@ if (!isset($rewrite_done)) {
 	die('Not rewritten yet');
 }
 
-define('BANK_USER_ID', 0);
+define('BANK_USER_ID', 42);
 
 require_once('config.php');
 global $db;
@@ -160,10 +160,10 @@ function transaction($from_id, $to_id, $description, $amount, $returnkeycodeinst
 			$status = 'INVALID-AMOUNT';
 		}
 	} else {
-		if ($from_id == -1) {
+		if ($from_id <= 0) {
 			// Invalid from user id.
 			$status = "INVALID-SENDER";
-		} else if ($to_id == -1) {
+		} else if ($to_id <= 0) {
 			// Invalid to user id.
 			$status = "INVALID-RECEIVER";
 		} else {
