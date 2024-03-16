@@ -17,7 +17,7 @@ function login_failure($code) {
 
 }
 
-if (empty($_SERVER['PHP_AUTH_USER'])) {
+if (empty($_SERVER['PHP_AUTH_USER']) || empty($_SERVER['PHP_AUTH_PW'])) {
 	login_failure('1002');
 }
 
@@ -73,7 +73,7 @@ function getDomainInfo($domain)
 		$result = $stmt->get_result();
 	} else if (sizeof($domain) == 4) {
 		$ipdom = $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3];
-		$stmt = $db->prepare("SELECT id, owner, '' FROM iptable WHERE ip=?");
+		$stmt = $db->prepare("SELECT id, owner, '', filekeys FROM iptable WHERE ip=?");
 		$stmt->bind_param('s', $ipdom);
 		$stmt->execute();
 		$result = $stmt->get_result();
