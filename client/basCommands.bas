@@ -201,26 +201,8 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
             ElseIf FileExists(App.Path & "\user" & fixPath(sC, consoleID)) = True Then
             
                 'it's a file - run it
-                If Right(fixPath(sC, consoleID), 4) = ".dsc" Then
-                    'its compiled, decompile before running.
-                    Dim bf As clsBlowfish
-                    Set bf = New clsBlowfish
-                    Dim tempStrA As String
-                    Dim tempStrB As String
-                    
-                    tempStrA = GetFile(App.Path & "\user" & fixPath(sC, consoleID))
-                    bf.sInitBF "3f29c928jwf44fgv"
-                    tempStrA = StrConv(DecodeBase64(tempStrA), vbUnicode)
-                    bf.sStringDecrypt tempStrA, tempStrB
-                                    
-                    WriteFile App.Path & "\user\system\tempDec.dat", tempStrB
-                    Shift_Console_Lines consoleID
-                    Run_Script "\system\tempDec.dat", consoleID, sP, "COMPILED"
-                    DeleteAFile App.Path & "\user\system\tempDec.dat"
-                Else
-                    Shift_Console_Lines consoleID
-                    Run_Script fixPath(sC, consoleID), consoleID, sP, referals(ActiveConsole)
-                End If
+                Shift_Console_Lines consoleID
+                Run_Script fixPath(sC, consoleID), consoleID, sP, referals(ActiveConsole)
             ElseIf FileExists(App.Path & "\user\system\commands\" & sC) = True Then
                 'it's a file - run it
                 Shift_Console_Lines consoleID
@@ -637,26 +619,11 @@ Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
 
     
     If FileExists(App.Path & "\user" & cPrefix(consoleID) & sFilename) = True Then
-            Dim bf As clsBlowfish
-            Set bf = New clsBlowfish
-            'MsgBox StrConv(DecodeBase64(strData), vbUnicode)
-            Dim tempStrA As String
-            Dim tempStrB As String
-    
-            sFileData = GetFileClean(App.Path & "\user" & cPrefix(consoleID) & sFilename)
-            
-            
-            'tempStrA = GetFile(App.Path & "\user\" & s)
-            bf.sInitBF "z123" & sDomain & "_" & sPort & "456"
-            bf.sStringEncrypt sFileData, tempStrB
-            'WriteFile App.Path & "\user\system\tempUpEnc.dat", tempStrB
-            tempStrA = EncodeBase64(StrConv(tempStrB, vbFromUnicode))
-            'WriteFile App.Path & "\user\system\tempUp64.dat", tempStrA
-        
-        
-        
-        'upload the freaking file!!
-        'tempStrA = Replace(tempStrA, "=", "--equals--")
+        Dim tempStrA As String
+
+        sFileData = GetFileClean(App.Path & "\user" & cPrefix(consoleID) & sFilename)
+        tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
+
         RunPage "domain_upload.php", consoleID, True, _
         "port=" & Trim(sPort) & _
         "&d=" & sDomain & _
@@ -668,9 +635,7 @@ Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
         SayError "File Not Found:" & sFilename, consoleID
         Exit Sub
     End If
-    
 
-    
     Exit Sub
 zxc:
     SayError "Invalid Parameters", consoleID
@@ -1042,35 +1007,7 @@ Public Sub Lookup(ByVal s As String, ByVal consoleID As Integer)
 End Sub
 
 Public Sub f_Compile(ByVal s As String, ByVal consoleID As Integer)
-    s = i(s)
-    s = Trim(s)
-    s = fixPath(s, consoleID)
-   
-    If FileExists(App.Path & "\user\" & s) = False Then
-        SayError "File Not Found: " & s, consoleID
-        Exit Sub
-    End If
-   
-    If Right(s, 3) <> ".ds" Then
-        SayError "Files must have a .ds extention to be compiled.", consoleID
-        Exit Sub
-    End If
-    
-    Dim bf As clsBlowfish
-    Set bf = New clsBlowfish
-    'MsgBox StrConv(DecodeBase64(strData), vbUnicode)
-    Dim tempStrA As String
-    Dim tempStrB As String
-    
-    tempStrA = GetFile(App.Path & "\user\" & s)
-    bf.sInitBF "3f29c928jwf44fgv"
-    bf.sStringEncrypt tempStrA, tempStrB
-    tempStrA = EncodeBase64(StrConv(tempStrB, vbFromUnicode))
-
-    WriteFile App.Path & "\user\" & s & "c", tempStrA
-    'Encrypt the file and store it it in <file>.dsc
-    'bf.sFileEncrypt App.Path & "\user\" & s, App.Path & "\user\" & s & "c"
-    
+    SayError "Compilation has been removed.", consoleID
 End Sub
 
 

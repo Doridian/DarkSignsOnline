@@ -10,7 +10,6 @@ Module=basScript; basScript.bas
 Form=frmEditor.frm
 Form=frmPayment.frm
 Form=frmLibrary.frm
-Class=clsBlowfish; clsBlowfish.cls
 Form=frmDSOMailRead.frm
 Form=frmDSOMailSend.frm
 Form=frmMail.frm

@@ -348,24 +348,10 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
             
                 Dim b64decoded() As Byte
                 b64decoded = basConsole.DecodeBase64(s)
-             '  Set b64 = Nothing
-                
-                
-                'Dim strKey As String
-                Dim bf As clsBlowfish
-                Dim newB() As Byte
-                ReDim newB(0 To UBound(b64decoded))
                 Dim newS As String
-                Set bf = New clsBlowfish
-                bf.sInitBF "z123" & sParameters & "456"
-                bf.sDecrypt b64decoded, newB
-                newS = StrConv(newB, vbUnicode)
+                newS = StrConv(b64decoded, vbUnicode)
 
                 WriteClean App.Path & "\user\system\temp.dat", newS
-                'bf.sInitBF "secretkey"
-                'MsgBox Left(sParameters, InStr(sParameters, "_") - 1)
-                'bf.sFileDecrypt App.Path & "\user\system\temp.dat", App.Path & "\user\system\tempD.dat"
-                'Run_Script "\system\temp.dat", consoleID, sParameters, referals(ActiveConsole)
                 cPrefix(consoleID) = "\web"
                 Run_Script "\system\temp.dat", consoleID, sParameters, Left(sParameters, InStr(sParameters, "_") - 1)
                 cPrefix(consoleID) = ""
