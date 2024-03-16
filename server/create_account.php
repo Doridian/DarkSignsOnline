@@ -222,7 +222,7 @@ if (isset($_POST['username'])) {
 
 	$headers = "From: Dark Signs Online <do-not-reply@darksignsonline.com>\r\n";
 
-	mail($email, "$username, verify your Dark Signs Account", "Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\nhttps://darksignsonline.com/verify.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttp://www.darksignsonline.com/", "$headers");
+	mail($email, "$username, verify your Dark Signs Account", "Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\nhttps://darksignsonline.com/verify.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttps://darksignsonline.com/", "$headers");
 
 	echo "<center><br><br><font size='4' color='orange' face='arial'><b>Your account has been created!</b><br>Check your email address for more information.</font></center>";
 	exit;
