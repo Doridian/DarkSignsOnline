@@ -16,7 +16,7 @@ echo $returnwith;
 
 
 $port=(int)$port;
-if ($port < 1 || $port > 65536){die("Error: Port number must be between 1 and 65536.<end>"); }
+if ($port < 1 || $port > 65536){die("Error: Port number must be between 1 and 65536."); }
 
 
 
@@ -47,7 +47,7 @@ if ($auth=="1001"){
 			if(strstr($subowners,":".trim(strtolower($u)).":")){
 				//subowner found, continue!
 			}else{		
-				die("Error: $d [user denied]newlineMake sure this domain name is registered to you.<end>");
+				die("Error: $d [user denied]newlineMake sure this domain name is registered to you.");
 			}
 			
 			
@@ -67,27 +67,19 @@ if ($auth=="1001"){
 			//$result = $db->query("UPDATE domain_scripts SET script='$filedata' where domain='$d' and port='$port'");
 		}else{
 			//no script exists.
-			die("No script is active on this port.<end>");
+			die("No script is active on this port.");
 		}
 
 			
-			die("Port successfully closed.: ".strtoupper($originaldomain).":$port<end>");
+			die("Port successfully closed.: ".strtoupper($originaldomain).":$port");
 	
 	}else{
 	
 		//domain not found
-		die("Server Not Found: ".strtoupper($originaldomain)."<end>");
+		die("Server Not Found: ".strtoupper($originaldomain)."");
 	}
 
 }else{
 
 	echo "Access Denied 65233";
 }
-
-
-echo "<end>";
-
-
-
-
-?>

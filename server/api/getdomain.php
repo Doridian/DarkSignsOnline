@@ -8,7 +8,7 @@
 		
 		if ($domain == '0')
 		{
-			echo 'Invalid lookup.<end>';			
+			echo 'Invalid lookup.';			
 		}
 		else if ($domain == '1')
 		{
@@ -18,7 +18,4 @@
 		{
 			echo $domain;
 		}
-		
-		echo '<end>';
 	}
-?>

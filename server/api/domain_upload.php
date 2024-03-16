@@ -9,7 +9,7 @@
 		$port = (int)$_POST['port'];
 		if ($port < 1 || $port > 65536)
 		{
-			die("Error: Port number must be between 1 and 65536.<end>");
+			die("Error: Port number must be between 1 and 65536.");
 		}
 		
 		
@@ -25,27 +25,26 @@
 			
 				if ($db->error)
 				{
-					die('fail<end>');
+					die('fail');
 				}
 				else
 				{
-					die('success<end>');
+					die('success');
 				}
 			}
 			else
 			{
 				print_r($user);
 				print_r($temp);
-				die('Restricted access.<end>');
+				die('Restricted access.');
 			}
 		}
 		else
 		{
-			die('Domain does not exist.<end>');
+			die('Domain does not exist.');
 		}
 	}
 	else
 	{
-		die('Access denied.<end>');
+		die('Access denied.');
 	}
-?>

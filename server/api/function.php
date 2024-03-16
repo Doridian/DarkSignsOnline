@@ -14,7 +14,7 @@ header('Content-Type: text/plain');
 function login_failure($code) {
 	header('WWW-Authenticate: Basic realm="DSO API"');
 	header('HTTP/1.0 401 Unauthorized');
-	die($code . '<end>');
+	die($code . '');
 
 }
 

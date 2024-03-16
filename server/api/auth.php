@@ -11,5 +11,3 @@ $stmt->execute();
 $res = $stmt->get_result();
 $ip = $res->fetch_row()[0];
 echo $ip;
-
-echo '<end>';

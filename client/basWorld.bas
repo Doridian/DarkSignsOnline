@@ -196,7 +196,6 @@ End Sub
 
 Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Integer, ByVal IsCustomDownload As Integer)
     'process incoming data that winhttp download
-    s = Replace(s, "<end>", "")
     s = Trim(s)
 
     'don't replace this if data is encrypted

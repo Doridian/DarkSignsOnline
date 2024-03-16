@@ -8,7 +8,7 @@
 		
 		if ($ip == 0)
 		{
-			echo 'Invalid lookup.<end>';			
+			echo 'Invalid lookup.';			
 		}
 		else if ($ip == 1)
 		{
@@ -18,7 +18,4 @@
 		{
 			echo $ip;
 		}
-		
-		echo '<end>';
 	}
-?>

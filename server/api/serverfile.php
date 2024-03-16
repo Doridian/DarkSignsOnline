@@ -9,9 +9,9 @@
 		{
 			if (auth_subowner_or_owner($serverfileupload)=="1001"){
 					write_domain_file($serverfileupload,$filename,$filedata,0);
-					die("File System Updated.<end>");
+					die("File System Updated.");
 			}else{
-					die("Access Denied<end>");
+					die("Access Denied");
 			}
 		}
 		else if ($action == 'downlaod')
@@ -20,41 +20,41 @@
 			if (strstr(substr(trim(strtolower(get_domain_file_no_auth_required($serverfiledownload,$filename))),0,9),"public")){
 					//it is a public file!
 					echo get_domain_file_no_auth_required($serverfiledownload,$filename);
-					die("<end>");
+					die("");
 			}
 
 			if (auth_subowner_or_owner($serverfiledownload)=="1001"){
 					echo download_domain_file($serverfiledownload,$filename);
-					die("<end>");
+					die("");
 			}else{
-					die("Access Denied<end>");
+					die("Access Denied");
 			}
 		}
 		else if ($action == 'delete')
 		{
 			if (auth_subowner_or_owner($serverfiledelete)=="1001"){
 					echo delete_domain_file($serverfiledelete,$filename);
-					die("<end>");
+					die("");
 			}else{
-					die("Access Denied<end>");
+					die("Access Denied");
 			}
 		}
 		else if ($action == 'count')
 		{
 			if (auth_subowner_or_owner($serverfilecount)=="1001"){
 					echo count_domain_files($serverfilecount);
-					die("<end>");
+					die("");
 			}else{
-					die("Access Denied<end>");
+					die("Access Denied");
 			}
 		}
 		else if ($action == 'name')
 		{
 			if (auth_subowner_or_owner($serverfilename)=="1001"){
 					echo get_domain_file_by_index($serverfilename,$fileindex);
-					die("<end>");
+					die("");
 			}else{
-					die("Access Denied<end>");
+					die("Access Denied");
 			}
 		}
 		else if ($action == 'dircount')
@@ -86,5 +86,3 @@
 								*/
 		}
 	}
-	echo '<end>';	
-?>

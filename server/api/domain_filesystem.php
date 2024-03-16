@@ -100,7 +100,7 @@ if ($auth=="1001"){
 					$allstring=str_replace("\r","*- -*",$allstring);
 					$allstring=str_replace("\n","*- -*",$allstring);
 					echo $allstring;
-					die("<end>");
+					die("");
 			}
 			
 			
@@ -112,12 +112,3 @@ if ($auth=="1001"){
 
 	echo "Access Denied: ".strtoupper($originaldomain);
 }
-
-
-
-echo "<end>";
-
-
-
-
-?>

@@ -14,7 +14,7 @@
 			}
 			else
 			{
-				die('4501  <end>');				
+				die('4501  ');				
 			}
 			while($row = $db->fetch_array( $result )) {$textdata=$row['data'];}
 			
@@ -24,12 +24,12 @@
 			$chan = $_REQUEST['chan'];
 			if ($chan == '001')
 			{
-				die('4500Modification Denied.<end>');
+				die('4500Modification Denied.');
 			}
 			$chan = (int)$chan;
 			if ($chan === 0)
 			{
-				die('4500Invalid channel.<end>');
+				die('4500Invalid channel.');
 			}
 		
 			$data = $_REQUEST['data']; // Get some error checking.
@@ -48,9 +48,7 @@
 				
 			}
 			
-			die("4500Updated: $chan!<end>");
+			die("4500Updated: $chan!");
 			
 		}	
 	}
-	echo '<end>';	
-?>

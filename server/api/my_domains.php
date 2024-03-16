@@ -60,6 +60,3 @@
 	{
 		echo 'Access Denied';
 	}
-	
-	//echo "<end>";
-?>

@@ -19,7 +19,7 @@ echo $returnwith;
 
 
 $port=(int)$_REQUEST['port'];
-if ($port < 1 || $port > 65536){die("Error: Port number must be between 1 and 65536.<end>"); }
+if ($port < 1 || $port > 65536){die("Error: Port number must be between 1 and 65536."); }
 
 
 
@@ -36,7 +36,7 @@ if ($auth=="1001"){
 	$subowners = strtolower($dInfo['subowners']);
 
 	if ($dInfo[1] !== $uid && !strstr($subowners,":".trim(strtolower($u)).":")) {
-		die("Error: $d [user denied]newlineMake sure this domain name is registered to you.<end>");
+		die("Error: $d [user denied]newlineMake sure this domain name is registered to you.");
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
@@ -51,20 +51,12 @@ if ($auth=="1001"){
 
 		$script=str_replace("\n","*- -*",$script);
 		$script=str_replace("\r","",$script);
-		die("$filename:$script<end>");			
+		die("$filename:$script");			
 	}else{
-		die("No Script Found: ".strtoupper($originaldomain).":$port<end>");
+		die("No Script Found: ".strtoupper($originaldomain).":$port");
 	}
 
 }else{
 
 	echo "Access Denied";
 }
-
-
-echo "<end>";
-
-
-
-
-?>

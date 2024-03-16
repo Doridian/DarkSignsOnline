@@ -19,15 +19,14 @@ if ($auth=="1001"){
 	//make the transaction
 		if (transaction($u,$to,$description,$amount)==true){
 		$usercash=number_format(grab_from_users("cash"));
-		die("Payment of $$amount2 to $to is complete.newlineYour new balance is $$usercash.<end>");
+		die("Payment of $$amount2 to $to is complete.newlineYour new balance is $$usercash.");
 	}else{
 		$usercash=number_format(grab_from_users("cash"));
-		die("Payment of $$amount2 to $to was DECLINED by the bank.newlineYour account balance of $$usercash may be insufficient.<end>");
+		die("Payment of $$amount2 to $to was DECLINED by the bank.newlineYour account balance of $$usercash may be insufficient.");
 	}
 	//-----------------------------------------------------------------------------
 
 	
 }else{
-	echo "Not Authorized, Access Denied.";
-	die("<end>");
+	die("Not Authorized, Access Denied.");
 }

@@ -19,6 +19,3 @@
 	{
 		echo 'Access Denied 1984';
 	}
-	
-	echo '<end>';
-?>

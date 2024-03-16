@@ -10,7 +10,7 @@ $port = (int)$_REQUEST['port'];
 
 if ($port < 1 || $port > 65536)
 {
-	die('not found<end>');
+	die('not found');
 }
 $d = $_REQUEST['d'];
 $d = strtolower($d); 
@@ -36,5 +36,3 @@ else
 {
 	echo 'not found';
 }
-
-echo '<end>';

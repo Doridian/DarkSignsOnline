@@ -83,11 +83,3 @@
 
 	echo "Access Denied 6233";
 }
-
-
-echo "<end>";
-
-
-
-
-?>

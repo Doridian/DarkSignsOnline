@@ -20,7 +20,7 @@
 		
 			
 			if ($db->error) {
-				die($db->error . '<end>');
+				die($db->error . '');
 			}
 			
 			while ($mail = $db->fetch_array($result))
@@ -97,6 +97,3 @@
 	{
 		echo 'Access Denied 65233';
 	}
-
-	echo '<end>';
-?>
