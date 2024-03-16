@@ -211,11 +211,11 @@ if (isset($_POST['username'])) {
 		$res = $stmt->get_result();
 	} while ($res->num_rows != 0);
 
-	$stmt = $db->prepare("INSERT INTO iptable (owner, ip) VALUES (?, ?)");
+	$stmt = $db->prepare("INSERT INTO iptable (owner, ip, filekeys) VALUES (?, ?, '')");
 	$stmt->bind_param('is', $userid, $randomip);
 	$stmt->execute();
 	$id = $db->insert_id;
-	$stmt = $db->prepare("INSERT INTO domain (id, name, ext, time, ip) VALUES (?, ?, ?, ?, ?)");
+	$stmt = $db->prepare("INSERT INTO domain (id, name, ext, time, ip, filekeys) VALUES (?, ?, ?, ?, ?, '')");
 	$usr = 'usr';
 	$stmt->bind_param('issis', $id, $username, $usr, $timestamp, $aip);
 	$stmt->execute();
