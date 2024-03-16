@@ -3,6 +3,8 @@ if (!isset($rewrite_done)) {
 	die('Not rewritten yet');
 }
 
+define('BANK_USER_ID', 0);
+
 require_once('config.php');
 global $db;
 

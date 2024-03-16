@@ -42,7 +42,7 @@ if ($temp[0] === -1) {
 				die ('Insufficient balance. Try again when you have more money.');
 			} else {
 				//echo $user['name'];
-				if (transaction($uid, 'bank', 'Domain Registration: ' . $d, $price[$ext])) {
+				if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $d, $price[$ext])) {
 					// Generate IP
 					$randomip;
 					$res;
@@ -82,7 +82,7 @@ if ($temp[0] === -1) {
 			} else if ($price > $user['cash']) {
 				die ('Insufficient balance. Try again when you have more money.');
 			} else {
-				if (transaction($uid, 'bank', 'Domain Registration: ' . $d, $price)) {
+				if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $d, $price)) {
 					// Generate IP
 					$randomip;
 					$res;
@@ -131,7 +131,7 @@ if ($temp[0] === -1) {
 				if ($price > $user['cash']) {
 					die ($user['cash'] . '  Insufficient balance. Try again when you have more money.');
 				} else {
-					if (transaction($uid, 'bank', 'Domain Registration: ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3], $price)) {
+					if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3], $price)) {
 						$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype) VALUES (?, ?, 'IP')");
 						$stmt->bind_param('is', $uid, $ipdom);
 						$stmt->execute();
