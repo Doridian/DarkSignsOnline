@@ -1,5 +1,6 @@
 $style100 = {white, nobold, 48, impact, center}
-$style101 - = {black, nobold, 72, impact, center}
+$style101 = {black, nobold, 72, impact, center}
+
 SAY -->-
 draw -1 0 0 0 solid
 SAY -->{center courier new 32}
@@ -26,10 +27,6 @@ SAY -->New Console #2 {gold 24 IMPACT NOBOLD center}
 SAY -->New Console #3 {gold 24 IMPACT NOBOLD center}
 SAY -->New Console #4 {gold 24 IMPACT NOBOLD center}
 SAY -->Welcome admin.
-
-
-
-
 
 SAY -->-
 draw -1 0 0 0 solid
