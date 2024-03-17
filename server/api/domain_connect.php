@@ -22,9 +22,10 @@ $stmt = $db->prepare("SELECT code FROM domainscripts WHERE domain_id = ? AND por
 $stmt->bind_param('ii', $temp[0], $port);
 $stmt->execute();
 $exists = $stmt->get_result();
-$code = $exists->fetch_row();
-if (empty ($code)) {
-	die ('not found');
+$code_a = $exists->fetch_row();
+if (empty($code_a)) {
+	die('not found');
 }
-
-echo $d . '_' . $port . '::' . $code[0];
+$code = $code_a[0];
+// Edit code as necessary here
+echo $d . '_' . $port . '::' . dso_b64_encode($code);
