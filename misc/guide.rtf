@@ -1,162 +1,234 @@
-{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\froman\fcharset0 Times New Roman;}{\f1\fnil\fcharset2 Wingdings;}}
-{\*\generator Msftedit 5.41.15.1507;}\viewkind4\uc1\pard\f0\fs36 Page Up and Page Down scrolls the console. Any keypress will move it back down.\line Page Up and Page Down WITH SHIFT changes the size of the Comm Window\par
-\par
-\par
-Property Spaces can be used in the following commands\line\fs20 SAY\par
-PAUSE\par
-\par
-\fs36\par
-\par
-The SAY command and the Property Space\par
- \endash  printing to the console.\par
-\fs24 Property Space can be used with the SAY command.\line\line It can be used anywhere in the text parameter and is included between \{ and \} characters.\par
-\par
-E.g.\line SAY hello, this will be green \{green\}\par
-\par
-The property space goes between the parenthesis \{ and \}. This is optional.\par
-You can put a number between 8 and 24 in the property space to change display size.\par
-You can put a valid font name in the property space to change display font.\par
-You can put a color in the property space to change the display color.\par
-\par
-E.g.\par
-SAY \{24, red, verdana\} hello, this will be large and red in verdana.\par
-\par
-Keywords in the property space can be in any order, upper or lower case, etc. The property space is designed to be flexible. It can exist anywhere in the SAY text parameter. But it \b\i must \b0\i0 open with \{ and close with \}. Separate each with a space or comma.\line\par
-E.g.\par
-SAY hello, this will be large \{24, red, verdana\} and red in verdana.\par
-\line The table below shows, on the right hand side, the keyword which can be used in the Property Space.\line\par
-\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
-\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx4320\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx8748\pard\intbl Colors\cell Purple, pink, orange, white, black, orange, lorange, blue, dblue, lblue, green, dgreen, lgreen, brown, lbrown, dbrown, marone, grey, dgrey, lgrey, red, lred, dred, gold, yellow, lyellow, dyellow\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
-\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx4320\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx8748\pard\intbl Font Size\cell 8, 9, 10, 11 \f1\'e0\f0  up to 48\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
-\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx4320\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx8748\pard\intbl Font Name\cell Arial, arial black, comic sans ms, courier new, Georgia, impact, lucida console, Tahoma, times new roman, trebuchet ms, verdana, wingdings\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
-\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx4320\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx8748\pard\intbl Attributes\cell bold, nobold, italic, noitalic, underline, nounderline, strikethrough, nostrikethrough, \cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
-\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx4320\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx8748\pard\intbl Extras\cell flash, flashfast, flashslow, aligncenter, alignright\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
-\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx4320\clbrdrl\brdrw15\brdrs\clbrdrt\brdrw15\brdrs\clbrdrr\brdrw15\brdrs\clbrdrb\brdrw15\brdrs \cellx8748\pard\intbl\cell\cell\row\pard\par
-\par
-\par
-\par
-The characters \{ and \} can be printed independently (so they wont be recognized as a property space by using (** for \{ and **) for \}\par
-\par
-\par
-\par
-\b FILES AND DIRECTORIES SHOULD NOT HAVE SPACES, THEY MAY BE CONVERTED TO - DASHES\b0\par
-\par
-\par
-Parameters which include a directory name or file name can be specified as being from the local directory or from the root directory.\par
-\par
-e.g a file \\system\\file.ds\par
-\par
-From ANY directory, can be accessed with:   \\system\\file.s\line\line However it can only be accessed from its parent directory (\\system) with simply just: file.s\line\line This goes for directories as well.\line\par
-\line ---------------------------\par
-\par
-for a new line, type: say -\par
-\par
-\par
-You can also run a file as a script simply by typing its name in the console. if you have a script called mscript, type \b\i myscript \b0\i0 in the console to run the file as a script.\par
-\par
-VARIABLE NAMES are like\par
-$varname\line They should be \b no more than 36\b0  characters in length. Variables are NOT case sensitive. $VaRiAbLE is the same as $variable.\par
-\par
-\par
-\b Global Variables Which Always Exist are: \b0 $time, $date, $username\par
-\par
-Variables do not need to be declared.\line Examples of assigning values to variables:\par
-\par
-$myvar = hello\line or\line $myvar = 12* 500\line or\line $multiplier = 10\par
-$myvar = 12 * multiplier\par
-\par
-In the last case, $myvar will be equal to 120\par
-\par
--\line This can be done both in scripts or even typed in the console. (i.e., you can create and set variables by typing them in the console).\par
-\par
-\par
-\b FOR LOOPS\par
-\line Example\line\b0\line FOR $var = 1 to 5\line    say var is $var\line NEXT\par
-\b\line you can also make loops backwards, or change the loop interval, by appending the optional STEP keyword:\par
-the loop below will count down: 10, 8, 6, 4, 2\par
-\b0\par
-FOR $var = 10 to 0 step -2\par
-   say var is $var\par
-NEXT\par
-\par
-\par
---------------------------\line\par
-\b IF STATEMENTS\b0\par
-\line\b Example\b0\line\line IF $var = 5 then\par
-\tab say it is 5\par
-ELSE IF $var = 6 then\par
-\tab say it is 6\par
-ELSE\par
-\tab say it is not 5 or 6! must be something else..\par
-END IF\line\line Available Operators\line = is equal to\line > is greater than\line < is less than\line ^ contains\line ~ doesn't contain\par
-\par
-If statements can be nested within each other, etc, i.e.\par
-\line IF $var = 5 then\par
-\tab IF $var2 = 6 then\par
-\tab\tab say hello\par
-\tab END IF\par
-ENDIF\par
-\line\par
-\par
-\b Goto Works\b0\par
-\par
-@START\line\line GOTO START\par
-\par
-\par
-\par
-\b NOTE ABOUT ASSIGNING VALUES\par
-\b0 If you have problems with your data acting as numbers as opposing to a string, you may choose to encase your value in quotes, e.g.\par
-\par
-$p = $date\par
-\par
-Above, if the date is 5/5/2010, the value of $p will be seen as the mathematical result of the equation 5 / 5 / 10.\par
-To ensure that strings are not calculated mathematically, simply use instead the following, noting the quotes are the value.\par
-\par
-$p = "$date"\par
-\par
-\par
-\par
-\par
-\b Cancel a running script\par
-\b0\par
-You can cancel a current script that is running by holding down the CTRL key and pressing C to cancel.\par
-\par
-\par
-\par
-\fs48 Switch between the four primary consoles with the F keys (F1, F2, F3, F4).\fs24\par
-\line\par
-\line\b GETTING USER INPUT FROM SCRIPTS\par
-\par
-\b0\line Below shows the structure of how to get a user to enter data , which can then be processed by the script.\line\par
-$var = input(message) \line and\line $var\par
-\par
-\par
--------------\par
-\par
-\b RUN MULTIPLE COMMANDS ON ONE LINE\par
-\par
-\b0 You can do this easily by dividing each command with the bar symbol, hold down shift and the key which is often under Backspace to get the bar symbol: |\line e.g.\line say hi | say bye\par
-\par
------------------\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
-\par
+{\rtf1\ansi\ansicpg1252\cocoartf2759
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 TimesNewRomanPSMT;\f1\froman\fcharset0 TimesNewRomanPS-BoldItalicMT;\f2\fswiss\fcharset0 Helvetica;
+\f3\froman\fcharset0 TimesNewRomanPS-BoldMT;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red242\green242\blue242;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;\cssrgb\c96078\c96078\c96078;}
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs36 \cf2 \up0 \nosupersub \ulnone Page Up and Page Down scrolls the console. Any keypress will move it back down.\uc0\u8232 Page Up and Page Down WITH SHIFT changes the size of the Comm Window\
+\
+\
+Property Spaces can be used in the following commands\uc0\u8232 
+\fs20 SAY\
+PAUSE\
+\
+
+\fs36 \
+\
+The SAY command and the Property Space\
+ \'96 printing to the console.\
+\pard\pardeftab720\partightenfactor0
+
+\fs24 \cf2 Property Space can be used with the SAY command.\uc0\u8232 \u8232 It can be used anywhere in the text parameter and is included between \{ and \} characters.\
+\
+E.g.\uc0\u8232 SAY hello, this will be green \{green\}\
+\
+The property space goes between the parenthesis \{ and \}. This is optional.\
+You can put a number between 8 and 24 in the property space to change display size.\
+You can put a valid font name in the property space to change display font.\
+You can put a color in the property space to change the display color.\
+\
+E.g.\
+SAY \{24, red, verdana\} hello, this will be large and red in verdana.\
+\
+Keywords in the property space can be in any order, upper or lower case, etc. The property space is designed to be flexible. It can exist anywhere in the SAY text parameter. But it 
+\f1\i\b must 
+\f0\i0\b0 open with \{ and close with \}. Separate each with a space or comma.\uc0\u8232 \
+E.g.\
+SAY hello, this will be large \{24, red, verdana\} and red in verdana.\
+\uc0\u8232 The table below shows, on the right hand side, the keyword which can be used in the Property Space.\u8232 \
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth4100\clftsWidth3 \clheight1480 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth4100\clftsWidth3 \clheight1480 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Colors
+\f2 \cf0 \up0 \nosupersub \ulnone \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0 \cf2 \up0 \nosupersub \ulnone Purple, pink, orange, white, black, orange, lorange, blue, dblue, lblue, green, dgreen, lgreen, brown, lbrown, dbrown, marone, grey, dgrey, lgrey, red, lred, dred, gold, yellow, lyellow, dyellow
+\f2 \cf0 \up0 \nosupersub \ulnone \cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat3 \clwWidth4100\clftsWidth3 \clheight380 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clcbpat3 \clwWidth4100\clftsWidth3 \clheight380 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0 \cf2 \up0 \nosupersub \ulnone Font Size
+\f2 \cf0 \up0 \nosupersub \ulnone \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0 \cf2 \up0 \nosupersub \ulnone 8, 9, 10, 11, \'85 up to 48
+\f2 \cf0 \up0 \nosupersub \ulnone \cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth4100\clftsWidth3 \clheight880 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth4100\clftsWidth3 \clheight880 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0 \cf2 \up0 \nosupersub \ulnone Font Name
+\f2 \cf0 \up0 \nosupersub \ulnone \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0 \cf2 \up0 \nosupersub \ulnone Arial, arial black, comic sans ms, courier new, Georgia, impact, lucida console, Tahoma, times new roman, trebuchet ms, verdana, wingdings
+\f2 \cf0 \up0 \nosupersub \ulnone \cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat3 \clwWidth4100\clftsWidth3 \clheight580 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clcbpat3 \clwWidth4100\clftsWidth3 \clheight580 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0 \cf2 \up0 \nosupersub \ulnone Attributes
+\f2 \cf0 \up0 \nosupersub \ulnone \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0 \cf2 \up0 \nosupersub \ulnone bold, nobold, italic, noitalic, underline, nounderline, strikethrough, nostrikethrough,
+\f2 \cf0 \up0 \nosupersub \ulnone \cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth4100\clftsWidth3 \clheight380 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth4100\clftsWidth3 \clheight380 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0 \cf2 \up0 \nosupersub \ulnone Extras
+\f2 \cf0 \up0 \nosupersub \ulnone \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0 \cf2 \up0 \nosupersub \ulnone flash, flashfast, flashslow, aligncenter, alignright
+\f2 \cf0 \up0 \nosupersub \ulnone 
+\f0 \cf2 \up0 \nosupersub \ulnone \cell \lastrow\row
+\pard\pardeftab720\partightenfactor0
+\cf2 \
+\
+\
+\
+The characters \{ and \} can be printed independently (so they wont be recognized as a property space by using (** for \{ and **) for \}\
+\
+\
+\
+\pard\pardeftab720\partightenfactor0
+
+\f3\b \cf2 FILES AND DIRECTORIES SHOULD NOT HAVE SPACES, THEY MAY BE CONVERTED TO - DASHES
+\f0\b0 \
+\
+\
+Parameters which include a directory name or file name can be specified as being from the local directory or from the root directory.\
+\
+e.g a file \\system\\file.ds\
+\
+From ANY directory, can be accessed with:   \\system\\file.ds\uc0\u8232 \u8232 However it can only be accessed from its parent directory (\\system) with simply just: file.s\u8232 \u8232 This goes for directories as well.\u8232 \
+\uc0\u8232 ---------------------------\
+\
+for a new line, type: say -\
+\
+\
+You can also run a file as a script simply by typing its name in the console. if you have a script called mscript, type 
+\f1\i\b myscript 
+\f0\i0\b0 in the console to run the file as a script.\
+\
+VARIABLE NAMES are like\
+$varname\uc0\u8232 They should be 
+\f3\b no more than 36
+\f0\b0  characters in length. Variables are NOT case sensitive. $VaRiAbLE is the same as $variable.\
+\
+\
+
+\f3\b Global Variables Which Always Exist are: 
+\f0\b0 $time, $date, $username\
+\
+Variables do not need to be declared.\uc0\u8232 Examples of assigning values to variables:\
+\
+$myvar = hello\uc0\u8232 or\u8232 $myvar = 12* 500\u8232 or\u8232 $multiplier = 10\
+$myvar = 12 * multiplier\
+\
+In the last case, $myvar will be equal to 120\
+\
+-\uc0\u8232 This can be done both in scripts or even typed in the console. (i.e., you can create and set variables by typing them in the console).\
+\
+\
+
+\f3\b FOR LOOPS\
+\uc0\u8232 Example\u8232 
+\f0\b0 \uc0\u8232 FOR $var = 1 to 5\u8232    say var is $var\u8232 NEXT\
+
+\f3\b \uc0\u8232 you can also make loops backwards, or change the loop interval, by appending the optional STEP keyword:\
+the loop below will count down: 10, 8, 6, 4, 2\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0 \cf2 \
+FOR $var = 10 to 0 step -2\
+   say var is $var\
+NEXT\
+\
+\
+--------------------------\uc0\u8232 \
+\pard\pardeftab720\partightenfactor0
+
+\f3\b \cf2 IF STATEMENTS
+\f0\b0 \
+\uc0\u8232 
+\f3\b Example
+\f0\b0 \uc0\u8232 \u8232 IF $var = 5 then\
+	say it is 5\
+ELSE IF $var = 6 then\
+	say it is 6\
+ELSE\
+	say it is not 5 or 6! must be something else..\
+END IF\uc0\u8232 \u8232 Available Operators\u8232 = is equal to\u8232 > is greater than\u8232 < is less than\u8232 ^ contains\u8232 ~ doesn't contain\
+\
+If statements can be nested within each other, etc, i.e.\
+\uc0\u8232 IF $var = 5 then\
+	IF $var2 = 6 then\
+		say hello\
+	END IF\
+ENDIF\
+\uc0\u8232 \
+\
+
+\f3\b Goto Works
+\f0\b0 \
+\
+@START\uc0\u8232 \u8232 GOTO START\
+\
+\
+\
+
+\f3\b NOTE ABOUT ASSIGNING VALUES\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0 \cf2 If you have problems with your data acting as numbers as opposing to a string, you may choose to encase your value in quotes, e.g.\
+\
+$p = $date\
+\
+Above, if the date is 5/5/2010, the value of $p will be seen as the mathematical result of the equation 5 / 5 / 10.\
+To ensure that strings are not calculated mathematically, simply use instead the following, noting the quotes are the value.\
+\
+$p = "$date"\
+\
+\
+\
+\
+\pard\pardeftab720\partightenfactor0
+
+\f3\b \cf2 Cancel a running script\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0 \cf2 \
+You can cancel a current script that is running by holding down the CTRL key and pressing C to cancel.\
+\
+\
+\
+\pard\pardeftab720\partightenfactor0
+
+\fs48 \cf2 Switch between the four primary consoles with the F keys (F1, F2, F3, F4).
+\fs24 \
+\uc0\u8232 \
+\uc0\u8232 
+\f3\b GETTING USER INPUT FROM SCRIPTS\
+\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0 \cf2 \uc0\u8232 Below shows the structure of how to get a user to enter data , which can then be processed by the script.\u8232 \
+$var = input(message) \uc0\u8232 and\u8232 $var\
 }
- 
