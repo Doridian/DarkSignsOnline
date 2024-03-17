@@ -108,6 +108,7 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
 
+        Remove-Item -Force ".\client\dist" -Recurse -ErrorAction Continue
         mkdir ".\client\dist"
         Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\build.log" -Wait -PassThru
         Get-Content .\logs\build.log
@@ -115,7 +116,7 @@ jobs:
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Build failure?", $path))
         }
         cd ".\client\dist"
-        ..\mkdirs.bat
+        Copy-Item ..\user .\ -Recurse -Force
         Copy-Item ..\libs\VbAsyncSocket\LICENSE .\LICENSE-VbAsyncSocket.txt
         Copy-Item ..\libs\vbrun60sp6.exe .\vb6-sp6-runtime-installer.exe
         Copy-Item ..\..\LICENSE .\LICENSE.txt
