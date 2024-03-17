@@ -445,7 +445,7 @@ Private Sub Form_Load()
     DontAutoSave = True
   
     Me.Caption = "Editing " & EditorFile_Long
-    RT.Text = GetFile(App.Path & "\user" & cPrefix(5) & EditorFile_Long)
+    RT.Text = GetFile(App.Path & "\user" & EditorFile_Long)
     
     lTitle.Caption = EditorFile_Long
     
@@ -457,7 +457,7 @@ End Sub
 Sub AutoSave()
     If DontAutoSave = True Then Exit Sub
     
-    WriteFile App.Path & "\user" & cPrefix(5) & EditorFile_Long, RT.Text
+    WriteFile App.Path & "\user" & EditorFile_Long, RT.Text
     
 End Sub
 

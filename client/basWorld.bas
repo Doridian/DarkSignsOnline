@@ -352,10 +352,7 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
                 newS = StrConv(b64decoded, vbUnicode)
 
                 WriteClean App.Path & "\user\system\temp.dat", newS
-                cPrefix(consoleID) = "\web"
                 Run_Script "\system\temp.dat", consoleID, sParameters, Left(sParameters, InStr(sParameters, "_") - 1)
-                cPrefix(consoleID) = ""
-                cPrefix(5) = ""
             End If
             
         Case "4300" 'file library upload complete
@@ -392,7 +389,7 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
                 ffname = Trim(Mid(s, 1, InStr(s, ":") - 1))
                 ffname = Replace(ffname, "\\", "\")
                 s = Mid(s, InStr(s, ":") + 1, Len(s))
-                WriteFile App.Path & "\user" & cPrefix(consoleID) & ffname, s
+                WriteFile App.Path & "\user" & ffname, s
                 SayComm "Download Complete: " & ffname
             Else
                 SayCommMultiLines s, consoleID

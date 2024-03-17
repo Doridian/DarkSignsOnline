@@ -36,7 +36,6 @@ Public Flash As Boolean
 
 Public cPath(1 To 5) As String
 Public cPath_tmp(1 To 4) As String
-Public cPrefix(1 To 5) As String
 
 Public EditorFile_Short As String
 Public EditorFile_Long As String

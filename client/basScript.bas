@@ -36,13 +36,8 @@ Public Type NextFunction
 End Type
 
 Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters As String, ScriptFrom As String)
-    cPrefix(5) = cPrefix(consoleID)
     Dim OldPath As String
     OldPath = cPath(consoleID)
-    
-    If cPrefix(consoleID) <> "" Then
-     cPath(consoleID) = "\"
-    End If
 
     If Right(Trim(filename), 1) = ">" Then Exit Function
     If Trim(filename) = "." Or Trim(filename) = ".." Then Exit Function
@@ -482,32 +477,6 @@ NextWaitFor:
             GoTo AfterRun
         End If
         
-        If i(myLine.Caption) = "noprefix" Then myLine.Caption = "setprefix \"
-        
-        If Mid(i(myLine.Caption), 1, 10) = "setprefix " Then
-            If Len(i(myLine.Caption)) > 10 Then
-             tmpS = Replace(i(Mid(myLine.Caption, 10, Len(myLine.Caption))), "/", "\")
-            Else
-             tmpS = ""
-            End If
-            If Mid(tmpS, 1, 1) <> "\" Then tmpS = "\" & tmpS
-            If Mid(tmpS, Len(tmpS), 1) = "\" Then tmpS = Mid(tmpS, 1, Len(tmpS) - 1)
-            If cPrefix(consoleID) = tmpS Then GoTo AfterRun
-            If Not DirExists(App.Path & "\user" & tmpS) Then
-                Say consoleID, "New Prefix directory not found!{orange}"
-                GoTo AfterRun
-            End If
-            If cPrefix(consoleID) <> "" And MsgBox("The script wants to chnage its prefix from """ & cPrefix(consoleID) & """ to """ & tmpS & """?" & vbCrLf & "Do you want to accept this?" & vbCrLf & "ONLY ACCEPT WHEN YOU REALYY TRUST THIS SCRIPT!", vbQuestion + vbYesNo) = vbNo Then
-                Say consoleID, "Prefix Change forbidden!{red}"
-                GoTo AfterRun
-            End If
-            Say consoleID, "Prefix changed to """ & tmpS & """{green}"
-            If tmpS = "\" Then tmpS = ""
-            cPrefix(consoleID) = tmpS
-            cPrefix(5) = tmpS
-            GoTo AfterRun
-        End If
-        
         If i(myLine.Caption) = "exit" Then GoTo ScriptEnd
     
     
@@ -787,7 +756,7 @@ zz2:
         Dim sFilter As String, sPath As String, n As Integer, sAll As String, dCount As Integer
         sFilter = Trim(Replace(sFilter, "*", ""))
     
-        sPath = App.Path & "\user" & cPrefix(consoleID) & cPath(consoleID)
+        sPath = App.Path & "\user" & cPath(consoleID)
         
         'directories
         frmConsole.Dir1.Path = sPath
@@ -817,7 +786,7 @@ zz2:
         sFilter = Trim(Replace(VarVal, "*", ""))
         'cd MsgBox sFilter
         'sFilter = "*"
-        sPath = App.Path & "\user" & cPrefix(consoleID) & cPath(consoleID)
+        sPath = App.Path & "\user" & cPath(consoleID)
     
         'files
         frmConsole.File1.Pattern = "*"
@@ -1018,7 +987,6 @@ Public Function ReplaceVariables(ByVal s As String, ByVal consoleID As Integer) 
     s = Replace(s, "$username", Trim(myUsername))
     s = Replace(s, "$consoleid", Trim(str(consoleID)))
     s = Replace(s, "$dir", cPath(consoleID))
-    s = Replace(s, "$prefix", cPrefix(consoleID))
     s = Replace(s, "$newline", vbCrLf)
     s = Replace(s, "$tab", Chr(vbKeyTab))
     
@@ -1342,7 +1310,7 @@ Public Function f_File(ByVal s As String, consoleID As Integer) As String
     
     
 
-    If FileExists(App.Path & "\user" & cPrefix(consoleID) & sFile) = False Then
+    If FileExists(App.Path & "\user" & sFile) = False Then
         GoTo zxc
         Exit Function
     End If
@@ -1350,7 +1318,7 @@ Public Function f_File(ByVal s As String, consoleID As Integer) As String
     Dim FF As Long, CLine As Integer, CLinePrinted As Integer, tmpJuice As String, tmpS As String
     FF = FreeFile
     
-    Open App.Path & "\user" & cPrefix(consoleID) & sFile For Input As #FF
+    Open App.Path & "\user" & sFile For Input As #FF
         Do Until EOF(FF)
             Line Input #FF, tmpS
             CLine = CLine + 1
@@ -1383,7 +1351,7 @@ Public Function f_FileExists(ByVal s As String, ByVal consoleID As Integer) As S
     s = Trim(s)
     s = fixPath(s, consoleID)
     
-    If FileExists(App.Path & "\user" & cPrefix(consoleID) & s) = True Then
+    If FileExists(App.Path & "\user" & s) = True Then
         f_FileExists = "1"
     Else
         f_FileExists = "0"
@@ -1395,7 +1363,7 @@ Public Function f_DirExists(ByVal s As String, ByVal consoleID As Integer) As St
     s = Trim(s)
     s = fixPath(s, consoleID)
     
-    If DirExists(App.Path & "\user" & cPrefix(consoleID) & s) = True Then
+    If DirExists(App.Path & "\user" & s) = True Then
         f_DirExists = "1"
     Else
         f_DirExists = "0"

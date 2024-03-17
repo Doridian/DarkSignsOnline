@@ -792,7 +792,7 @@ Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
   tmpInputString = tmpInputString & Mid(tmpS, 1, iTmp)
   tmpS = Trim(Mid(tmpS, iTmp + 1))
  End If
- tmpS2 = App.Path & "\user" & cPrefix(consoleID) & cPath(consoleID)
+ tmpS2 = App.Path & "\user" & cPath(consoleID)
  tmpS = Replace(tmpS, "/", "\")
  iTmp = InStrRev(tmpS, "\")
  If iTmp > 0 Then

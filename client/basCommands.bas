@@ -492,7 +492,7 @@ Public Function IsInCommandsSubdirectory(ByVal sFile As String) As String
     Dim n As Integer
     
     For n = 0 To frmConsole.Dir1.ListCount - 1
-        sPath = Replace(frmConsole.Dir1.List(n), App.Path & "\user" & cPrefix(5), "")
+        sPath = Replace(frmConsole.Dir1.List(n), App.Path & "\user", "")
         If sPath <> "" Then
         
         
@@ -618,10 +618,10 @@ Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
     
 
     
-    If FileExists(App.Path & "\user" & cPrefix(consoleID) & sFilename) = True Then
+    If FileExists(App.Path & "\user" & sFilename) = True Then
         Dim tempStrA As String
 
-        sFileData = GetFileClean(App.Path & "\user" & cPrefix(consoleID) & sFilename)
+        sFileData = GetFileClean(App.Path & "\user" & sFilename)
         tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
 
         RunPage "domain_upload.php", consoleID, True, _
@@ -1210,11 +1210,11 @@ Public Sub MakeDir(ByVal s As String, ByVal consoleID As Integer)
 
     s = fixPath(s, consoleID)
     
-    If DirExists(App.Path & "\user" & cPrefix(consoleID) & s) = True Then
+    If DirExists(App.Path & "\user" & s) = True Then
         'don't create it if it already exists
         GoTo errorDir
     Else
-        MakeADir App.Path & "\user" & cPrefix(consoleID) & s
+        MakeADir App.Path & "\user" & s
     End If
     
     Exit Sub
@@ -1242,19 +1242,19 @@ Public Sub MoveRename(ByVal s As String, ByVal consoleID As Integer, Optional sT
         Exit Sub
     End If
     
-    If FileExists(App.Path & "\user" & cPrefix(consoleID) & s1) = False Then
+    If FileExists(App.Path & "\user" & s1) = False Then
         SayError "File Not Found: " & s1, consoleID
         Exit Sub
     End If
     
     'now move it or copy it
     If i(sTag) = "copyonly" Then
-        If CopyAFile(App.Path & "\user" & cPrefix(consoleID) & s1, App.Path & "\user" & cPrefix(consoleID) & s2, consoleID) = False Then
+        If CopyAFile(App.Path & "\user" & s1, App.Path & "\user" & s2, consoleID) = False Then
             SayError "Invalid Destination File: " & s2, consoleID
             Exit Sub
         End If
     Else
-        If MoveAFile(App.Path & "\user" & cPrefix(consoleID) & s1, App.Path & "\user" & cPrefix(consoleID) & s2, consoleID) = False Then
+        If MoveAFile(App.Path & "\user" & s1, App.Path & "\user" & s2, consoleID) = False Then
             SayError "Invalid Destination File: " & s2, consoleID
             Exit Sub
         End If
@@ -1318,7 +1318,7 @@ Public Sub DeleteFiles(ByVal s As String, ByVal consoleID As Integer)
     End If
     
     
-    DelFiles App.Path & "\user" & cPrefix(consoleID) & s, consoleID
+    DelFiles App.Path & "\user" & s, consoleID
     
     Exit Sub
     
@@ -1339,7 +1339,7 @@ Public Sub EditFile(ByVal s As String, ByVal consoleID As Integer)
     EditorFile_Short = GetShortName(s)
     EditorFile_Long = s
         
-    If FileExists(App.Path & "\user" & cPrefix(consoleID) & s) Then
+    If FileExists(App.Path & "\user" & s) Then
 
     Else
         Say consoleID, "{green}File Not Found, Creating: " & s
@@ -1399,11 +1399,11 @@ Public Sub AppendAFile(ByVal s As String, ByVal consoleID As Integer)
         AppendToStartOfFile = False
     End If
     
-    If FileExists(App.Path & "\user" & cPrefix(consoleID) & sFile) = False Then
+    If FileExists(App.Path & "\user" & sFile) = False Then
         'it will be created.
         sFileData = ""
     Else
-        sFileData = GetFile(App.Path & "\user" & cPrefix(consoleID) & sFile)
+        sFileData = GetFile(App.Path & "\user" & sFile)
     End If
     
     'add it to the data
@@ -1422,7 +1422,7 @@ Public Sub AppendAFile(ByVal s As String, ByVal consoleID As Integer)
     
     
     're write it!
-    WriteFile App.Path & "\user" & cPrefix(consoleID) & sFile, sFileData
+    WriteFile App.Path & "\user" & sFile, sFileData
     
     
        
@@ -1467,7 +1467,7 @@ Public Sub WriteAFile(ByVal s As String, ByVal consoleID As Integer, ByVal Scrip
     
 
     're write it!
-    WriteFile App.Path & "\user" & cPrefix(consoleID) & sFile, s
+    WriteFile App.Path & "\user" & sFile, s
     
     
        
@@ -1515,7 +1515,7 @@ Public Sub DisplayFile(ByVal s As String, ByVal consoleID As Integer)
     End If
     
 
-    If FileExists(App.Path & "\user" & cPrefix(consoleID) & sFile) = False Then
+    If FileExists(App.Path & "\user" & sFile) = False Then
         SayError "File Not Found: " & sFile, consoleID
         Exit Sub
     End If
@@ -1524,7 +1524,7 @@ Public Sub DisplayFile(ByVal s As String, ByVal consoleID As Integer)
     Dim FF As Long, tmpS As String, CLine As Integer, CLinePrinted As Integer
 
     FF = FreeFile
-    Open App.Path & "\user" & cPrefix(consoleID) & sFile For Input As #FF
+    Open App.Path & "\user" & sFile For Input As #FF
         Do Until EOF(FF)
             Line Input #FF, tmpS
             CLine = CLine + 1
@@ -1596,7 +1596,7 @@ Public Sub RunFileAsScript(ByVal s As String, ByVal consoleID As Integer)
     s = fixPath(s, consoleID)
     
 
-    If FileExists(App.Path & "\user" & cPrefix(consoleID) & s) Then
+    If FileExists(App.Path & "\user" & s) Then
         'run it as a script
         
         WriteErrorLog "RunFileAsScript"
@@ -1628,9 +1628,9 @@ Public Sub RemoveDir(ByVal s As String, ByVal consoleID As Integer)
 
     s = fixPath(s, consoleID)
     
-    If DirExists(App.Path & "\user" & cPrefix(consoleID) & s) = True Then
+    If DirExists(App.Path & "\user" & s) = True Then
         'don't create it if it already exists
-        If RemoveADir(App.Path & "\user" & cPrefix(consoleID) & s, consoleID) = False Then
+        If RemoveADir(App.Path & "\user" & s, consoleID) = False Then
             SayError "Directory Not Empty: " & s, consoleID
             Exit Sub
         End If
@@ -1684,7 +1684,7 @@ Public Sub ChangeDir(ByVal s As String, ByVal consoleID As Integer)
     
     'say consoleID, "path is " & s, False
     
-    If DirExists(App.Path & "\user" & cPrefix(consoleID) & s) = True Then
+    If DirExists(App.Path & "\user" & s) = True Then
         
         s = Replace(s, "\\", "\")
         s = s & "\"
@@ -1721,7 +1721,7 @@ Public Function fixPath(ByVal s As String, ByVal consoleID As Integer) As String
         End If
     End If
     
-    fixPath = fixPath & cPrefix(consoleID) & "\" & s
+    fixPath = fixPath & "\" & s
     
     fixPath = Replace(fixPath, "../", "")
     fixPath = Replace(fixPath, "//", "/")
@@ -1745,7 +1745,7 @@ Public Sub ListDirectoryContents(ByVal consoleID As Integer, Optional ByVal sFil
     dirMsg = "Directory List {yellow 10}"
     fileMsg = "File List {yellow 10}"
     
-    sPath = App.Path & "\user" & cPrefix(consoleID) & cPath(consoleID)
+    sPath = App.Path & "\user" & cPath(consoleID)
     
     
     
