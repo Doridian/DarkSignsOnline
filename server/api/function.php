@@ -184,3 +184,14 @@ function transaction($from_id, $to_id, $description, $amount, $returnkeycodeinst
 	}
 	return $status == 'COMPLETE';
 }
+
+define('BASE64_DEFAULT', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=');
+define('BASE64_DSO', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.,');
+
+function dso_b64_decode($str) {
+	return base64_decode(strtr($str, BASE64_DSO, BASE64_DEFAULT));
+}
+
+function dso_b64_encode($str) {
+	return strtr(base64_encode($str), BASE64_DEFAULT, BASE64_DSO);
+}
