@@ -13,8 +13,6 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Private Const Equals As Byte = 44    'Asc(",")
-
 Private Const Mask1 As Byte = 3      '00000011
 Private Const Mask2 As Byte = 15     '00001111
 Private Const Mask3 As Byte = 63     '00111111
@@ -31,7 +29,6 @@ Private Base64Reverse() As Byte
 
 
 Public Function EncodeByteArray(Data() As Byte) As String
-
    Dim EncodedData() As Byte
 
    Dim DataLength As Long
@@ -45,8 +42,6 @@ Public Function EncodeByteArray(Data() As Byte) As String
    Dim m As Long
 
    Dim Index As Long
-
-   Dim CharCount As Long
 
    DataLength = UBound(Data) + 1
 
@@ -67,35 +62,24 @@ Public Function EncodeByteArray(Data() As Byte) As String
       EncodedData(Index + 2) = Base64Lookup(((Data1 And Mask2) * Shift2) Or (Data2 \ Shift6))
       EncodedData(Index + 3) = Base64Lookup(Data2 And Mask3)
       Index = Index + 4
-      CharCount = CharCount + 4
-
-      If CharCount = 76 And Index < EncodedLength Then
-         EncodedData(Index) = 13
-         EncodedData(Index + 1) = 10
-         CharCount = 0
-         Index = Index + 2
-      End If
    Next
 
    If m = 1 Then
       Data0 = Data(l)
       EncodedData(Index) = Base64Lookup((Data0 \ Shift2))
       EncodedData(Index + 1) = Base64Lookup((Data0 And Mask1) * Shift4)
-      EncodedData(Index + 2) = Equals
-      EncodedData(Index + 3) = Equals
-      Index = Index + 4
+      Index = Index + 2
    ElseIf m = 2 Then
       Data0 = Data(l)
       Data1 = Data(l + 1)
       EncodedData(Index) = Base64Lookup((Data0 \ Shift2))
       EncodedData(Index + 1) = Base64Lookup(((Data0 And Mask1) * Shift4) Or (Data1 \ Shift4))
       EncodedData(Index + 2) = Base64Lookup((Data1 And Mask2) * Shift2)
-      EncodedData(Index + 3) = Equals
-      Index = Index + 4
+      Index = Index + 3
    End If
 
+   ReDim Preserve EncodedData(Index - 1)
    EncodeByteArray = StrConv(EncodedData, vbUnicode)
-
 End Function
 
 
@@ -117,9 +101,7 @@ Public Function DecodeToByteArray(EncodedText As String) As Byte()
 
    Dim Index As Long
 
-   Dim CharCount As Long
-
-   EncodedData = StrConv(Replace$(Replace$(Replace$(EncodedText, vbCr, ""), vbLf, ""), ",", ""), vbFromUnicode)
+   EncodedData = StrConv(EncodedText, vbFromUnicode)
 
    EncodedLength = UBound(EncodedData) + 1
    DataLength = (EncodedLength \ 4) * 3
