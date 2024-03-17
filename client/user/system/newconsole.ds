@@ -1,0 +1,3 @@
+CD /
+SAY New Console #$consoleid {gold 24 IMPACT NOBOLD center}
+SAY Welcome $username.

@@ -1,0 +1,24 @@
+CD /
+SAY -
+draw -1 0 0 0 solid
+SAY {center courier new 32}
+draw -1 60 120 60 fadeinverse
+SAY -
+draw -1 60 120 60 fadecenter
+SAY [ D A R K S I G N S ]{center impact nobold 48}
+draw -1 60 120 60 fadecenter
+SAY ONLINE{center impact nobold 84}
+draw -1 60 120 60 fadecenter
+SAY {center courier new 16}
+draw -1 60 120 60 fadeinverse
+SAY Type HELP for a list of commands.{center courier new 16}
+draw -1 60 120 60 fadeinverse
+SAY -
+draw -1 0 0 0 solid
+SAY -
+SAY It is $time on the $date.{grey}
+SAY You can EDIT this startup script file by typing: EDIT system\startup.ds{lgrey}
+SAY -
+SAYcomm Welcome to Dark Signs Delta.
+LOGIN 
+./system/newconsole.ds
