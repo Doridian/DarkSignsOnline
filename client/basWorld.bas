@@ -20,9 +20,17 @@ Public Authorized As Boolean
 Public Comms(1 To 49) As String
 Public HttpRequests() As clsHttpRequestor
 
+Private Declare Function UrlEscape Lib "shlwapi" Alias "UrlEscapeW" (ByVal pszURL As Long, ByVal pszEscaped As Long, pcchEscaped As Long, ByVal dwFlags As Long) As Long
+Private Const E_POINTER As Long = &H80004003
+Private Const S_OK As Long = 0
+Private Const INTERNET_MAX_URL_LENGTH As Long = 2048
+Private Const URL_ESCAPE_PERCENT As Long = &H1000&
+
+
 Public Sub InitHttpRequests()
     ReDim HttpRequests(0 To 0)
 End Sub
+
 
 Public Sub CleanHttpRequests()
     Dim X As Integer
@@ -129,11 +137,7 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
 
     If UsePost = True Then
         Requestor.Method = "POST"
-        PostData = Trim(PostData)
-        PostData = Replace(PostData, " ", "%20")
-        PostData = Replace(PostData, "+", "--plus--")
-        'PostData = Replace(PostData, "&", "--and--") 'this one screws up URL
-        Requestor.PostData = PostData
+        Requestor.PostData = Trim(PostData)
     Else
         Requestor.Method = "GET"
         Requestor.PostData = ""
@@ -205,18 +209,6 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
     'process incoming data that winhttp download
     s = Trim(s)
 
-    'don't replace this if data is encrypted
-    If InStr(Mid(i(s), 1, 20), "encrypted") = 0 Then
-        s = Replace(s, vbCr, vbCrLf)
-        s = Replace(s, vbLf, vbCrLf)
-        s = Replace(s, "*- -*", vbCrLf) 'replace the new lines (DSO in some places uses *- -* for new lines that should be replaced
-        s = Replace(s, "--plus--", "+")
-        s = Replace(s, "--and--", "&")
-        s = Replace(s, "--hash--", "#")
-    Else
-        'it's encrypted, don't screw up the data
-    End If
-
     If IsCustomDownload > 0 Then
         'put the data into a variable!
         Vars(IsCustomDownload).VarValue = Bracketize(s, True)
@@ -228,9 +220,7 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
     cCode = Mid(s, 1, 4)
     s = Replace(s, cCode, "")
     
-    
     Select Case cCode
-        
         Case "0000" 'do nothing with the data
         
         Case "0001" 'it's the user list
@@ -339,15 +329,8 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
                 Dim sParameters As String
                 If InStr(s, "::") > 0 Then
                     sParameters = Mid(s, 1, InStr(s, "::") - 1)
-                    'MsgBox sParameters
                     s = Mid(s, InStr(s, "::") + 2, Len(s))
                 End If
-                
-                's = Replace(s, "--equals--", "=")
-                
-                'MsgBox s
-                
-                'Dim EncodedText As String
             
                 Dim b64decoded() As Byte
                 b64decoded = basConsole.DecodeBase64(s)
@@ -572,8 +555,35 @@ Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
 End Sub
 
 
+Public Function EncodeURLParameter( _
+    ByVal Url As String, _
+    Optional ByVal SpacePlus As Boolean = True) As String
+    
+    Dim cchEscaped As Long
+    Dim hResult As Long
+    
+    If Len(Url) > INTERNET_MAX_URL_LENGTH Then
+        Err.Raise &H8004D700, "URLUtility.URLEncode", _
+                  "URL parameter too long"
+    End If
+    
+    cchEscaped = Len(Url) * 1.5
+    EncodeURLParameter = String$(cchEscaped, 0)
+    hResult = UrlEscape(Url, EncodeURLParameter, cchEscaped, URL_ESCAPE_PERCENT)
+    If hResult = E_POINTER Then
+        EncodeURLParameter = String$(cchEscaped, 0)
+        hResult = UrlEscape(Url, EncodeURLParameter, cchEscaped, URL_ESCAPE_PERCENT)
+    End If
 
-Public Function MaskAnd(ByVal s As String) As String
-    MaskAnd = Replace(s, "&", "--and--")
+    If hResult <> S_OK Then
+        Err.Raise Err.LastDllError, "URLUtility.URLEncode", _
+                  "System error"
+    End If
+    
+    EncodeURLParameter = Left$(EncodeURLParameter, cchEscaped)
+    If SpacePlus Then
+        EncodeURLParameter = Replace$(EncodeURLParameter, "+", "%2B")
+        EncodeURLParameter = Replace$(EncodeURLParameter, " ", "+")
+    End If
 End Function
 

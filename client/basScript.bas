@@ -49,8 +49,8 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
     Dim sParams() As String, n As Integer, n2 As Integer
     ScriptParameters = Trim(ScriptParameters)
     
-    Dim args As Integer
-    args = 0
+    Dim Args As Integer
+    Args = 0
     
         'for $1, $2, $3, etc
         ScriptParameters = Trim(MaskSpacesInQuotes(ScriptParameters))
@@ -58,7 +58,7 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
         For n = 0 To UBound(sParams)
             sParams(n) = Trim(Replace(sParams(n), Chr(240), " "))
             sParams(n) = RemoveSurroundingQuotes(sParams(n))
-            If sParams(n) <> "" Then args = args + 1
+            If sParams(n) <> "" Then Args = Args + 1
         Next n
              
         
@@ -110,7 +110,7 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
                 Line Input #FF, tmpS
                 tmpS = Trim(tmpS)
                 tmpS = Replace(tmpS, "$referal", ScriptFrom)
-                tmpS = Replace(tmpS, "$args", args)
+                tmpS = Replace(tmpS, "$args", Args)
                 'replace $1, $2, $3, etc, with the passed parameter values
                 For n = 1 To 19
                     If UBound(sParams) >= n Then
@@ -697,8 +697,9 @@ zz2:
     ElseIf Mid(i(VarVal), 1, 17) = "serverfileupload(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
+        VarVal = EncodeURLParameter(VarVal)
         s2 = GetPart(VarVal, 2, " ") 'filename
-        s2 = MaskAnd(GetFile(App.Path & "\user" & fixPath(s2, consoleID)))
+        s2 = EncodeURLParameter(GetFile(App.Path & "\user" & fixPath(s2, consoleID)))
 
         sockIndex = DownloadURL(API_Server & API_Path & "index.php?serverfileupload=" & GetPart(VarVal, 1, " ") & "&filename=" & GetPart(VarVal, 2, " ") & "&filedata=" & s2, VarIndex, consoleID)
         VarVal = "[loading]"
@@ -2087,16 +2088,6 @@ Public Function UnBracketize(ByVal s As String) As String
     s = Replace(s, "[{[", "(")
     s = Replace(s, "]}]", ")")
     UnBracketize = s
-End Function
-
-Public Function URLFormat(ByVal s As String) As String
-    
-    s = Replace(s, "+", "--plus--")
-    s = Replace(s, "&", "--and--")
-    s = Replace(s, "#", "--hash--")
-    
-    URLFormat = s
-    
 End Function
 
 Public Function RemoveSurroundingQuotes(ByVal s As String) As String

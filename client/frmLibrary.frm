@@ -744,28 +744,22 @@ Sub UploadIt()
 
     sFileData = GetFile(App.Path & "\user" & sFile)
     
-    sFileData = Replace(sFileData, "&", "--and--")
-    
     
     PostData = _
     "returnwith=4300" & _
-    "&category=" & MaskAnd(sCategory) & _
-    "&title=" & MaskAnd(sTitle) & _
+    "&category=" & EncodeURLParameter(sCategory) & _
+    "&title=" & EncodeURLParameter(sTitle) & _
     "&filesize=" & Trim(str(Len(sFileData))) & _
-    "&version=" & Trim(MaskAnd(txtVersion)) & _
-    "&description=" & MaskAnd(sDescription) & _
-    "&shortfilename=" & MaskAnd(sShortFileName) & _
-    "&filedata=" & MaskAnd(sFileData)
+    "&version=" & Trim(EncodeURLParameter(txtVersion)) & _
+    "&description=" & EncodeURLParameter(sDescription) & _
+    "&shortfilename=" & EncodeURLParameter(sShortFileName) & _
+    "&filedata=" & EncodeURLParameter(sFileData)
 
 
     lStatus.Caption = "Sending data..."
 
 
     RunPage "file_database.php", 5, True, PostData, False
-    
-    
-    
-    
 End Sub
 
 Private Sub cDownload_Click()
@@ -1051,7 +1045,7 @@ Private Sub List1_Click()
     UpdateResults
 End Sub
 
-Private Sub List1_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub List1_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
     
     UploadBox.Visible = False
     RemoveBox.Visible = False
@@ -1107,11 +1101,6 @@ Private Sub tsc_Click()
     tsl.Caption = "Updating..."
     
     Dim PostData As String
-    PostData = "textspaceupload=" & Trim(Mid(ss, InStr(ss, " "), 99)) & "&textdata=" & Replace(TS.Text, "&", "--and--")
-    PostData = Replace(PostData, vbCrLf, "*- -*")
-    PostData = Replace(PostData, "#", "--hash--")
-
-    
+    PostData = "textspaceupload=" & EncodeURLParameter(Trim(Mid(ss, InStr(ss, " "), 99))) & "&textdata=" & EncodeURLParameter(TS.Text)
     RunPage "index.php", ActiveConsole, True, PostData, False
-    
 End Sub

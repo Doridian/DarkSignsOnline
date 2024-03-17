@@ -860,35 +860,16 @@ Public Sub ServerCommands(ByVal s As String, ByVal consoleID As Integer)
         sC = Trim(sCommand)
         sP = ""
     End If
-    
-    
-    
-    'encode, then reverse
-    'sKey = Encode(sKey, encodeKey)
-    'sKey = ReverseString(sKey)
-    'replace ands
-    'sKey = Replace(sKey, "&", "--and--")
+
     sKey = DSOEncode(sKey)
 
 
     Select Case i(sC)
-    
     Case "append"
-        
         ServerCommand_Append sP, sKey, sDomain, consoleID
-        
     Case "write"
-    
         ServerCommand_Write sP, sKey, sDomain, consoleID
-        
-    
     End Select
-    
-    
-    
-
-
-    
 End Sub
 
 Public Sub ServerCommand_Append(s As String, sKey As String, sDomain As String, ByVal consoleID As Integer)
