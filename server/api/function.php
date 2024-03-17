@@ -185,8 +185,8 @@ function transaction($from_id, $to_id, $description, $amount, $returnkeycodeinst
 	return $status == 'COMPLETE';
 }
 
-define('BASE64_DEFAULT', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=');
-define('BASE64_DSO', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.,');
+define('BASE64_DEFAULT', '+/=');
+define('BASE64_DSO', '_.,');
 
 function dso_b64_decode($str) {
 	return base64_decode(strtr($str, BASE64_DSO, BASE64_DEFAULT));
