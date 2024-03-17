@@ -115,11 +115,14 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
     Dim Requestor As New clsHttpRequestor
     Requestor.consoleID = consoleID
     Requestor.IsCustomDownload = IsCustomDownload
-    Requestor.UserName = myUsername
-    Requestor.Password = myPassword
 
     If IsCustomDownload <= 0 Then
-        sUrl = API_Server + API_Path + sUrl
+        sUrl = API_Server & API_Path & sUrl
+        Requestor.UserName = myUsername
+        Requestor.Password = myPassword
+    Else
+        Requestor.UserName = ""
+        Requestor.Password = ""
     End If
     
     Requestor.Url = sUrl

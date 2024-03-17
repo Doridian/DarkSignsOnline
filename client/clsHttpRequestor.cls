@@ -27,6 +27,8 @@ Private Retries As Integer
 Private WithEvents HttpRequest As cHttpRequest
 Attribute HttpRequest.VB_VarHelpID = -1
 
+Private Const HTTPREQUEST_SETCREDENTIALS_FOR_SERVER As Long = 0
+
 Private Sub Class_Initialize()
     Set HttpRequest = Nothing
     Done = True
@@ -71,7 +73,9 @@ Public Sub Send()
     Done = False
 
     HttpRequest.Open_ Method, Url, True
-    HttpRequest.SetCredentials UserName, Password, 0
+    If UserName <> "" And Password <> "" Then
+        HttpRequest.SetCredentials UserName, Password, HTTPREQUEST_SETCREDENTIALS_FOR_SERVER
+    End If
 
     If Method = "POST" Then
         HttpRequest.SetRequestHeader "Content-Type", "application/x-www-form-urlencoded"
