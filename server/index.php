@@ -65,6 +65,13 @@
 <br />
 <span class="style5"><br />- News - <br /><br />
 
+  <strong>March 17th 2024</strong><br /><span class="style9">
+    Managed to recover at least the startup script files from the leftover "zlog.dat" file.<br />
+    Seems to have been a console log, sadly all it ever logged was the startup script.<br />
+    The two big things that still need to be restored for basic functionality are as follows:
+    <b>Domain filesystem (SERVER WRITE, etc)</b> and some <b>built-in commands</b> (the ones written in
+    DScript)</span><br /><br />
+
   <strong>March 16th 2024</strong><br /><span class="style9">
     Worked on and off on the source of both server and client over the past few days.<br />
     Things are starting to come together. The client is possibly fully ready.<br />
