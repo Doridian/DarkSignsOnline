@@ -567,13 +567,15 @@ Public Function EncodeURLParameter( _
                   "URL parameter too long"
     End If
     
-    cchEscaped = Len(Url) * 1.5
-    EncodeURLParameter = String$(cchEscaped, 0)
-    hResult = UrlEscape(Url, EncodeURLParameter, cchEscaped, URL_ESCAPE_PERCENT)
-    If hResult = E_POINTER Then
+    Dim urlLenMultiplier As Long
+    urlLenMultiplier = 1
+    hResult = E_POINTER
+    While hResult = E_POINTER And urlLenMultiplier <= 10
+        urlLenMultiplier = urlLenMultiplier + 1
+        cchEscaped = Len(Url) * urlLenMultiplier
         EncodeURLParameter = String$(cchEscaped, 0)
         hResult = UrlEscape(Url, EncodeURLParameter, cchEscaped, URL_ESCAPE_PERCENT)
-    End If
+    Wend
 
     If hResult <> S_OK Then
         Err.Raise Err.LastDllError, "URLUtility.URLEncode", _
