@@ -119,7 +119,7 @@ Public Function DecodeToByteArray(EncodedText As String) As Byte()
 
    Dim CharCount As Long
 
-   EncodedData = StrConv(Replace$(Replace$(EncodedText, vbCrLf, ""), ",", ""), vbFromUnicode)
+   EncodedData = StrConv(Replace$(Replace$(Replace$(EncodedText, vbCr, ""), vbLf, ""), ",", ""), vbFromUnicode)
 
    EncodedLength = UBound(EncodedData) + 1
    DataLength = (EncodedLength \ 4) * 3
