@@ -65,16 +65,15 @@ Public Sub CheckMusic()
         .FileMusic.Refresh
         
         If .FileMusic.ListCount < 1 Then Exit Sub
-        
-        Dim tmpFile As String
-        
-        'If MP.PlayState = mpStopped Or MP.PlayState = mpClosed Or MP.PlayState = mpWaiting Then
+
         If Not Playing Then
-        
             NextMusicIndex
             
-            tmpFile = .FileMusic.Path & "\" & .FileMusic.List(MusicFileIndex)
-            SayComm "Next track: " & tmpFile
+            Dim tmpFile As String
+            Dim tmpFileName As String
+            tmpFileName = .FileMusic.List(MusicFileIndex)
+            tmpFile = .FileMusic.Path & "\" & tmpFileName
+            SayComm "Next track: " & tmpFileName
     
             StopMusic
             mciSendString "open """ & tmpFile & """ type mpegvideo alias dsomusic", vbNullString, 0, 0
@@ -82,7 +81,6 @@ Public Sub CheckMusic()
             Playing = True
             
             DoEvents
-            
         End If
     End With
 End Sub
