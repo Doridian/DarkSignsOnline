@@ -12,5 +12,5 @@ $stmt->bind_param("s", $verify);
 $stmt->execute();
 
 ?>
-<h1>Verification done</h1>
+<font face="Georgia, Times New Roman, Times, serif" size="+3">Verification done</font>
 <?php require('_bottom.php');
