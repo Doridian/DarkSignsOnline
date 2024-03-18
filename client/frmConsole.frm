@@ -26,6 +26,13 @@ Begin VB.Form frmConsole
    ScaleHeight     =   9705
    ScaleWidth      =   11475
    StartUpPosition =   3  'Windows Default
+   Begin VB.Timer tmrProcessQueue 
+      Enabled         =   0   'False
+      Index           =   0
+      Interval        =   1
+      Left            =   9480
+      Top             =   7320
+   End
    Begin DSO.ctxWinsock sockIRC 
       Left            =   960
       Top             =   7080
@@ -903,7 +910,11 @@ End Sub
 
 
 Private Sub Form_Load()
-    basWorld.InitHttpRequests
+    basWorld.InitBasWorld
+    Dim X As Integer
+    For X = 1 To 30
+        Load tmrProcessQueue(X)
+    Next
 
     curMsg = 0
     connected = False
@@ -1238,6 +1249,12 @@ Private Sub tmrPrint_Timer()
 
 End Sub
 
+Private Sub tmrProcessQueue_Timer(Index As Integer)
+    tmrProcessQueue(Index).Enabled = False
+    basWorld.ProcessQueueEntry Index
+    tmrProcessQueue(Index).Tag = ""
+End Sub
+
 Private Sub tmrStart_Timer()
     tmrStart = False
     
@@ -1245,9 +1262,6 @@ Private Sub tmrStart_Timer()
     Start_Console 2
     Start_Console 3
     Start_Console 4
-    
-
-    
 End Sub
 
 Public Sub Start_Console(ByVal consoleID As Integer)

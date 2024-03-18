@@ -26,8 +26,17 @@ Private Const S_OK As Long = 0
 Private Const INTERNET_MAX_URL_LENGTH As Long = 2048
 Private Const URL_ESCAPE_PERCENT As Long = &H1000&
 
+Private Type ProcessQueueEntry
+    Data As String
+    DataSource As String
+    consoleID As Integer
+    IsCustomDownload As Integer
+End Type
 
-Public Sub InitHttpRequests()
+Private ProcessQueue(1 To 30) As ProcessQueueEntry
+
+
+Public Sub InitBasWorld()
     ReDim HttpRequests(0 To 0)
 End Sub
 
@@ -48,8 +57,10 @@ Public Sub CleanHttpRequests()
         If Not HttpRequests(X).SafeToDelete() Then
             Y = Y + 1
             Set NewHttpRequests(Y) = HttpRequests(X)
+            SayComm "DND " & HttpRequests(X).Url
         Else
             MadeChanges = True
+            SayComm "CTD " & HttpRequests(X).Url
         End If
     Next
 
@@ -101,7 +112,7 @@ Public Sub LogoutNow(ByVal consoleID As Integer)
     SayComm "You have been logged out."
     
     If frmConsole.getConnected Then
-        frmConsole.Send "QUIT :www.darksignsonline.com, Dark Signs Online"    'send the quit message
+        frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
         frmConsole.lstUsers.Clear  'clear the list entries
         frmConsole.display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
         frmConsole.sockIRC.Close_   'close the connection
@@ -204,8 +215,36 @@ AllDone:
     frmConsole.CommLowerBorder.Move 0, frmConsole.Comm.Height - frmConsole.CommLowerBorder.Height, frmConsole.Comm.Width
 End Sub
 
-
 Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Integer, ByVal IsCustomDownload As Integer)
+    Dim NewEntry As ProcessQueueEntry
+    NewEntry.Data = s
+    NewEntry.DataSource = sSource
+    NewEntry.consoleID = consoleID
+    NewEntry.IsCustomDownload = IsCustomDownload
+    
+    Dim X As Integer
+    For X = 1 To 30
+        If frmConsole.tmrProcessQueue(X).Tag = "" Then
+            frmConsole.tmrProcessQueue(X).Tag = "used"
+            Exit For
+        End If
+    Next
+    ProcessQueue(X) = NewEntry
+    frmConsole.tmrProcessQueue(X).Enabled = True
+End Sub
+
+Public Sub ProcessQueueEntry(ByVal Index As Integer)
+    Dim s As String
+    Dim sSource As String
+    Dim consoleID As Integer
+    Dim IsCustomDownload As Integer
+
+    s = ProcessQueue(Index).Data
+    sSource = ProcessQueue(Index).DataSource
+    consoleID = ProcessQueue(Index).consoleID
+    IsCustomDownload = ProcessQueue(Index).IsCustomDownload
+    
+
     'process incoming data that winhttp download
     s = Trim(s)
 
@@ -254,7 +293,7 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
             
             
             If frmConsole.getConnected Then
-                frmConsole.Send "QUIT :www.darksignsonline.com, Dark Signs Online"    'send the quit message
+                frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
                 frmConsole.lstUsers.Clear  'clear the list entries
                 frmConsole.display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
                 frmConsole.sockIRC.Close_   'close the connection

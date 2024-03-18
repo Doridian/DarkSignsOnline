@@ -63,6 +63,7 @@ End Sub
 
 Public Sub Send()
     If DoneForever Then
+        SayComm "Request Send while DoneForever: " & Url
         Exit Sub
     End If
 
@@ -87,6 +88,7 @@ End Sub
 
 Private Sub HttpRequest_OnError(ByVal ErrorNumber As Long, ByVal ErrorDescription As String)
     If Done Then
+        SayComm "Request OnError while Done: " & Url
         Exit Sub
     End If
     Done = True
@@ -96,6 +98,7 @@ End Sub
 
 Private Sub HttpRequest_OnResponseFinished()
     If Done Then
+        SayComm "Request OnResponseFinished while Done: " & Url
         Exit Sub
     End If
     Done = True
@@ -111,6 +114,7 @@ End Sub
 
 Private Sub ManageSockError(Reason As String)
     If DoneForever Then
+        SayComm "Request ManageSockError while DoneForever: " & Url
         Exit Sub
     End If
 

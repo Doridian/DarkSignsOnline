@@ -245,7 +245,7 @@ Beginning:
                 ForVariableIndex = VariableIndex(ForVariable)
                 
                 If ForVariableIndex = 0 Then
-                    SetVariable ForVariable, "= " & ForStart, consoleID
+                    SetVariable ForVariable, "= " & ForStart, consoleID, ScriptFrom
                     ForVariableIndex = VariableIndex(ForVariable)
                 Else
                     Vars(ForVariableIndex).VarValue = ForStart
@@ -517,7 +517,7 @@ Public Sub ScriptLog(s As String, lineNum As Integer)
     'AppendFile App.Path & "\script.log", "Line " & Format(lineNum, "000") & ", " & s
 End Sub
 
-Public Function SetVariable(ByVal VarName As String, ByVal VarVal As String, ByVal consoleID As Integer)
+Public Function SetVariable(ByVal VarName As String, ByVal VarVal As String, ByVal consoleID As Integer, ByVal ScriptFrom As String)
     
     'these strings can be used to divide varval for functions like "transfer("
     Dim s1 As String, s2 As String, s3 As String, s4 As String, s5 As String
@@ -703,11 +703,19 @@ zz2:
 
         sockIndex = DownloadURL(API_Server & API_Path & "index.php?serverfileupload=" & GetPart(VarVal, 1, " ") & "&filename=" & GetPart(VarVal, 2, " ") & "&filedata=" & s2, VarIndex, consoleID)
         VarVal = "[loading]"
-    
-    
+    ElseIf Mid(i(VarVal), 1, 12) = "scripttoken(" Then
+        VarVal = KillDirectFunctionSides(VarVal)
+        If ScriptFrom = "" Then
+            VarVal = "not from a script"
+        Else
+            VarVal = "[loading]"
+            sockIndex = DownloadURL(API_Server & API_Path & "domain_token.php?d=" & URLEncode(ScriptFrom), VarIndex, consoleID)
+        End If
     ElseIf Mid(i(VarVal), 1, 6) = "getip(" Then '--------- doing 3
         VarVal = KillDirectFunctionSides(VarVal)
+        SayComm "GETIP 1"
         sockIndex = DownloadURL(API_Server & API_Path & "index.php?getip=" & SumUp(VarVal, consoleID), VarIndex, consoleID)
+        SayComm "GETIP 2"
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 10) = "getdomain(" Then '--------- doing 4
         VarVal = KillDirectFunctionSides(VarVal)
@@ -866,10 +874,6 @@ Public Function DownloadURL(ByVal VarVal As String, VarIndex As Integer, console
     sUrl = Replace(sUrl, ")***", "")
     sUrl = Replace(sUrl, "***", "")
     
-    sUrl = Replace(sUrl, "http://", "")
-    sUrl = Replace(sUrl, "Http://", "")
-    sUrl = Replace(sUrl, "HTTP://", "")
-    
     If InStr(sUrl, "?") > 0 Then
         PostData = Mid(sUrl, InStr(sUrl, "?") + 1, Len(sUrl))
         sUrl = Mid(sUrl, 1, InStr(sUrl, "?") - 1)
@@ -886,17 +890,8 @@ Public Function DownloadURL(ByVal VarVal As String, VarIndex As Integer, console
         sDomain = sUrl
     End If
     
-    If sDomain = "darksignsonline.com" Or sDomain = "www.darksignsonline.com" Then
-        VarVal = "No direct API access using download!"
-    End If
-    
-    'MsgBox sUrl & vbCrLf & vbCrLf & PostData
-    
-    
+
     DownloadURL = RunPage(sUrl, consoleID, True, PostData, VarIndex)
-    
-    
-    
 End Function
 
 Public Sub GetFirstAndShortenRemaining(s1 As String, sFullString As String, dividerChar As String)

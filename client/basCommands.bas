@@ -190,7 +190,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
             If Mid(sC, 1, 1) = "$" And Len(sC) > 1 Then
                 'it's a variable being set
                 
-                SetVariable sC, sP, consoleID
+                SetVariable sC, sP, consoleID, ScriptFrom
                 
                 If IsFromScript = True Then
                     If InStr(sP, "(") = 0 Then
