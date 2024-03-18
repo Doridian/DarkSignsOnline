@@ -70,10 +70,10 @@ Private Sub btnSend_Click()
    Dim toSend As String
 
    
-   toSend = "action=send&returnwith=7002&to=" & Me.msgTo & _
-        "&subject=" & Me.msgSubject & _
-        "&message=" & Replace(Me.msgBody.Text, vbNewLine, Chr(6))
-   
+   toSend = "action=send&returnwith=7002&to=" & EncodeURLParameter(Me.msgTo) & _
+        "&subject=" & EncodeURLParameter(Me.msgSubject) & _
+        "&message=" & EncodeURLParameter(Replace(Me.msgBody.Text, vbNewLine, Chr(6)))
+
    RunPage "dsmail.php", consoleID, True, toSend
    
    DisableAll

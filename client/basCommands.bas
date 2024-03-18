@@ -469,7 +469,7 @@ End Sub
 
 Public Sub ListMySubDomains(ByVal domain As String, ByVal consoleID As Integer)
     SayComm "Downloading subdomain list..."
-    RunPage "my_domains.php?domain=" & domain & "&type=subdomain", consoleID, False, "", 0
+    RunPage "my_domains.php?domain=" & EncodeURLParameter(domain) & "&type=subdomain", consoleID, False, "", 0
 End Sub
 
 Public Sub ListMyIPs(ByVal consoleID As Integer)
@@ -583,9 +583,9 @@ Public Sub ConnectToDomain(ByVal s As String, ByVal consoleID As Integer)
     SayComm "Connecting to " & UCase(sDomain) & ":" & sPort & "..."
     Say consoleID, "{green}Connecting to " & UCase(sDomain) & ":" & sPort & "...", False
     
-    RunPage "domain_connect.php?params=" & sParams & _
-    "&d=" & sDomain & _
-    "&port=" & sPort, consoleID
+    RunPage "domain_connect.php?params=" & EncodeURLParameter(sParams) & _
+    "&d=" & EncodeURLParameter(sDomain) & _
+    "&port=" & EncodeURLParameter(sPort), consoleID
     
 
 
@@ -625,9 +625,9 @@ Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
         tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
 
         RunPage "domain_upload.php", consoleID, True, _
-        "port=" & Trim(sPort) & _
-        "&d=" & sDomain & _
-        "&filedata=" & tempStrA
+        "port=" & EncodeURLParameter(Trim(sPort)) & _
+        "&d=" & EncodeURLParameter(sDomain) & _
+        "&filedata=" & EncodeURLParameter(tempStrA)
         
         SayComm "Attempting to upload: " & UCase(sDomain) & ":" & i(sPort), consoleID
         
@@ -660,8 +660,8 @@ Public Sub CloseDomainPort(ByVal s As String, ByVal consoleID As Integer)
     sPort = s
   
     RunPage "domain_close.php", consoleID, True, _
-    "port=" & Trim(sPort) & _
-    "&d=" & sDomain
+    "port=" & EncodeURLParameter(Trim(sPort)) & _
+    "&d=" & EncodeURLParameter(sDomain)
         
     SayComm "Attempting to close port : " & UCase(sDomain) & ":" & i(sPort), consoleID
         
@@ -698,9 +698,9 @@ Public Sub DownloadFromDomain(ByVal s As String, ByVal consoleID As Integer)
 
         RunPage "domain_download.php", consoleID, True, _
         "returnwith=4400" & _
-        "&port=" & Trim(sPort) & _
-        "&d=" & sDomain & _
-        "&filename=" & sFilename
+        "&port=" & EncodeURLParameter(Trim(sPort)) & _
+        "&d=" & EncodeURLParameter(sDomain) & _
+        "&filename=" & EncodeURLParameter(sFilename)
         
         SayComm "Attempting to download: " & UCase(sDomain) & ":" & i(sPort), consoleID
         
@@ -736,19 +736,19 @@ Public Sub SubOwners(ByVal s As String, ByVal consoleID As Integer)
         'list the domain names
            
             RunPage "index.php", consoleID, True, _
-            "returnwith=2001&listprivileges=" & Trim(sDomain)
+            "returnwith=2001&listprivileges=" & EncodeURLParameter(Trim(sDomain))
 
     ElseIf Mid(i(s), 1, 4) = "add " Then
         sUsername = Trim(Mid(s, 5, Len(s)))
             
             RunPage "index.php", consoleID, True, _
-            "returnwith=2001&addprivileges=" & Trim(sDomain) & "&username=" & sUsername
+            "returnwith=2001&addprivileges=" & EncodeURLParameter(Trim(sDomain)) & "&username=" & EncodeURLParameter(sUsername)
 
     ElseIf Mid(i(s), 1, 7) = "remove " Then
         sUsername = Trim(Mid(s, 8, Len(s)))
         
              RunPage "index.php", consoleID, True, _
-            "returnwith=2001&removeprivileges=" & Trim(sDomain) & "&username=" & sUsername
+            "returnwith=2001&removeprivileges=" & EncodeURLParameter(Trim(sDomain)) & "&username=" & EncodeURLParameter(sUsername)
 
     Else
         SayError "Invalid Parameters.", consoleID
@@ -785,7 +785,7 @@ Public Sub RegisterDomain(ByVal s As String, ByVal consoleID As Integer)
     
     
     'RunPage "domain_register.php?returnwith=2000&d=" & Trim(s), consoleID
-    RunPage "domain_register.php", consoleID, True, "d=" & s
+    RunPage "domain_register.php", consoleID, True, "d=" & EncodeURLParameter(s)
     
 End Sub
 
@@ -822,7 +822,7 @@ Public Sub UnRegisterDomain(ByVal s As String, ByVal consoleID As Integer)
     
     
     RunPage "domain_register.php", consoleID, True, _
-    "returnwith=2000&unregisterdomain=" & Trim(sDomain) & "&pw=" & sPass
+    "returnwith=2000&unregisterdomain=" & EncodeURLParameter(Trim(sDomain)) & "&pw=" & EncodeURLParameter(sPass)
     
 End Sub
 
@@ -883,10 +883,10 @@ Public Sub ServerCommand_Append(s As String, sKey As String, sDomain As String, 
     sFilename = Trim(Mid(s, 1, InStr(s, " ")))
     sFileData = Trim(Mid(s, InStr(s, " "), Len(s)))
     
-    sPostData = "append=" & sFilename & _
-        "&keycode=" & sKey & _
-        "&d=" & sDomain & _
-        "&filedata=" & sFileData
+    sPostData = "append=" & EncodeURLParameter(sFilename) & _
+        "&keycode=" & EncodeURLParameter(sKey) & _
+        "&d=" & EncodeURLParameter(sDomain) & _
+        "&filedata=" & EncodeURLParameter(sFileData)
     
     RunPage "domain_filesystem.php", consoleID, True, sPostData, 0
 
@@ -904,10 +904,10 @@ Public Sub ServerCommand_Write(s As String, sKey As String, sDomain As String, B
     sFilename = Trim(Mid(s, 1, InStr(s, " ")))
     sFileData = Trim(Mid(s, InStr(s, " "), Len(s)))
     
-    sPostData = "write=" & sFilename & _
-        "&keycode=" & sKey & _
-        "&d=" & sDomain & _
-        "&filedata=" & sFileData
+    sPostData = "write=" & EncodeURLParameter(sFilename) & _
+        "&keycode=" & EncodeURLParameter(sKey) & _
+        "&d=" & EncodeURLParameter(sDomain) & _
+        "&filedata=" & EncodeURLParameter(sFileData)
         
     RunPage "domain_filesystem.php", consoleID, True, sPostData, 0
 
@@ -961,9 +961,9 @@ Public Sub TransferMoney(ByVal s As String, ByVal consoleID As Integer)
     
         RunPage "transfer.php", consoleID, True, _
         "returnwith=2000" & _
-        "&to=" & Trim(sTo) & _
-        "&amount=" & Trim(sAmount) & _
-        "&description=" & Trim(sDescription)
+        "&to=" & EncodeURLParameter(Trim(sTo)) & _
+        "&amount=" & EncodeURLParameter(Trim(sAmount)) & _
+        "&description=" & EncodeURLParameter(Trim(sDescription))
     
     End If
     
@@ -983,7 +983,7 @@ Public Sub Lookup(ByVal s As String, ByVal consoleID As Integer)
     End If
     
     
-    RunPage "lookup.php?returnwith=2000&d=" & Trim(s), consoleID
+    RunPage "lookup.php?returnwith=2000&d=" & EncodeURLParameter(Trim(s)), consoleID
     
 End Sub
 

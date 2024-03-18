@@ -696,7 +696,7 @@ Sub DownloadOne()
     lStatus.Caption = "Downloading to \downloads\" & Trim(KillBadDirChars(LV.SelectedItem.ListSubItems(4).Text)) & "..."
     
     
-    RunPage "file_database.php?returnwith=4304&getfile=" & sID, 5, False, "", False
+    RunPage "file_database.php?returnwith=4304&getfile=" & EncodeURLParameter(sID), 5, False, "", False
         
     
     
@@ -833,7 +833,7 @@ Private Sub Command8_Click()
     lStatus.Caption = "Removing..."
     
 
-    RunPage "file_database.php?returnwith=4303&removenow=" & sID, 5, False, "", False
+    RunPage "file_database.php?returnwith=4303&removenow=" & EncodeURLParameter(sID), 5, False, "", False
     
 End Sub
 
@@ -998,7 +998,7 @@ Sub UpdateResults()
     
     lStatus.Caption = "Updating..."
     
-    RunPage "file_database.php?returnwith=4301&getcategory=" & sCategory, 5, False, "", False
+    RunPage "file_database.php?returnwith=4301&getcategory=" & EncodeURLParameter(sCategory), 5, False, "", False
     
     
 End Sub
@@ -1067,7 +1067,7 @@ Sub LoadList3()
     TS.Text = "Loading..."
     tsl.Caption = ss & "..."
     
-    RunPage "index.php?textspacedownload=" & Trim(Mid(ss, InStr(ss, " "), 99)), ActiveConsole, False, "", False
+    RunPage "index.php?textspacedownload=" & EncodeURLParameter(Trim(Mid(ss, InStr(ss, " "), 99))), ActiveConsole, False, "", False
     
 End Sub
 

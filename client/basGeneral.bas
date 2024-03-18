@@ -77,7 +77,7 @@ End Function
 
 
 Function GetFileClean(ByVal filename As String) As String
-    Dim handle As Integer
+    Dim Handle As Integer
     
     ' ensure that the file exists
     If Len(Dir$(filename)) = 0 Then
@@ -85,12 +85,12 @@ Function GetFileClean(ByVal filename As String) As String
     End If
     
     ' open in binary mode
-    handle = FreeFile
-    Open filename$ For Binary As #handle
+    Handle = FreeFile
+    Open filename$ For Binary As #Handle
     ' read the string and close the file
-    GetFileClean = Space$(LOF(handle))
-    Get #handle, , GetFileClean
-    Close #handle
+    GetFileClean = Space$(LOF(Handle))
+    Get #Handle, , GetFileClean
+    Close #Handle
     
     If Mid(GetFileClean, Len(GetFileClean) - 1, 2) = vbCrLf Then
         GetFileClean = Mid(GetFileClean, 1, Len(GetFileClean) - 2)
@@ -495,64 +495,6 @@ End Function
 '
 '    If NextEmptyOperator = 9999 Then NextEmptyOperator = 0
 'End Function
-
-
-
-
-' url encodes a string
-Public Function URLEncode(ByVal str As String) As String
-        Dim intLen As Integer
-        Dim x As Integer
-        Dim curChar As Long
-                Dim newStr As String
-                intLen = Len(str)
-        newStr = ""
-                        For x = 1 To intLen
-            curChar = Asc(Mid$(str, x, 1))
-            
-            If (curChar < 48 Or curChar > 57) And _
-                (curChar < 65 Or curChar > 90) And _
-                (curChar < 97 Or curChar > 122) Then
-                                newStr = newStr & "%" & Hex(curChar)
-            Else
-                newStr = newStr & Chr(curChar)
-            End If
-        Next x
-        
-        URLEncode = newStr
-End Function
-
-' decodes a url encoded string
-Public Function UrlDecode(ByVal str As String) As String
-        Dim intLen As Integer
-        Dim x As Integer
-        Dim curChar As String * 1
-        Dim strCode As String * 2
-        
-        Dim newStr As String
-        
-        intLen = Len(str)
-        newStr = ""
-        
-        For x = 1 To intLen
-            curChar = Mid$(str, x, 1)
-            
-            If curChar = "%" Then
-                strCode = "&h" & Mid$(str, x + 1, 2)
-                
-                If IsNumeric(strCode) Then
-                    curChar = Chr(Int(strCode))
-                Else
-                    curChar = ""
-                End If
-                                x = x + 2
-            End If
-            
-            newStr = newStr & curChar
-        Next x
-        
-        UrlDecode = newStr
-End Function
 
 Public Function CountCharsInString(ByVal s As String, ByVal sFind As String) As Long
     Dim n As Long
