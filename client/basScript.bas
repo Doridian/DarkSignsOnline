@@ -711,6 +711,9 @@ zz2:
             VarVal = "[loading]"
             sockIndex = DownloadURL(API_Server & API_Path & "domain_token.php?d=" & URLEncode(ScriptFrom), VarIndex, consoleID)
         End If
+    ElseIf Mid(i(VarVal), 1, 12) = "urlencode(" Then
+        VarVal = KillDirectFunctionSides(VarVal)
+        VarVal = URLEncode(VarVal)
     ElseIf Mid(i(VarVal), 1, 6) = "getip(" Then '--------- doing 3
         VarVal = KillDirectFunctionSides(VarVal)
         sockIndex = DownloadURL(API_Server & API_Path & "index.php?getip=" & SumUp(VarVal, consoleID), VarIndex, consoleID)
