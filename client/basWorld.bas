@@ -57,10 +57,8 @@ Public Sub CleanHttpRequests()
         If Not HttpRequests(X).SafeToDelete() Then
             Y = Y + 1
             Set NewHttpRequests(Y) = HttpRequests(X)
-            SayComm "DND " & HttpRequests(X).Url
         Else
             MadeChanges = True
-            SayComm "CTD " & HttpRequests(X).Url
         End If
     Next
 
@@ -121,7 +119,7 @@ Public Sub LogoutNow(ByVal consoleID As Integer)
 End Sub
 
 
-Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer)
+Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer, Optional NoAuth As Boolean)
     If InStr(i(sUrl), "auth.php") = 0 And Authorized = False Then
         Say consoleID, "You must be logged in to do that!{36 center orange impact nobold}", False
         Say consoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}", False
@@ -137,11 +135,13 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
 
     If IsCustomDownload <= 0 Then
         sUrl = API_Server & API_Path & sUrl
-        Requestor.UserName = myUsername
-        Requestor.Password = myPassword
-    Else
+    End If
+    If NoAuth Then
         Requestor.UserName = ""
         Requestor.Password = ""
+    Else
+        Requestor.UserName = myUsername
+        Requestor.Password = myPassword
     End If
     
     Requestor.Url = sUrl

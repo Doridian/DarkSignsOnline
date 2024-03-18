@@ -597,7 +597,7 @@ zz2:
         Dim VarVal2 As String
         VarVal2 = KillDirectFunctionSides(VarVal)
         VarVal = "[loading]"
-        sockIndex = DownloadURL(VarVal2, VarIndex, consoleID)
+        sockIndex = DownloadUserURL(VarVal2, VarIndex, consoleID)
     ElseIf Mid(i(VarVal), 1, 5) = "ping(" Then '--------- doing 1
         VarVal = KillDirectFunctionSides(VarVal)
         sockIndex = DownloadURL(API_Server & API_Path & "ping.php?port=0&domain=" & VarVal, VarIndex, consoleID)
@@ -703,7 +703,7 @@ zz2:
 
         sockIndex = DownloadURL(API_Server & API_Path & "index.php?serverfileupload=" & GetPart(VarVal, 1, " ") & "&filename=" & GetPart(VarVal, 2, " ") & "&filedata=" & s2, VarIndex, consoleID)
         VarVal = "[loading]"
-    ElseIf Mid(i(VarVal), 1, 12) = "scripttoken(" Then
+    ElseIf Mid(i(VarVal), 1, 12) = "servertoken(" Then
         VarVal = KillDirectFunctionSides(VarVal)
         If ScriptFrom = "" Then
             VarVal = "not from a script"
@@ -854,13 +854,15 @@ zz2:
     Msgbux "indx(" & Trim(str(VarIndex)) & ")" & " name(" & VarName & ")= val(" & VarVal & ")"
     
 End Function
+Public Function DownloadUserURL(ByVal VarVal As String, VarIndex As Integer, consoleID As Integer) As Integer
+    DownloadUserURL = DownloadURL(VarVal, VarIndex, consoleID, True)
+End Function
 
-Public Function DownloadURL(ByVal VarVal As String, VarIndex As Integer, consoleID As Integer) As Integer
+Public Function DownloadURL(ByVal VarVal As String, VarIndex As Integer, consoleID As Integer, Optional NoAuth As Boolean) As Integer
     Dim sUrl As String
     Dim PostData As String
 
     VarVal = RemoveSurroundingQuotes(VarVal)
-    
 
     If InStr(Mid(VarVal, 1, 18), "(") > 0 Then
         VarVal = Mid(VarVal, InStr(VarVal, "(") + 1, Len(VarVal))
@@ -889,7 +891,7 @@ Public Function DownloadURL(ByVal VarVal As String, VarIndex As Integer, console
     End If
     
 
-    DownloadURL = RunPage(sUrl, consoleID, True, PostData, VarIndex)
+    DownloadURL = RunPage(sUrl, consoleID, True, PostData, VarIndex, NoAuth)
 End Function
 
 Public Sub GetFirstAndShortenRemaining(s1 As String, sFullString As String, dividerChar As String)

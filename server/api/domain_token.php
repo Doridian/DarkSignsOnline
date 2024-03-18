@@ -3,15 +3,14 @@
 $rewrite_done = true;
 require_once 'function.php';
 
-$port = (int) $_REQUEST['port'];
-
-if ($port < 1 || $port > 65536) {
-	die ('not found');
-}
-
 $d = strtolower($_REQUEST['d']);
 if (empty($d)) {
     die ('not found');
+}
+
+$temp = getDomainInfo($d);
+if ($temp[0] <= 0) {
+	die ('not found');
 }
 
 require_once('jwt/JWTExceptionWithPayloadInterface.php');
@@ -28,7 +27,7 @@ use Firebase\JWT\JWT;
 $start = time();
 $payload = [
     'iss' => 'http://darksignsonline.com',
-    'aud' => "http://$d:$port",
+    'aud' => $d,
     'sub' => ''.$user['id'],
     'name' => $user['username'],
     'iat' => $start,
