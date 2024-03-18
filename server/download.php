@@ -12,7 +12,7 @@ function get_release_client($release)
     return null;
 }
 ?>
-<br /><span class="style5"><br />
+<span class="style5"><br />
     <p><br />
         <font face="Georgia, Times New Roman, Times, serif" size="+3">Download</font><br />
         <br />

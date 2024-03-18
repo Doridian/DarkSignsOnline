@@ -226,7 +226,6 @@ if (isset($_POST['username'])) {
 
 ?>
 
-<br />
 <font face="Georgia, Times New Roman, Times, serif" size="+3">Create a new account</font><br />
 <br />
 
