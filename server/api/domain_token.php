@@ -3,7 +3,7 @@
 $rewrite_done = true;
 require_once 'function.php';
 
-echo '4100';
+echo '2000';
 
 $port = (int) $_REQUEST['port'];
 
@@ -27,7 +27,6 @@ require_once('jwt/JWT.php');
 
 use Firebase\JWT\JWT;
 
-$key = 'example_key';
 $payload = [
     'iss' => 'http://example.org',
     'aud' => 'http://example.com',
@@ -35,5 +34,5 @@ $payload = [
     'nbf' => 1357000000
 ];
 
-$jwt = JWT::encode($payload, $key, 'RS256');
+$jwt = JWT::encode($payload, $JWT_PRIVATE_KEY, 'RS256');
 echo $jwt;
