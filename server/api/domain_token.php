@@ -35,5 +35,5 @@ $payload = [
     'nbf' => 1357000000
 ];
 
-$jwt = JWT::encode($payload, $key, 'HS256', null);
+$jwt = JWT::encode($payload, $key, 'RS256');
 echo $jwt;
