@@ -523,7 +523,7 @@ Public Sub SayMultiLines(ByVal s As String, consoleID As Integer)
             End If
         Next n
         
-        Say consoleID, "{12 green}Line(s) Found: " & Trim(str(iCount)), False
+        Say consoleID, "{12 green}Line(s) Found: " & Trim(Str(iCount)), False
         
         New_Console_Line consoleID
 
@@ -601,20 +601,24 @@ Public Function EncodeURLParameter( _
     Dim cchEscaped As Long
     Dim hResult As Long
     
+    If Url = "" Then
+        EncodeURLParameter = ""
+        Exit Function
+    End If
+    
     If Len(Url) > INTERNET_MAX_URL_LENGTH Then
         Err.Raise &H8004D700, "URLUtility.URLEncode", _
                   "URL parameter too long"
     End If
     
-    Dim urlLenMultiplier As Long
-    urlLenMultiplier = 1
-    hResult = E_POINTER
-    While hResult = E_POINTER And urlLenMultiplier <= 10
-        urlLenMultiplier = urlLenMultiplier + 1
-        cchEscaped = Len(Url) * urlLenMultiplier
+    cchEscaped = Len(Url)
+    
+    EncodeURLParameter = String$(cchEscaped, 0)
+    hResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+    If hResult = E_POINTER Then
         EncodeURLParameter = String$(cchEscaped, 0)
-        hResult = UrlEscape(Url, EncodeURLParameter, cchEscaped, URL_ESCAPE_PERCENT)
-    Wend
+        hResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+    End If
 
     If hResult <> S_OK Then
         Err.Raise Err.LastDllError, "URLUtility.URLEncode", _
