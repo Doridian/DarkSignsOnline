@@ -31,8 +31,7 @@
                       <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/">Discussion
                         Forum (archive.org)</a>
                       |
-                      <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/wiki/">Wiki
-                        (archive.org)</a>
+                      <a href="/wiki/">Wiki</a>
                     </div>
                   </td>
                 </tr>
