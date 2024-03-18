@@ -7,10 +7,7 @@ require "_top.php";
 require_once 'api/config.php';
 global $db;
 
-
 if (isset($_POST['username'])) {
-	die('Registrations are currently closed');
-
 	$username = trim($_POST['username']);
 	$password = trim($_POST['password']);
 	$email = trim($_POST['email']);
@@ -220,9 +217,8 @@ if (isset($_POST['username'])) {
 	$stmt->bind_param('issis', $id, $username, $usr, $timestamp, $aip);
 	$stmt->execute();
 
-	$headers = "From: Dark Signs Online <do-not-reply@darksignsonline.com>\r\n";
-
-	mail($email, "$username, verify your Dark Signs Account", "Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\nhttps://darksignsonline.com/verify.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttps://darksignsonline.com/", "$headers");
+	$headers = "From: Dark Signs Online <noreply@darksignsonline.com>\r\n";
+	mail($email, "$username, verify your Dark Signs Account", "Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\nhttps://darksignsonline.com/verify.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttps://darksignsonline.com/", $headers);
 
 	echo "<center><br><br><font size='4' color='orange' face='arial'><b>Your account has been created!</b><br>Check your email address for more information.</font></center>";
 	exit;
