@@ -16,14 +16,14 @@ if (empty($d)) {
     die ('not found');
 }
 
+require_once('jwt/JWTExceptionWithPayloadInterface.php');
 require_once('jwt/BeforeValidException.php');
-require_once('jwt/CachedKeySet.php');
 require_once('jwt/ExpiredException.php');
+require_once('jwt/SignatureInvalidException.php');
+require_once('jwt/CachedKeySet.php');
+require_once('jwt/Key.php');
 require_once('jwt/JWK.php');
 require_once('jwt/JWT.php');
-require_once('jwt/JWTExceptionWithPayloadInterface.php');
-require_once('jwt/Key.php');
-require_once('jwt/SignatureInvalidException.php');
 
 use Firebase\JWT\JWT;
 
