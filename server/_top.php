@@ -24,14 +24,14 @@
                     <div align="left" class="style11">
                       <a href="/">Home</a>
                       |
-                      <a href="/create_account.php">Sign up (soon!)</a>
+                      <a href="/create_account.php">Sign up</a>
                       |
                       <a href="/download.php">Download</a>
                       |
+                      <a href="/wiki/">Wiki</a>
+                      |
                       <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/">Discussion
                         Forum (archive.org)</a>
-                      |
-                      <a href="/wiki/">Wiki</a>
                     </div>
                   </td>
                 </tr>
