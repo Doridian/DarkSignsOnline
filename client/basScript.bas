@@ -713,9 +713,7 @@ zz2:
         End If
     ElseIf Mid(i(VarVal), 1, 6) = "getip(" Then '--------- doing 3
         VarVal = KillDirectFunctionSides(VarVal)
-        SayComm "GETIP 1"
         sockIndex = DownloadURL(API_Server & API_Path & "index.php?getip=" & SumUp(VarVal, consoleID), VarIndex, consoleID)
-        SayComm "GETIP 2"
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 10) = "getdomain(" Then '--------- doing 4
         VarVal = KillDirectFunctionSides(VarVal)
