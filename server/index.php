@@ -1,4 +1,4 @@
-<?php require ('_top.php'); ?>
+<?php require('_top.php'); ?>
 <table width="90%" border="0" cellspacing="0" cellpadding="10">
   <tbody>
     <tr>
@@ -66,6 +66,10 @@
 <span class="style5"><br />- News - <br /><br />
 
   <strong>March 17th 2024</strong><br /><span class="style9">
+    Decoded to work on the Wiki today. The Wiki link up top now links to this server, no longer to archive.org.<br />
+    I have restored all archived pages to their original state and fixed some typos.</span><br /><br />
+
+  <strong>March 17th 2024</strong><br /><span class="style9">
     Managed to recover at least the startup script files from the leftover "zlog.dat" file.<br />
     Seems to have been a console log, sadly all it ever logged was the startup script.<br />
     The two big things that still need to be restored for basic functionality are as follows:
@@ -106,8 +110,7 @@
 
   <strong>March 7th 2024</strong><br /><span class="style9">
     Hey everyone,
-    <a target="_blank"
-      href="https://web.archive.org/web/20110724080717/http://www.darksignsonline.com/forum/viewtopic.php?f=2&t=956">Doridian
+    <a target="_blank" href="https://web.archive.org/web/20110724080717/http://www.darksignsonline.com/forum/viewtopic.php?f=2&t=956">Doridian
       (archive.org)</a>
     here. I used to work on DSO way back when and just
     realized the domain was free so I grabbed it.<br />
@@ -123,14 +126,12 @@
 
   <strong>March 7th 2008</strong><br /><span class="style9">Just released DSO 0.8.1, contains minor bug fixes, plus
     afew new features. See
-    <a
-      href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=2&amp;t=269">here
+    <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=2&amp;t=269">here
       (archive.org)</a>
     for more info.</span><br /><br />
 
   <strong>March 5th 2008</strong><br /><span class="style9">DSO 0.80 released :). View changes
-    <a
-      href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=2&amp;t=263">here
+    <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=2&amp;t=263">here
       (archive.org)</a>.
   </span><br /><br />
 
@@ -140,8 +141,7 @@
   <strong>February 3rd 2008 </strong><br /><span class="style9">A new update will be available in the near future.
   </span><strong><br /><br />January 14th 2008 </strong><br /><span class="style9">A <span class="style17"><em>must
         have</em></span> update
-    is available.<br /><a
-      href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/download.php">Download v0.77
+    is available.<br /><a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/download.php">Download v0.77
       here. (archive.org)</a><br /></span></span>
 <table width="600" border="0" cellpadding="15" cellspacing="0" bgcolor="#1B1B1B">
   <tbody>
@@ -159,15 +159,13 @@
         <font face="verdana"><span class="style13">New features</span></font>
         <font face="verdana" size="2"><br />
           <br />
-          <strong>DRAW Command<br /> </strong><a
-            href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=139">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=139
+          <strong>DRAW Command<br /> </strong><a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=139">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=139
             (archive.org)</a><br />
           <br />
           <strong>Bunches of bugs fixed.</strong><br />
           <br />
           <strong>Encoding - secure scripts on your domains</strong><br />
-          <a
-            href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=137">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=137
+          <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=137">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=137
             (archive.org)</a><br />
           <br />
           <strong>REMOTEVIEW command added</strong>
@@ -178,13 +176,9 @@
 </table>
 <span class="style5"><strong><strong><strong><br />
         <br />January 13th 2008 </strong><span class="style16"><span class="style17"><br /></span> The DRAW command
-        has been added!<br /></span><strong><a
-          href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/dsodraw3.png"
-          target="_top"><img src="/dsodraw3small.png" width="284" height="213" border="1" /></a></strong>
-      <strong><strong><a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/dsodraw4.png"
-            target="_top">
-            <img src="/dsodraw4small.png" width="287" height="215"
-              border="1" /></a></strong></strong><br /><br />January
+        has been added!<br /></span><strong><a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/dsodraw3.png" target="_top"><img src="/dsodraw3small.png" width="284" height="213" border="1" /></a></strong>
+      <strong><strong><a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/dsodraw4.png" target="_top">
+            <img src="/dsodraw4small.png" width="287" height="215" border="1" /></a></strong></strong><br /><br />January
       12th 2008 </strong><br /> </strong><span class="style9">New update available -
     <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/download.php">version 0.74
       (archive.org)</a>~!
@@ -217,8 +211,7 @@
           direxists(directoryname)<br />
           <br />
           <strong>Public Files for your servers! </strong><br />
-          <a
-            href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=119">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=119
+          <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=119">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=119
             (archive.org)</a>
         </font>
       </td>
@@ -232,8 +225,7 @@
       version (archive.org)</a>
     of the live chat log is available. </span><br />
   <br />
-  <strong><strong>January 11th 2008 </strong><br /> </strong><span class="style9"><a
-      href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/download.php">Download
+  <strong><strong>January 11th 2008 </strong><br /> </strong><span class="style9"><a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/download.php">Download
       (archive.org)</a>
     the new update, 0.73. <br /> </span></span>
 <table width="600" border="0" cellpadding="15" cellspacing="0" bgcolor="#1B1B1B">
@@ -256,19 +248,16 @@
           <strong>New Transfer Functions</strong>
           <strong> - </strong>Get the status of transfers, and
           more. <br />
-          <a
-            href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=98">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=98
+          <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=98">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=98
             (archive.org)</a><br />
           <br />
           <strong>New Remote File System Commands and
             Functions</strong><br />
-          <a
-            href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=104">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=104
+          <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=104">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=104
             (archive.org)</a><br />
           <br />
           <strong>SUBOWNERS Command</strong><br />
-          <a
-            href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=100">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=100
+          <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=100">http://www.darksignsonline.com/forum/viewtopic.php?f=9&amp;t=100
             (archive.org)</a>
         </font>
       </td>
@@ -316,9 +305,8 @@
   and requires editors. <br /><br /><br /><strong>January 7th 2008 </strong><br /><span class="style9">The first release
     of Dark Signs Online is
     <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/download.php">available for
-      download. (archive.org)</a></span><br /><br /><br /><strong>January 4th 2008 </strong><br /><span
-    class="style9">The first beta
+      download. (archive.org)</a></span><br /><br /><br /><strong>January 4th 2008 </strong><br /><span class="style9">The first beta
     version is due before the 15th of
     January.</span></span><br /><br />
 <br />
-<?php require ('_bottom.php');
+<?php require('_bottom.php');
