@@ -53,34 +53,6 @@ function write_file($file_id, $filename, $contents) {
 	$stmt->execute();
 }
 
-$returnwith = $_REQUEST['returnwith'];
-if (trim($returnwith) == "") {
-	$returnwith = '2000';
-}
-echo $returnwith;
-
-$write = $_REQUEST['write'];
-if (!empty($write)) {
-	$file = verify_keycode($write);
-	$filedata = $_REQUEST['filedata'];
-	write_file($file['id'], $write, $filedata);
-	exit;
-}
-
-$append = $_REQUEST['append'];
-if (!empty($append)) {
-	$file = verify_keycode($append);
-	$filedata = $file['contents'] . $_REQUEST['filedata'];
-	write_file($file['id'], $append, $filedata);
-	exit;
-}
-
-$downloadfile = $_REQUEST['downloadfile'];
-if (!empty($downloadfile)) {
-	$file = verify_keycode($fileserver);
-	die($file['contents']);
-}
-
 $fileserver = $_REQUEST['fileserver'];
 if (!empty($fileserver)) {
 	$file = verify_keycode($fileserver);
@@ -108,4 +80,32 @@ if (!empty($fileserver)) {
 		echo $fdarray[$x] . '\n';
 	}
 	exit;
+}
+
+$returnwith = $_REQUEST['returnwith'];
+if (trim($returnwith) == "") {
+	$returnwith = '2000';
+}
+echo $returnwith;
+
+$write = $_REQUEST['write'];
+if (!empty($write)) {
+	$file = verify_keycode($write);
+	$filedata = $_REQUEST['filedata'];
+	write_file($file['id'], $write, $filedata);
+	exit;
+}
+
+$append = $_REQUEST['append'];
+if (!empty($append)) {
+	$file = verify_keycode($append);
+	$filedata = $file['contents'] . $_REQUEST['filedata'];
+	write_file($file['id'], $append, $filedata);
+	exit;
+}
+
+$downloadfile = $_REQUEST['downloadfile'];
+if (!empty($downloadfile)) {
+	$file = verify_keycode($fileserver);
+	die($file['contents']);
 }
