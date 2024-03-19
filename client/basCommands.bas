@@ -837,6 +837,8 @@ Public Sub ServerCommands(ByVal s As String, ByVal consoleID As Integer)
 
     If InStr(s, ":----:") = 0 Then Exit Sub
     
+    'SERVER KEY:---:DOMAIN:----:WRITE
+    
     sKey = Trim(Mid(s, 1, InStr(s, ":----:") - 1))
     sDomain = Trim(Mid(sKey, InStr(sKey, ":---:") + 5, Len(sKey)))
     sKey = Mid(sKey, 1, InStr(sKey, ":---:") - 1)
@@ -1476,11 +1478,11 @@ Public Sub DisplayFile(ByVal s As String, ByVal consoleID As Integer)
             MaxLines = Val(Trim(Mid(s, InStr(s, " "), Len(s))))
             
             If MaxLines < 1 Then
-                SayError "Invalid Parameter Value: " & Trim(str(MaxLines)), consoleID
+                SayError "Invalid Parameter Value: " & Trim(Str(MaxLines)), consoleID
                 Exit Sub
             End If
             If startLine < 1 Then
-                SayError "Invalid Parameter Value: " & Trim(str(MaxLines)), consoleID
+                SayError "Invalid Parameter Value: " & Trim(Str(MaxLines)), consoleID
                 Exit Sub
             End If
         Else
@@ -1795,7 +1797,7 @@ Public Sub ListDirectoryContents(ByVal consoleID As Integer, Optional ByVal sFil
 NoFilesFound:
     sAll = ""
     
-    Say consoleID, Trim(str(fCount)) & " file(s) and " & Trim(str(dCount)) & " dir(s) found in " & cPath(consoleID) & " {green 10}", False
+    Say consoleID, Trim(Str(fCount)) & " file(s) and " & Trim(Str(dCount)) & " dir(s) found in " & cPath(consoleID) & " {green 10}", False
     
     Exit Sub
 zxc:
