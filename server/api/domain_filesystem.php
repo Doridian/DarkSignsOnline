@@ -77,7 +77,7 @@ if (!empty($fileserver)) {
 	}
 
 	for ($x = $startline - 1; $x < $endline && $x < count($fdarray); $x++) {
-		echo $fdarray[$x] . '\n';
+		echo $fdarray[$x] . "\n";
 	}
 	exit;
 }
