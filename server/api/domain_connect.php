@@ -26,7 +26,7 @@ $code_a = $exists->fetch_row();
 if (empty($code_a)) {
 	die('not found');
 }
-$code = "\$serverdomain = \"$d\"\n\$serverip = \"$dInfo[3]\"\n\$serverport = $port\n".$code_a[0];
+$code = "\$serverdomain = \"$d\"\r\n\$serverip = \"$dInfo[3]\"\r\n\$serverport = $port\r\n".$code_a[0];
 $lines = explode("\n", $code);
 
 foreach ($lines as $k => $v) {
