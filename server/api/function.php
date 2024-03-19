@@ -64,18 +64,18 @@ function getDomainInfo($domain)
 	$result = null;
 
 	if (sizeof($domain) == 2) {
-		$stmt = $db->prepare("SELECT d.id, ipt.owner, d.subowners, d.filekeys FROM domain d, iptable ipt WHERE d.name=? AND d.ext=? AND d.id=ipt.id");
+		$stmt = $db->prepare("SELECT d.id, ipt.owner, d.subowners FROM domain d, iptable ipt WHERE d.name=? AND d.ext=? AND d.id=ipt.id");
 		$stmt->bind_param('ss', $domain[0], $domain[1]);
 		$stmt->execute();
 		$result = $stmt->get_result();
 	} else if (sizeof($domain) == 3) {
-		$stmt = $db->prepare("SELECT s.id, ipt.owner, d.subowners, s.filekeys FROM subdomain s, iptable ipt, domain d WHERE d.name=? AND d.ext=? AND d.id=s.hostid AND s.name=? AND s.id=ipt.id");
+		$stmt = $db->prepare("SELECT s.id, ipt.owner, d.subowners FROM subdomain s, iptable ipt, domain d WHERE d.name=? AND d.ext=? AND d.id=s.hostid AND s.name=? AND s.id=ipt.id");
 		$stmt->bind_param('sss', $domain[1], $domain[2], $domain[0]);
 		$stmt->execute();
 		$result = $stmt->get_result();
 	} else if (sizeof($domain) == 4) {
 		$ipdom = $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3];
-		$stmt = $db->prepare("SELECT id, owner, '', filekeys FROM iptable WHERE ip=?");
+		$stmt = $db->prepare("SELECT id, owner, '' FROM iptable WHERE ip=?");
 		$stmt->bind_param('s', $ipdom);
 		$stmt->execute();
 		$result = $stmt->get_result();
@@ -84,7 +84,7 @@ function getDomainInfo($domain)
 	if ($result && $result->num_rows == 1) {
 		return $result->fetch_row();
 	} else {
-		return array(-1, -1, '', '');
+		return array(-1, -1, '');
 	}
 }
 

@@ -17,7 +17,7 @@ $dInfo = getDomainInfo($d);
 
 //if it wants to write or append or serverfile, check for a keycode
 if (!empty ($write) || !empty ($append) || !empty ($fileserver)) {
-	$filekeys = $dInfo[3];
+	$filekeys = ''; // TODO: This
 	$keycode = $_REQUEST['keycode'];
 
 	$keycode = str_replace("--and--", "&", $keycode);

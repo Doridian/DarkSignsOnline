@@ -57,11 +57,11 @@ if (sizeof($domain) == 2) {
 					$res = $stmt->get_result();
 				} while ($res->num_rows != 0);
 
-				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, filekeys) VALUES (?, ?, '')");
+				$stmt = $db->prepare("INSERT INTO iptable (owner, ip) VALUES (?, ?)");
 				$stmt->bind_param('is', $uid, $randomip);
 				$stmt->execute();
 				$id = $db->insert_id;
-				$stmt = $db->prepare("INSERT INTO domain (id, name, ext, time, ip, filekeys) VALUES (?, ?, ?, ?, ?, '')");
+				$stmt = $db->prepare("INSERT INTO domain (id, name, ext, time, ip) VALUES (?, ?, ?, ?, ?)");
 				$stmt->bind_param('issis', $id, $domain[0], $domain[1], $timestamp, $_SERVER['REMOTE_ADDR']);
 				$stmt->execute();
 				die ('Registration complete for ' . $d . ', you have been charged $' . $price[$ext] . '');
@@ -97,11 +97,11 @@ if (sizeof($domain) == 2) {
 					$res = $stmt->get_result();
 				} while ($res->num_rows != 0);
 
-				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, filekeys) VALUES (?, ?, 'SUBDOMAIN', '')");
+				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype) VALUES (?, ?, 'SUBDOMAIN')");
 				$stmt->bind_param('is', $uid, $randomip);
 				$stmt->execute();
 				$id = $db->insert_id;
-				$stmt = $db->prepare("INSERT INTO subdomain (id, hostid, name, time, ip, filekeys) VALUES (?, ?, ?, ?, ?, '')");
+				$stmt = $db->prepare("INSERT INTO subdomain (id, hostid, name, time, ip) VALUES (?, ?, ?, ?, ?)");
 				$stmt->bind_param('issis', $id, $temp2[0], $domain[0], $timestamp, $_SERVER['REMOTE_ADDR']);
 				$stmt->execute();
 
@@ -135,7 +135,7 @@ if (sizeof($domain) == 2) {
 				die ($user['cash'] . '  Insufficient balance. Try again when you have more money.');
 			} else {
 				if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3], $price)) {
-					$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, filekeys) VALUES (?, ?, 'IP', '')");
+					$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype) VALUES (?, ?, 'IP')");
 					$stmt->bind_param('is', $uid, $ipdom);
 					$stmt->execute();
 					die ('Registration complete for ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3] . ', you have been charged $' . $price . '.');
