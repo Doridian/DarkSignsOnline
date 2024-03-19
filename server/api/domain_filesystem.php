@@ -43,13 +43,20 @@ function verify_keycode($filename) {
 
 function write_file($file_id, $filename, $contents) {
 	global $db, $dInfo;
-	if ($file_id < 0) {
+	if (strlen($contents) === 0) {
+		if ($file_id < 0) {
+			return;
+		}
+		$stmt = $db->prepare("DELETE FROM domain_files WHERE id = ?");
+		$stmt->bind_param('i', $file_id);
+	} else if ($file_id < 0) {
 		$stmt = $db->prepare("INSERT INTO domain_files (domain, filename, contents) VALUES (?, ?, ?)");
 		$stmt->bind_param('iss', $dInfo[0], $filename, $contents);
 	} else {
 		$stmt = $db->prepare("UPDATE domain_files SET contents = ? WHERE id = ?");
 		$stmt->bind_param('si', $contents, $file_id);
 	}
+
 	$stmt->execute();
 }
 
