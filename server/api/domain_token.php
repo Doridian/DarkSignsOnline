@@ -9,8 +9,8 @@ if (empty($d)) {
     die ('not found');
 }
 
-$temp = getDomainInfo($d);
-if ($temp[0] <= 0) {
+$dInfo = getDomainInfo($d);
+if ($dInfo[0] <= 0) {
 	die ('not found');
 }
 
