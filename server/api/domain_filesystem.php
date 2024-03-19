@@ -42,7 +42,6 @@ function verify_keycode($filename) {
 }
 
 function write_file($file_id, $filename, $contents) {
-	$contents = line_endings_to_dos($contents);
 	global $db, $dInfo;
 	if ($file_id < 0) {
 		$stmt = $db->prepare("INSERT INTO domain_files (domain, filename, contents) VALUES (?, ?, ?)");
@@ -92,7 +91,7 @@ echo $returnwith;
 $write = $_REQUEST['write'];
 if (!empty($write)) {
 	$file = verify_keycode($write);
-	$filedata = $_REQUEST['filedata'];
+	$filedata = line_endings_to_dos($_REQUEST['filedata']);
 	write_file($file['id'], $write, $filedata);
 	exit;
 }
@@ -100,7 +99,7 @@ if (!empty($write)) {
 $append = $_REQUEST['append'];
 if (!empty($append)) {
 	$file = verify_keycode($append);
-	$filedata = $file['contents'] . $_REQUEST['filedata'];
+	$filedata = $file['contents'] . line_endings_to_dos($_REQUEST['filedata']);
 	write_file($file['id'], $append, $filedata);
 	exit;
 }
