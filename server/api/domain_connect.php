@@ -26,13 +26,12 @@ $code_a = $exists->fetch_row();
 if (empty($code_a)) {
 	die('not found');
 }
-$code = "\$serverdomain = \"$d\"\r\n\$serverip = \"$dInfo[3]\"\r\n\$serverport = $port\r\n".$code_a[0];
-$lines = explode("\n", $code);
 
+$preamble = "\$serverdomain = \"$d\"\r\n\$serverip = \"$dInfo[3]\"\r\n\$serverport = $port\r\n";
+$lines = explode("\r\n", $code_a[0]);
 foreach ($lines as $k => $v) {
 	$v = preg_replace('/(fileserver\()/i', "\$1$dInfo[2], $d, ", $v);
 	$v = preg_replace('/^(\s*SERVER )(WRITE |APPEND )/i', "\$1$dInfo[2]:---:$d:----:\$2", $v);
 	$lines[$k] = $v;
 }
-
-echo $d . '_' . $port . '::' . dso_b64_encode(implode("\n", $lines));
+echo $d . '_' . $port . '::' . dso_b64_encode($preamble . implode("\r\n", $lines));

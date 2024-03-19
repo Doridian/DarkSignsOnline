@@ -19,7 +19,7 @@ if ($temp[0] > 0)
 {
 	if ($user['id'] === $temp[1])
 	{
-		$code = dso_b64_decode($_POST['filedata']);
+		$code = dso_b64_decode(line_endings_to_dos($_POST['filedata']));
 		$stmt = $db->prepare("INSERT INTO domain_scripts VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE code=?, ip=?, time=?;");
 		$time = time();
 		$stmt->bind_param('iisssssi', $temp[0], $port, $code, $_SERVER['REMOTE_ADDR'], $time, $code, $_SERVER['REMOTE_ADDR'], $time);

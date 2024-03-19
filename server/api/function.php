@@ -198,3 +198,7 @@ function dso_b64_encode($str) {
 	global $BASE64_DSO_ENCODE;
 	return strtr(base64_encode($str), $BASE64_DSO_ENCODE);
 }
+
+function line_endings_to_dos($str) {
+	return preg_replace("/(\r\n|\r|\n)/", "\r\n", $str);
+}

@@ -42,6 +42,7 @@ function verify_keycode($filename) {
 }
 
 function write_file($file_id, $filename, $contents) {
+	$contents = line_endings_to_dos($contents);
 	global $db, $dInfo;
 	if ($file_id < 0) {
 		$stmt = $db->prepare("INSERT INTO domain_files (domain, filename, contents) VALUES (?, ?, ?)");
@@ -69,7 +70,7 @@ if (!empty($fileserver)) {
 	}
 
 	//now, get the lines that are required.
-	$fdarray = explode('\n', $file['contents']);
+	$fdarray = explode("\r\n", $file['contents']);
 
 	$endline = count($fdarray);
 	if ($maxlines > 0) {
@@ -77,7 +78,7 @@ if (!empty($fileserver)) {
 	}
 
 	for ($x = $startline - 1; $x < $endline && $x < count($fdarray); $x++) {
-		echo $fdarray[$x] . "\n";
+		echo $fdarray[$x] . "\r\n";
 	}
 	exit;
 }
