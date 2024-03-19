@@ -1,7 +1,8 @@
 <?php
 
+$need_jwt_private_key = true;
 $rewrite_done = true;
-require_once 'function.php';
+require_once('function.php');
 
 $d = strtolower($_REQUEST['d']);
 if (empty($d)) {

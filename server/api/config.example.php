@@ -1,9 +1,9 @@
 <?php
-global $db;
-$db = new mysqli('HOST', 'USERNAME', 'PASSWORD', 'DATABASE');
-if (!$db) {
-    die('9999');
-}
+
+$DB_HOST = 'localhost';
+$DB_USERNAME = 'root';
+$DB_PASSWORD = '';
+$DB_DATABASE = 'darksigns';
 
 $JWT_PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----
 PUT YOUR PUBLIC KEY HERE

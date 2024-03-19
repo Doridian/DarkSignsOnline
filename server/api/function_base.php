@@ -14,3 +14,17 @@ function make_keycode($length = 16)
 define('BANK_USER_ID', 42);
 
 require_once('config.php');
+
+global $db;
+$db = new mysqli($DB_HOST, $DB_USERNAME, $DB_PASSWORD, $DB_DATABASE);
+if (!$db) {
+    die('9999');
+}
+
+if (empty($need_db_credentials)) {
+	unset($DB_HOST, $DB_USERNAME, $DB_PASSWORD, $DB_DATABASE);
+}
+
+if (empty($need_jwt_private_key)) {
+	unset($JWT_PRIVATE_KEY);
+}
