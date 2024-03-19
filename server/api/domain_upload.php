@@ -13,16 +13,16 @@ if ($port < 1 || $port > 65536)
 
 
 $d = $_POST['d'];
-$temp = getDomainInfo($d);
+$dInfo = getDomainInfo($d);
 
-if ($temp[0] > 0)
+if ($dInfo[0] > 0)
 {
-	if ($user['id'] === $temp[1])
+	if ($user['id'] === $dInfo[1])
 	{
 		$code = dso_b64_decode(line_endings_to_dos($_POST['filedata']));
 		$stmt = $db->prepare("INSERT INTO domain_scripts VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE code=?, ip=?, time=?;");
 		$time = time();
-		$stmt->bind_param('iisssssi', $temp[0], $port, $code, $_SERVER['REMOTE_ADDR'], $time, $code, $_SERVER['REMOTE_ADDR'], $time);
+		$stmt->bind_param('iisssssi', $dInfo[0], $port, $code, $_SERVER['REMOTE_ADDR'], $time, $code, $_SERVER['REMOTE_ADDR'], $time);
 		$stmt->execute();
 
 		die('success');

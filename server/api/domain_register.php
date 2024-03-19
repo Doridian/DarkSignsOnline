@@ -28,11 +28,11 @@ if (isset ($_REQUEST['prices'])) {
 
 $d = strtolower($_REQUEST['d']);
 
-$temp = getDomainInfo($d);
+$dInfo = getDomainInfo($d);
 
 $timestamp = time();
 
-if ($temp[0] > 0) {
+if ($dInfo[0] > 0) {
 	die ('Domain ' . $d . ' is already registed.');
 }
 
@@ -80,9 +80,9 @@ if (sizeof($domain) == 2) {
 	$ext = $domain[2];
 	$price = 20;
 	if ($ext == 'com' || $ext == 'net' || $ext == 'org' || $ext == 'edu' || $ext == 'mil' || $ext == 'gov' || $ext == 'dsn' || ($ext == 'usr' && $user['username'] == $domain[1])) {
-		$temp2 = getDomainInfo($domain[1] . '.' . $domain[2]);
-		if ($temp2[1] != $user['id']) {
-			die ($temp[1] . '  ' . $user['id'] . '  You must be the owner of the full domain to register a sub domain.');
+		$dInfo2 = getDomainInfo($domain[1] . '.' . $domain[2]);
+		if ($dInfo2[1] != $user['id']) {
+			die ($dInfo2[1] . '  ' . $user['id'] . '  You must be the owner of the full domain to register a sub domain.');
 		} else if ($price > $user['cash']) {
 			die ('Insufficient balance. Try again when you have more money.');
 		} else {
@@ -104,7 +104,7 @@ if (sizeof($domain) == 2) {
 				$stmt->execute();
 				$id = $db->insert_id;
 				$stmt = $db->prepare("INSERT INTO subdomain (id, hostid, name, time, ip) VALUES (?, ?, ?, ?, ?)");
-				$stmt->bind_param('issis', $id, $temp2[0], $domain[0], $timestamp, $_SERVER['REMOTE_ADDR']);
+				$stmt->bind_param('issis', $id, $dInfo2[0], $domain[0], $timestamp, $_SERVER['REMOTE_ADDR']);
 				$stmt->execute();
 
 				die ('Registration complete for ' . $d . ', you have been charged $' . $price . '');
