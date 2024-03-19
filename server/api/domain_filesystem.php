@@ -41,14 +41,14 @@ function verify_keycode($filename) {
 	return $row;
 }
 
-function write_file($file, $contents) {
+function write_file($file_id, $filename, $contents) {
 	global $db, $dInfo;
-	if ($file['id'] < 0) {
+	if ($file_id < 0) {
 		$stmt = $db->prepare("INSERT INTO domain_files (domain, filename, contents) VALUES (?, ?, ?)");
 		$stmt->bind_param('iss', $dInfo[0], $filename, $contents);
 	} else {
 		$stmt = $db->prepare("UPDATE domain_files SET contents = ? WHERE id = ?");
-		$stmt->bind_param('si', $contents, $id);
+		$stmt->bind_param('si', $contents, $file_id);
 	}
 	$stmt->execute();
 }
@@ -63,7 +63,7 @@ $write = $_REQUEST['write'];
 if (!empty($write)) {
 	$file = verify_keycode($write);
 	$filedata = $_REQUEST['filedata'];
-	write_file($file['id'], $filedata);
+	write_file($file['id'], $write, $filedata);
 	exit;
 }
 
@@ -71,7 +71,7 @@ $append = $_REQUEST['append'];
 if (!empty($append)) {
 	$file = verify_keycode($append);
 	$filedata = $file['contents'] . $_REQUEST['filedata'];
-	write_file($file['id'], $filedata);
+	write_file($file['id'], $append, $filedata);
 	exit;
 }
 
