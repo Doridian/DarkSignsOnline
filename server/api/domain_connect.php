@@ -5,7 +5,7 @@ require_once 'function.php';
 
 echo '4100';
 
-$port = (int) $_REQUEST['port'];
+$port = (int)$_REQUEST['port'];
 
 if ($port < 1 || $port > 65536) {
 	die ('not found');

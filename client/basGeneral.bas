@@ -510,93 +510,10 @@ Public Function CountCharsInString(ByVal s As String, ByVal sFind As String) As 
 End Function
 
 Public Function DSOEncode(ByVal s As String) As String
-    Dim n As Long, tmpS As String
-    s = Trim(s)
-    
-    Randomize
-    
-    s = ReverseString(s)
-    
-    tmpS = ""
-    For n = 1 To Len(s)
-        tmpS = Asc(Mid(s, n, 1))
-        If Len(tmpS) = 2 Then tmpS = "3" & tmpS
-        If Len(tmpS) < 2 Then GoTo SkipOne
-        DSOEncode = DSOEncode & Trim(str(tmpS * 2))
-SkipOne:
-    Next n
-    
-    Dim newS As String
-    
-    newS = ""
-    For n = 1 To Len(DSOEncode) Step 2
-        tmpS = Mid(DSOEncode, n, 2)
-        tmpS = ReverseString(tmpS)
-        newS = newS & tmpS
-    Next n
-    DSOEncode = newS
-
-    newS = ""
-    For n = 1 To Len(DSOEncode) Step 3
-        tmpS = Mid(DSOEncode, n, 3)
-        tmpS = ReverseString(tmpS)
-        newS = newS & tmpS
-    Next n
-    DSOEncode = newS
-    
-    
-    DSOEncode = ReverseString(DSOEncode)
-    DSOEncode = Trim(DSOEncode)
+    DSOEncode = s
 End Function
 
 Public Function DSODecode(ByVal s As String) As String
-    On Error GoTo zxc
-    
-    Dim n As Long, tmpS As String, CharCount As Long
-    s = Trim(s)
-    
-    s = ReverseString(s)
-    
-    tmpS = ""
-    Dim newS As String
-    
-    newS = ""
-    For n = 1 To Len(s) Step 3
-        tmpS = Mid(s, n, 3)
-        tmpS = ReverseString(tmpS)
-        newS = newS & tmpS
-    Next n
-    s = newS
-    
-    newS = ""
-    For n = 1 To Len(s) Step 2
-        tmpS = Mid(s, n, 2)
-        tmpS = ReverseString(tmpS)
-        newS = newS & tmpS
-    Next n
-    s = newS
-    
-    For n = 1 To Len(s) Step 3
-        CharCount = CharCount + 1
-        tmpS = Mid(s, n, 3)
-        tmpS = Trim(str(Val(tmpS / 2)))
-        If Mid(tmpS, 1, 1) = "3" Or Mid(tmpS, 1, 1) = "4" Then
-            tmpS = Mid(tmpS, 2, Len(tmpS))
-        End If
-        
-
-        tmpS = tmpS
-        
-        DSODecode = DSODecode & Chr(tmpS)
-    Next n
-    
-
-    DSODecode = ReverseString(DSODecode)
-    DSODecode = Trim(DSODecode)
-    
-    Exit Function
-zxc:
-    SayComm "Decoding Error: " & s
     DSODecode = s
 End Function
 
