@@ -31,7 +31,7 @@ $lines = explode("\n", $code);
 
 foreach ($lines as $k => $v) {
 	$v = preg_replace('/(fileserver\()/i', "\$1$dInfo[2], $d, ", $v);
-	$v = preg_replace('/^(\s+SERVER )(WRITE | APPEND )/i', "\$1$dInfo[2]:---:$d:----:\$2", $v);
+	$v = preg_replace('/^(\s*SERVER )(WRITE |APPEND )/i', "\$1$dInfo[2]:---:$d:----:\$2", $v);
 	$lines[$k] = $v;
 }
 
