@@ -2,10 +2,9 @@
 
 $rewrite_done = true;
 
-$htmltitle = "Create a new account";
-require "_top.php";
-require_once 'api/config.php';
-global $db;
+$htmltitle = 'Create a new account';
+require('_top.php');
+require_once('api/function_base.php');
 
 if (isset($_POST['username'])) {
 	$username = trim($_POST['username']);
@@ -143,7 +142,7 @@ if (isset($_POST['username'])) {
 	$cdate = trim(str_replace(" 0", " ", " " . date('dS \of F Y')));
 	$ahostname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
 	$aip = $_SERVER['REMOTE_ADDR'];
-	$vercode = rand(1, 1000) . rand(1, 1000) . rand(1, 1000) . rand(1, 1000);
+	$vercode = make_keycode();
 	$timestamp = time();
 
 	if (trim(strtolower($dobmonth)) == "january") {

@@ -3,13 +3,7 @@ if (!isset($rewrite_done)) {
 	die('Not rewritten yet');
 }
 
-define('BANK_USER_ID', 42);
-
-require_once('config.php');
-global $db;
-
-global $user;
-
+require_once('function_base.php');
 header('Content-Type: text/plain');
 
 function login_failure($code) {
@@ -133,7 +127,7 @@ function getCash($user_id)
 function transaction($from_id, $to_id, $description, $amount, $returnkeycodeinstead = 0)
 {
 	global $db;
-	$vercode = rand(100, 999) . rand(100, 999) . rand(100, 999) . rand(100, 999) . rand(100, 999);
+	$vercode = make_keycode();
 
 	if ($from_id > 0 && $to_id > 0 && $from_id != $to_id) {
 		if ($amount > 0) {
@@ -203,14 +197,4 @@ function dso_b64_decode($str) {
 function dso_b64_encode($str) {
 	global $BASE64_DSO_ENCODE;
 	return strtr(base64_encode($str), $BASE64_DSO_ENCODE);
-}
-function make_keycode($length = 16)
-{
-	$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-	$charactersLength = strlen($characters);
-	$keycode = '';
-	for ($i = 0; $i < $length; $i++) {
-		$keycode .= $characters[rand(0, $charactersLength - 1)];
-	}
-	return $keycode;
 }
