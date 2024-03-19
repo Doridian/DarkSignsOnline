@@ -12,14 +12,14 @@ if ($port < 1 || $port > 65536) {
 }
 $d = $_REQUEST['d'];
 $d = strtolower($d);
-$temp = getDomainInfo($d);
+$dInfo = getDomainInfo($d);
 
-if ($temp[0] <= 0) {
+if ($dInfo[0] <= 0) {
 	die ('not found');
 }
 
 $stmt = $db->prepare("SELECT code FROM domain_scripts WHERE domain_id = ? AND port = ?");
-$stmt->bind_param('ii', $temp[0], $port);
+$stmt->bind_param('ii', $dInfo[0], $port);
 $stmt->execute();
 $exists = $stmt->get_result();
 $code_a = $exists->fetch_row();
