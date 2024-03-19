@@ -27,7 +27,7 @@ if ($temp[0] <= 0) {
 	die ("Domain does not exist.");
 }
 
-$stmt = $db->prepare("DELETE FROM domainscripts WHERE domain=? AND port=? AND owner=?;");
+$stmt = $db->prepare("DELETE FROM domain_scripts WHERE domain=? AND port=? AND owner=?;");
 $stmt->bind_param('iii', $temp[0], $port, $uid);
 $stmt->execute();
 

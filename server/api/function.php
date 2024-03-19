@@ -204,3 +204,13 @@ function dso_b64_encode($str) {
 	global $BASE64_DSO_ENCODE;
 	return strtr(base64_encode($str), $BASE64_DSO_ENCODE);
 }
+function make_keycode($length = 16)
+{
+	$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	$charactersLength = strlen($characters);
+	$keycode = '';
+	for ($i = 0; $i < $length; $i++) {
+		$keycode .= $characters[rand(0, $charactersLength - 1)];
+	}
+	return $keycode;
+}

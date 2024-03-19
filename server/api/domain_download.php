@@ -26,7 +26,7 @@ if ($dInfo[0] <= 0) {
 	die ("Domain does not exist.");
 }
 
-$stmt = $db->prepare("SELECT code FROM domainscripts WHERE domain=? AND port=? AND owner=?");
+$stmt = $db->prepare("SELECT code FROM domain_scripts WHERE domain=? AND port=? AND owner=?");
 $stmt->bind_param('iii', $dInfo[0], $port, $uid);
 $stmt->execute();
 $res = $stmt->get_result();

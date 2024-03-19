@@ -15,9 +15,9 @@
 			}
 			else
 			{
-				$query = $db->query("SELECT domain_id FROM domainscripts WHERE domain_id=$temp[0] AND port=$port");
+				$query = $db->query("SELECT domain_id FROM domain_scripts WHERE domain_id=$temp[0] AND port=$port");
 				
-				//list($isport) = $db->fetch_row($db->query('SELECT code FROM domainscripts WHERE domain_id = "'.$temp[0].'" AND port = "'.$port.'";'));
+				//list($isport) = $db->fetch_row($db->query('SELECT code FROM domain_scripts WHERE domain_id = "'.$temp[0].'" AND port = "'.$port.'";'));
 				//if (!empty($isport))
 				
 				if ($db->num_rows($query) == 1)
