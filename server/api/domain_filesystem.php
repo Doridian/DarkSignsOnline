@@ -42,7 +42,7 @@ function verify_keycode($filename) {
 }
 
 function write_file($file, $contents) {
-	global $db;
+	global $db, $dInfo;
 	if ($file['id'] < 0) {
 		$stmt = $db->prepare("INSERT INTO domain_files (domain, filename, contents) VALUES (?, ?, ?)");
 		$stmt->bind_param('iss', $dInfo[0], $filename, $contents);
