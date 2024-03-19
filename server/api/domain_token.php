@@ -26,7 +26,7 @@ use Firebase\JWT\JWT;
 
 $start = time();
 $payload = [
-    'iss' => 'http://darksignsonline.com',
+    'iss' => 'https://darksignsonline.com/api/domain_token.php',
     'aud' => $d,
     'sub' => ''.$user['id'],
     'name' => $user['username'],
