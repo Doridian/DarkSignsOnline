@@ -37,4 +37,4 @@
     <br />
     <br />
 </span>
-<?php require('_bottom.php'); ?>
+<?php require('_bottom.php');
