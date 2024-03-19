@@ -1,6 +1,11 @@
 <?php require('_top.php'); ?>
 <span class="style5"><br />- News - <br /><br />
 
+  <strong>March 19th 2024</strong><br /><span class="style9">
+    Most of the things should now be fixed up. Server scripts and domain filesystem commands fully work.<br />
+    The big areas that still need fixing are (all server-only fixes) <i>transactions</i>, <i>DSMail</i> and <i>the library</i>
+    (likely in the order I will fix them)</span><br /><br />
+
   <strong>March 17th 2024</strong><br /><span class="style9">
     Decoded to work on the Wiki today. The Wiki link up top now links to this server, no longer to archive.org.<br />
     I have restored all archived pages to their original state and fixed some typos.</span><br /><br />
