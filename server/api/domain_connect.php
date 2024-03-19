@@ -27,5 +27,11 @@ if (empty($code_a)) {
 	die('not found');
 }
 $code = $code_a[0];
-// Edit code as necessary here
-echo $d . '_' . $port . '::' . dso_b64_encode($code);
+$lines = explode("\n", $code);
+
+foreach ($lines as $k => $v) {
+	$v = preg_replace('/(fileserver\(|SERVER WRITE | SERVER APPEND )/i', '$1' . "$dInfo[3], $d, ", $v);
+	$lines[$k] = $v;
+}
+
+echo $d . '_' . $port . '::' . dso_b64_encode(implode("\n", $lines));
