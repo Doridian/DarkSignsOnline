@@ -57,8 +57,9 @@ if (sizeof($domain) == 2) {
 					$res = $stmt->get_result();
 				} while ($res->num_rows != 0);
 
-				$stmt = $db->prepare("INSERT INTO iptable (owner, ip) VALUES (?, ?)");
-				$stmt->bind_param('is', $uid, $randomip);
+				$keycode = make_keycode();
+				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, keycode) VALUES (?, ?, ?)");
+				$stmt->bind_param('iss', $uid, $randomip, $keycode);
 				$stmt->execute();
 				$id = $db->insert_id;
 				$stmt = $db->prepare("INSERT INTO domain (id, name, ext, time, ip) VALUES (?, ?, ?, ?, ?)");
@@ -97,8 +98,9 @@ if (sizeof($domain) == 2) {
 					$res = $stmt->get_result();
 				} while ($res->num_rows != 0);
 
-				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype) VALUES (?, ?, 'SUBDOMAIN')");
-				$stmt->bind_param('is', $uid, $randomip);
+				$keycode = make_keycode();
+				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, keycode) VALUES (?, ?, 'SUBDOMAIN', ?)");
+				$stmt->bind_param('iss', $uid, $randomip, $keycode);
 				$stmt->execute();
 				$id = $db->insert_id;
 				$stmt = $db->prepare("INSERT INTO subdomain (id, hostid, name, time, ip) VALUES (?, ?, ?, ?, ?)");
@@ -135,8 +137,9 @@ if (sizeof($domain) == 2) {
 				die ($user['cash'] . '  Insufficient balance. Try again when you have more money.');
 			} else {
 				if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3], $price)) {
-					$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype) VALUES (?, ?, 'IP')");
-					$stmt->bind_param('is', $uid, $ipdom);
+					$keycode = make_keycode();
+					$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, keycode) VALUES (?, ?, 'IP', ?)");
+					$stmt->bind_param('iss', $uid, $ipdom, $keycode);
 					$stmt->execute();
 					die ('Registration complete for ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3] . ', you have been charged $' . $price . '.');
 				} else {

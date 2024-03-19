@@ -15,38 +15,37 @@ function verify_keycode($filename) {
 	global $db, $d, $dInfo, $user;
 	$is_owner = $user['id'] === $dInfo[1];
 
-	if ($is_owner) {
-		$stmt = $db->prepare("SELECT * FROM domain_files WHERE domain = ? AND filename = ?");
-		$stmt->bind_param('is', $dInfo[0], $filename);
-	} else {
-		$keycode = $_REQUEST['keycode'];
-		$stmt = $db->prepare("SELECT * FROM domain_files WHERE domain = ? AND filename = ? AND keycode = ?");
-		$stmt->bind_param('iss', $dInfo[0], $filename, $keycode);
+	$keycode = $_REQUEST['keycode'];
+	if ($keycode !== $dInfo[2]) {
+		die("2000Error - ($filename) Invalid Server Key: " . strtoupper($d));
 	}
+
+	$stmt = $db->prepare("SELECT * FROM domain_files WHERE domain = ? AND filename = ?");
+	$stmt->bind_param('is', $dInfo[0], $filename);
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$row = $res->fetch_array();
 
-	if (empty($row)) {
-		if ($is_owner) {
-			return array('id' => -1, 'filename' => $filename, 'contents' => '');
+	if (!$is_owner) {
+		if (empty($row)) {
+			die("2000Error - ($filename) File not found: " . strtoupper($d));
 		}
-		die("2000Error - ($keycode) Invalid Server Key: " . strtoupper($d));
+		if(strtoupper(substr($row['contents'], 0, 6)) !== 'PUBLIC') {
+			die("2000Error - ($filename) Private file: " . strtoupper($d));
+		}
 	}
 
-	if (!$is_owner && strtoupper(substr($row['contents'], 0, 6)) !== 'PUBLIC') {
-		die("2000Error - ($keycode) Private file: " . strtoupper($d));
+	if (empty($row)) {
+		return array('id' => -1, 'filename' => $filename, 'contents' => '');
 	}
-
 	return $row;
 }
 
 function write_file($file, $contents) {
 	global $db;
 	if ($file['id'] < 0) {
-		$stmt = $db->prepare("INSERT INTO domain_files (domain, filename, keycode, contents) VALUES (?, ?, ?, ?)");
-		$keycode = make_keycode();
-		$stmt->bind_param('iss', $dInfo[0], $filename, $keycode, $contents);
+		$stmt = $db->prepare("INSERT INTO domain_files (domain, filename, contents) VALUES (?, ?, ?)");
+		$stmt->bind_param('iss', $dInfo[0], $filename, $contents);
 	} else {
 		$stmt = $db->prepare("UPDATE domain_files SET contents = ? WHERE id = ?");
 		$stmt->bind_param('si', $contents, $id);

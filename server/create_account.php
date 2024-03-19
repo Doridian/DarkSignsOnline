@@ -207,8 +207,9 @@ if (isset($_POST['username'])) {
 		$res = $stmt->get_result();
 	} while ($res->num_rows != 0);
 
-	$stmt = $db->prepare("INSERT INTO iptable (owner, ip) VALUES (?, ?)");
-	$stmt->bind_param('is', $userid, $randomip);
+	$keycode = make_keycode();
+	$stmt = $db->prepare("INSERT INTO iptable (owner, ip, keycode) VALUES (?, ?, ?)");
+	$stmt->bind_param('iss', $userid, $randomip, $keycode);
 	$stmt->execute();
 	$id = $db->insert_id;
 	$stmt = $db->prepare("INSERT INTO domain (id, name, ext, time, ip) VALUES (?, ?, 'usr', ?, ?)");
