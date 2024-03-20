@@ -212,6 +212,25 @@ function transaction($from_id, $to_id, $description, $amount, $returnkeycodeinst
 	return $status == 'COMPLETE';
 }
 
+function idToUser($id) {
+	global $db;
+	$stmt = $db->prepare('SELECT username FROM users WHERE id=?');
+	$stmt->bind_param('i', $id);
+	$stmt->execute();
+	$res = $stmt->get_result();
+	$row = $res->fetch_array();
+	return $row['username'];
+}
+function userToId($user) {
+	global $db;
+	$stmt = $db->prepare('SELECT id FROM users WHERE username=?');
+	$stmt->bind_param('i', $user);
+	$stmt->execute();
+	$res = $stmt->get_result();
+	$row = $res->fetch_array();
+	return $row['id'];
+}
+
 $BASE64_DSO_ENCODE = array(
 	'+' => '_',
 	'/' => '.',

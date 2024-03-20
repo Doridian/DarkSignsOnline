@@ -18,12 +18,6 @@ if ($dInfo[0] <= 0) {
 
 $owner_id = $dInfo[1];
 $date_formatted = date('Y-m-d H:i:s', $dInfo[4]);
-
-$stmt = $db->prepare('SELECT username FROM users WHERE id=?');
-$stmt->bind_param('i', $owner_id);
-$stmt->execute();
-$res = $stmt->get_result();
-$row = $res->fetch_array();
-$owner = $row['username'];
+$owner = idToUser($owner_id);
 
 echo "$d was created by $owner on $date_formatted";
