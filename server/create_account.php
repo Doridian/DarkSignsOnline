@@ -141,7 +141,7 @@ if (isset($_POST['username'])) {
 	$vercode = make_keycode();
 	$timestamp = time();
 
-	$stmt = $db->prepare('INSERT INTO users (username, password, email, createtime, ip, lastseen, dobday, dobmonth, dobyear, emailverifycode, active, cash) VALUES (?,?,?,?,?,?,?,?,?,?,?,0,200)');
+	$stmt = $db->prepare('INSERT INTO users (username, password, email, createtime, ip, lastseen, dobday, dobmonth, dobyear, emailverifycode, active, cash) VALUES (?,?,?,?,?,?,?,?,?,?,0,200)');
 	if (!$stmt) {
 		die("Error: " . $db->error);
 	}
