@@ -3,8 +3,9 @@
 $rewrite_done = true;
 require_once('function.php');
 
-$type = $_GET['type'];
 echo '2001';
+
+$type = $_GET['type'];
 if ($type == 'domain')
 {
 	$stmt = $db->prepare('SELECT i.id AS id, d.name AS name, d.ext AS ext, COUNT(s.id) AS subdomains FROM iptable AS i LEFT JOIN domain AS d ON d.id = i.id LEFT JOIN subdomain AS s ON s.hostid = i.id WHERE i.owner = ? AND i.regtype="DOMAIN" GROUP BY i.id;');
@@ -18,6 +19,7 @@ if ($type == 'domain')
 			echo '*';
 		echo '$newline';
 	}
+	exit;
 }
 else if ($type == 'subdomain')
 {
@@ -27,9 +29,9 @@ else if ($type == 'subdomain')
 	{
 		die('Domain not found.');
 	}
-	else if ($dInfo[1] !== $user['id'])
+	if ($dInfo[1] !== $user['id'])
 	{
-		die('Domain not found.');
+		die('Permission denied.');
 	}
 
 	$stmt = $db->prepare('SELECT name FROM subdomain WHERE hostid=?');
@@ -41,6 +43,7 @@ else if ($type == 'subdomain')
 	{
 		echo $loop['name'].'.'.$domain.'$newline';
 	}
+	exit;
 }
 else if ($type == 'ip')
 {
@@ -52,8 +55,7 @@ else if ($type == 'ip')
 	{
 		echo $loop['ip'].'$newline';
 	}
+	exit;
 }
-else
-{
-	echo 'Invalid type paramater.';
-}
+
+die('Invalid type paramater.');
