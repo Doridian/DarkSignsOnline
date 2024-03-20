@@ -76,17 +76,20 @@ Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, Scrip
         Loop
     Close #FF
 
+    CancelScript(ConsoleID) = False
+
     Dim S As New ScriptControl
     S.AllowUI = False
-    S.Timeout = 0
+    S.Timeout = 100
     S.UseSafeSubset = True
     S.Language = "VBScript"
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure ConsoleID, ScriptFrom, False
+    G.Configure ConsoleID, ScriptFrom, False, S
     S.AddObject "DSO", G, True
 
+    New_Console_Line_InProgress ConsoleID
     On Error GoTo EvalError
     S.AddCode tmpAll
     On Error GoTo 0
@@ -94,6 +97,12 @@ Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, Scrip
     GoTo ScriptEnd
     Exit Function
 EvalError:
+    If Err.Number = 9001 Then
+        GoTo ScriptCancelled
+    End If
+    If Err.Number = 9002 Then
+        GoTo ScriptEnd
+    End If
     SAY ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}", False
     GoTo ScriptEnd
 

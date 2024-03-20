@@ -11,12 +11,12 @@ Public Sub InitBasCommands()
     For X = 1 To 4
         Set scrConsole(X) = New ScriptControl
         scrConsole(X).AllowUI = False
-        scrConsole(X).Timeout = 0
+        scrConsole(X).Timeout = 100
         scrConsole(X).UseSafeSubset = True
         scrConsole(X).Language = "VBScript"
 
         Set scrConsoleContext(X) = New clsScriptFunctions
-        scrConsoleContext(X).Configure X, "", True
+        scrConsoleContext(X).Configure X, "", True, scrConsole(X)
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
     Next
@@ -29,7 +29,6 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     If ConsoleID > 4 Then
         ConsoleID = 4
     End If
-
     Dim tmpS As String
     tmpS = CLine.Caption
     Dim promptEndIdx As Integer
@@ -38,7 +37,9 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
         tmpS = Mid(tmpS, promptEndIdx + 1)
     End If
 
-    New_Console_Line ConsoleID
+    CancelScript(ConsoleID) = False
+    New_Console_Line_InProgress ConsoleID
+
     On Error GoTo EvalError
     scrConsole(ConsoleID).AddCode Trim(tmpS)
     On Error GoTo 0
@@ -46,6 +47,12 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     GoTo ScriptEnd
     Exit Function
 EvalError:
+    If Err.Number = 9001 Then
+        GoTo ScriptCancelled
+    End If
+    If Err.Number = 9002 Then
+        GoTo ScriptEnd
+    End If
     SAY ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}", False
     GoTo ScriptEnd
 
@@ -59,8 +66,7 @@ ScriptEnd:
     
     Dim sC As String 'the main command
     Dim sP As String 'any parameters
-    
-    tmpS = CLine.Caption
+
     'kill double spaces - MUST BE BEFORE REPLACES VARIABLES
     'tmpS = Replace(tmpS, "  ", " ")
     
@@ -277,7 +283,6 @@ ScriptEnd:
     End Select
     
 zzz:
-    WriteErrorLog "Run_Command - " & sC & " - " & sP
     New_Console_Line ConsoleID
 End Function
 
@@ -1605,7 +1610,6 @@ Public Sub RunFileAsScript(ByVal S As String, ByVal ConsoleID As Integer)
     If FileExists(App.Path & "\user" & S) Then
         'run it as a script
         
-        WriteErrorLog "RunFileAsScript"
         Shift_Console_Lines ConsoleID
         Run_Script S, ConsoleID, sParams, "CONSOLE"
         

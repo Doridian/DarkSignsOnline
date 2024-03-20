@@ -461,11 +461,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 frmDSOMailSend.Enabled = True
                 MsgBox "Mail failed to send." & vbNewLine & S
             End If
-            
-            
-            
-           ' MsgBox s
-        
+
         Case Else
 
             If Trim(Replace(S, vbCrLf, "")) = "" Then Exit Sub

@@ -678,7 +678,8 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     
     If Shift = 2 And KeyCode = vbKeyC Then
         'cancel the running script
-        CancelScript(ActiveConsole) = True: Exit Sub
+        CancelScript(ActiveConsole) = True
+        Exit Sub
     End If
     
     
@@ -1682,7 +1683,7 @@ Sub PrintAll()
     tmpY = IRC.Height - 240
     
     Dim maxChatTextSize As Long
-    Dim n As Long, n2 As Integer, tmpS As String, s As String
+    Dim n As Long, n2 As Integer, tmpS As String, S As String
     
     maxChatTextSize = IRC.Width - 840
     
@@ -1690,22 +1691,22 @@ Sub PrintAll()
     For n = UBound(ss) To 0 Step -1
         cList.Clear
         
-        s = ss(n)
-        s = Replace(s, vbCrLf, ""): s = Replace(s, vbCr, ""): s = Replace(s, vbLf, "")
+        S = ss(n)
+        S = Replace(S, vbCrLf, ""): S = Replace(S, vbCr, ""): S = Replace(S, vbLf, "")
         cSize.FontName = IRC.FontName
         cSize.FontSize = IRC.FontSize
 CheckForLine:
-        For n2 = 1 To Len(s)
-            cSize.Caption = Mid(s, 1, n2)
+        For n2 = 1 To Len(S)
+            cSize.Caption = Mid(S, 1, n2)
             If cSize.Width > maxChatTextSize Then
                 cList.AddItem cSize.Caption
-                s = Mid(s, n2 + 1, Len(s))
+                S = Mid(S, n2 + 1, Len(S))
                 GoTo CheckForLine
             End If
         Next n2
     
-        If Trim(s) <> "" Then
-            cList.AddItem s
+        If Trim(S) <> "" Then
+            cList.AddItem S
         End If
         
 
@@ -1755,24 +1756,24 @@ AllDone:
 End Sub
 
 
-Public Sub ChatSend(ByVal s As String, ByVal ConsoleID As Integer)
-    If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
-    s = Trim(s)
-    If Len(s) > 0 Then
-        Send "PRIVMSG " + channel$ + " :" + s
-        displaychat "<" + MyIRCName + ">  " + s
+Public Sub ChatSend(ByVal S As String, ByVal ConsoleID As Integer)
+    If Len(S) > 32763 Then S = Mid(S, 1, 32763) ' 32764 would overflow
+    S = Trim(S)
+    If Len(S) > 0 Then
+        Send "PRIVMSG " + channel$ + " :" + S
+        displaychat "<" + MyIRCName + ">  " + S
     Else
         ShowHelp "chatview", ConsoleID
     End If
 End Sub
 
-Public Sub ChatView(ByVal s As String, ByVal ConsoleID As Integer)
-    s = Trim(LCase(s))
-    If s = "on" Then
+Public Sub ChatView(ByVal S As String, ByVal ConsoleID As Integer)
+    S = Trim(LCase(S))
+    If S = "on" Then
         chatToStatus = True
         RegSave "CHATVIEW", "True"
         SayCOMM "Chatview is now enabled."
-    ElseIf s = "off" Then
+    ElseIf S = "off" Then
         chatToStatus = False
         RegSave "CHATVIEW", False
         SayCOMM "Chatview is now disabled."

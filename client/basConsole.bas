@@ -193,11 +193,11 @@ End Sub
 
 
 
-Public Sub AddToRecentCommands(ByVal s As String)
-    If InStr(s, ">") > 0 Then s = Mid(s, InStr(s, ">") + 1, Len(s))
-    If Trim(s) = "" Then Exit Sub
+Public Sub AddToRecentCommands(ByVal S As String)
+    If InStr(S, ">") > 0 Then S = Mid(S, InStr(S, ">") + 1, Len(S))
+    If Trim(S) = "" Then Exit Sub
         
-    If i(s) = RecentCommands(ActiveConsole, 1) Then GoTo SkipAddingIt
+    If i(S) = RecentCommands(ActiveConsole, 1) Then GoTo SkipAddingIt
     
 
     Dim n As Integer
@@ -207,70 +207,70 @@ Public Sub AddToRecentCommands(ByVal s As String)
 
 
 SkipAddingIt:
-    RecentCommands(ActiveConsole, 1) = Trim(s)
+    RecentCommands(ActiveConsole, 1) = Trim(S)
     RecentCommands(ActiveConsole, 0) = ""
     RecentCommandsIndex(ActiveConsole) = 0
 End Sub
 
 Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
     On Error GoTo zxc
-    Dim part1 As String, part2 As String, s As String
+    Dim part1 As String, part2 As String, S As String
     
-    s = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
-    If Right(s, 1) = "_" Then Exit Sub
+    S = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
+    If Right(S, 1) = "_" Then Exit Sub
     
-    If InStr(s, "_") = 0 Then Exit Sub
-    part1 = Mid(s, 1, InStr(s, "_") + 1)
-    part2 = Mid(s, InStr(s, "_") + 2, Len(s))
+    If InStr(S, "_") = 0 Then Exit Sub
+    part1 = Mid(S, 1, InStr(S, "_") + 1)
+    part2 = Mid(S, InStr(S, "_") + 2, Len(S))
     
-    s = Replace(part1, "_", "") & "_" & part2
+    S = Replace(part1, "_", "") & "_" & part2
     
 
     'If InStr(s, "_") < Len(Console_Prompt(True)) Then Exit Sub
     
-    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = s
+    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = S
 zxc:
 End Sub
 
 Public Sub MoveUnderscoreToHome(ByVal ConsoleID As Integer)
     On Error GoTo zxc
-    Dim s As String
-    s = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
-    If InStr(s, "_") = 0 Then Exit Sub
+    Dim S As String
+    S = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
+    If InStr(S, "_") = 0 Then Exit Sub
     
 
-    s = Console_Prompt(False, ConsoleID) & "_" & Trim(Replace(Mid(s, Len(Console_Prompt(False, ConsoleID)), 999), "_", ""))
+    S = Console_Prompt(False, ConsoleID) & "_" & Trim(Replace(Mid(S, Len(Console_Prompt(False, ConsoleID)), 999), "_", ""))
 
     
-    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = s
+    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = S
 zxc:
 End Sub
 
 Public Sub MoveUnderscoreToEnd(ByVal ConsoleID As Integer)
     On Error GoTo zxc
-    Dim s As String
-    s = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
+    Dim S As String
+    S = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
     
-    s = Replace(s, "_", "") & "_"
+    S = Replace(S, "_", "") & "_"
 
-    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = s
+    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = S
 zxc:
 End Sub
 
 Public Sub MoveUnderscoreLeft(ByVal ConsoleID As Integer)
     On Error GoTo zxc
-    Dim part1 As String, part2 As String, s As String
+    Dim part1 As String, part2 As String, S As String
     
-    s = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
-    If InStr(s, "_") = 0 Then Exit Sub
-    part1 = Mid(s, 1, InStr(s, "_") - 2)
-    part2 = Mid(s, InStr(s, "_") - 1, Len(s))
+    S = Console(ConsoleID, CurrentLine(ConsoleID)).Caption
+    If InStr(S, "_") = 0 Then Exit Sub
+    part1 = Mid(S, 1, InStr(S, "_") - 2)
+    part2 = Mid(S, InStr(S, "_") - 1, Len(S))
     
-    s = part1 & "_" & Replace(part2, "_", "")
+    S = part1 & "_" & Replace(part2, "_", "")
     
-    If InStr(s, "_") < Len(Console_Prompt(True, ConsoleID)) Then Exit Sub
+    If InStr(S, "_") < Len(Console_Prompt(True, ConsoleID)) Then Exit Sub
     
-    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = s
+    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = S
 zxc:
 End Sub
 
@@ -285,23 +285,19 @@ Public Sub Insert_Char(ByVal sChar As String, ByVal ConsoleID As Integer)
     DoEvents
 End Sub
 
-Public Sub New_Console_Line(ByVal ConsoleID As Integer)
-
-    WriteErrorLog "New_Console_Line"
+Public Sub New_Console_Line_InProgress(ByVal ConsoleID As Integer)
     Shift_Console_Lines ConsoleID
     
     Console(ConsoleID, CurrentLine(ConsoleID)) = Console_Line_Defaults
-
-
-    'add the standard prompt if required
-    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = Console_Prompt(True, ConsoleID)
-
-    
-    
+    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = " "
 End Sub
 
-Public Sub WriteErrorLog(ByVal s As String)
-    'AppendFile App.Path & "\zlog.dat", s
+Public Sub New_Console_Line(ByVal ConsoleID As Integer)
+    Shift_Console_Lines ConsoleID
+    
+    Console(ConsoleID, CurrentLine(ConsoleID)) = Console_Line_Defaults
+    'add the standard prompt if required
+    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = Console_Prompt(True, ConsoleID)
 End Sub
 
 Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
@@ -668,16 +664,16 @@ Public Function Font_Height(theFontName As String, theFontSize As String) As Int
     Font_Height = frmConsole.lfont.Height + yDiv
 End Function
 
-Public Sub SayAll(ByVal ConsoleID As Integer, s As String, Optional withNewLineAfter As Boolean = True, Optional FromScript As Boolean = False, Optional SkipPropertySpace As Integer)
+Public Sub SayAll(ByVal ConsoleID As Integer, S As String, Optional withNewLineAfter As Boolean = True, Optional FromScript As Boolean = False, Optional SkipPropertySpace As Integer)
     Dim sA() As String
-    s = Replace(s, "$newilne", vbCrLf)
-    sA = Split(s, vbCrLf)
+    S = Replace(S, "$newilne", vbCrLf)
+    sA = Split(S, vbCrLf)
     
     
     Dim n As Long, rc As Long
     For n = 0 To UBound(sA)
         
-        Say ConsoleID, sA(n), withNewLineAfter, FromScript, SkipPropertySpace
+        SAY ConsoleID, sA(n), withNewLineAfter, FromScript, SkipPropertySpace
         
     
         
@@ -688,7 +684,6 @@ Public Sub SayAll(ByVal ConsoleID As Integer, s As String, Optional withNewLineA
         Else
             If n < UBound(sA) Then
                 If FromScript = True Then
-                    WriteErrorLog "SayAll"
                     Shift_Console_Lines ConsoleID
                 End If
             End If
@@ -698,43 +693,42 @@ Public Sub SayAll(ByVal ConsoleID As Integer, s As String, Optional withNewLineA
     
 End Sub
 
-Public Function Say(ByVal ConsoleID As Integer, s As String, Optional withNewLineAfter As Boolean = True, Optional FromScript As Boolean = False, Optional SkipPropertySpace As Integer)
+Public Function SAY(ByVal ConsoleID As Integer, S As String, Optional withNewLineAfter As Boolean = True, Optional FromScript As Boolean = False, Optional SkipPropertySpace As Integer)
     
 
     If ConsoleID > 4 Then Exit Function
-    If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
+    If Len(S) > 32763 Then S = Mid(S, 1, 32763) ' 32764 would overflow
     
 
     Dim tmpLine As ConsoleLine, propertySpace As String
     'save the current line
     
     If Data_For_Run_Function_Enabled(ConsoleID) = 1 Then
-        Data_For_Run_Function(ConsoleID) = Data_For_Run_Function(ConsoleID) & vbCrLf & s
+        Data_For_Run_Function(ConsoleID) = Data_For_Run_Function(ConsoleID) & vbCrLf & S
         Exit Function
     End If
     
     tmpLine = Console(ConsoleID, CurrentLine(ConsoleID))
     
-    s = RemoveSurroundingQuotes(s)
+    S = RemoveSurroundingQuotes(S)
     
     If withNewLineAfter = False And FromScript = False Then
-        WriteErrorLog "Say"
         Shift_Console_Lines ConsoleID
         Console(ConsoleID, 1) = Console_Line_Defaults
     End If
     
     'If withNewLineAfter = False Then
-    s = PreSpace & s
+    S = PreSpace & S
         
         
     
 If SkipPropertySpace = 1 Then
-    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = s
+    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = S
     GoTo SkipPropertySpaceNow
 End If
 
-    If Has_Property_Space(s) = True Then
-        propertySpace = i(Get_Property_Space(s)) & " "
+    If Has_Property_Space(S) = True Then
+        propertySpace = i(Get_Property_Space(S)) & " "
         propertySpace = Replace(propertySpace, ",", " ")
         Console(ConsoleID, CurrentLine(ConsoleID)).FontColor = propertySpace_Color(propertySpace)
         Console(ConsoleID, CurrentLine(ConsoleID)).FontSize = propertySpace_Size(propertySpace)
@@ -751,7 +745,7 @@ End If
     End If
     
 
-    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = Remove_Property_Space(s)
+    Console(ConsoleID, CurrentLine(ConsoleID)).Caption = Remove_Property_Space(S)
 
 DoEvents
 
@@ -805,22 +799,22 @@ Public Function Load_Property_Space(ByVal propertySpace As String, sCaption As S
     
 End Function
 
-Public Function Is_Valid_Font(ByVal s As String) As Boolean
+Public Function Is_Valid_Font(ByVal S As String) As Boolean
     'this shows the fonts that dark signs accepts as valid
-    s = i(s)
+    S = i(S)
     If _
-    s = "arial" Or _
-    s = "arial black" Or _
-    s = "comic sans ms" Or _
-    s = "courier new" Or _
-    s = "georgia" Or _
-    s = "impact" Or _
-    s = "lucida console" Or _
-    s = "tahoma" Or _
-    s = "times new roman" Or _
-    s = "trebuchet ms" Or _
-    s = "verdana" Or _
-    s = "wingdings" _
+    S = "arial" Or _
+    S = "arial black" Or _
+    S = "comic sans ms" Or _
+    S = "courier new" Or _
+    S = "georgia" Or _
+    S = "impact" Or _
+    S = "lucida console" Or _
+    S = "tahoma" Or _
+    S = "times new roman" Or _
+    S = "trebuchet ms" Or _
+    S = "verdana" Or _
+    S = "wingdings" _
     Then
     
     
@@ -830,57 +824,57 @@ Public Function Is_Valid_Font(ByVal s As String) As Boolean
     End If
 End Function
 
-Public Function Remove_Property_Space(ByVal s As String) As String
+Public Function Remove_Property_Space(ByVal S As String) As String
     Dim n As Integer
     Dim isOn As Boolean
     isOn = True
 
-    For n = 1 To Len(s)
-        If Mid(s, n, 1) = "{" Then
+    For n = 1 To Len(S)
+        If Mid(S, n, 1) = "{" Then
             isOn = False
         End If
         If isOn = True Then
-            Remove_Property_Space = Remove_Property_Space & Mid(s, n, 1)
+            Remove_Property_Space = Remove_Property_Space & Mid(S, n, 1)
         End If
-        If Mid(s, n, 1) = "}" Then
+        If Mid(S, n, 1) = "}" Then
             isOn = True
         End If
     Next n
 End Function
 
-Public Function Get_Property_Space(ByVal s As String) As String
+Public Function Get_Property_Space(ByVal S As String) As String
     Dim n As Integer
     Dim isOn As Boolean
     isOn = False
 
-    For n = 1 To Len(s)
-        If Mid(s, n, 1) = "}" Then
+    For n = 1 To Len(S)
+        If Mid(S, n, 1) = "}" Then
             isOn = False
         End If
         If isOn = True Then
-            Get_Property_Space = Get_Property_Space & Mid(s, n, 1)
+            Get_Property_Space = Get_Property_Space & Mid(S, n, 1)
         End If
-        If Mid(s, n, 1) = "{" Then
+        If Mid(S, n, 1) = "{" Then
             isOn = True
         End If
     Next n
 End Function
 
-Public Function Kill_Property_Space(ByVal s As String) As String
+Public Function Kill_Property_Space(ByVal S As String) As String
     Dim n As Integer
     Dim isOn As Boolean
     isOn = False
 
-    For n = 1 To Len(s)
-        If Mid(s, n, 1) = "{" Then
+    For n = 1 To Len(S)
+        If Mid(S, n, 1) = "{" Then
             isOn = False
         End If
         
         If isOn = True Then
-            Kill_Property_Space = Kill_Property_Space & Mid(s, n, 1)
+            Kill_Property_Space = Kill_Property_Space & Mid(S, n, 1)
         End If
         
-        If Mid(s, n, 1) = "}" Then
+        If Mid(S, n, 1) = "}" Then
             isOn = True
         End If
     Next n
@@ -889,9 +883,9 @@ Public Function Kill_Property_Space(ByVal s As String) As String
     Kill_Property_Space = Replace(Kill_Property_Space, "}", "")
 End Function
 
-Public Function Has_Property_Space(ByVal s As String) As Boolean
-    If InStr(s, "{") > 0 And InStr(s, "}") > 0 Then
-        If InStr(s, "{") < InStr(s, "}") Then
+Public Function Has_Property_Space(ByVal S As String) As Boolean
+    If InStr(S, "{") > 0 And InStr(S, "}") > 0 Then
+        If InStr(S, "{") < InStr(S, "}") Then
             Has_Property_Space = True
         Else
             Has_Property_Space = False
@@ -901,100 +895,100 @@ Public Function Has_Property_Space(ByVal s As String) As Boolean
     End If
 End Function
 
-Public Function propertySpace_Name(ByVal s As String) As String
+Public Function propertySpace_Name(ByVal S As String) As String
     propertySpace_Name = RegLoad("Default_FontName", "Verdana")
-    s = i(s)
+    S = i(S)
     
-    If InStr(s, "arial") > 0 Then propertySpace_Name = "Arial"
-    If InStr(s, "arial black") > 0 Then propertySpace_Name = "Arial Black"
-    If InStr(s, "comic sans ms") > 0 Then propertySpace_Name = "Comic Sans MS"
-    If InStr(s, "courier new") > 0 Then propertySpace_Name = "Courier New"
-    If InStr(s, "georgia") > 0 Then propertySpace_Name = "Georgia"
-    If InStr(s, "impact") > 0 Then propertySpace_Name = "Impact"
-    If InStr(s, "lucida console") > 0 Then propertySpace_Name = "Lucida Console"
-    If InStr(s, "tahoma") > 0 Then propertySpace_Name = "Tahoma"
-    If InStr(s, "times new roman") > 0 Then propertySpace_Name = "Times New Roman"
-    If InStr(s, "trebuchet ms") > 0 Then propertySpace_Name = "Trebuchet MS"
-    If InStr(s, "verdana") > 0 Then propertySpace_Name = "Verdana"
-    If InStr(s, "wingdings") > 0 Then propertySpace_Name = "Wingdings"
+    If InStr(S, "arial") > 0 Then propertySpace_Name = "Arial"
+    If InStr(S, "arial black") > 0 Then propertySpace_Name = "Arial Black"
+    If InStr(S, "comic sans ms") > 0 Then propertySpace_Name = "Comic Sans MS"
+    If InStr(S, "courier new") > 0 Then propertySpace_Name = "Courier New"
+    If InStr(S, "georgia") > 0 Then propertySpace_Name = "Georgia"
+    If InStr(S, "impact") > 0 Then propertySpace_Name = "Impact"
+    If InStr(S, "lucida console") > 0 Then propertySpace_Name = "Lucida Console"
+    If InStr(S, "tahoma") > 0 Then propertySpace_Name = "Tahoma"
+    If InStr(S, "times new roman") > 0 Then propertySpace_Name = "Times New Roman"
+    If InStr(S, "trebuchet ms") > 0 Then propertySpace_Name = "Trebuchet MS"
+    If InStr(S, "verdana") > 0 Then propertySpace_Name = "Verdana"
+    If InStr(S, "wingdings") > 0 Then propertySpace_Name = "Wingdings"
     
 
 End Function
 
-Public Function propertySpace_Bold(ByVal s As String) As Boolean
+Public Function propertySpace_Bold(ByVal S As String) As Boolean
     propertySpace_Bold = True
-    s = i(s)
+    S = i(S)
     
-    If InStr(s, "bold") > 0 Then propertySpace_Bold = True
-    If InStr(s, "nobold") > 0 Then propertySpace_Bold = False
+    If InStr(S, "bold") > 0 Then propertySpace_Bold = True
+    If InStr(S, "nobold") > 0 Then propertySpace_Bold = False
 End Function
 
-Public Function propertySpace_Italic(ByVal s As String) As Boolean
+Public Function propertySpace_Italic(ByVal S As String) As Boolean
     propertySpace_Italic = False
-    s = i(s)
+    S = i(S)
     
-    If InStr(s, "italic") > 0 Then propertySpace_Italic = True
-    If InStr(s, "noitalic") > 0 Then propertySpace_Italic = False
+    If InStr(S, "italic") > 0 Then propertySpace_Italic = True
+    If InStr(S, "noitalic") > 0 Then propertySpace_Italic = False
 End Function
 
-Public Function propertySpace_Strikethru(ByVal s As String) As Boolean
+Public Function propertySpace_Strikethru(ByVal S As String) As Boolean
     propertySpace_Strikethru = False
-    s = i(s)
+    S = i(S)
     
-    If InStr(s, "strikethru") > 0 Then propertySpace_Strikethru = True
-    If InStr(s, "strikethrough") > 0 Then propertySpace_Strikethru = True
-    If InStr(s, "nostrikethru") > 0 Then propertySpace_Strikethru = False
-    If InStr(s, "nostrikethrough") > 0 Then propertySpace_Strikethru = False
+    If InStr(S, "strikethru") > 0 Then propertySpace_Strikethru = True
+    If InStr(S, "strikethrough") > 0 Then propertySpace_Strikethru = True
+    If InStr(S, "nostrikethru") > 0 Then propertySpace_Strikethru = False
+    If InStr(S, "nostrikethrough") > 0 Then propertySpace_Strikethru = False
     
 End Function
 
-Public Function propertySpace_Underline(ByVal s As String) As Boolean
+Public Function propertySpace_Underline(ByVal S As String) As Boolean
     propertySpace_Underline = False
-    s = i(s)
+    S = i(S)
     
-    If InStr(s, "underline") > 0 Then propertySpace_Underline = True
-    If InStr(s, "nounderline") > 0 Then propertySpace_Underline = False
+    If InStr(S, "underline") > 0 Then propertySpace_Underline = True
+    If InStr(S, "nounderline") > 0 Then propertySpace_Underline = False
 End Function
 
-Public Function propertySpace_Color(ByVal s As String) As Long
+Public Function propertySpace_Color(ByVal S As String) As Long
     propertySpace_Color = 777
-    s = i(s)
+    S = i(S)
     
-    If InStr(s, "white") Then propertySpace_Color = vbWhite
-    If InStr(s, "black") Then propertySpace_Color = vbBlack + 1
+    If InStr(S, "white") Then propertySpace_Color = vbWhite
+    If InStr(S, "black") Then propertySpace_Color = vbBlack + 1
     
-    If InStr(s, "purple") Then propertySpace_Color = iPurple
-    If InStr(s, "pink") Then propertySpace_Color = iPink
-    If InStr(s, "orange") Then propertySpace_Color = iOrange
-    If InStr(s, "lorange") Then propertySpace_Color = iLightOrange
+    If InStr(S, "purple") Then propertySpace_Color = iPurple
+    If InStr(S, "pink") Then propertySpace_Color = iPink
+    If InStr(S, "orange") Then propertySpace_Color = iOrange
+    If InStr(S, "lorange") Then propertySpace_Color = iLightOrange
     
-    If InStr(s, "blue") Then propertySpace_Color = iBlue
-    If InStr(s, "dblue") Then propertySpace_Color = iDarkBlue
-    If InStr(s, "lblue") Then propertySpace_Color = iLightBlue
+    If InStr(S, "blue") Then propertySpace_Color = iBlue
+    If InStr(S, "dblue") Then propertySpace_Color = iDarkBlue
+    If InStr(S, "lblue") Then propertySpace_Color = iLightBlue
     
-    If InStr(s, "green") Then propertySpace_Color = iGreen
-    If InStr(s, "dgreen") Then propertySpace_Color = iDarkGreen
-    If InStr(s, "lgreen") Then propertySpace_Color = iLightGreen
+    If InStr(S, "green") Then propertySpace_Color = iGreen
+    If InStr(S, "dgreen") Then propertySpace_Color = iDarkGreen
+    If InStr(S, "lgreen") Then propertySpace_Color = iLightGreen
     
-    If InStr(s, "gold") Then propertySpace_Color = iGold
-    If InStr(s, "yellow") Then propertySpace_Color = iYellow
-    If InStr(s, "lyellow") Then propertySpace_Color = iLightYellow
-    If InStr(s, "dyellow") Then propertySpace_Color = iDarkYellow
+    If InStr(S, "gold") Then propertySpace_Color = iGold
+    If InStr(S, "yellow") Then propertySpace_Color = iYellow
+    If InStr(S, "lyellow") Then propertySpace_Color = iLightYellow
+    If InStr(S, "dyellow") Then propertySpace_Color = iDarkYellow
     
-    If InStr(s, "brown") Then propertySpace_Color = iBrown
-    If InStr(s, "lbrown") Then propertySpace_Color = iLightBrown
-    If InStr(s, "dbrown") Then propertySpace_Color = iDarkBrown
-    If InStr(s, "maroon") Then propertySpace_Color = iMaroon
+    If InStr(S, "brown") Then propertySpace_Color = iBrown
+    If InStr(S, "lbrown") Then propertySpace_Color = iLightBrown
+    If InStr(S, "dbrown") Then propertySpace_Color = iDarkBrown
+    If InStr(S, "maroon") Then propertySpace_Color = iMaroon
     
-    If InStr(s, "grey") Then propertySpace_Color = iGrey
-    If InStr(s, "dgrey") Then propertySpace_Color = iDarkGrey
-    If InStr(s, "lgrey") Then propertySpace_Color = iLightGrey
+    If InStr(S, "grey") Then propertySpace_Color = iGrey
+    If InStr(S, "dgrey") Then propertySpace_Color = iDarkGrey
+    If InStr(S, "lgrey") Then propertySpace_Color = iLightGrey
     
-    If InStr(s, "red") Then propertySpace_Color = iRed
-    If InStr(s, "lred") Then propertySpace_Color = iLightRed
-    If InStr(s, "dred") Then propertySpace_Color = iDarkRed
+    If InStr(S, "red") Then propertySpace_Color = iRed
+    If InStr(S, "lred") Then propertySpace_Color = iLightRed
+    If InStr(S, "dred") Then propertySpace_Color = iDarkRed
     
-    If InStr(s, "rgb:") Then
+    If InStr(S, "rgb:") Then
         Dim Error, R, G, b
         
         Error = False
@@ -1012,8 +1006,8 @@ Public Function propertySpace_Color(ByVal s As String) As Long
         
            Dim sTmp As String
 
-        s = Replace(s, ",", " ")
-        sTmp = Mid(s, InStr(s, "rgb:"), Len(s))
+        S = Replace(S, ",", " ")
+        sTmp = Mid(S, InStr(S, "rgb:"), Len(S))
         sTmp = Replace(sTmp, ":", " :") & " "
         
         R = Trim(GetPart(sTmp, 2, ":"))
@@ -1047,14 +1041,14 @@ Public Function propertySpace_Color(ByVal s As String) As Long
     If propertySpace_Color = 777 Then propertySpace_Color = RegLoad("Default_FontColor", RGB(255, 255, 255))
 End Function
 
-Public Function propertySpace_Size(ByVal s As String) As String
+Public Function propertySpace_Size(ByVal S As String) As String
     propertySpace_Size = 777
-    s = Replace(s, "{", " "): s = Replace(s, "}", " ")
-    s = " " & i(Replace(s, ",", " ")) & " "
+    S = Replace(S, "{", " "): S = Replace(S, "}", " ")
+    S = " " & i(Replace(S, ",", " ")) & " "
     
     Dim n As Integer
     For n = 1 To 144
-        If InStr(s, " " & Trim(Str(n)) & " ") > 0 Then
+        If InStr(S, " " & Trim(Str(n)) & " ") > 0 Then
             propertySpace_Size = Trim(Str(n))
         End If
     Next n
