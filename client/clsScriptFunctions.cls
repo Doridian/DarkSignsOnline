@@ -16,10 +16,18 @@ Option Explicit
 Public ConsoleID As Integer
 Public ScriptFrom As String
 
-Public Sub SayCOMM(s As String)
-    basWorld.SayCOMM s
+Public Sub SayCOMM(S As String)
+    basWorld.SayCOMM S
 End Sub
 
 Public Sub CD(dir As String)
     cPath(ConsoleID) = dir
+End Sub
+
+Public Sub SAY(S As String)
+    basConsole.SAY ConsoleID, S
+End Sub
+
+Public Sub RUN(Script As String)
+    Run_Script cPath(ConsoleID) & "/" & Script, ConsoleID, "", "RUN"
 End Sub
