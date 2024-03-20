@@ -166,7 +166,7 @@ if (isset($_POST['username'])) {
 	$stmt->execute();
 	$id = $db->insert_id;
 	$stmt = $db->prepare("INSERT INTO domain (id, name, ext, ip) VALUES (?, ?, 'usr', ?)");
-	$stmt->bind_param('isi', $id, $username, $aip);
+	$stmt->bind_param('iss', $id, $username, $aip);
 	$stmt->execute();
 
 	$headers = "From: Dark Signs Online <noreply@darksignsonline.com>\r\n";
