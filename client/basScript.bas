@@ -121,12 +121,12 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
                         If Left(tmpS, 1) = "^" And IsNumeric(Mid(tmpS, 2, Len(tmpS))) = True Then
                             tmpS = Mid(tmpS, 2, Len(tmpS))
                             tmpS = DSODecode(tmpS)
-                            tmpS = Replace(tmpS, "$" & Trim(str(n)), sParams(n - 1))
-                            tmpS = Replace(tmpS, "$p" & Trim(str(n)), sParams(n - 1))
+                            tmpS = Replace(tmpS, "$" & Trim(Str(n)), sParams(n - 1))
+                            tmpS = Replace(tmpS, "$p" & Trim(Str(n)), sParams(n - 1))
                             tmpS = "^" & DSOEncode(tmpS)
                         Else
-                            tmpS = Replace(tmpS, "$" & Trim(str(n)), sParams(n - 1))
-                            tmpS = Replace(tmpS, "$p" & Trim(str(n)), sParams(n - 1))
+                            tmpS = Replace(tmpS, "$" & Trim(Str(n)), sParams(n - 1))
+                            tmpS = Replace(tmpS, "$p" & Trim(Str(n)), sParams(n - 1))
                         End If
                         
                         
@@ -554,7 +554,7 @@ Public Function SetVariable(ByVal VarName As String, ByVal VarVal As String, ByV
         'its a new variable
         VarIndex = NextEmptyVariable
         'add to the variable lengths table so it can be replaced efficiently later
-        VariableLengths(Len(VarName)) = VariableLengths(Len(VarName)) & Trim(str(VarIndex)) & ":"
+        VariableLengths(Len(VarName)) = VariableLengths(Len(VarName)) & Trim(Str(VarIndex)) & ":"
         
     End If
     
@@ -626,7 +626,7 @@ zz2:
         
 
         If AuthorizePayment = True And Val(s2) > 0 Then
-            sockIndex = DownloadURL(API_Server & API_Path & "index.php?transfer=" & EncodeURLParameter(s1) & "&amount=" & EncodeURLParameter(s2) & "&description=" & EncodeURLParameter(s3), VarIndex, consoleID)
+            sockIndex = DownloadURL(API_Server & API_Path & "transfer.php?to=" & EncodeURLParameter(s1) & "&amount=" & EncodeURLParameter(s2) & "&description=" & EncodeURLParameter(s3), VarIndex, consoleID)
             VarVal = "[loading]"
         Else
             VarVal = "Payment Not Sent"
@@ -635,64 +635,64 @@ zz2:
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?transferstatus=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?status=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 15) = "transferamount(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?transferamount=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?amount=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 20) = "transferdescription(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?transferdescription=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?description=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 19) = "transfertousername(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?transfertousername=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?to_username=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 21) = "transferfromusername(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?transferfromusername=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?from_username=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 13) = "transferdate(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?transferdate=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?date=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 13) = "transfertime(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?transfertime=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?time=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 16) = "serverfilecount(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?serverfilecount=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?count=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 15) = "serverfilename(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?serverfilename=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&fileindex=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?name=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&fileindex=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 17) = "serverfiledelete(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?serverfiledelete=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?delete=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 19) = "serverfiledownload(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?serverfiledownload=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?download=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 17) = "serverfileupload(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
@@ -701,7 +701,7 @@ zz2:
         s2 = GetPart(VarVal, 2, " ") 'filename
         s2 = EncodeURLParameter(GetFile(App.Path & "\user" & fixPath(s2, consoleID)))
 
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?serverfileupload=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")) & "&filedata=" & EncodeURLParameter(s2), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?upload=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")) & "&filedata=" & EncodeURLParameter(s2), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 12) = "servertoken(" Then
         VarVal = KillDirectFunctionSides(VarVal)
@@ -716,11 +716,11 @@ zz2:
         VarVal = EncodeURLParameter(VarVal)
     ElseIf Mid(i(VarVal), 1, 6) = "getip(" Then '--------- doing 3
         VarVal = KillDirectFunctionSides(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?getip=" & EncodeURLParameter(SumUp(VarVal, consoleID)), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_meta.php?getip=" & EncodeURLParameter(SumUp(VarVal, consoleID)), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 10) = "getdomain(" Then '--------- doing 4
         VarVal = KillDirectFunctionSides(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "index.php?getdomain=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_meta.php?getdomain=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 13) = "filedownload(" Then '--------- doing 2
         'file download is for people getting any files from their own domain name
@@ -754,11 +754,6 @@ zz2:
         "&maxlines=" & EncodeURLParameter(GetPart(VarVal, 5, " ")), VarIndex, consoleID)
         
         VarVal = "[loading]"
-    'ElseIf Mid(i(VarVal), 1, 5) = "hash(" Then
-    '    VarVal = KillDirectFunctionSides(VarVal)
-    '    VarVal = RemoveSurroundingQuotes(VarVal)
-    '    VarVal = Trim(VarVal)
-    '    VarVal = MD5_string(VarVal)
     ElseIf Mid(i(VarVal), 1, 8) = "dirlist(" Then
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = RemoveSurroundingQuotes(VarVal)
@@ -854,7 +849,7 @@ zz2:
     
     
     
-    Msgbux "indx(" & Trim(str(VarIndex)) & ")" & " name(" & VarName & ")= val(" & VarVal & ")"
+    Msgbux "indx(" & Trim(Str(VarIndex)) & ")" & " name(" & VarName & ")= val(" & VarVal & ")"
     
 End Function
 Public Function DownloadUserURL(ByVal VarVal As String, VarIndex As Integer, consoleID As Integer) As Integer
@@ -984,7 +979,7 @@ Public Function ReplaceVariables(ByVal s As String, ByVal consoleID As Integer) 
     s = Replace(s, "$date", Date)
     s = Replace(s, "$now", Now)
     s = Replace(s, "$username", Trim(myUsername))
-    s = Replace(s, "$consoleid", Trim(str(consoleID)))
+    s = Replace(s, "$consoleid", Trim(Str(consoleID)))
     s = Replace(s, "$dir", cPath(consoleID))
     s = Replace(s, "$newline", vbCrLf)
     s = Replace(s, "$tab", Chr(vbKeyTab))
@@ -1576,7 +1571,7 @@ Public Function f_Random(ByVal s As String) As String
     iDiff = (Val(s2) - Val(s1)) + 1
     
     Randomize
-    f_Random = Trim(str(Int(Rnd * iDiff) + Val(s1)))
+    f_Random = Trim(Str(Int(Rnd * iDiff) + Val(s1)))
        
     
      
@@ -1690,7 +1685,7 @@ End Function
 Public Function f_Len(ByVal s As String) As String
     On Error GoTo zxc
     
-    f_Len = Trim(str(Len(s)))
+    f_Len = Trim(Str(Len(s)))
 Exit Function
 zxc:
     f_Len = "*LEN-ERROR*"
@@ -1830,7 +1825,7 @@ Public Sub ScriptError(ByVal qTmp As String, sCommand As String, scriptSource As
     
     qTmp = " * Warning * > " & Trim(qTmp) & " in " & _
     IU(FileTitleOnly(scriptSource)) & " > Line " & _
-    Trim(str(LineNumber)) & " > " & sCommand
+    Trim(Str(LineNumber)) & " > " & sCommand
     
     SayError qTmp, consoleID
     
@@ -1932,7 +1927,7 @@ Public Function SumUp(sValue As String, ByVal consoleID As Integer) As String
         InStr(SumUp, "/") > 0 Or InStr(SumUp, "+") > 0 Or InStr(SumUp, "%") > 0 Then
         SumUp = ReplaceVariables(SumUp, consoleID)
         If IsNumeric(Mid(SumUp, 1, NextEmptyOperator(SumUp) - 1)) Or Val(SumUp) < 0 Then
-            SumUp = Trim(str(sumProcess(SumUp)))
+            SumUp = Trim(Str(sumProcess(SumUp)))
         End If
     End If
 End Function

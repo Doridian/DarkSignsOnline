@@ -749,7 +749,7 @@ Sub UploadIt()
     "returnwith=4300" & _
     "&category=" & EncodeURLParameter(sCategory) & _
     "&title=" & EncodeURLParameter(sTitle) & _
-    "&filesize=" & Trim(str(Len(sFileData))) & _
+    "&filesize=" & Trim(Str(Len(sFileData))) & _
     "&version=" & Trim(EncodeURLParameter(txtVersion)) & _
     "&description=" & EncodeURLParameter(sDescription) & _
     "&shortfilename=" & EncodeURLParameter(sShortFileName) & _
@@ -881,7 +881,7 @@ Public Sub AddListItems(ByVal s As String)
     
     
     
-    frmLibrary.lStatus = Trim(str(LV.ListItems.Count)) & " results found."
+    frmLibrary.lStatus = Trim(Str(LV.ListItems.Count)) & " results found."
             
 End Sub
 
@@ -1067,7 +1067,7 @@ Sub LoadList3()
     TS.Text = "Loading..."
     tsl.Caption = ss & "..."
     
-    RunPage "index.php?textspacedownload=" & EncodeURLParameter(Trim(Mid(ss, InStr(ss, " "), 99))), ActiveConsole, False, "", False
+    RunPage "textspace.php?download=" & EncodeURLParameter(Trim(Mid(ss, InStr(ss, " "), 99))), ActiveConsole, False, "", False
     
 End Sub
 
@@ -1101,6 +1101,6 @@ Private Sub tsc_Click()
     tsl.Caption = "Updating..."
     
     Dim PostData As String
-    PostData = "textspaceupload=" & EncodeURLParameter(Trim(Mid(ss, InStr(ss, " "), 99))) & "&textdata=" & EncodeURLParameter(TS.Text)
-    RunPage "index.php", ActiveConsole, True, PostData, False
+    PostData = "upload=" & EncodeURLParameter(Trim(Mid(ss, InStr(ss, " "), 99))) & "&textdata=" & EncodeURLParameter(TS.Text)
+    RunPage "textspace.php", ActiveConsole, True, PostData, False
 End Sub

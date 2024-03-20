@@ -735,20 +735,20 @@ Public Sub SubOwners(ByVal s As String, ByVal consoleID As Integer)
     If i(Mid(s, 1, 4)) = "list" Then
         'list the domain names
            
-            RunPage "index.php", consoleID, True, _
-            "returnwith=2001&listprivileges=" & EncodeURLParameter(Trim(sDomain))
+            RunPage "domain_privileges.php", consoleID, True, _
+            "returnwith=2001&list=" & EncodeURLParameter(Trim(sDomain))
 
     ElseIf Mid(i(s), 1, 4) = "add " Then
         sUsername = Trim(Mid(s, 5, Len(s)))
             
-            RunPage "index.php", consoleID, True, _
-            "returnwith=2001&addprivileges=" & EncodeURLParameter(Trim(sDomain)) & "&username=" & EncodeURLParameter(sUsername)
+            RunPage "domain_privileges.php", consoleID, True, _
+            "returnwith=2001&add=" & EncodeURLParameter(Trim(sDomain)) & "&username=" & EncodeURLParameter(sUsername)
 
     ElseIf Mid(i(s), 1, 7) = "remove " Then
         sUsername = Trim(Mid(s, 8, Len(s)))
         
-             RunPage "index.php", consoleID, True, _
-            "returnwith=2001&removeprivileges=" & EncodeURLParameter(Trim(sDomain)) & "&username=" & EncodeURLParameter(sUsername)
+             RunPage "domain_privileges.php", consoleID, True, _
+            "returnwith=2001&remove=" & EncodeURLParameter(Trim(sDomain)) & "&username=" & EncodeURLParameter(sUsername)
 
     Else
         SayError "Invalid Parameters.", consoleID
