@@ -143,7 +143,7 @@ if (isset($_POST['username'])) {
 
 	$stmt = $db->prepare('INSERT INTO users (username, password, email, createtime, ip, lastseen, dobday, dobmonth, dobyear, emailverifycode, active, cash) VALUES (?,?,?,?,?,?,?,?,?,?,?,0,200)');
 	if (!$stmt) {
-		die("Error: " . $stmt->error);
+		die("Error: " . $db->error);
 	}
 	$stmt->bind_param('sssisiiiis', $username, $password, $email, $timestamp, $aip, $timestamp, $dobday, $dobmonth, $dobyear, $vercode);
 	$stmt->execute();
