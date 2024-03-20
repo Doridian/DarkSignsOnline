@@ -15,6 +15,7 @@ Option Explicit
 
 Public ConsoleID As Integer
 Public ScriptFrom As String
+Public IsCLIInput As Boolean
 
 Public Sub SayCOMM(S As String)
     basWorld.SayCOMM S

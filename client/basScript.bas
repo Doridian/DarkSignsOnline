@@ -86,6 +86,7 @@ Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, Scrip
     Set G = New clsScriptFunctions
     G.ConsoleID = ConsoleID
     G.ScriptFrom = ScriptFrom
+    G.IsCLIInput = False
     S.AddObject "DSO", G, True
 
     On Error GoTo EvalError
@@ -95,11 +96,11 @@ Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, Scrip
     GoTo ScriptEnd
     Exit Function
 EvalError:
-    Say ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}", False
+    SAY ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}", False
     GoTo ScriptEnd
 
 ScriptCancelled:
-    Say ConsoleID, "Script Stopped by User (CTRL + C){orange}", False
+    SAY ConsoleID, "Script Stopped by User (CTRL + C){orange}", False
 ScriptEnd:
     New_Console_Line ConsoleID
     cPath(ConsoleID) = OldPath

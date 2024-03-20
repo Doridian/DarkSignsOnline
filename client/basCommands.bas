@@ -22,7 +22,7 @@ Public Sub InitBasCommands()
     Next
 End Sub
 
-Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Optional ScriptFrom As String, Optional FromScript As Boolean = True, Optional IsFromScript As Boolean)
+Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Optional ScriptFrom As String, Optional FromScript As Boolean = True)
     If ConsoleID < 1 Then
         ConsoleID = 1
     End If
@@ -31,6 +31,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     End If
     
     scrConsoleContext(ConsoleID).ScriptFrom = ScriptFrom
+    scrConsoleContext(ConsoleID).IsCLIInput = Not FromScript
 
     Dim tmpS As String
     tmpS = CLine.Caption
@@ -118,7 +119,7 @@ ScriptEnd:
     If Len(Trim(sC)) > 2 Then
     If InStr(LimitedCommandString, ":" & i(sC) & ":") > 0 Then
         'then it cannot be run
-        If IsFromScript = True Then 'then don't allow it
+        If FromScript = True Then 'then don't allow it
             SayError "Command blocked by commands-security.dat: " & UCase(sC) & " " & sP, ConsoleID
             GoTo zzz
         End If
@@ -191,7 +192,7 @@ ScriptEnd:
         Case "mysubdomains": ListMySubDomains sP, ConsoleID
         Case "myips": ListMyIPs ConsoleID
         
-        Case "server": If IsFromScript = True Then ServerCommands sP, ConsoleID
+        Case "server": If FromScript = True Then ServerCommands sP, ConsoleID
         
         'Case "chatsend": frmConsole.ChatSend sP, consoleID
         Case "chatview": frmConsole.ChatView sP, ConsoleID
@@ -241,7 +242,7 @@ ScriptEnd:
                 
                 SetVariable sC, sP, ConsoleID, ScriptFrom
                 
-                If IsFromScript = True Then
+                If FromScript = True Then
                     If InStr(sP, "(") = 0 Then
                         'only exit function if it doesn't have a function.
                         Exit Function
