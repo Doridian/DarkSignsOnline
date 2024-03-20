@@ -14,7 +14,7 @@ if ($action == 'inbox')
 {
 	
 	$last = (int)$_REQUEST['last'];
-	$stmt = $db->prepare('SELECT dsmail.id AS id, from_user_tbl.username AS from_user, dsmail.subject AS subject, dsmail.message AS message, dsmail.time AS time FROM dsmail WHERE to_user = ? LEFT JOIN users from_user_tbl ON users.id = dsmail.from_user WHERE dsmail.id > ? ORDER BY dsmail.id ASC');
+	$stmt = $db->prepare('SELECT dsmail.id AS id, from_user_tbl.username AS from_user, dsmail.subject AS subject, dsmail.message AS message, dsmail.time AS time FROM dsmail LEFT JOIN users from_user_tbl ON users.id = dsmail.from_user WHERE dsmail.to_user = ? AND dsmail.id > ? ORDER BY dsmail.id ASC');
 	$stmt->bind_param('ii', $user['id'], $last);
 	$stmt->execute();
 	$result = $stmt->get_result();
