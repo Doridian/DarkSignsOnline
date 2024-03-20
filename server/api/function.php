@@ -82,6 +82,39 @@ function getDomainInfo($domain)
 	}
 }
 
+function getIpDomain($ip)
+{
+	global $db;
+
+	$stmt = $db->prepare("SELECT ip, id, regtype FROM iptable WHERE ip=?");
+	$stmt->bind_param('s', $ip);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	$row = $result->fetch_array();
+	if (empty($row))  {
+		return '';
+	}
+
+	switch ($row['regtype']) {
+		case 'DOMAIN':
+			$stmt = $db->prepare("SELECT name, ext FROM domain WHERE id=?");
+			$stmt->bind_param('i', $row['id']);
+			$stmt->execute();
+			$result = $stmt->get_result();
+			$row = $result->fetch_array();
+			return $row['name'] . '.' . $row['ext'];
+		case 'SUBDOMAIN':
+			$stmt = $db->prepare("SELECT sub.name AS sub_name, d.name AS d_name, d.ext AS d_ext FROM subdomain sub, domain d WHERE sub.id=? AND sub.hostid=d.id");
+			$stmt->bind_param('i', $row['id']);
+			$stmt->execute();
+			$result = $stmt->get_result();
+			$row = $result->fetch_array();
+			return $row['sub_name'] . '.' . $row['d_name'] . '.' . $row['d_ext'];
+		case 'IP':
+			return $row['ip'];
+	}
+}
+
 function domain_exists($domain, $ext)
 {
 	global $db;
