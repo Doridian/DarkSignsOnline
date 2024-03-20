@@ -1,62 +1,59 @@
 <?php
-	include_once "function.php";
 
-	$type = $_GET['type'];
-	if ($auth == '1001')
+$rewrite_done = true;
+require_once('function.php');
+
+$type = $_GET['type'];
+echo '2001';
+if ($type == 'domain')
+{
+	$stmt = $db->prepare('SELECT i.id AS id, d.name AS name, d.ext AS ext, COUNT(s.id) AS subdomains FROM iptable AS i LEFT JOIN domain AS d ON d.id = i.id LEFT JOIN subdomain AS s ON s.hostid = i.id WHERE i.owner = ? AND i.regtype="DOMAIN" GROUP BY i.id;');
+	$stmt->bind_param('i', $user['id']);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	while ($loop = $result->fetch_array())
 	{
-		echo '2001';
-		if ($type == 'domain')
-		{
-			$loopQuery = $db->query("SELECT i.id, d.name, d.ext FROM iptable AS i, domain AS d WHERE i.owner='$user[id]' AND i.regtype='DOMAIN' AND d.id=i.id");
-			while ($loop = $db->fetch_array($loopQuery))
-			{
-				$count = $db->num_rows($db->query("SELECT id FROM subdomain WHERE hostid='$loop[id]'"));
-								
-				echo $loop['name'].'.'.$loop['ext'];
-								
-				if ($count > 0)
-					echo '*';
-				echo '$newline';
-			}
-		}
-		else if ($type == 'subdomain')
-		{
-			$domain = $_GET['domain'];
-			$domain = explode('.', $domain);
-			if (sizeof($domain) == 2)
-			{
-				if (getOwner($domain[0], $domain[1]) == $user['id'])
-				{
-					$loopQuery = $db->query("SELECT s.name FROM iptable AS i, domain AS d, subdomain AS s WHERE i.owner='$user[id]' AND i.id=d.id AND d.name='$domain[0]' AND d.ext='$domain[1]' AND d.id=s.hostid AND d.active=1 GROUP BY s.id");
-					while ($loop = $db->fetch_array($loopQuery))
-					{
-						echo $loop['name'].'.'.$domain[0].'.'.$domain[1].'$newline';
-					}
-				}
-				else
-				{
-					echo 'Restricted access to domain.{red 15}';
-				}
-			}
-			else
-			{
-				echo 'Invalid domain. Syntax : mySite.com';
-			}
-		}
-		else if ($type == 'ip')
-		{
-			$loopQuery = $db->query("SELECT ip FROM iptable WHERE owner='$user[id]' AND regtype='IP' AND active=1");
-			while ($loop = $db->fetch_array($loopQuery))
-			{
-				echo $loop['ip'].'$newline';
-			}
-		}
-		else
-		{
-			echo 'Invalid type paramater.';
-		}
+		echo $loop['name'].'.'.$loop['ext'];
+		if ($loop['subdomains'] > 0)
+			echo '*';
+		echo '$newline';
 	}
-	else
+}
+else if ($type == 'subdomain')
+{
+	$domain = $_GET['domain'];
+	$dInfo = getDomainInfo($domain);
+	if ($dInfo[0] <= 0)
 	{
-		echo 'Access Denied';
+		die('Domain not found.');
 	}
+	else if ($dInfo[1] !== $user['id'])
+	{
+		die('Domain not found.');
+	}
+
+	$stmt = $db->prepare('SELECT name FROM subdomain WHERE hostid=?');
+	$stmt->bind_param('i', $dInfo[0]);
+	$stmt->execute();
+	$result = $stmt->get_result();
+
+	while ($loop = $result->fetch_array())
+	{
+		echo $loop['name'].'.'.$domain.'$newline';
+	}
+}
+else if ($type == 'ip')
+{
+	$stmt = $db->prepare('SELECT ip FROM iptable WHERE owner=? AND regtype="IP"');
+	$stmt->bind_param('i', $user['id']);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	while ($loop = $result->fetch_array())
+	{
+		echo $loop['ip'].'$newline';
+	}
+}
+else
+{
+	echo 'Invalid type paramater.';
+}
