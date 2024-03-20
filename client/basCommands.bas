@@ -815,15 +815,10 @@ Public Sub UnRegisterDomain(ByVal s As String, ByVal consoleID As Integer)
     
     Say consoleID, "{green 10}A unregistration request has been sent for " & sDomain & ".", False
     Say consoleID, "{lgreen 10}The result will be posted to the COMM.", False
+
     
-    
-    
-    'MsgBox sDomain & vbCrLf & sPass
-    
-    
-    RunPage "domain_register.php", consoleID, True, _
-    "returnwith=2000&unregisterdomain=" & EncodeURLParameter(Trim(sDomain)) & "&pw=" & EncodeURLParameter(sPass)
-    
+    RunPage "domain_unregister.php", consoleID, True, _
+    "returnwith=2000&d=" & EncodeURLParameter(Trim(sDomain)) & "&pw=" & EncodeURLParameter(sPass)
 End Sub
 
 Public Sub ServerCommands(ByVal s As String, ByVal consoleID As Integer)
