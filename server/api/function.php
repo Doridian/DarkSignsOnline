@@ -219,15 +219,22 @@ function idToUser($id) {
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$row = $res->fetch_array();
+	if (empty($row)) {
+		return '';
+	}
 	return $row['username'];
 }
-function userToId($user) {
+
+function userToId($username) {
 	global $db;
 	$stmt = $db->prepare('SELECT id FROM users WHERE username=?');
-	$stmt->bind_param('i', $user);
+	$stmt->bind_param('s', $username);
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$row = $res->fetch_array();
+	if (empty($row)) {
+		return -1;
+	}
 	return $row['id'];
 }
 
