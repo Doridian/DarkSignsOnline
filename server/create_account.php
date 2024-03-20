@@ -7,7 +7,7 @@ require('_top.php');
 require_once('api/function_base.php');
 
 if (isset($_POST['username'])) {
-	$username = trim($_POST['username']);
+	$username = strtolower(trim($_POST['username']));
 	$password = trim($_POST['password']);
 	$email = trim($_POST['email']);
 	$dobday = trim($_POST['dobday']);

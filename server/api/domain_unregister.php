@@ -27,5 +27,9 @@ if ($dInfo[1] !== $user['id']) {
 $stmt = $db->prepare("DELETE FROM domain WHERE id=?");
 $stmt->bind_param('i', $dInfo[0]);
 $stmt->execute();
-$stmt->close();
+
+$stmt = $db->prepare("DELETE FROM iptable WHERE id=?");
+$stmt->bind_param('i', $dInfo[0]);
+$stmt->execute();
+
 die('Domain unregistered');

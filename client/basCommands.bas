@@ -790,9 +790,6 @@ Public Sub RegisterDomain(ByVal s As String, ByVal consoleID As Integer)
 End Sub
 
 Public Sub UnRegisterDomain(ByVal s As String, ByVal consoleID As Integer)
-    s = i(s)
-    s = Replace(s, "http://", ""): s = Replace(s, "www.", "")
-    
     s = Trim(s)
     If s = "" Then
         SayError "The UNREGISTER command requires parameters.", consoleID
@@ -805,7 +802,7 @@ Public Sub UnRegisterDomain(ByVal s As String, ByVal consoleID As Integer)
     Dim sPass As String
     
     If InStr(s, " ") > 0 Then
-        sDomain = Trim(Mid(s, 1, InStr(s, " ")))
+        sDomain = LCase(Trim(Mid(s, 1, InStr(s, " "))))
         sPass = Trim(Mid(s, InStr(s, " "), Len(s)))
     Else
         SayError "Your password is required as a final parameter.", consoleID
