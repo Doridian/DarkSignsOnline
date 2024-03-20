@@ -1,6 +1,6 @@
 <?php
 if (!isset($rewrite_done)) {
-	die('Not rewritten yet');
+	die('9999Not rewritten yet');
 }
 
 require_once('function_base.php');
