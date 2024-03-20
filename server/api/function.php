@@ -18,7 +18,7 @@ if (empty($_SERVER['PHP_AUTH_USER']) || empty($_SERVER['PHP_AUTH_PW'])) {
 }
 
 $stmt = $db->prepare("SELECT * FROM users WHERE username=?");
-$stmt->bind_param('ss', $_SERVER['PHP_AUTH_USER']);
+$stmt->bind_param('s', $_SERVER['PHP_AUTH_USER']);
 $stmt->execute();
 $res = $stmt->get_result();
 $user = $res->fetch_assoc();
