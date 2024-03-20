@@ -13,9 +13,24 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Public ConsoleID As Integer
-Public ScriptFrom As String
-Public IsCLIInput As Boolean
+Private ConsoleID As Integer
+Private ScriptFrom As String
+Private IsCLIInput As Boolean
+Private IsConfigured As Boolean
+
+Private Sub Class_Initialize()
+    IsConfigured = False
+End Sub
+
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean)
+    If IsConfigured Then
+        Exit Sub
+    End If
+    IsConfigured = True
+    ConsoleID = NewConsoleID
+    ScriptFrom = NewScriptFrom
+    IsCLIInput = NewIsCLIInput
+End Sub
 
 Public Sub SayCOMM(S As String)
     basWorld.SayCOMM S

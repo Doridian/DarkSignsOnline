@@ -84,9 +84,7 @@ Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, Scrip
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.ConsoleID = ConsoleID
-    G.ScriptFrom = ScriptFrom
-    G.IsCLIInput = False
+    G.Configure ConsoleID, ScriptFrom, False
     S.AddObject "DSO", G, True
 
     On Error GoTo EvalError
@@ -855,7 +853,7 @@ Public Function f_Run(ByVal S As String, ConsoleID As Integer) As String
 
     Data_For_Run_Function_Enabled(ConsoleID) = 1
     Data_For_Run_Function(ConsoleID) = ""
-    Run_Command tmpLine, ConsoleID, False
+    'Run_Command tmpLine, ConsoleID, False
     Data_For_Run_Function_Enabled(ConsoleID) = 0
     
     If Left(Data_For_Run_Function(ConsoleID), 2) = vbCrLf Then
@@ -1306,22 +1304,6 @@ End Function
 
 Public Function Msgbux(ByVal S As String)
     frmConsole.List1.AddItem S, 0
-End Function
-
-Public Function Pipe_Commands(ByVal S As String, ByVal ConsoleID As Integer)
-    Dim n As Integer, tmpS As String
-    
-    Dim CLine As ConsoleLine
-    CLine = Console_Line_Defaults
-    
-    For n = 1 To 10
-        tmpS = Trim(GetPart(S, n, "|"))
-        
-        If tmpS <> "" Then
-            CLine.Caption = tmpS
-            Run_Command CLine, ConsoleID
-        End If
-    Next n
 End Function
 
 Public Function CompareIF(ByVal s1 As String, ByVal s2 As String, ByVal sOperator As String, ByVal ConsoleID As Integer) As Boolean

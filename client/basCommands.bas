@@ -16,7 +16,7 @@ Public Sub InitBasCommands()
         scrConsole(X).Language = "VBScript"
 
         Set scrConsoleContext(X) = New clsScriptFunctions
-        scrConsoleContext(X).ConsoleID = X
+        scrConsoleContext(X).Configure X, "", True
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
     Next
@@ -29,9 +29,6 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     If ConsoleID > 4 Then
         ConsoleID = 4
     End If
-    
-    scrConsoleContext(ConsoleID).ScriptFrom = ScriptFrom
-    scrConsoleContext(ConsoleID).IsCLIInput = Not FromScript
 
     Dim tmpS As String
     tmpS = CLine.Caption

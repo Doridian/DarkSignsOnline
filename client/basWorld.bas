@@ -29,7 +29,7 @@ Private Const URL_ESCAPE_PERCENT As Long = &H1000&
 Private Type ProcessQueueEntry
     Data As String
     DataSource As String
-    consoleID As Integer
+    ConsoleID As Integer
     IsCustomDownload As Integer
 End Type
 
@@ -73,41 +73,41 @@ Public Sub CleanHttpRequests()
     Next
 End Sub
 
-Public Sub LoginNow(ByVal consoleID As Integer)
+Public Sub LoginNow(ByVal ConsoleID As Integer)
     Dim isBad As Boolean
     isBad = False
 
     If Authorized = True Then
-        Say consoleID, "You are already logged in and authorized as " & myUsername & ".{green}", False
+        SAY ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}", False
         Exit Sub
     Else
         If myUsername = "" Then
-            Say consoleID, "{14, orange,  center}Your username is not right - type: USERNAME [username] to set it."
+            SAY ConsoleID, "{14, orange,  center}Your username is not right - type: USERNAME [username] to set it."
             isBad = True
         End If
         If myPassword = "" Then
-            Say consoleID, "{14, orange, center}Your password is not right - type: PASSWORD [password] to set it."
+            SAY ConsoleID, "{14, orange, center}Your password is not right - type: PASSWORD [password] to set it."
             isBad = True
         End If
         
         If isBad = True Then
-            Say consoleID, "Warning - You are not logged in!{16 center underline}"
-            Say consoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
+            SAY ConsoleID, "Warning - You are not logged in!{16 center underline}"
+            SAY ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
             Exit Sub
         End If
     
         
-        SayComm "Logging in..."
+        SayCOMM "Logging in..."
 
-        RunPage "auth.php", consoleID, True, ""
+        RunPage "auth.php", ConsoleID, True, ""
     End If
 End Sub
 
-Public Sub LogoutNow(ByVal consoleID As Integer)
+Public Sub LogoutNow(ByVal ConsoleID As Integer)
     Authorized = False
     frmConsole.Shape1.BackColor = vbRed
     frmConsole.lblUsername.Caption = "You have been logged out."
-    SayComm "You have been logged out."
+    SayCOMM "You have been logged out."
     
     If frmConsole.getConnected Then
         frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
@@ -119,10 +119,10 @@ Public Sub LogoutNow(ByVal consoleID As Integer)
 End Sub
 
 
-Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer, Optional NoAuth As Boolean)
+Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer, Optional NoAuth As Boolean)
     If InStr(i(sUrl), "auth.php") = 0 And Authorized = False Then
-        Say consoleID, "You must be logged in to do that!{36 center orange impact nobold}", False
-        Say consoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}", False
+        SAY ConsoleID, "You must be logged in to do that!{36 center orange impact nobold}", False
+        SAY ConsoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}", False
         Exit Function
     End If
  
@@ -130,7 +130,7 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
     sUrl = Replace(sUrl, " ", "%20")
 
     Dim Requestor As New clsHttpRequestor
-    Requestor.consoleID = consoleID
+    Requestor.ConsoleID = ConsoleID
     Requestor.IsCustomDownload = IsCustomDownload
 
     If IsCustomDownload <= 0 Then
@@ -168,18 +168,18 @@ Public Function myPassword() As String
     myPassword = RegLoad("myPasswordDev", "")
 End Function
 
-Public Sub SayComm(s As String, Optional ByVal consoleID As Integer)
+Public Sub SayCOMM(S As String, Optional ByVal ConsoleID As Integer)
     'send a message to the comm
     
     Dim n As Integer
     
-    If Trim(s) <> "" Then
+    If Trim(S) <> "" Then
         
         For n = UBound(Comms) To 2 Step -1
             frmConsole.lComm(n).Caption = frmConsole.lComm(n - 1).Caption
             frmConsole.lCommTime(n).Caption = frmConsole.lCommTime(n - 1).Caption
         Next n
-        Comms(1) = s
+        Comms(1) = S
     
     End If
     
@@ -215,11 +215,11 @@ AllDone:
     frmConsole.CommLowerBorder.Move 0, frmConsole.Comm.Height - frmConsole.CommLowerBorder.Height, frmConsole.Comm.Width
 End Sub
 
-Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Integer, ByVal IsCustomDownload As Integer)
+Public Sub Process(ByVal S As String, sSource As String, ByVal ConsoleID As Integer, ByVal IsCustomDownload As Integer)
     Dim NewEntry As ProcessQueueEntry
-    NewEntry.Data = s
+    NewEntry.Data = S
     NewEntry.DataSource = sSource
-    NewEntry.consoleID = consoleID
+    NewEntry.ConsoleID = ConsoleID
     NewEntry.IsCustomDownload = IsCustomDownload
     
     Dim X As Integer
@@ -234,56 +234,56 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Inte
 End Sub
 
 Public Sub ProcessQueueEntry(ByVal Index As Integer)
-    Dim s As String
+    Dim S As String
     Dim sSource As String
-    Dim consoleID As Integer
+    Dim ConsoleID As Integer
     Dim IsCustomDownload As Integer
 
-    s = ProcessQueue(Index).Data
+    S = ProcessQueue(Index).Data
     sSource = ProcessQueue(Index).DataSource
-    consoleID = ProcessQueue(Index).consoleID
+    ConsoleID = ProcessQueue(Index).ConsoleID
     IsCustomDownload = ProcessQueue(Index).IsCustomDownload
     
 
     'process incoming data that winhttp download
-    s = Trim(s)
+    S = Trim(S)
 
     If IsCustomDownload > 0 Then
         'put the data into a variable!
-        Vars(IsCustomDownload).VarValue = Bracketize(s, True)
+        Vars(IsCustomDownload).VarValue = Bracketize(S, True)
         Exit Sub
     End If
     
     Dim cCode As String
     'MsgBox s
-    cCode = Mid(s, 1, 4)
-    s = Replace(s, cCode, "")
+    cCode = Mid(S, 1, 4)
+    S = Replace(S, cCode, "")
     
     Select Case cCode
         Case "0000" 'do nothing with the data
         
         Case "0001" 'it's the user list
-            LoadUserList s, consoleID
+            LoadUserList S, ConsoleID
         
         Case "1001" 'login ok
-            userIP = s
-            referals(0) = s
-            referals(1) = s
-            referals(2) = s
-            referals(3) = s
+            userIP = S
+            referals(0) = S
+            referals(1) = S
+            referals(2) = S
+            referals(3) = S
             
             
             Authorized = True
             frmConsole.lblUsername.Caption = "You are online as " & myUsername & "."
             frmConsole.Shape1.BackColor = iGreen: DoEvents
-            SayComm "You have been authorized as " & myUsername & "."
-            SayComm "Welcome to the Dark Signs Network!"
-            SayComm "Dark Signs Online - PreRelease Build 1337"
+            SayCOMM "You have been authorized as " & myUsername & "."
+            SayCOMM "Welcome to the Dark Signs Network!"
+            SayCOMM "Dark Signs Online - PreRelease Build 1337"
             If Command <> "" Then
                 Dim CLine As ConsoleLine
                 CLine = Console_Line_Defaults
                 CLine.Caption = Command
-                Run_Command CLine, consoleID
+                New_Console_Line ConsoleID
             End If
             
             Run_Script "\system\login-1.ds", 1, "", "BOOT"
@@ -314,7 +314,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             Authorized = False
             frmConsole.lblUsername.Caption = "Unable to log in."
             frmConsole.Shape1.BackColor = iOrange: DoEvents
-            SayComm "Unable to log in. Please check your username and password."
+            SayCOMM "Unable to log in. Please check your username and password."
                 
             MsgBox "Your username and password was denied by the server." & vbCrLf & vbCrLf & "Username: " & myUsername & vbCrLf & "Password: [hidden]" & vbCrLf & vbCrLf & "If the information above is not correct, use the USERNAME command to change your username, or the PASSWORD command to change your password. Then type LOGIN again. Contact us if you continue to experience problems." & vbCrLf & vbCrLf & "https://darksignsonline.com", vbCritical, "Account Information"
                 
@@ -324,30 +324,30 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             Authorized = False
             frmConsole.lblUsername.Caption = "Access Denied."
             frmConsole.Shape1.BackColor = iOrange: DoEvents
-            SayComm "Sorry, your account (" & myUsername & ") is disabled."
+            SayCOMM "Sorry, your account (" & myUsername & ") is disabled."
             MsgBox "Sorry, your account (" & myUsername & ") is disabled." & vbCrLf & vbCrLf & "This probably means that your account has expired." & vbCrLf & vbCrLf & "Please visit the website to renew your account, or contact us if you believe this is an error." & vbCrLf & vbCrLf & "https://darksignsonline.com", vbCritical, "Account Information"
         
         
         '2000 is just a general show in the comm, all purpose
         Case "2000":
             'MsgBox s
-            SayCommMultiLines s, consoleID
+            SayCommMultiLines S, ConsoleID
             
         Case "2001":
             'MsgBox s
-            SayMultiLines s, consoleID
+            SayMultiLines S, ConsoleID
         
         Case "2003":
-            If (s = "success") Then
-                SayComm "Upload Successful.", consoleID
+            If (S = "success") Then
+                SayCOMM "Upload Successful.", ConsoleID
             Else
-                MsgBox s
-                SayComm "Upload Failed.", consoleID
+                MsgBox S
+                SayCOMM "Upload Failed.", ConsoleID
             End If
             
             
         Case "2004": ' Domain querys.
-            SayMultiLines s, consoleID
+            SayMultiLines S, ConsoleID
         
         Case "3001": 'update chat
             
@@ -361,40 +361,40 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
         Case "4100":
             
 
-            If Len(s) < 20 And InStr(i(s), "not found") > 0 Then
-                Say consoleID, "Connection Failed.{orange}", False
+            If Len(S) < 20 And InStr(i(S), "not found") > 0 Then
+                SAY ConsoleID, "Connection Failed.{orange}", False
                 New_Console_Line ActiveConsole
             Else
                 Dim sParameters As String
-                If InStr(s, "::") > 0 Then
-                    sParameters = Mid(s, 1, InStr(s, "::") - 1)
-                    s = Mid(s, InStr(s, "::") + 2, Len(s))
+                If InStr(S, "::") > 0 Then
+                    sParameters = Mid(S, 1, InStr(S, "::") - 1)
+                    S = Mid(S, InStr(S, "::") + 2, Len(S))
                 End If
             
                 Dim b64decoded() As Byte
-                b64decoded = basConsole.DecodeBase64(s)
+                b64decoded = basConsole.DecodeBase64(S)
                 Dim newS As String
                 newS = StrConv(b64decoded, vbUnicode)
 
                 WriteClean App.Path & "\user\system\temp.dat", newS
-                Run_Script "\system\temp.dat", consoleID, sParameters, Left(sParameters, InStr(sParameters, "_") - 1)
+                Run_Script "\system\temp.dat", ConsoleID, sParameters, Left(sParameters, InStr(sParameters, "_") - 1)
             End If
             
         Case "4300" 'file library upload complete
-            frmLibrary.lStatus.Caption = s
+            frmLibrary.lStatus.Caption = S
             frmLibrary.UploadBox.Visible = False
         Case "4301" 'file library list category
-            frmLibrary.AddListItems s
+            frmLibrary.AddListItems S
         Case "4302" 'file library existing scripts list for removal
-            frmLibrary.AddtoRemoveList s
+            frmLibrary.AddtoRemoveList S
         Case "4303" 'file in the database was removed ok!
-            frmLibrary.lStatus.Caption = s
+            frmLibrary.lStatus.Caption = S
             frmLibrary.LoadScriptsToRemove
         Case "4304" 'file has been downloaded
             Dim sF1 As String, sF2 As String
-            If InStr(s, ":") > 0 Then
-                sF1 = Trim(Mid(s, 1, InStr(s, ":") - 1))
-                sF2 = Trim(Mid(s, InStr(s, ":") + 1, Len(s)))
+            If InStr(S, ":") > 0 Then
+                sF1 = Trim(Mid(S, 1, InStr(S, ":") - 1))
+                sF2 = Trim(Mid(S, InStr(S, ":") + 1, Len(S)))
                 WriteFile App.Path & "\user\downloads\" & sF1, sF2
                 frmLibrary.lStatus = "File downloaded ok: \downloads\" & sF1
             Else
@@ -404,33 +404,33 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
         Case "4400" 'file to write from the DOWNLOAD function
         
         
-            If Mid(i(s), 1, 5) = "error" Then
-                SayCommMultiLines s, consoleID
+            If Mid(i(S), 1, 5) = "error" Then
+                SayCommMultiLines S, ConsoleID
                 Exit Sub
             End If
         
             Dim ffname As String
-            If InStr(s, ":") > 0 Then
-                ffname = Trim(Mid(s, 1, InStr(s, ":") - 1))
+            If InStr(S, ":") > 0 Then
+                ffname = Trim(Mid(S, 1, InStr(S, ":") - 1))
                 ffname = Replace(ffname, "\\", "\")
-                s = Mid(s, InStr(s, ":") + 1, Len(s))
-                WriteFile App.Path & "\user" & ffname, s
-                SayComm "Download Complete: " & ffname
+                S = Mid(S, InStr(S, ":") + 1, Len(S))
+                WriteFile App.Path & "\user" & ffname, S
+                SayCOMM "Download Complete: " & ffname
             Else
-                SayCommMultiLines s, consoleID
+                SayCommMultiLines S, ConsoleID
             End If
         
         Case "4500"
-            frmLibrary.tsl.Caption = s
+            frmLibrary.tsl.Caption = S
             
         Case "4501"
-            frmLibrary.TS.Text = s
+            frmLibrary.TS.Text = S
             frmLibrary.tsl.Caption = "Loaded!"
         
         Case "7001" 'mail inbox
             frmDSOMail.EnableAll
             Dim emails() As String
-            emails = Split(s, vbNewLine)
+            emails = Split(S, vbNewLine)
             Dim numEmails As Integer
             numEmails = UBound(emails)
             
@@ -447,7 +447,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             
             frmDSOMail.StatusBar1.SimpleText = "Current emails: ?" & vbTab & "New emails: " & numEmails
         Case "7002" ' Send msg.s
-            If s = "success" Then
+            If S = "success" Then
                 frmDSOMailSend.EnableAll
                 frmDSOMailSend.Hide
                 frmDSOMailSend.btnSend.Caption = "Send"
@@ -459,7 +459,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 frmDSOMailSend.EnableAll
                 frmDSOMailSend.btnSend.Caption = "Send"
                 frmDSOMailSend.Enabled = True
-                MsgBox "Mail failed to send." & vbNewLine & s
+                MsgBox "Mail failed to send." & vbNewLine & S
             End If
             
             
@@ -468,13 +468,13 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
         
         Case Else
 
-            If Trim(Replace(s, vbCrLf, "")) = "" Then Exit Sub
+            If Trim(Replace(S, vbCrLf, "")) = "" Then Exit Sub
             If InStr(i(sSource), "z_online") > 0 Then Exit Sub
             If InStr(i(sSource), "chat") > 0 Then Exit Sub
 
-            SayComm s
-            MsgBox s
-            SayComm "The function [" & sSource & "] returned some strange data."
+            SayCOMM S
+            MsgBox S
+            SayCOMM "The function [" & sSource & "] returned some strange data."
 
         
     End Select
@@ -483,7 +483,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
 End Sub
 
 
-Public Sub SayCommMultiLines(ByVal s As String, consoleID As Integer)
+Public Sub SayCommMultiLines(ByVal S As String, ConsoleID As Integer)
 
         Dim p1 As String, p2 As String, p3 As String, p4 As String, p5 As String
         Dim p6 As String, p7 As String, p8 As String, p9 As String, p10 As String
@@ -491,24 +491,24 @@ Public Sub SayCommMultiLines(ByVal s As String, consoleID As Integer)
         'this can be sent data divided with the string "newline" (without quotes)
         'and it wil be shown properly up to 10 lines
         
-        p1 = GetPart(s, 1, "newline"): p2 = GetPart(s, 2, "newline"):
-        p3 = GetPart(s, 3, "newline"): p4 = GetPart(s, 4, "newline")
-        p5 = GetPart(s, 5, "newline"): p6 = GetPart(s, 6, "newline")
-        p7 = GetPart(s, 7, "newline"): p8 = GetPart(s, 8, "newline")
-        p9 = GetPart(s, 9, "newline"): p10 = GetPart(s, 10, "newline")
-        If Trim(p1) <> "" Then SayComm p1: If Trim(p2) <> "" Then SayComm p2
-        If Trim(p3) <> "" Then SayComm p3: If Trim(p4) <> "" Then SayComm p4
-        If Trim(p5) <> "" Then SayComm p5: If Trim(p6) <> "" Then SayComm p6
-        If Trim(p7) <> "" Then SayComm p7: If Trim(p8) <> "" Then SayComm p8
-        If Trim(p9) <> "" Then SayComm p9: If Trim(p10) <> "" Then SayComm p10
+        p1 = GetPart(S, 1, "newline"): p2 = GetPart(S, 2, "newline"):
+        p3 = GetPart(S, 3, "newline"): p4 = GetPart(S, 4, "newline")
+        p5 = GetPart(S, 5, "newline"): p6 = GetPart(S, 6, "newline")
+        p7 = GetPart(S, 7, "newline"): p8 = GetPart(S, 8, "newline")
+        p9 = GetPart(S, 9, "newline"): p10 = GetPart(S, 10, "newline")
+        If Trim(p1) <> "" Then SayCOMM p1: If Trim(p2) <> "" Then SayCOMM p2
+        If Trim(p3) <> "" Then SayCOMM p3: If Trim(p4) <> "" Then SayCOMM p4
+        If Trim(p5) <> "" Then SayCOMM p5: If Trim(p6) <> "" Then SayCOMM p6
+        If Trim(p7) <> "" Then SayCOMM p7: If Trim(p8) <> "" Then SayCOMM p8
+        If Trim(p9) <> "" Then SayCOMM p9: If Trim(p10) <> "" Then SayCOMM p10
 
 End Sub
 
 
-Public Sub SayMultiLines(ByVal s As String, consoleID As Integer)
+Public Sub SayMultiLines(ByVal S As String, ConsoleID As Integer)
 
         Dim sA() As String
-        sA = Split(s, "$newline")
+        sA = Split(S, "$newline")
         Dim iCount As Integer
         
         Dim n As Integer, tmpS As String
@@ -516,22 +516,22 @@ Public Sub SayMultiLines(ByVal s As String, consoleID As Integer)
             tmpS = Trim(sA(n))
             If tmpS <> "" Then
                 iCount = iCount + 1
-                Say consoleID, tmpS, False
+                SAY ConsoleID, tmpS, False
                 
-                If iCount Mod 20 = 0 Then PauseConsole "", consoleID
+                If iCount Mod 20 = 0 Then PauseConsole "", ConsoleID
             End If
         Next n
         
-        Say consoleID, "{12 green}Line(s) Found: " & Trim(Str(iCount)), False
+        SAY ConsoleID, "{12 green}Line(s) Found: " & Trim(Str(iCount)), False
         
-        New_Console_Line consoleID
+        New_Console_Line ConsoleID
 
 End Sub
 
 
-Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
-    s = Replace(s, "::", ":")
-    s = Replace(s, vbCr, ""): s = Replace(s, vbLf, "")
+Public Sub LoadUserList(ByVal S As String, ByVal ConsoleID As Integer)
+    S = Replace(S, "::", ":")
+    S = Replace(S, vbCr, ""): S = Replace(S, vbLf, "")
     
     
     
@@ -542,7 +542,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
     Dim tmpS As String, n As Integer
     
     For n = 1 To 200
-        tmpS = Trim(GetPart(s, n, ":"))
+        tmpS = Trim(GetPart(S, n, ":"))
         If Len(tmpS) > 2 Then
             frmConsole.ListOfUsers.AddItem tmpS
         End If
@@ -562,7 +562,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
             'this user just signed in!
             '----------------------------------------
             If i(tmpS) <> "admin" Then
-                SayComm "User " & Trim(tmpS) & " has signed in.", consoleID
+                SayCOMM "User " & Trim(tmpS) & " has signed in.", ConsoleID
             End If
         End If
         End If
@@ -574,12 +574,12 @@ Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
     For n = 1 To 200
         tmpS = Trim(GetPart(UsersOnline, n, ":"))
         If Len(tmpS) > 2 Then
-            If InStr(i(s), ":" & i(tmpS) & ":") = 0 Then
+            If InStr(i(S), ":" & i(tmpS) & ":") = 0 Then
                 '----------------------------------------
                 'this user has been signed out!
                 '----------------------------------------
                 If i(tmpS) <> "admin" Then
-                    SayComm "User " & Trim(tmpS) & " has signed out.", consoleID
+                    SayCOMM "User " & Trim(tmpS) & " has signed out.", ConsoleID
                 End If
             End If
         End If
@@ -587,7 +587,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
     
     
     
-    UsersOnline = s
+    UsersOnline = S
     
     
 End Sub
