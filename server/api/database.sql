@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Mar 20, 2024 at 07:18 AM
+-- Generation Time: Mar 20, 2024 at 07:39 AM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 7.4.33
 
@@ -132,24 +132,16 @@ CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `active` tinyint(1) NOT NULL DEFAULT 0,
+  `active` tinyint(1) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `createdate` varchar(255) NOT NULL,
-  `createtime` varchar(255) NOT NULL,
+  `createtime` int(11) NOT NULL,
   `ip` varchar(255) NOT NULL,
-  `hostname` varchar(255) NOT NULL,
-  `lastseen` varchar(255) NOT NULL,
-  `enabled` tinyint(1) NOT NULL,
+  `lastseen` int(11) NOT NULL,
   `dobday` int(11) NOT NULL,
   `dobmonth` int(11) NOT NULL,
   `dobyear` int(11) NOT NULL,
-  `tagline` varchar(255) NOT NULL,
-  `publicemail` varchar(255) NOT NULL,
-  `timestamp` int(11) NOT NULL,
   `emailverifycode` varchar(255) NOT NULL,
-  `emailverified` int(11) NOT NULL,
-  `cash` int(11) NOT NULL,
-  `expiredate` varchar(255) NOT NULL
+  `cash` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -216,7 +208,8 @@ ALTER TABLE `transactions`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `username` (`username`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `emailverifycode` (`emailverifycode`);
 
 --
 -- AUTO_INCREMENT for dumped tables
