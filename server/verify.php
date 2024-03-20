@@ -7,8 +7,8 @@ if (empty($verify)) {
     die("<h1>No verification code provided</h1>");
 }
 
-$stmt = $db->prepare("SELECT * FROM users WHERE emailverifycode = ?");
-$stmt->bind_param("s", $verify);
+$stmt = $db->prepare('UPDATE users SET active = 1, emailverifycode = "" WHERE emailverifycode = ? AND active = 0');
+$stmt->bind_param('s', $verify);
 $stmt->execute();
 
 ?>
