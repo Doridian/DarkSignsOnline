@@ -93,7 +93,7 @@ Private Sub HttpRequest_OnError(ByVal ErrorNumber As Long, ByVal ErrorDescriptio
     End If
     Done = True
     
-    ManageSockError "Socket error code " & str(ErrorNumber) & " = " & ErrorDescription
+    ManageSockError "Socket error code " & Str(ErrorNumber) & " = " & ErrorDescription
 End Sub
 
 Private Sub HttpRequest_OnResponseFinished()
@@ -103,8 +103,8 @@ Private Sub HttpRequest_OnResponseFinished()
     End If
     Done = True
 
-    If HttpRequest.Status < 200 Or HttpRequest.Status > 499 Then
-        ManageSockError "HTTP Status " & str(HttpRequest.Status)
+    If HttpRequest.Status < 200 Or HttpRequest.Status > 299 Then
+        ManageSockError "HTTP Status " & Str(HttpRequest.Status)
         Exit Sub
     End If
 
@@ -132,7 +132,7 @@ Private Sub ManageSockError(Reason As String)
 
         If InStr(i(Url), "z_online") > 0 Then Exit Sub 'don't show these errors
         If InStr(i(Url), "chat") > 0 Then Exit Sub 'don't show these errors
-        SayComm "Connection failed to [" & Url & "] because of " & Reason & ". Retry " & Trim(str(Retries)) & " of " & Trim(str(basWorld.MaxSockRetries)) & "."
+        SayComm "Connection failed to [" & Url & "] because of " & Reason & ". Retry " & Trim(Str(Retries)) & " of " & Trim(Str(basWorld.MaxSockRetries)) & "."
    Else
         SayComm "Connection failed to [" & Url & "] because of " & Reason & ". Retry count expired."
         SetDoneForever
