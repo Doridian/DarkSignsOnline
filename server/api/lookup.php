@@ -16,8 +16,8 @@ if ($dInfo[0] <= 0) {
 	die('not found');
 }
 
-$time = $dInfp[4];
 $owner_id = $dInfo[1];
+$date_formatted = date('Y-m-d H:i:s', $dInfo[4]);
 
 $stmt = $db->prepare('SELECT username FROM users WHERE id=?');
 $stmt->bind_param('i', $owner_id);
@@ -26,5 +26,4 @@ $res = $stmt->get_result();
 $row = $res->fetch_array();
 $owner = $row['username'];
 
-$date_formatted = date('Y-m-d H:i:s', $time);
 echo "$d was created by $owner on $date_formatted";
