@@ -15,25 +15,9 @@ if (isset($_POST['username'])) {
 	$dobyear = trim($_POST['dobyear']);
 
 	$username = str_replace(" ", "-", trim($username));
-	//check if email already exists
-	$stmt = $db->prepare("SELECT id from users where email=?");
-	$stmt->bind_param('s', $email);
-	$stmt->execute();
-	if ($stmt->get_result()->num_rows > 0) {
-		die("The email address <b>$email</b> already exists in the database. Please try again.");
-	}
-	//check if username already exists
-	$stmt = $db->prepare("SELECT id from users where username=?");
-	$stmt->bind_param('s', $username);
-	$stmt->execute();
-	if ($stmt->get_result()->num_rows > 0) {
-		die("The username <b>$username</b> already exists in the database. Please try again.");
-	}
+
 	if (strstr($username, "_")) {
-		die("Error, please don't use underscore characters like _ in your username.");
-	}
-	if (strstr($username, " ")) {
-		die("Error, please don't use space characters in your username.");
+		die("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, ">")) {
 		die("Error, please don't use invalid characters in your username.");
@@ -129,79 +113,48 @@ if (isset($_POST['username'])) {
 		die("Error, please don't use invalid characters in your username.");
 	}
 
-
 	//check password length
 	if (strlen($password) < 6) {
 		die("Your password should be at least 6 characters long.");
 	}
+
+	//check if email already exists
+	$stmt = $db->prepare("SELECT id from users where email=?");
+	$stmt->bind_param('s', $email);
+	$stmt->execute();
+	if ($stmt->get_result()->num_rows > 0) {
+		$email = htmlentities($email);
+		die("The email address <b>$email</b> already exists in the database. Please try again.");
+	}
+	//check if username already exists
+	$stmt = $db->prepare("SELECT id from users where username=?");
+	$stmt->bind_param('s', $username);
+	$stmt->execute();
+	if ($stmt->get_result()->num_rows > 0) {
+		$username = htmlentities($username);
+		die("The username <b>$username</b> already exists in the database. Please try again.");
+	}
+
 	//insert the data
 
-	$ctime = date('h:i A');
-	$ctime = str_replace("zz0", "", "zz" . $ctime);
-	$ctime = str_replace("zz", "", $ctime);
-	$cdate = trim(str_replace(" 0", " ", " " . date('dS \of F Y')));
-	$ahostname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
 	$aip = $_SERVER['REMOTE_ADDR'];
 	$vercode = make_keycode();
 	$timestamp = time();
 
-	if (trim(strtolower($dobmonth)) == "january") {
-		$dobmonth = "1";
-	}
-	if (trim(strtolower($dobmonth)) == "february") {
-		$dobmonth = "2";
-	}
-	if (trim(strtolower($dobmonth)) == "march") {
-		$dobmonth = "3";
-	}
-	if (trim(strtolower($dobmonth)) == "april") {
-		$dobmonth = "4";
-	}
-	if (trim(strtolower($dobmonth)) == "may") {
-		$dobmonth = "5";
-	}
-	if (trim(strtolower($dobmonth)) == "june") {
-		$dobmonth = "6";
-	}
-	if (trim(strtolower($dobmonth)) == "july") {
-		$dobmonth = "7";
-	}
-	if (trim(strtolower($dobmonth)) == "august") {
-		$dobmonth = "8";
-	}
-	if (trim(strtolower($dobmonth)) == "september") {
-		$dobmonth = "9";
-	}
-	if (trim(strtolower($dobmonth)) == "october") {
-		$dobmonth = "10";
-	}
-	if (trim(strtolower($dobmonth)) == "november") {
-		$dobmonth = "11";
-	}
-	if (trim(strtolower($dobmonth)) == "december") {
-		$dobmonth = "12";
-	}
-
-
-	$stmt = $db->prepare("INSERT INTO users (username, password, email, createdate, createtime, ip, hostname, lastseen, enabled, expiredate, dobday, dobmonth, dobyear, tagline, publicemail, timestamp, emailverifycode, emailverified, cash) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+	$stmt = $db->prepare('INSERT INTO users (username, password, email, createtime, ip, lastseen, dobday, dobmonth, dobyear, emailverifycode, active, cash) VALUES (?,?,?,?,?,?,?,?,?,?,?,0,200)');
 	if (!$stmt) {
-		echo "Error: " . $stmt->error;
+		die("Error: " . $stmt->error);
 	}
-	$one = 1;
-	$beta_testing = 'Beta Testing';
-	$empty = '';
-	$zero = 0;
-	$cash = 200;
-	$stmt->bind_param('ssssssssisiiissisii', $username, $password, $email, $cdate, $ctime, $aip, $ahostname, $cdate, $one, $beta_testing, $dobday, $dobmonth, $dobyear, $empty, $empty, $timestamp, $vercode, $zero, $cash);
+	$stmt->bind_param('sssisiiiis', $username, $password, $email, $timestamp, $aip, $timestamp, $dobday, $dobmonth, $dobyear, $vercode);
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$userid = $db->insert_id;
 
 	$randomip;
 	$res;
-	$stmt = $db->prepare("SELECT * FROM iptable WHERE ip=?");
+	$stmt = $db->prepare('SELECT * FROM iptable WHERE ip=?');
 	do {
-		$randomip = rand(1, 255) . "." . rand(1, 255) . "." . rand(1, 255) . "." . rand(1, 255);
+		$randomip = rand(1, 255) . '.' . rand(1, 255) . '.' . rand(1, 255) . '.' . rand(1, 255);
 		$stmt->bind_param('s', $randomip);
 		$stmt->execute();
 		$res = $stmt->get_result();
@@ -209,11 +162,11 @@ if (isset($_POST['username'])) {
 
 	$keycode = make_keycode();
 	$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, keycode, time) VALUES (?, ?, 'DOMAIN', ?, ?)");
-	$stmt->bind_param('iss', $userid, $randomip, $keycode, $timestamp);
+	$stmt->bind_param('issi', $userid, $randomip, $keycode, $timestamp);
 	$stmt->execute();
 	$id = $db->insert_id;
 	$stmt = $db->prepare("INSERT INTO domain (id, name, ext, ip) VALUES (?, ?, 'usr', ?)");
-	$stmt->bind_param('isis', $id, $username, $aip);
+	$stmt->bind_param('isi', $id, $username, $aip);
 	$stmt->execute();
 
 	$headers = "From: Dark Signs Online <noreply@darksignsonline.com>\r\n";
@@ -306,18 +259,18 @@ if (isset($_POST['username'])) {
 						?>
 					</select>
 					<select name="dobmonth">
-						<option>January</option>
-						<option>February</option>
-						<option>March</option>
-						<option>April</option>
-						<option>May</option>
-						<option>June</option>
-						<option>July</option>
-						<option>August</option>
-						<option>September</option>
-						<option>October</option>
-						<option>November</option>
-						<option>December</option>
+						<option value="1">January</option>
+						<option value="2">February</option>
+						<option value="3">March</option>
+						<option value="4">April</option>
+						<option value="5">May</option>
+						<option value="6">June</option>
+						<option value="7">July</option>
+						<option value="8">August</option>
+						<option value="9">September</option>
+						<option value="10">October</option>
+						<option value="11">November</option>
+						<option value="12">December</option>
 					</select>
 					<select name="dobyear">
 						<?php

@@ -99,7 +99,7 @@ function grab_from_users($field, $usern = "")
 	}
 
 	if ($auth == '1001') {
-		$stmt = $db->prepare("SELECT ? FROM users WHERE username=? AND enabled='1'");
+		$stmt = $db->prepare("SELECT ? FROM users WHERE username=? AND active='1'");
 		$stmt->bind_param('ss', $field, $usern);
 		$stmt->execute();
 		$result = $stmt->get_result();
