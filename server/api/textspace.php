@@ -16,7 +16,7 @@
 			{
 				die('4501  ');				
 			}
-			while($row = $db->fetch_array( $result )) {$textdata=$row['data'];}
+			while($row = $db->fetch_assoc( $result )) {$textdata=$row['data'];}
 			
 		}
 		else if ($action == 'upload')

@@ -12,7 +12,7 @@ if ($type == 'domain')
 	$stmt->bind_param('i', $user['id']);
 	$stmt->execute();
 	$result = $stmt->get_result();
-	while ($loop = $result->fetch_array())
+	while ($loop = $result->fetch_assoc())
 	{
 		echo $loop['name'].'.'.$loop['ext'];
 		if ($loop['subdomains'] > 0)
@@ -39,7 +39,7 @@ else if ($type == 'subdomain')
 	$stmt->execute();
 	$result = $stmt->get_result();
 
-	while ($loop = $result->fetch_array())
+	while ($loop = $result->fetch_assoc())
 	{
 		echo $loop['name'].'.'.$domain.'$newline';
 	}
@@ -51,7 +51,7 @@ else if ($type == 'ip')
 	$stmt->bind_param('i', $user['id']);
 	$stmt->execute();
 	$result = $stmt->get_result();
-	while ($loop = $result->fetch_array())
+	while ($loop = $result->fetch_assoc())
 	{
 		echo $loop['ip'].'$newline';
 	}

@@ -17,13 +17,13 @@ if (empty($_SERVER['PHP_AUTH_USER']) || empty($_SERVER['PHP_AUTH_PW'])) {
 	login_failure('1002');
 }
 
-$stmt = $db->prepare("SELECT * FROM users WHERE username=? AND password=?");
-$stmt->bind_param('ss', $_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']);
+$stmt = $db->prepare("SELECT * FROM users WHERE username=?");
+$stmt->bind_param('ss', $_SERVER['PHP_AUTH_USER']);
 $stmt->execute();
 $res = $stmt->get_result();
-$user = $res->fetch_array();
+$user = $res->fetch_assoc();
 
-if (!$user) {
+if (!$user || !password_verify($_SERVER['PHP_AUTH_PW'], $user['password'])) {
 	// bad username or password
 	login_failure('1002');
 } else if ($user['active'] === 1) {
@@ -33,6 +33,8 @@ if (!$user) {
 	// account disabled
 	login_failure('1003');
 }
+
+unset($user['password']);
 
 function validIP($ip)
 {
@@ -90,7 +92,7 @@ function getIpDomain($ip)
 	$stmt->bind_param('s', $ip);
 	$stmt->execute();
 	$result = $stmt->get_result();
-	$row = $result->fetch_array();
+	$row = $result->fetch_assoc();
 	if (empty($row))  {
 		return '';
 	}
@@ -101,14 +103,14 @@ function getIpDomain($ip)
 			$stmt->bind_param('i', $row['id']);
 			$stmt->execute();
 			$result = $stmt->get_result();
-			$row = $result->fetch_array();
+			$row = $result->fetch_assoc();
 			return $row['name'] . '.' . $row['ext'];
 		case 'SUBDOMAIN':
 			$stmt = $db->prepare("SELECT sub.name AS sub_name, d.name AS d_name, d.ext AS d_ext FROM subdomain sub, domain d WHERE sub.id=? AND sub.hostid=d.id");
 			$stmt->bind_param('i', $row['id']);
 			$stmt->execute();
 			$result = $stmt->get_result();
-			$row = $result->fetch_array();
+			$row = $result->fetch_assoc();
 			return $row['sub_name'] . '.' . $row['d_name'] . '.' . $row['d_ext'];
 		case 'IP':
 			return $row['ip'];
@@ -218,7 +220,7 @@ function idToUser($id) {
 	$stmt->bind_param('i', $id);
 	$stmt->execute();
 	$res = $stmt->get_result();
-	$row = $res->fetch_array();
+	$row = $res->fetch_assoc();
 	if (empty($row)) {
 		return '';
 	}
@@ -231,7 +233,7 @@ function userToId($username) {
 	$stmt->bind_param('s', $username);
 	$stmt->execute();
 	$res = $stmt->get_result();
-	$row = $res->fetch_array();
+	$row = $res->fetch_assoc();
 	if (empty($row)) {
 		return -1;
 	}

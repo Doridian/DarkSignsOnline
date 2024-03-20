@@ -118,6 +118,8 @@ if (isset($_POST['username'])) {
 		die("Your password should be at least 6 characters long.");
 	}
 
+	$password = password_hash($password, PASSWORD_DEFAULT);
+
 	//check if email already exists
 	$stmt = $db->prepare("SELECT id from users where email=?");
 	$stmt->bind_param('s', $email);

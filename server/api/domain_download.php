@@ -30,9 +30,8 @@ $stmt = $db->prepare("SELECT code FROM domain_scripts WHERE domain=? AND port=? 
 $stmt->bind_param('iii', $dInfo[0], $port, $uid);
 $stmt->execute();
 $res = $stmt->get_result();
-$row = $res->fetch_array();
-if (!empty ($row)) {
-	$row = $res->fetch_array();
+$row = $res->fetch_assoc();
+if (!empty($row)) {
 	$script = $row['code'];
 
 	$script = str_replace("\n", "*- -*", $script);

@@ -24,7 +24,7 @@ function verify_keycode($filename) {
 	$stmt->bind_param('is', $dInfo[0], $filename);
 	$stmt->execute();
 	$res = $stmt->get_result();
-	$row = $res->fetch_array();
+	$row = $res->fetch_assoc();
 
 	if (!$is_owner) {
 		if (empty($row)) {

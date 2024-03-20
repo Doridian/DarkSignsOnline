@@ -65,7 +65,7 @@ function auth_subowner_or_owner($domain)
 				 else
 				 {
 					 //check subowners
-					 $subowners = $db->fetch_array($db->query("SELECT subowners FROM domains WHERE domain='$d'"));
+					 $subowners = $db->fetch_assoc($db->query("SELECT subowners FROM domains WHERE domain='$d'"));
 
 					 if (strstr($subowners[0], ':'.$u.':'))
 					 {
@@ -127,7 +127,7 @@ function domainauth($d)
 		} else {
 			return "1002";
 		}
-		while ($row = $db->fetch_array($result)) {
+		while ($row = $db->fetch_assoc($result)) {
 			$ret = trim($row[$field]);
 		}
 		return $ret;
@@ -144,7 +144,7 @@ function grab_from_domains($field, $domain)
 
 	if ($auth === "1001") {
 		$result = $db->query("SELECT $field from domains where domain='$domain'") or die($db->error);
-		while ($row = $db->fetch_array($result)) {
+		while ($row = $db->fetch_assoc($result)) {
 			$ret = trim($row[$field]);
 		}
 		return $ret;
@@ -171,7 +171,7 @@ function get_domain_file($d, $filename)
 
 	$result = $db->query("SELECT * from domains where domain='$d'");
 
-	while ($row = $db->fetch_array($result)) {
+	while ($row = $db->fetch_assoc($result)) {
 		$files = $row['files'];
 
 		if (strlen($files)) {
@@ -224,7 +224,7 @@ function get_domain_file_by_index($d, $fileindex)
 
 	$result = $db->query("SELECT * from domains where domain='$d'");
 
-	while ($row = $db->fetch_array($result)) {
+	while ($row = $db->fetch_assoc($result)) {
 		$files = $row['files'];
 
 		if (strlen($files)) {
@@ -268,7 +268,7 @@ function count_domain_files($d)
 
 	$result = $db->query("SELECT * from domains where domain='$d'");
 
-	while ($row = $db->fetch_array($result)) {
+	while ($row = $db->fetch_assoc($result)) {
 		$files = $row['files'];
 		if (strlen($files)) {
 			$filestuff = explode(":----:", $files);
@@ -297,7 +297,7 @@ function filekey($d, $tmps)
 	//validate the new key into the database
 	$result = $db->query("SELECT filekeys from domains where domain='$d'");
 
-	while ($row = $db->fetch_array($result)) {
+	while ($row = $db->fetch_assoc($result)) {
 		$filekeys = $filekeys . $row['filekeys'];
 	}
 
@@ -327,7 +327,7 @@ function write_domain_file($d, $filename, $filedata, $appendifexists)
 	$result2 = $db->query("SELECT * FROM domains where domain='$d'") or die($db->error);
 
 
-	while ($row = $db->fetch_array($result2)) {
+	while ($row = $db->fetch_assoc($result2)) {
 		$files = $row['files'];
 
 		if (strlen($files)) {
@@ -393,7 +393,7 @@ function delete_domain_file($d, $filename)
 	$result2 = $db->query("SELECT * FROM domains where domain='$d'") or die($db->error);
 
 	$removed = 0;
-	while ($row = $db->fetch_array($result2)) {
+	while ($row = $db->fetch_assoc($result2)) {
 		$files = $row['files'];
 
 		if (strlen($files)) {
@@ -447,7 +447,7 @@ function download_domain_file($d, $filename)
 
 
 		$filefound = 0;
-		while ($row = $db->fetch_array($result2)) {
+		while ($row = $db->fetch_assoc($result2)) {
 			$files = $row['files'];
 
 			if (strlen($files)) {
@@ -502,7 +502,7 @@ function get_domain_file_no_auth_required($d, $filename)
 	$result2 = $db->query("SELECT * FROM domains where domain='$d'") or die($db->error);
 
 	$filefound = 0;
-	while ($row = $db->fetch_array($result2)) {
+	while ($row = $db->fetch_assoc($result2)) {
 		$files = $row['files'];
 
 		if (strlen($files)) {
@@ -552,7 +552,7 @@ function listdomains()
 		$result = $db->query("SELECT dom.name AS dname, dom.ext AS dext FROM iptable AS ipt, domain AS dom WHERE ipt.owner='$user[id]' AND dom.id = ipt.id");
 		echo "2001";
 		//echo "SELECT dom.name AS dname, dom.ext AS dext FROM iptable AS ipt, domain AS dom WHERE ipt.owner='$user[id]' AND dom.id = ipt.id";
-		while ($row = $db->fetch_array($result)) {
+		while ($row = $db->fetch_assoc($result)) {
 			$tmps = "$row[dname].$row[dext]";
 			echo $tmps . "newline";
 		}
@@ -605,17 +605,17 @@ function getdomain($server)
 	//echo count($svr);
 	if (count($svr) >= 2 && count($svr) <= 4) {
 		if ($db->num_rows($result) == 1) {
-			$data = $db->fetch_array($result);
+			$data = $db->fetch_assoc($result);
 			if (count($svr) == 2) {
 				return $data['name'] . '.' . $data['ext'];
 			} else if (count($svr) == 3) {
 				return $data['sname'] . '.' . $data['dname'] . '.' . $data['ext'];
 			} else if (count($svr) == 4) {
 				if ($data['regtype'] == 'SUBDOMAIN') {
-					$data = $db->fetch_array($db->query("SELECT sub.name AS sname, dom.name AS dname, dom.ext AS ext FROM domain AS dom, subdomain AS sub WHERE sub.id='$data[id]' AND dom.id=sub.hostid AND sub.active=1"));
+					$data = $db->fetch_assoc($db->query("SELECT sub.name AS sname, dom.name AS dname, dom.ext AS ext FROM domain AS dom, subdomain AS sub WHERE sub.id='$data[id]' AND dom.id=sub.hostid AND sub.active=1"));
 					return $data['sname'] . '.' . $data['dname'] . '.' . $data['ext'];
 				} else if ($data['regtype'] == 'DOMAIN') {
-					$data = $db->fetch_array($db->query("SELECT name, ext FROM domain WHERE id='$data[id]'  AND active=1"));
+					$data = $db->fetch_assoc($db->query("SELECT name, ext FROM domain WHERE id='$data[id]'  AND active=1"));
 					return $data['name'] . '.' . $data['ext'];
 				} else {
 					return $svr[0] . '.' . $svr[1] . '.' . $svr[2] . '.' . $svr[3];

@@ -74,7 +74,7 @@
 			/*
 						$result = $db->query("SELECT * from domains where domain='$d'");
 
-								while($row = $db->fetch_array( $result )) {
+								while($row = $db->fetch_assoc( $result )) {
 										$files = $row['files'];
 										if (strlen($files)){
 												$filestuff=split(":----:",$files);
