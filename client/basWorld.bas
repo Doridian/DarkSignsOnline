@@ -428,7 +428,6 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             frmLibrary.tsl.Caption = "Loaded!"
         
         Case "7001" 'mail inbox
-            MsgBox s
             frmDSOMail.EnableAll
             Dim emails() As String
             emails = Split(s, vbNewLine)
@@ -440,13 +439,13 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             Else
                 Dim n As Integer
                 For n = 0 To UBound(emails) - 1 Step 1
-                    emails(n) = "1" & Chr(7) & emails(n)
+                    emails(n) = "1" & Chr(7) & Trim(emails(n))
                 Next n
                 AppendFile App.Path & "\mail.dat", Join(emails, vbNewLine)
                 frmDSOMail.reloadInbox
             End If
             
-            frmDSOMail.StatusBar1.SimpleText = "Current emails: " & 2 & vbTab & "New emails: " & numEmails
+            frmDSOMail.StatusBar1.SimpleText = "Current emails: ?" & vbTab & "New emails: " & numEmails
         Case "7002" ' Send msg.s
             If s = "success" Then
                 frmDSOMailSend.EnableAll
