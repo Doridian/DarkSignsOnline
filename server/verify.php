@@ -1,16 +1,15 @@
 <?php
 require('_top.php');
-require_once('api/config.php');
+require_once('api/function_base.php');
 
 $verify = $_REQUEST['code'];
 if (empty($verify)) {
-    die("<h1>No verification code provided</h1>");
+    echo '<font face="Georgia, Times New Roman, Times, serif" size="+3">Empty verification code</font>';
+} else {
+    $stmt = $db->prepare('UPDATE users SET active = 1, emailverifycode = "" WHERE emailverifycode = ? AND active = 0');
+    $stmt->bind_param('s', $verify);
+    $stmt->execute();
+    echo '<font face="Georgia, Times New Roman, Times, serif" size="+3">Verification done</font>';
 }
 
-$stmt = $db->prepare('UPDATE users SET active = 1, emailverifycode = "" WHERE emailverifycode = ? AND active = 0');
-$stmt->bind_param('s', $verify);
-$stmt->execute();
-
-?>
-<font face="Georgia, Times New Roman, Times, serif" size="+3">Verification done</font>
-<?php require('_bottom.php');
+require('_bottom.php');
