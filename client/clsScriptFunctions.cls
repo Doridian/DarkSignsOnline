@@ -21,7 +21,7 @@ Public Sub SayCOMM(S As String)
 End Sub
 
 Public Sub CD(dir As String)
-    cPath(ConsoleID) = dir
+    ChangeDir dir, ConsoleID
 End Sub
 
 Public Sub SAY(S As String)

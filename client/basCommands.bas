@@ -1671,13 +1671,11 @@ Public Sub MakeADir(S As String)
 End Sub
 
 Public Sub ChangeDir(ByVal S As String, ByVal ConsoleID As Integer)
-    S = Trim(S)
-    
     If InvalidChars(S) = True Then
         SayError "Invalid Directory Name: " & S, ConsoleID
         Exit Sub
     End If
-    
+
     If S = ".." Then DownADir ConsoleID: Exit Sub
     If InStr(S, "..") > 0 Then
         GoTo errorDir
@@ -1686,11 +1684,8 @@ Public Sub ChangeDir(ByVal S As String, ByVal ConsoleID As Integer)
     If S = "." Then Exit Sub
     If InStr(S, ".\") > 0 Then Exit Sub
     If InStr(S, "\.") > 0 Then Exit Sub
-    
 
     S = fixPath(S, ConsoleID)
-    
-    'say consoleID, "path is " & s, False
     
     If DirExists(App.Path & "\user" & S) = True Then
         
