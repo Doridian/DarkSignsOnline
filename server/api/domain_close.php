@@ -1,7 +1,7 @@
 <?php
 
 $rewrite_done = true;
-include_once "function.php";
+require_once("function.php");
 
 $returnwith = (string) (int) $_GET['returnwith'];
 $d = trim($_REQUEST['d']);

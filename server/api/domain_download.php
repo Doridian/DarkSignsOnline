@@ -1,7 +1,7 @@
 <?php
 
 $rewrite_done = true;
-include_once 'function.php';
+require_once("function.php");
 
 
 $uid = $user['id'];

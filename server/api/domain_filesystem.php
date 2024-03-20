@@ -5,7 +5,7 @@
 //----------------------------------------------------------------------------------------------------------
 
 $rewrite_done = true;
-require_once('function.php');
+require_once("function.php");
 global $db;
 
 $d = trim($_REQUEST['d']);
