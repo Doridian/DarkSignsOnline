@@ -208,12 +208,12 @@ if (isset($_POST['username'])) {
 	} while ($res->num_rows != 0);
 
 	$keycode = make_keycode();
-	$stmt = $db->prepare("INSERT INTO iptable (owner, ip, keycode) VALUES (?, ?, ?)");
-	$stmt->bind_param('iss', $userid, $randomip, $keycode);
+	$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, keycode, time) VALUES (?, ?, 'DOMAIN', ?, ?)");
+	$stmt->bind_param('iss', $userid, $randomip, $keycode, $timestamp);
 	$stmt->execute();
 	$id = $db->insert_id;
-	$stmt = $db->prepare("INSERT INTO domain (id, name, ext, time, ip) VALUES (?, ?, 'usr', ?, ?)");
-	$stmt->bind_param('isis', $id, $username, $timestamp, $aip);
+	$stmt = $db->prepare("INSERT INTO domain (id, name, ext, ip) VALUES (?, ?, 'usr', ?)");
+	$stmt->bind_param('isis', $id, $username, $aip);
 	$stmt->execute();
 
 	$headers = "From: Dark Signs Online <noreply@darksignsonline.com>\r\n";

@@ -58,12 +58,12 @@ if (sizeof($domain) == 2) {
 				} while ($res->num_rows != 0);
 
 				$keycode = make_keycode();
-				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, keycode) VALUES (?, ?, ?)");
-				$stmt->bind_param('iss', $uid, $randomip, $keycode);
+				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, time, keycode) VALUES (?, ?, 'DOMAIN', ?, ?)");
+				$stmt->bind_param('iss', $uid, $randomip, $time, $keycode);
 				$stmt->execute();
 				$id = $db->insert_id;
-				$stmt = $db->prepare("INSERT INTO domain (id, name, ext, time, ip) VALUES (?, ?, ?, ?, ?)");
-				$stmt->bind_param('issis', $id, $domain[0], $domain[1], $timestamp, $_SERVER['REMOTE_ADDR']);
+				$stmt = $db->prepare("INSERT INTO domain (id, name, ext, ip) VALUES (?, ?, ?, ?)");
+				$stmt->bind_param('issis', $id, $domain[0], $domain[1], $_SERVER['REMOTE_ADDR']);
 				$stmt->execute();
 				die ('Registration complete for ' . $d . ', you have been charged $' . $price[$ext] . '');
 			} else {
@@ -99,12 +99,12 @@ if (sizeof($domain) == 2) {
 				} while ($res->num_rows != 0);
 
 				$keycode = make_keycode();
-				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, keycode) VALUES (?, ?, 'SUBDOMAIN', ?)");
-				$stmt->bind_param('iss', $uid, $randomip, $keycode);
+				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, time, keycode) VALUES (?, ?, 'SUBDOMAIN', ?, ?)");
+				$stmt->bind_param('iss', $uid, $randomip, $time, $keycode);
 				$stmt->execute();
 				$id = $db->insert_id;
-				$stmt = $db->prepare("INSERT INTO subdomain (id, hostid, name, time, ip) VALUES (?, ?, ?, ?, ?)");
-				$stmt->bind_param('issis', $id, $dInfoRoot[0], $domain[0], $timestamp, $_SERVER['REMOTE_ADDR']);
+				$stmt = $db->prepare("INSERT INTO subdomain (id, hostid, name, ip) VALUES (?, ?, ?, ?)");
+				$stmt->bind_param('issis', $id, $dInfoRoot[0], $domain[0], $_SERVER['REMOTE_ADDR']);
 				$stmt->execute();
 
 				die ('Registration complete for ' . $d . ', you have been charged $' . $price . '');
@@ -138,8 +138,9 @@ if (sizeof($domain) == 2) {
 			} else {
 				if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3], $price)) {
 					$keycode = make_keycode();
-					$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, keycode) VALUES (?, ?, 'IP', ?)");
-					$stmt->bind_param('iss', $uid, $ipdom, $keycode);
+					$timestamp = time();
+					$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, time, keycode) VALUES (?, ?, 'IP', ?, ?)");
+					$stmt->bind_param('iss', $uid, $ipdom, $timestamp, $keycode);
 					$stmt->execute();
 					die ('Registration complete for ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3] . ', you have been charged $' . $price . '.');
 				} else {
