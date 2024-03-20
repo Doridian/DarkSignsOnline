@@ -23,7 +23,7 @@ if ($action === 'inbox')
 	}
 	exit;
 }
-else if ($action === 'outbox')
+/*else if ($action === 'outbox')
 {
 	$last = (int)$_REQUEST['last'];
 	$stmt = $db->prepare('SELECT dsmail.id AS id, to_user_tbl.username AS to_user, dsmail.subject AS subject, dsmail.message AS message, dsmail.time AS time FROM dsmail LEFT JOIN users to_user_tbl ON to_user_tbl.id = dsmail.to_user WHERE dsmail.from_user = ? AND dsmail.id > ? ORDER BY dsmail.id ASC');
@@ -35,7 +35,7 @@ else if ($action === 'outbox')
 		echo 'X_'.$mail['id'].chr(7).$mail['to_user'].chr(7).$mail['subject'].chr(7).$mail['message'].chr(7).$mail['time']."\n";
 	}
 	exit;
-}
+}*/
 else if ($action === 'send')
 {
 	$from = $user['id'];
