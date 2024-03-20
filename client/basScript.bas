@@ -27,7 +27,7 @@ Public Type FunctionTemp
     After_String As String
     functionParameters As String
     tmpS As String
-    s As String
+    S As String
 End Type
 
 Public Type NextFunction
@@ -35,59 +35,21 @@ Public Type NextFunction
     FunctionName As String
 End Type
 
-Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters As String, ScriptFrom As String)
+Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, ScriptParameters As String, ScriptFrom As String)
+    If ConsoleID < 1 Then
+        ConsoleID = 1
+    End If
+    If ConsoleID > 4 Then
+        ConsoleID = 4
+    End If
     Dim OldPath As String
-    OldPath = cPath(consoleID)
+    OldPath = cPath(ConsoleID)
 
     If Right(Trim(filename), 1) = ">" Then Exit Function
     If Trim(filename) = "." Or Trim(filename) = ".." Then Exit Function
     If InStr(filename, Chr(34) & Chr(34)) Then Exit Function
     
     DoEvents
-    CancelScript(consoleID) = False
-    
-    Dim sParams() As String, n As Integer, n2 As Integer
-    ScriptParameters = Trim(ScriptParameters)
-    
-    Dim Args As Integer
-    Args = 0
-    
-        'for $1, $2, $3, etc
-        ScriptParameters = Trim(MaskSpacesInQuotes(ScriptParameters))
-        sParams = Split(ScriptParameters & "       ")
-        For n = 0 To UBound(sParams)
-            sParams(n) = Trim(Replace(sParams(n), Chr(240), " "))
-            sParams(n) = RemoveSurroundingQuotes(sParams(n))
-            If sParams(n) <> "" Then Args = Args + 1
-        Next n
-             
-        
-
-    Dim WaitForVariables() As String, WaitN As Integer, VarIndex As Integer
-    
-    Dim GotoEnabled As Boolean: GotoEnabled = False
-    Dim GotoString As String
-    
-    Dim ForEnabled As Boolean: ForEnabled = False
-    Dim ForLine As String
-    Dim ForStart As Long: ForStart = 1
-    Dim ForEnd As Long: ForEnd = 5
-    Dim ForStep As Long: ForStep = 1
-    Dim ForVariable As String
-    Dim ForVariableIndex As Integer
-    Dim ForStartLine As Integer
-    
-    Dim IFIndex As Integer
-    Dim IFa(1 To 19) As String
-    Dim IFb(1 To 19) As String
-    Dim IFOperator(1 To 19) As String
-    Dim IFTrue(1 To 19) As Boolean
-    Dim IFHasBeenTrue(1 To 19) As Boolean
-    Dim qTmp As String
-    
-    For n = 1 To UBound(IFHasBeenTrue)
-        IFHasBeenTrue(n) = False
-    Next n
 
     Dim ShortFileName As String
     'file name should be from local dir, i.e: \system\startup.ds
@@ -95,429 +57,60 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
     filename = App.Path & "\user" & filename
     'make sure it is not a directory
     If DirExists(filename) = True Then Exit Function
-    
+
     If FileExists(filename) = False Then
-        SayComm "File Not Found": Exit Function
+        SayCOMM "File Not Found: " & filename
+        Exit Function
     End If
     
-    
-    Dim Script(1 To 9999) As String, EncryptedScript() As String, FF As Long, MaxLines As Integer, tmpS As String, tmpS2 As String
+    Dim FF As Long
+    Dim tmpS As String
+    Dim tmpAll As String
+    tmpAll = ""
     FF = FreeFile
-    
+    Open filename For Input As #FF
+        Do Until EOF(FF)
+            tmpS = ""
+            Line Input #FF, tmpS
+            tmpAll = tmpAll & Trim(tmpS) & vbCrLf
+        Loop
+    Close #FF
 
-        Open filename For Input As #FF
-            Do Until EOF(FF)
-                Line Input #FF, tmpS
-                tmpS = Trim(tmpS)
-                tmpS = Replace(tmpS, "$referal", ScriptFrom)
-                tmpS = Replace(tmpS, "$args", Args)
-                'replace $1, $2, $3, etc, with the passed parameter values
-                For n = 1 To 19
-                    If UBound(sParams) >= n Then
+    Dim S As New ScriptControl
+    S.AllowUI = False
+    S.Timeout = 0
+    S.UseSafeSubset = True
+    S.Language = "VBScript"
 
-                        ' Added to prevent crash bug with ^< on a single line.
-                        If InStr(tmpS, "^<") = 1 Then tmpS = Replace(tmpS, "^<", "^ <")
-                        
-                        If Left(tmpS, 1) = "^" And IsNumeric(Mid(tmpS, 2, Len(tmpS))) = True Then
-                            tmpS = Mid(tmpS, 2, Len(tmpS))
-                            tmpS = DSODecode(tmpS)
-                            tmpS = Replace(tmpS, "$" & Trim(Str(n)), sParams(n - 1))
-                            tmpS = Replace(tmpS, "$p" & Trim(Str(n)), sParams(n - 1))
-                            tmpS = "^" & DSOEncode(tmpS)
-                        Else
-                            tmpS = Replace(tmpS, "$" & Trim(Str(n)), sParams(n - 1))
-                            tmpS = Replace(tmpS, "$p" & Trim(Str(n)), sParams(n - 1))
-                        End If
-                        
-                        
-                    End If
-                    
-                Next n
-    
-                tmpS = Replace(tmpS, Chr(9), "") 'replace TABS in case code is indented
-                If tmpS <> "" Then
-                    MaxLines = MaxLines + 1: Script(MaxLines) = tmpS
-                End If
-            Loop
-        Close #FF
+    Dim G As clsScriptFunctions
+    Set G = New clsScriptFunctions
+    G.ConsoleID = ConsoleID
+    G.ScriptFrom = ScriptFrom
+    S.AddObject "DSO", G, True
 
-    DeleteAFile App.Path & "\user\system\temp.dat"
-    
-    Dim myLine As ConsoleLine
-    
-    For n = 1 To MaxLines
-Beginning:
+    On Error GoTo EvalError
+    S.AddCode tmpAll
+    On Error GoTo 0
 
-        Do
-            If CancelScript(consoleID) = True Then GoTo ScriptCancelled
-            DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        Loop Until frmConsole.tmrWait(consoleID).Enabled = False
-
-        
-        myLine = Console_Line_Defaults
-        myLine.Caption = Trim(Script(n))
-        
-        If Left(myLine.Caption, 1) = "^" Then
-            If IsNumeric(Mid(myLine.Caption, 2, Len(myLine.Caption))) = True Then
-                'decode the line, if it is marked with ^, it is encoded
-                myLine.Caption = Mid(myLine.Caption, 2, Len(myLine.Caption))
-                myLine.Caption = DSODecode(myLine.Caption)
-            Else
-                myLine.Caption = Mid(myLine.Caption, 2, Len(myLine.Caption))
-            End If
-        End If
-        
-        
-        
-        'is it a comment?
-        tmpS = Mid(Trim(myLine.Caption), 1, 1)
-        If tmpS = "'" Or tmpS = "/" Or tmpS = "\" Then GoTo NextLine
-        
-        'kill illegal chars if its not an IF statement
-        'myLine.Caption = Replace(myLine.Caption, ">", "-")
-        
-        tmpS = myLine.Caption
-        
-        
-        ScriptLog tmpS, n
-        
-        
-  
-        
-            '------------------------------------------------------------
-            'FOR LOOPS
-            If ForEnabled = True Then
-                If n < ForStartLine Then GoTo NextLine
-                If Mid(i(tmpS), 1, 4) = "next" Then
-                    tmpS = i(Replace(i(tmpS), "next", ""))
-                    'If tmpS <> I(Variables(ForVariableIndex, 1)) Then GoTo NextLine
-                    Vars(ForVariableIndex).VarValue = Val(Vars(ForVariableIndex).VarValue) + ForStep
-                    
-                    If ForStep > 0 And Val(Vars(ForVariableIndex).VarValue) > ForEnd Then
-                        ForEnabled = False
-                        GoTo NextLine
-                    ElseIf ForStep < 0 And Val(Vars(ForVariableIndex).VarValue) < ForEnd Then
-                        ForEnabled = False
-                        GoTo NextLine
-                    Else
-                        n = 1
-                        GoTo Beginning
-                    End If
-                    
-                End If
-            End If
-            If Mid(i(tmpS), 1, 4) = "for " Then
-                
-                'start a FOR loop'---------------???????????
-                'If GotoEnabled = True Then
-                '    ForEnabled = True
-                '    GoTo NextLine
-                'End If
-
-
-                If ForLine = i(tmpS) Then GoTo NextLine
-
-                ForLine = i(tmpS)
-                tmpS = Trim(Replace(tmpS, "for ", "")): tmpS = Trim(Replace(tmpS, "FOR ", "")): tmpS = Trim(Replace(tmpS, "For ", ""))
-                If InStr(tmpS, "=") = 0 Then GoTo NextLine
-                
-                
-                tmpS = Replace(tmpS, " TO ", " to "): tmpS = Replace(tmpS, " To ", " to "): tmpS = Replace(tmpS, " tO ", " to ")
-                If InStr(tmpS, " to ") = 0 Then GoTo NextLine
-
-                ForVariable = Trim(Mid(tmpS, 1, InStr(tmpS, "=") - 1))
-                
-                tmpS = i(Mid(tmpS, InStr(tmpS, "=") + 1, Len(tmpS)))
-                    
-                    If InStr(tmpS, "step") > 0 Then
-                        ForStep = Val(Trim(Mid(tmpS, InStr(tmpS, "step") + 4, Len(tmpS))))
-                        tmpS = i(Mid(tmpS, 1, InStr(tmpS, "step") - 2))
-                    Else: ForStep = 1
-                    End If
-                
-
-                ForStart = Val(ReplaceVariables(Mid(tmpS, 1, InStr(tmpS, "to") - 1), consoleID))
-                ForEnd = Val(ReplaceVariables(Mid(tmpS, InStr(tmpS, "to") + 2, Len(tmpS)), consoleID))
-                
-               
-                
-                'If ForStart > ForEnd Then GoTo NextLine
-                ForVariableIndex = VariableIndex(ForVariable)
-                
-                If ForVariableIndex = 0 Then
-                    SetVariable ForVariable, "= " & ForStart, consoleID, ScriptFrom
-                    ForVariableIndex = VariableIndex(ForVariable)
-                Else
-                    Vars(ForVariableIndex).VarValue = ForStart
-                End If
-
-                ForStartLine = n
-                ForEnabled = True
-                n = 1
-                GoTo Beginning
-            End If
-            '------------------------------------------------------------
-            
-            
-            
-            '------------------------------------------------------------
-            'IF STATEMENTS
-            
-            If Mid(i(tmpS), 1, 3) = "if " Then
-                IFIndex = IFIndex + 1
-                IFHasBeenTrue(IFIndex) = False
-                
-                If IFIndex > 1 Then
-                    If IFTrue(IFIndex - 1) = False Then
-                        GoTo AfterRun
-                    End If
-                End If
-
-            
-                qTmp = Trim(tmpS)
-                If Trim(Right(i(qTmp), 5)) = "then" Then qTmp = Trim(Mid(qTmp, 1, Len(qTmp) - 5))
-                qTmp = Trim(Mid(qTmp, 3, Len(qTmp)))
-                qTmp = Mask(qTmp)
-                
-               
-                IFOperator(IFIndex) = GetOperator(qTmp)
-
-                If IFOperator(IFIndex) = "" Then
-                    ScriptError "Invalid Operator in IF Statement", Trim(tmpS), ShortFileName, n, consoleID
-                    GoTo AfterRun
-                End If
-                
-                IFa(IFIndex) = Trim(Mid(qTmp, 1, InStr(qTmp, IFOperator(IFIndex)) - 1))
-                IFb(IFIndex) = Trim(Mid(qTmp, InStr(qTmp, IFOperator(IFIndex)) + Len(IFOperator(IFIndex)), Len(qTmp)))
-                
-                IFa(IFIndex) = UnMask(IFa(IFIndex))
-                IFb(IFIndex) = UnMask(IFb(IFIndex))
-                
-                'remove surrounding quotes
-                If Right(IFa(IFIndex), 1) = Chr(34) And Left(IFa(IFIndex), 1) = Chr(34) Then IFa(IFIndex) = Replace(IFa(IFIndex), Chr(34), "")
-                If Right(IFb(IFIndex), 1) = Chr(34) And Left(IFb(IFIndex), 1) = Chr(34) Then IFb(IFIndex) = Replace(IFb(IFIndex), Chr(34), "")
-                
-                'qTmp = UnMask(qTmp)
-                
-                
-                
-                IFTrue(IFIndex) = CompareIF(IFa(IFIndex), IFb(IFIndex), IFOperator(IFIndex), consoleID)
-                
-                If IFTrue(IFIndex) = True Then
-                    IFHasBeenTrue(IFIndex) = True
-                Else
-                    IFHasBeenTrue(IFIndex) = False
-                End If
-                
-
-
-                GoTo AfterRun
-                
-            ElseIf Mid(i(tmpS), 1, 7) = "elseif " Or Mid(i(tmpS), 1, 8) = "else if " Then
-                
-                If IFIndex > 1 Then
-                    If IFTrue(IFIndex - 1) = False Then
-                        GoTo AfterRun
-                    End If
-                End If
-                
-                If IFHasBeenTrue(IFIndex) = True Then
-                    IFTrue(IFIndex) = False
-                    GoTo AfterRun
-                End If
-                
-
-                
-                qTmp = Trim(tmpS)
-                If Trim(Right(i(qTmp), 5)) = "then" Then qTmp = Trim(Mid(qTmp, 1, Len(qTmp) - 5))
-                qTmp = Trim(Mid(qTmp, 8, Len(qTmp)))
-                qTmp = Mask(qTmp)
-                
- 
-                                
-                IFOperator(IFIndex) = GetOperator(qTmp)
-                
-                
-                If IFOperator(IFIndex) = "" Then
-                    ScriptError "Invalid Operator in ELSE IF Statement", Trim(tmpS), ShortFileName, n, consoleID
-                    GoTo AfterRun
-                End If
-                IFa(IFIndex) = Trim(Mid(qTmp, 1, InStr(qTmp, IFOperator(IFIndex)) - 1))
-                IFb(IFIndex) = Trim(Mid(qTmp, InStr(qTmp, IFOperator(IFIndex)) + 1, Len(qTmp)))
-                IFTrue(IFIndex) = CompareIF(IFa(IFIndex), IFb(IFIndex), IFOperator(IFIndex), consoleID)
-                
-
-                If IFTrue(IFIndex) = True Then
-                    IFHasBeenTrue(IFIndex) = True
-                Else
-                    IFHasBeenTrue(IFIndex) = False
-                End If
-                
-                GoTo AfterRun
-            End If
-            
-            If Mid(i(tmpS), 1, 5) = "endif" Or Mid(i(tmpS), 1, 6) = "end if" Then
-                IFHasBeenTrue(IFIndex) = True
-                IFTrue(IFIndex) = False
-                IFIndex = IFIndex - 1
-                
-                If IFIndex < 0 Then
-                    ScriptError "END IF detected that is not required or out of order", Trim(tmpS), ShortFileName, n, consoleID
-                    IFIndex = 0
-                End If
-                
-                GoTo AfterRun:
-            End If
-            
-            If Mid(i(tmpS), 1, 4) = "else" Then
-                            
-                If IFIndex > 1 Then
-                    If IFTrue(IFIndex - 1) = False Then
-                        GoTo AfterRun
-                    End If
-                End If
-                
-                If IFHasBeenTrue(IFIndex) = True Then
-                    IFTrue(IFIndex) = False
-                    GoTo AfterRun
-                End If
-                
-                If IFHasBeenTrue(IFIndex) = False Then
-                    IFTrue(IFIndex) = True
-                    GoTo AfterRun
-                End If
-                
-            End If
-AfterIf:
-            '------------------------------------------------------------
-            
-            
-            '------------------------------------------------------------
-            'IS THE SCRIPT INSIDE AN IF STATEMENT?
-            If IFIndex > 0 Then
-                If IFTrue(IFIndex) = False Then GoTo AfterRun
-            End If
-            '------------------------------------------------------------
-            myLine.Caption = tmpS
-            
-            
-            
-            
-            
-        
-        
-        
-        
-        
-RunACommand:
-            '-----------------
-            'GOTO
-            If GotoEnabled = True Then
-                'the commented line is replacing variables, not necessary really, too slow
-                If Trim(Left(myLine.Caption, 1)) = "@" Then
-                    'If i(myLine.Caption) = "@" & i(GotoString) Or i(myLine.Caption) = "@ " & i(GotoString) Then
-                    If i(ReplaceVariables(myLine.Caption, consoleID)) = "@" & i(GotoString) Or i(ReplaceVariables(myLine.Caption, consoleID)) = "@ " & i(GotoString) Then
-                        GotoString = ""
-                        GotoEnabled = False
-                    Else
-                        GoTo NextLine
-                    End If
-                End If
-                GoTo NextLine
-            End If
-            If Mid(i(myLine.Caption), 1, 5) = "goto " Then
-                'GotoString = i(Mid(i(myLine.Caption), 5, Len(myLine.Caption)))
-                GotoString = i(Mid(i(myLine.Caption), 5, Len(myLine.Caption)))
-                GotoString = i(ReplaceVariables(GotoString, consoleID))
-                If Left(GotoString, 1) = "@" Then GotoString = Mid(GotoString, 2, Len(GotoString))
-                If GotoString <> "" Then
-                    GotoEnabled = True
-                    n = 0:
-                    IFIndex = 0 'also reset the IF statements index
-                    For n2 = 1 To 19
-                        IFTrue(n2) = False
-                        IFHasBeenTrue(n2) = False
-                    Next n2
-                    ForEnabled = False ': ForStart = 1: ForEnd = 5: ForStep = 1 'reset FOR
-                    ForLine = ""
-                    GoTo NextLine
-                End If
-            End If
-            '-----------------
-        
-        
-        
-           
-        'WATFOR $var1, $var2, etc (wait for remote commands)
-        If Mid(i(myLine.Caption), 1, 9) = "wait for " Or Mid(i(myLine.Caption), 1, 8) = "waitfor " Then
-            tmpS = Trim(Mid(myLine.Caption, 10, Len(myLine.Caption)))
-            tmpS = Replace(tmpS, " ", ",")
-            tmpS = Replace(tmpS, ",,", ","): tmpS = Replace(tmpS, ",,", ","): tmpS = Replace(tmpS, ",,", ",")
-            WaitForVariables = Split(tmpS, ",")
-            
-            For WaitN = 0 To UBound(WaitForVariables)
-                
-                tmpS = Trim(WaitForVariables(WaitN))
-                
-                If tmpS <> "" Then
-                    
-                    
-                    VarIndex = VariableIndex(tmpS)
-                    If VarIndex = 0 Then GoTo NextWaitFor
-
-                    Do
-                        If CancelScript(consoleID) = True Then GoTo ScriptCancelled
-                        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-                        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-                    Loop Until i(Vars(VarIndex).VarValue) <> "[loading]"
-                
-                End If
-NextWaitFor:
-            Next
-            GoTo AfterRun
-        End If
-        
-        If i(myLine.Caption) = "exit" Then GoTo ScriptEnd
-    
-    
-
-        Run_Command myLine, consoleID, ScriptFrom, True, True
-        
-        Do
-            DoEvents: DoEvents: DoEvents: DoEvents
-            
-            If CancelScript(consoleID) = True Then
-                Add_Key vbKeyReturn, False, consoleID
-                GoTo ScriptCancelled
-            End If
-        Loop While WaitingForInput(consoleID) = True
-        
-AfterRun:
-
-
-        
-NextLine:
-    Next n
-    
-    If GotoEnabled = True Then
-        ScriptError "GOTO Tag Not Found: " & GotoString, Trim(tmpS), ShortFileName, n, consoleID
-    End If
-    
-    cPath(consoleID) = OldPath
+    GoTo ScriptEnd
     Exit Function
+EvalError:
+    Say ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}", False
+    GoTo ScriptEnd
+
 ScriptCancelled:
-    Say consoleID, "Script Stopped by User (CTRL + C){orange}", False
+    Say ConsoleID, "Script Stopped by User (CTRL + C){orange}", False
 ScriptEnd:
-    New_Console_Line consoleID
-    cPath(consoleID) = OldPath
+    New_Console_Line ConsoleID
+    cPath(ConsoleID) = OldPath
 End Function
 
 
-Public Sub ScriptLog(s As String, lineNum As Integer)
+Public Sub ScriptLog(S As String, lineNum As Integer)
     'AppendFile App.Path & "\script.log", "Line " & Format(lineNum, "000") & ", " & s
 End Sub
 
-Public Function SetVariable(ByVal VarName As String, ByVal VarVal As String, ByVal consoleID As Integer, ByVal ScriptFrom As String)
+Public Function SetVariable(ByVal VarName As String, ByVal VarVal As String, ByVal ConsoleID As Integer, ByVal ScriptFrom As String)
     
     'these strings can be used to divide varval for functions like "transfer("
     Dim s1 As String, s2 As String, s3 As String, s4 As String, s5 As String
@@ -536,10 +129,10 @@ Public Function SetVariable(ByVal VarName As String, ByVal VarVal As String, ByV
     End If
     
     'just in case (this is required AGAIN sometimes, long story...)
-    VarVal = ReplaceVariables(VarVal, consoleID)
+    VarVal = ReplaceVariables(VarVal, ConsoleID)
     
     'does the variable name contain []? is it an array?
-    VarName = ReplaceArrayIndex(VarName, consoleID)
+    VarName = ReplaceArrayIndex(VarName, ConsoleID)
     
     
     VarName = Trim(Replace(VarName, "$", ""))
@@ -564,48 +157,48 @@ Public Function SetVariable(ByVal VarName As String, ByVal VarVal As String, ByV
     
     'check if the value is a function
     If Mid(i(VarVal), 1, 7) = "getkey(" Then
-        GetKeyWaiting(consoleID) = "1"
+        GetKeyWaiting(ConsoleID) = "1"
         Do
             DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
             DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-            If CancelScript(consoleID) = True Then GoTo zz1
-        Loop Until GetKeyWaiting(consoleID) <> "1"
+            If CancelScript(ConsoleID) = True Then GoTo zz1
+        Loop Until GetKeyWaiting(ConsoleID) <> "1"
 zz1:
-        VarVal = GetKeyWaiting(consoleID)
-        GetKeyWaiting(consoleID) = "0"
+        VarVal = GetKeyWaiting(ConsoleID)
+        GetKeyWaiting(ConsoleID) = "0"
     ElseIf Mid(i(VarVal), 1, 9) = "getascii(" Then
-        GetAsciiWaiting(consoleID) = "1"
+        GetAsciiWaiting(ConsoleID) = "1"
         Do
             DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
             DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-            If CancelScript(consoleID) = True Then GoTo zz2
-        Loop Until GetAsciiWaiting(consoleID) <> "1"
+            If CancelScript(ConsoleID) = True Then GoTo zz2
+        Loop Until GetAsciiWaiting(ConsoleID) <> "1"
 zz2:
-        VarVal = GetAsciiWaiting(consoleID)
-        GetAsciiWaiting(consoleID) = "0"
+        VarVal = GetAsciiWaiting(ConsoleID)
+        GetAsciiWaiting(ConsoleID) = "0"
     ElseIf Mid(i(VarVal), 1, 6) = "input(" Then
-        cPath_tmp(consoleID) = cPath(consoleID)
-        cPath(consoleID) = Mid(VarVal, 7, Len(VarVal))
-        If Right(cPath(consoleID), 1) = ")" Then cPath(consoleID) = Mid(cPath(consoleID), 1, Len(cPath(consoleID)) - 1)
+        cPath_tmp(ConsoleID) = cPath(ConsoleID)
+        cPath(ConsoleID) = Mid(VarVal, 7, Len(VarVal))
+        If Right(cPath(ConsoleID), 1) = ")" Then cPath(ConsoleID) = Mid(cPath(ConsoleID), 1, Len(cPath(ConsoleID)) - 1)
         
-        WaitingForInput(consoleID) = True
-        WaitingForInput_VarIndex(consoleID) = VarIndex
-        WaitingForInput_Message(consoleID) = cPath(consoleID)
+        WaitingForInput(ConsoleID) = True
+        WaitingForInput_VarIndex(ConsoleID) = VarIndex
+        WaitingForInput_Message(ConsoleID) = cPath(ConsoleID)
         
-        Shift_Console_Lines_Reverse consoleID
+        Shift_Console_Lines_Reverse ConsoleID
     ElseIf Mid(i(VarVal), 1, 9) = "download(" Then
         Dim VarVal2 As String
         VarVal2 = KillDirectFunctionSides(VarVal)
         VarVal = "[loading]"
-        sockIndex = DownloadUserURL(VarVal2, VarIndex, consoleID)
+        sockIndex = DownloadUserURL(VarVal2, VarIndex, ConsoleID)
     ElseIf Mid(i(VarVal), 1, 5) = "ping(" Then '--------- doing 1
         VarVal = KillDirectFunctionSides(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "ping.php?port=0&domain=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "ping.php?port=0&domain=" & EncodeURLParameter(VarVal), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 9) = "pingport(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
-        sockIndex = DownloadURL(API_Server & API_Path & "ping.php?port=" & EncodeURLParameter(GetPart(VarVal, 2, " ")) & "&domain=" & EncodeURLParameter(SumUp(GetPart(VarVal, 1, " "), consoleID)), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "ping.php?port=" & EncodeURLParameter(GetPart(VarVal, 2, " ")) & "&domain=" & EncodeURLParameter(SumUp(GetPart(VarVal, 1, " "), ConsoleID)), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 9) = "transfer(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
@@ -626,7 +219,7 @@ zz2:
         
 
         If AuthorizePayment = True And Val(s2) > 0 Then
-            sockIndex = DownloadURL(API_Server & API_Path & "transfer.php?to=" & EncodeURLParameter(s1) & "&amount=" & EncodeURLParameter(s2) & "&description=" & EncodeURLParameter(s3), VarIndex, consoleID)
+            sockIndex = DownloadURL(API_Server & API_Path & "transfer.php?to=" & EncodeURLParameter(s1) & "&amount=" & EncodeURLParameter(s2) & "&description=" & EncodeURLParameter(s3), VarIndex, ConsoleID)
             VarVal = "[loading]"
         Else
             VarVal = "Payment Not Sent"
@@ -635,73 +228,73 @@ zz2:
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?status=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?status=" & EncodeURLParameter(VarVal), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 15) = "transferamount(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?amount=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?amount=" & EncodeURLParameter(VarVal), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 20) = "transferdescription(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?description=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?description=" & EncodeURLParameter(VarVal), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 19) = "transfertousername(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?to_username=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?to_username=" & EncodeURLParameter(VarVal), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 21) = "transferfromusername(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?from_username=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?from_username=" & EncodeURLParameter(VarVal), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 13) = "transferdate(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?date=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?date=" & EncodeURLParameter(VarVal), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 13) = "transfertime(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?time=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "transfer_info.php?time=" & EncodeURLParameter(VarVal), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 16) = "serverfilecount(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = Trim(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?count=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?count=" & EncodeURLParameter(VarVal), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 15) = "serverfilename(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
-        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?name=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&fileindex=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?name=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&fileindex=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 17) = "serverfiledelete(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
-        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?delete=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?delete=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 19) = "serverfiledownload(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
-        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?download=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?download=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 17) = "serverfileupload(" Then '--------- doing 2
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
         VarVal = EncodeURLParameter(VarVal)
         s2 = GetPart(VarVal, 2, " ") 'filename
-        s2 = EncodeURLParameter(GetFile(App.Path & "\user" & fixPath(s2, consoleID)))
+        s2 = EncodeURLParameter(GetFile(App.Path & "\user" & fixPath(s2, ConsoleID)))
 
-        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?upload=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")) & "&filedata=" & EncodeURLParameter(s2), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem_meta.php?upload=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&filename=" & EncodeURLParameter(GetPart(VarVal, 2, " ")) & "&filedata=" & EncodeURLParameter(s2), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 12) = "servertoken(" Then
         VarVal = KillDirectFunctionSides(VarVal)
@@ -709,24 +302,24 @@ zz2:
             VarVal = "not from a script"
         Else
             VarVal = "[loading]"
-            sockIndex = DownloadURL(API_Server & API_Path & "domain_token.php?d=" & EncodeURLParameter(ScriptFrom), VarIndex, consoleID)
+            sockIndex = DownloadURL(API_Server & API_Path & "domain_token.php?d=" & EncodeURLParameter(ScriptFrom), VarIndex, ConsoleID)
         End If
     ElseIf Mid(i(VarVal), 1, 12) = "urlencode(" Then
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = EncodeURLParameter(VarVal)
     ElseIf Mid(i(VarVal), 1, 6) = "getip(" Then '--------- doing 3
         VarVal = KillDirectFunctionSides(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "domain_meta.php?getip=" & EncodeURLParameter(SumUp(VarVal, consoleID)), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_meta.php?getip=" & EncodeURLParameter(SumUp(VarVal, ConsoleID)), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 10) = "getdomain(" Then '--------- doing 4
         VarVal = KillDirectFunctionSides(VarVal)
-        sockIndex = DownloadURL(API_Server & API_Path & "domain_meta.php?getdomain=" & EncodeURLParameter(VarVal), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_meta.php?getdomain=" & EncodeURLParameter(VarVal), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 13) = "filedownload(" Then '--------- doing 2
         'file download is for people getting any files from their own domain name
         VarVal = KillDirectFunctionSides(VarVal)
         VarVal = Replace(VarVal, ",", " "): VarVal = Replace(VarVal, "  ", " "): VarVal = Replace(VarVal, "  ", " ")
-        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem.php?d=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&downloadfile=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "domain_filesystem.php?d=" & EncodeURLParameter(GetPart(VarVal, 1, " ")) & "&downloadfile=" & EncodeURLParameter(GetPart(VarVal, 2, " ")), VarIndex, ConsoleID)
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 11) = "fileserver(" Then '--------- doing 2
         'fileserver is for people getting part of a file on a server
@@ -751,7 +344,7 @@ zz2:
         "&d=" & EncodeURLParameter(GetPart(VarVal, 2, " ")) & _
         "&fileserver=" & EncodeURLParameter(RemoveSurroundingQuotes(GetPart(VarVal, 3, " "))) & _
         "&startline=" & EncodeURLParameter(GetPart(VarVal, 4, " ")) & _
-        "&maxlines=" & EncodeURLParameter(GetPart(VarVal, 5, " ")), VarIndex, consoleID)
+        "&maxlines=" & EncodeURLParameter(GetPart(VarVal, 5, " ")), VarIndex, ConsoleID)
         
         VarVal = "[loading]"
     ElseIf Mid(i(VarVal), 1, 8) = "dirlist(" Then
@@ -761,7 +354,7 @@ zz2:
         Dim sFilter As String, sPath As String, n As Integer, sAll As String, dCount As Integer
         sFilter = Trim(Replace(sFilter, "*", ""))
     
-        sPath = App.Path & "\user" & cPath(consoleID)
+        sPath = App.Path & "\user" & cPath(ConsoleID)
         
         'directories
         frmConsole.Dir1.Path = sPath
@@ -791,7 +384,7 @@ zz2:
         sFilter = Trim(Replace(VarVal, "*", ""))
         'cd MsgBox sFilter
         'sFilter = "*"
-        sPath = App.Path & "\user" & cPath(consoleID)
+        sPath = App.Path & "\user" & cPath(ConsoleID)
     
         'files
         frmConsole.File1.Pattern = "*"
@@ -829,10 +422,10 @@ zz2:
     '        VarVal = MD5_string(VarVal)
     '    End If
     ElseIf Mid(i(VarVal), 1, 6) = "time()" Then '--------- doing 4
-        sockIndex = DownloadURL(API_Server & API_Path & "time.php", VarIndex, consoleID)
+        sockIndex = DownloadURL(API_Server & API_Path & "time.php", VarIndex, ConsoleID)
         VarVal = "[loading]"
     Else
-        VarVal = SumUp(VarVal, consoleID)
+        VarVal = SumUp(VarVal, ConsoleID)
     End If
     
     
@@ -852,11 +445,11 @@ zz2:
     Msgbux "indx(" & Trim(Str(VarIndex)) & ")" & " name(" & VarName & ")= val(" & VarVal & ")"
     
 End Function
-Public Function DownloadUserURL(ByVal VarVal As String, VarIndex As Integer, consoleID As Integer) As Integer
-    DownloadUserURL = DownloadURL(VarVal, VarIndex, consoleID, True)
+Public Function DownloadUserURL(ByVal VarVal As String, VarIndex As Integer, ConsoleID As Integer) As Integer
+    DownloadUserURL = DownloadURL(VarVal, VarIndex, ConsoleID, True)
 End Function
 
-Public Function DownloadURL(ByVal VarVal As String, VarIndex As Integer, consoleID As Integer, Optional NoAuth As Boolean) As Integer
+Public Function DownloadURL(ByVal VarVal As String, VarIndex As Integer, ConsoleID As Integer, Optional NoAuth As Boolean) As Integer
     Dim sUrl As String
     Dim PostData As String
 
@@ -889,7 +482,7 @@ Public Function DownloadURL(ByVal VarVal As String, VarIndex As Integer, console
     End If
     
 
-    DownloadURL = RunPage(sUrl, consoleID, True, PostData, VarIndex, NoAuth)
+    DownloadURL = RunPage(sUrl, ConsoleID, True, PostData, VarIndex, NoAuth)
 End Function
 
 Public Sub GetFirstAndShortenRemaining(s1 As String, sFullString As String, dividerChar As String)
@@ -907,22 +500,22 @@ Public Sub GetFirstAndShortenRemaining(s1 As String, sFullString As String, divi
     
 End Sub
 
-Public Function KillDirectFunctionSides(ByVal s As String) As String
+Public Function KillDirectFunctionSides(ByVal S As String) As String
     'this replaces something like  run(blah yah)  with just blah yah
     
-    If Right(s, 1) = ")" Then
-        s = Mid(s, 1, Len(s) - 1)
+    If Right(S, 1) = ")" Then
+        S = Mid(S, 1, Len(S) - 1)
         
-        If InStr(Mid(s, 1, 24), "(") > 0 Then
-            s = Mid(s, InStr(s, "(") + 1, Len(s))
+        If InStr(Mid(S, 1, 24), "(") > 0 Then
+            S = Mid(S, InStr(S, "(") + 1, Len(S))
         End If
         
     End If
     
-    KillDirectFunctionSides = s
+    KillDirectFunctionSides = S
 End Function
 
-Public Function ReplaceArrayIndex(ByVal VarName As String, consoleID As Integer) As String
+Public Function ReplaceArrayIndex(ByVal VarName As String, ConsoleID As Integer) As String
 
     ReplaceArrayIndex = VarName
     
@@ -930,7 +523,7 @@ Public Function ReplaceArrayIndex(ByVal VarName As String, consoleID As Integer)
         If InStr(VarName, "[") < InStr(VarName, "]") Then
         
             If Mid(VarName, 1, 1) = "$" Then
-                ReplaceArrayIndex = "$" & ReplaceVariables(Mid(VarName, 2, Len(VarName)), consoleID)
+                ReplaceArrayIndex = "$" & ReplaceVariables(Mid(VarName, 2, Len(VarName)), ConsoleID)
             End If
         End If
     
@@ -970,25 +563,25 @@ Public Function NextEmptyVariable() As Integer
     MsgBox "Error - your variable space is empty. Please restart as soon as possible.", vbCritical, "Error"
 End Function
 
-Public Function ReplaceVariables(ByVal s As String, ByVal consoleID As Integer) As String
+Public Function ReplaceVariables(ByVal S As String, ByVal ConsoleID As Integer) As String
 
     
         
     'global variables
-    s = Replace(s, "$time", Format(Time, "h:mm AMPM"))
-    s = Replace(s, "$date", Date)
-    s = Replace(s, "$now", Now)
-    s = Replace(s, "$username", Trim(myUsername))
-    s = Replace(s, "$consoleid", Trim(Str(consoleID)))
-    s = Replace(s, "$dir", cPath(consoleID))
-    s = Replace(s, "$newline", vbCrLf)
-    s = Replace(s, "$tab", Chr(vbKeyTab))
+    S = Replace(S, "$time", Format(Time, "h:mm AMPM"))
+    S = Replace(S, "$date", Date)
+    S = Replace(S, "$now", Now)
+    S = Replace(S, "$username", Trim(myUsername))
+    S = Replace(S, "$consoleid", Trim(Str(ConsoleID)))
+    S = Replace(S, "$dir", cPath(ConsoleID))
+    S = Replace(S, "$newline", vbCrLf)
+    S = Replace(S, "$tab", Chr(vbKeyTab))
     
     
         
-    If InStr(s, "$") = 0 Or Trim(s) = "" Then
-        If Has_Functions(s) = False Then
-            ReplaceVariables = s
+    If InStr(S, "$") = 0 Or Trim(S) = "" Then
+        If Has_Functions(S) = False Then
+            ReplaceVariables = S
             Exit Function
         End If
     End If
@@ -1007,15 +600,15 @@ Public Function ReplaceVariables(ByVal s As String, ByVal consoleID As Integer) 
             For n = 0 To UBound(nA)
                 If IsNumeric(nA(n)) = True Then
                     tmpS = "[$" & Vars(Val(nA(n))).VarName & "]"
-                    s = Replace(s, tmpS, "[" & Vars(Val(nA(n))).VarValue & "]")
+                    S = Replace(S, tmpS, "[" & Vars(Val(nA(n))).VarValue & "]")
                     
                     'do it some more, with spaces aruond the [ and ], just in case
                     tmpS = "[ $" & Vars(Val(nA(n))).VarName & " ]"
-                    s = Replace(s, tmpS, "[" & Vars(Val(nA(n))).VarValue & "]")
+                    S = Replace(S, tmpS, "[" & Vars(Val(nA(n))).VarValue & "]")
                     tmpS = "[ $" & Vars(Val(nA(n))).VarName & "]"
-                    s = Replace(s, tmpS, "[" & Vars(Val(nA(n))).VarValue & "]")
+                    S = Replace(S, tmpS, "[" & Vars(Val(nA(n))).VarValue & "]")
                     tmpS = "[$" & Vars(Val(nA(n))).VarName & " ]"
-                    s = Replace(s, tmpS, "[" & Vars(Val(nA(n))).VarValue & "]")
+                    S = Replace(S, tmpS, "[" & Vars(Val(nA(n))).VarValue & "]")
                 End If
             Next n
         End If
@@ -1028,7 +621,7 @@ Public Function ReplaceVariables(ByVal s As String, ByVal consoleID As Integer) 
             For n = 0 To UBound(nA)
                 If IsNumeric(nA(n)) = True Then
                     tmpS = "$" & Vars(Val(nA(n))).VarName
-                    s = Replace(s, tmpS, Vars(Val(nA(n))).VarValue)
+                    S = Replace(S, tmpS, Vars(Val(nA(n))).VarValue)
                 End If
             Next n
         End If
@@ -1038,19 +631,19 @@ Public Function ReplaceVariables(ByVal s As String, ByVal consoleID As Integer) 
     'now check for functions like mid(), left(), etc
 
     
-    If Has_Functions(s) = True Then
+    If Has_Functions(S) = True Then
     '   MsgBox s
-        s = Bracketize(s, False) 'prepare inside brackets
-        s = Convert_Functions(s, consoleID)
-        s = UnBracketize(s) 'fix inside bracks to original state
+        S = Bracketize(S, False) 'prepare inside brackets
+        S = Convert_Functions(S, ConsoleID)
+        S = UnBracketize(S) 'fix inside bracks to original state
     End If
     
    
-    ReplaceVariables = s
+    ReplaceVariables = S
 
 End Function
 
-Public Function FunctionData(ByVal s As String, n As Integer, sFunction As String) As FunctionTemp
+Public Function FunctionData(ByVal S As String, n As Integer, sFunction As String) As FunctionTemp
     
 '    '-------------------------------------
 '    'this part is so that other brackets like () won't interfere with function edges.
@@ -1078,8 +671,8 @@ Public Function FunctionData(ByVal s As String, n As Integer, sFunction As Strin
 
 
 
-    FunctionData.Before_String = Mid(s, 1, n - 1)
-    FunctionData.functionParameters = Mid(s, n + Len(sFunction) + 1, 999)
+    FunctionData.Before_String = Mid(S, 1, n - 1)
+    FunctionData.functionParameters = Mid(S, n + Len(sFunction) + 1, 999)
     
     If InStr(FunctionData.functionParameters, ")") > 0 Then
         FunctionData.functionParameters = Mid(FunctionData.functionParameters, 1, InStr(FunctionData.functionParameters, ")") - 1)
@@ -1087,13 +680,13 @@ Public Function FunctionData(ByVal s As String, n As Integer, sFunction As Strin
     
     FunctionData.functionParameters = UnBracketize(FunctionData.functionParameters)
     
-    FunctionData.tmpS = Mid(s, Len(FunctionData.Before_String) + 1, Len(s))
-    FunctionData.After_String = Mid(s, InStr(s, ")") + 1, Len(s))
+    FunctionData.tmpS = Mid(S, Len(FunctionData.Before_String) + 1, Len(S))
+    FunctionData.After_String = Mid(S, InStr(S, ")") + 1, Len(S))
                 
 
 End Function
 
-Public Function Convert_Functions(ByVal s As String, consoleID As Integer) As String
+Public Function Convert_Functions(ByVal S As String, ConsoleID As Integer) As String
 
 
 
@@ -1102,22 +695,22 @@ Public Function Convert_Functions(ByVal s As String, consoleID As Integer) As St
     
     Dim isForAvariable As Boolean
     
-    s = Trim(s)
-    If Left(s, 1) = "=" Then
+    S = Trim(S)
+    If Left(S, 1) = "=" Then
         isForAvariable = True
-        s = Trim(Mid(s, 2, Len(s)))
+        S = Trim(Mid(S, 2, Len(S)))
     Else
         isForAvariable = False
     End If
 
     
-    NextFunctionPos = NextFunctionPosition(s)
+    NextFunctionPos = NextFunctionPosition(S)
     
     
     Do While NextFunctionPos.StartPos > 0
         
         
-        sParameters = Mid(s, NextFunctionPos.StartPos + Len(NextFunctionPos.FunctionName), Len(s))
+        sParameters = Mid(S, NextFunctionPos.StartPos + Len(NextFunctionPos.FunctionName), Len(S))
         
         If InStr(sParameters, ")") > 0 Then sParameters = Mid(sParameters, 1, InStr(sParameters, ")"))
         sParameters = Trim(sParameters)
@@ -1129,23 +722,23 @@ Public Function Convert_Functions(ByVal s As String, consoleID As Integer) As St
         
         DoEvents
         
-        sFunctionResult = RunFunction(NextFunctionPos.FunctionName, sParameters, consoleID)
-        s = Mid(s, 1, NextFunctionPos.StartPos - 1) & sFunctionResult & Mid(s, NextFunctionPos.StartPos + Len(sParameters) + Len(NextFunctionPos.FunctionName), Len(s))
+        sFunctionResult = RunFunction(NextFunctionPos.FunctionName, sParameters, ConsoleID)
+        S = Mid(S, 1, NextFunctionPos.StartPos - 1) & sFunctionResult & Mid(S, NextFunctionPos.StartPos + Len(sParameters) + Len(NextFunctionPos.FunctionName), Len(S))
         
-        NextFunctionPos = NextFunctionPosition(s)
+        NextFunctionPos = NextFunctionPosition(S)
     Loop
     
     
     If isForAvariable = True Then
-        s = "= " & s
+        S = "= " & S
     End If
     
-    Convert_Functions = s
+    Convert_Functions = S
 
 
 End Function
 
-Public Function RunFunction(ByVal sFunctionName As String, ByVal sParameters As String, consoleID As Integer) As String
+Public Function RunFunction(ByVal sFunctionName As String, ByVal sParameters As String, ConsoleID As Integer) As String
     
     
     sParameters = RemoveSurroundingBrackets(sParameters)
@@ -1175,28 +768,28 @@ Public Function RunFunction(ByVal sFunctionName As String, ByVal sParameters As 
         Case "trim": RunFunction = Trim(sParameters)
         Case "killquotes": RunFunction = f_KillQuotes(sParameters)
         Case "fixquotes": RunFunction = f_FixQuotes(sParameters)
-        Case "file": RunFunction = f_File(sParameters, consoleID)
-        Case "run": RunFunction = f_Run(sParameters, consoleID)
-        Case "fileexists": RunFunction = f_FileExists(sParameters, consoleID)
-        Case "direxists": RunFunction = f_DirExists(sParameters, consoleID)
+        Case "file": RunFunction = f_File(sParameters, ConsoleID)
+        Case "run": RunFunction = f_Run(sParameters, ConsoleID)
+        Case "fileexists": RunFunction = f_FileExists(sParameters, ConsoleID)
+        Case "direxists": RunFunction = f_DirExists(sParameters, ConsoleID)
         'IMPORTANT!!!!!!!!!!!!!!!
         'make sure you also add new functions to the other list (the array!)
     End Select
     
 End Function
 
-Public Function NextFunctionPosition(ByVal s As String) As NextFunction
+Public Function NextFunctionPosition(ByVal S As String) As NextFunction
     Dim n As Integer
     Dim iPos As Long
     Dim sFind As String
-    s = i(s)
+    S = i(S)
     
     NextFunctionPosition.StartPos = 99999
     
     For n = 1 To UBound(FunctionList)
         sFind = FunctionList(n) & "("
         If Trim(FunctionList(n)) <> "" Then
-            iPos = InStr(s, sFind)
+            iPos = InStr(S, sFind)
             If iPos <> 0 Then
                 'the string exists
                 If iPos < NextFunctionPosition.StartPos Then
@@ -1249,27 +842,27 @@ Public Sub LoadFunctionArray()
     
 End Sub
 
-Public Function f_Run(ByVal s As String, consoleID As Integer) As String
+Public Function f_Run(ByVal S As String, ConsoleID As Integer) As String
     On Error GoTo zxc
     Dim tmpLine As ConsoleLine
     ' Add stuff here to detect various bad functions, and prompt user to allow or deny action.
-    s = Trim(s)
-    tmpLine.Caption = s
+    S = Trim(S)
+    tmpLine.Caption = S
     
     'If InStr(s, "CHATSEND ") > 0 Then GoTo zxc
-    If InStr(LimitedCommandString, ":" & i(s) & ":") > 0 Then GoTo zxc
+    If InStr(LimitedCommandString, ":" & i(S) & ":") > 0 Then GoTo zxc
 
-    Data_For_Run_Function_Enabled(consoleID) = 1
-    Data_For_Run_Function(consoleID) = ""
-    Run_Command tmpLine, consoleID, False
-    Data_For_Run_Function_Enabled(consoleID) = 0
+    Data_For_Run_Function_Enabled(ConsoleID) = 1
+    Data_For_Run_Function(ConsoleID) = ""
+    Run_Command tmpLine, ConsoleID, False
+    Data_For_Run_Function_Enabled(ConsoleID) = 0
     
-    If Left(Data_For_Run_Function(consoleID), 2) = vbCrLf Then
-        Data_For_Run_Function(consoleID) = Mid(Data_For_Run_Function(consoleID), 3, Len(Data_For_Run_Function(consoleID)))
+    If Left(Data_For_Run_Function(ConsoleID), 2) = vbCrLf Then
+        Data_For_Run_Function(ConsoleID) = Mid(Data_For_Run_Function(ConsoleID), 3, Len(Data_For_Run_Function(ConsoleID)))
     End If
     
-    f_Run = Data_For_Run_Function(consoleID)
-    Data_For_Run_Function(consoleID) = ""
+    f_Run = Data_For_Run_Function(ConsoleID)
+    Data_For_Run_Function(ConsoleID) = ""
     
     
     
@@ -1279,27 +872,27 @@ zxc:
 End Function
 
 
-Public Function f_File(ByVal s As String, consoleID As Integer) As String
+Public Function f_File(ByVal S As String, ConsoleID As Integer) As String
     'MsgBox s
     'filename, start line, max lines
-    s = Trim(Replace(s, ",", " "))
+    S = Trim(Replace(S, ",", " "))
     
-    If InStr(s, " ") = 0 Then GoTo zxc
+    If InStr(S, " ") = 0 Then GoTo zxc
     
     Dim sFile As String
     Dim sStart As Long
     Dim sLinesToGet As Long
     
-    sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), consoleID))
-    s = Trim(Mid(s, InStr(s, " "), Len(s)))
+    sFile = Trim(fixPath(Mid(S, 1, InStr(S, " ")), ConsoleID))
+    S = Trim(Mid(S, InStr(S, " "), Len(S)))
 
     
-    If InStr(s, " ") = 0 Then
-        sStart = Val(s)
+    If InStr(S, " ") = 0 Then
+        sStart = Val(S)
         sLinesToGet = 29999
     Else
-        sStart = Val(Mid(s, 1, InStr(s, " ")))
-        sLinesToGet = Val(Trim(Mid(s, InStr(s, " "), Len(s))))
+        sStart = Val(Mid(S, 1, InStr(S, " ")))
+        sLinesToGet = Val(Trim(Mid(S, InStr(S, " "), Len(S))))
     End If
     
     
@@ -1337,15 +930,15 @@ zxc:
     f_File = "*FILE-ERROR*"
 End Function
 
-Public Function f_KillQuotes(ByVal s As String) As String
-    f_KillQuotes = Replace(s, Chr(34), "")
+Public Function f_KillQuotes(ByVal S As String) As String
+    f_KillQuotes = Replace(S, Chr(34), "")
 End Function
 
-Public Function f_FileExists(ByVal s As String, ByVal consoleID As Integer) As String
-    s = Trim(s)
-    s = fixPath(s, consoleID)
+Public Function f_FileExists(ByVal S As String, ByVal ConsoleID As Integer) As String
+    S = Trim(S)
+    S = fixPath(S, ConsoleID)
     
-    If FileExists(App.Path & "\user" & s) = True Then
+    If FileExists(App.Path & "\user" & S) = True Then
         f_FileExists = "1"
     Else
         f_FileExists = "0"
@@ -1353,11 +946,11 @@ Public Function f_FileExists(ByVal s As String, ByVal consoleID As Integer) As S
 End Function
 
 
-Public Function f_DirExists(ByVal s As String, ByVal consoleID As Integer) As String
-    s = Trim(s)
-    s = fixPath(s, consoleID)
+Public Function f_DirExists(ByVal S As String, ByVal ConsoleID As Integer) As String
+    S = Trim(S)
+    S = fixPath(S, ConsoleID)
     
-    If DirExists(App.Path & "\user" & s) = True Then
+    If DirExists(App.Path & "\user" & S) = True Then
         f_DirExists = "1"
     Else
         f_DirExists = "0"
@@ -1365,53 +958,53 @@ Public Function f_DirExists(ByVal s As String, ByVal consoleID As Integer) As St
 End Function
 
 
-Public Function f_FixQuotes(ByVal s As String) As String
-    f_FixQuotes = Replace(s, Chr(34), "'")
+Public Function f_FixQuotes(ByVal S As String) As String
+    f_FixQuotes = Replace(S, Chr(34), "'")
 End Function
 
 
-Public Function f_Replace(ByVal s As String) As String
+Public Function f_Replace(ByVal S As String) As String
     
     On Error GoTo zxc
     
 '  MsgBox s
-s = ReverseString(s)
+S = ReverseString(S)
 
      
-    s = Trim(s)
-    If Mid(s, 1, 1) <> Chr(34) Then GoTo zxc
-    s = Mid(s, 2, Len(s))
+    S = Trim(S)
+    If Mid(S, 1, 1) <> Chr(34) Then GoTo zxc
+    S = Mid(S, 2, Len(S))
     Dim s1 As String, s2 As String, s3 As String
-    If InStr(s, Chr(34)) = 0 Then GoTo zxc
+    If InStr(S, Chr(34)) = 0 Then GoTo zxc
     
-    s1 = Mid(s, 1, InStr(s, Chr(34)) - 1)
-    s = Mid(s, Len(s1), Len(s))
+    s1 = Mid(S, 1, InStr(S, Chr(34)) - 1)
+    S = Mid(S, Len(s1), Len(S))
     
  
     
-    If InStr(s, Chr(34)) = 0 Then GoTo zxc
-    s = Trim(Mid(s, InStr(s, Chr(34)) + 1, Len(s)))
+    If InStr(S, Chr(34)) = 0 Then GoTo zxc
+    S = Trim(Mid(S, InStr(S, Chr(34)) + 1, Len(S)))
     
    
-    If Mid(s, 1, 1) = Chr(34) Then s = Mid(s, 2, Len(s))
-    If Mid(s, 1, 1) = "," Then s = Mid(s, 2, Len(s))
-    s = Trim(s)
-    If Mid(s, 1, 1) = Chr(34) Then s = Mid(s, 2, Len(s))
-    If Mid(s, 1, 1) = "," Then s = Mid(s, 2, Len(s))
+    If Mid(S, 1, 1) = Chr(34) Then S = Mid(S, 2, Len(S))
+    If Mid(S, 1, 1) = "," Then S = Mid(S, 2, Len(S))
+    S = Trim(S)
+    If Mid(S, 1, 1) = Chr(34) Then S = Mid(S, 2, Len(S))
+    If Mid(S, 1, 1) = "," Then S = Mid(S, 2, Len(S))
      
     
      
-    s2 = Mid(s, 1, InStr(s, Chr(34)) - 1)
+    s2 = Mid(S, 1, InStr(S, Chr(34)) - 1)
     
-    s = Trim(Mid(s, InStr(s, Chr(34)) + 1, Len(s)))
+    S = Trim(Mid(S, InStr(S, Chr(34)) + 1, Len(S)))
     
-    If Mid(s, 1, 1) = Chr(34) Then s = Mid(s, 2, Len(s))
-    If Mid(s, 1, 1) = "," Then s = Mid(s, 2, Len(s))
-    s = Trim(s)
-    If Mid(s, 1, 1) = Chr(34) Then s = Mid(s, 2, Len(s))
-    If Mid(s, 1, 1) = "," Then s = Mid(s, 2, Len(s))
+    If Mid(S, 1, 1) = Chr(34) Then S = Mid(S, 2, Len(S))
+    If Mid(S, 1, 1) = "," Then S = Mid(S, 2, Len(S))
+    S = Trim(S)
+    If Mid(S, 1, 1) = Chr(34) Then S = Mid(S, 2, Len(S))
+    If Mid(S, 1, 1) = "," Then S = Mid(S, 2, Len(S))
     
-    s3 = Replace(s, Chr(34), "")
+    s3 = Replace(S, Chr(34), "")
     
     
 
@@ -1430,30 +1023,30 @@ zxc:
 End Function
 
 
-Public Function f_Instr(ByVal s As String) As String
+Public Function f_Instr(ByVal S As String) As String
     
     On Error GoTo zxc
-    s = Trim(s)
+    S = Trim(S)
      
-    If Mid(s, 1, 1) <> Chr(34) Then GoTo zxc
-    s = Mid(s, 2, Len(s))
+    If Mid(S, 1, 1) <> Chr(34) Then GoTo zxc
+    S = Mid(S, 2, Len(S))
     
     Dim s1 As String, s2 As String
-    If InStr(s, Chr(34)) = 0 Then GoTo zxc
+    If InStr(S, Chr(34)) = 0 Then GoTo zxc
     
-    s1 = Mid(s, 1, InStr(s, Chr(34)) - 1)
+    s1 = Mid(S, 1, InStr(S, Chr(34)) - 1)
     
-    s = Mid(s, Len(s1), Len(s))
-    If InStr(s, Chr(34)) = 0 Then GoTo zxc
+    S = Mid(S, Len(s1), Len(S))
+    If InStr(S, Chr(34)) = 0 Then GoTo zxc
     
-    s = Trim(Mid(s, InStr(s, Chr(34)) + 1, Len(s)))
-    If Mid(s, 1, 1) = Chr(34) Then s = Mid(s, 2, Len(s))
-    If Mid(s, 1, 1) = "," Then s = Mid(s, 2, Len(s))
-    s = Trim(s)
-    If Mid(s, 1, 1) = Chr(34) Then s = Mid(s, 2, Len(s))
-    If Mid(s, 1, 1) = "," Then s = Mid(s, 2, Len(s))
+    S = Trim(Mid(S, InStr(S, Chr(34)) + 1, Len(S)))
+    If Mid(S, 1, 1) = Chr(34) Then S = Mid(S, 2, Len(S))
+    If Mid(S, 1, 1) = "," Then S = Mid(S, 2, Len(S))
+    S = Trim(S)
+    If Mid(S, 1, 1) = Chr(34) Then S = Mid(S, 2, Len(S))
+    If Mid(S, 1, 1) = "," Then S = Mid(S, 2, Len(S))
      
-    s2 = Replace(s, Chr(34), "")
+    s2 = Replace(S, Chr(34), "")
     
     
     f_Instr = InStr(LCase(s1), LCase(s2))
@@ -1466,30 +1059,30 @@ End Function
 
 
 
-Public Function f_Mid(ByVal s As String) As String
+Public Function f_Mid(ByVal S As String) As String
     Dim tmpLen As String, tmpStart As String
     
 
     'On Error GoTo zxc
     
 
-    tmpLen = Trim(ReverseString(Replace(s, ",", " ")))
+    tmpLen = Trim(ReverseString(Replace(S, ",", " ")))
 
 '    MsgBox tmpLen
 
     If InStr(tmpLen, " ") = 0 Then GoTo zxc
     tmpLen = ReverseString(Trim(Mid(tmpLen, 1, InStr(tmpLen, " "))))
-    s = Mid(s, 1, Len(s) - Len(tmpLen) - 1)
-    If Right(s, 1) = " " Then s = Mid(s, 1, Len(s) - 1)
+    S = Mid(S, 1, Len(S) - Len(tmpLen) - 1)
+    If Right(S, 1) = " " Then S = Mid(S, 1, Len(S) - 1)
     
     
-    tmpStart = Trim(ReverseString(Replace(s, ",", " ")))
+    tmpStart = Trim(ReverseString(Replace(S, ",", " ")))
     If InStr(tmpStart, " ") = 0 Then GoTo zxc
     tmpStart = ReverseString(Trim(Mid(tmpStart, 1, InStr(tmpStart, " "))))
-    s = Mid(s, 1, Len(s) - Len(tmpStart) - 1)
-    If Right(s, 1) = " " Then s = Mid(s, 1, Len(s) - 1)
+    S = Mid(S, 1, Len(S) - Len(tmpStart) - 1)
+    If Right(S, 1) = " " Then S = Mid(S, 1, Len(S) - 1)
     
-    f_Mid = Mid(s, Val(tmpStart), Val(tmpLen))
+    f_Mid = Mid(S, Val(tmpStart), Val(tmpLen))
      
      
      
@@ -1498,21 +1091,21 @@ zxc:
     f_Mid = "*MID-ERROR*"
 End Function
 
-Public Function f_Right(ByVal s As String) As String
+Public Function f_Right(ByVal S As String) As String
     Dim tmpS As String
     On Error GoTo zxc
     
-    tmpS = Trim(ReverseString(Replace(s, ",", " ")))
-    tmpS = Trim(ReverseString(Replace(s, "  ", " "))) ' added space support
+    tmpS = Trim(ReverseString(Replace(S, ",", " ")))
+    tmpS = Trim(ReverseString(Replace(S, "  ", " "))) ' added space support
     If InStr(tmpS, " ") = 0 Then GoTo zxc
     
     tmpS = ReverseString(Trim(Mid(tmpS, 1, InStr(tmpS, " "))))
     
     's = Mid(s, 1, Len(s) - Len(tmpS) - 1) This is the old var, hope I fixed it right (bigbob85)
-    s = Mid(s, 1, Len(s) - Len(tmpS) - 2)
-    If Right(s, 1) = " " Then s = Mid(s, 1, Len(s) - 1)
+    S = Mid(S, 1, Len(S) - Len(tmpS) - 2)
+    If Right(S, 1) = " " Then S = Mid(S, 1, Len(S) - 1)
     
-    f_Right = Right(s, Val(tmpS))
+    f_Right = Right(S, Val(tmpS))
      
 Exit Function
 zxc:
@@ -1520,24 +1113,24 @@ zxc:
 End Function
 
 
-Public Function f_Reverse(ByVal s As String) As String
+Public Function f_Reverse(ByVal S As String) As String
     
     On Error GoTo zxc
     
-    If i(s) = "true" Then
+    If i(S) = "true" Then
         f_Reverse = "False"
         
-    ElseIf i(s) = "false" Then
+    ElseIf i(S) = "false" Then
         f_Reverse = "True"
 
-    ElseIf i(s) = "0" Then
+    ElseIf i(S) = "0" Then
         f_Reverse = "1"
         
-    ElseIf i(s) = "1" Then
+    ElseIf i(S) = "1" Then
         f_Reverse = "0"
         
     Else
-        f_Reverse = ReverseString(s)
+        f_Reverse = ReverseString(S)
     End If
     
     
@@ -1547,16 +1140,16 @@ zxc:
     f_Reverse = "*REVERSE-ERROR*"
 End Function
 
-Public Function f_Random(ByVal s As String) As String
+Public Function f_Random(ByVal S As String) As String
     
     On Error GoTo zxc
     
-    s = Trim(s)
-    s = Replace(s, ",", " ")
-    s = Replace(s, "  ", " ") ' add in case of space after comma
+    S = Trim(S)
+    S = Replace(S, ",", " ")
+    S = Replace(S, "  ", " ") ' add in case of space after comma
     
-    If InStr(s, " ") = 0 Then GoTo zxc
-    If InStr(s, "%") <> 0 Then GoTo zxc ' added to prevent crash
+    If InStr(S, " ") = 0 Then GoTo zxc
+    If InStr(S, "%") <> 0 Then GoTo zxc ' added to prevent crash
     
         
     
@@ -1564,8 +1157,8 @@ Public Function f_Random(ByVal s As String) As String
     Dim s1 As String, s2 As String
     Dim iDiff As Long
     
-    s1 = Trim(Mid(s, 1, InStr(s, " ")))
-    s2 = Trim(Mid(s, InStr(s, " "), Len(s)))
+    s1 = Trim(Mid(S, 1, InStr(S, " ")))
+    s2 = Trim(Mid(S, InStr(S, " "), Len(S)))
     If Val(s2) < Val(s1) Then GoTo zxc 's2 must be more than s1
     
     iDiff = (Val(s2) - Val(s1)) + 1
@@ -1580,18 +1173,18 @@ zxc:
     f_Random = "*RANDOM-ERROR*"
 End Function
 
-Public Function f_RandomText(ByVal s As String) As String
+Public Function f_RandomText(ByVal S As String) As String
     
     On Error GoTo zxc
     
-    s = Trim(s)
+    S = Trim(S)
 
     
     Dim n As Long, tmpS As String, rndInt As Integer
     
-    If Val(s) < 1 Then s = "1"
+    If Val(S) < 1 Then S = "1"
     
-    For n = 1 To Val(s)
+    For n = 1 To Val(S)
         Randomize
         rndInt = Int(Rnd * 62)
         
@@ -1636,18 +1229,18 @@ zxc:
     f_RandomText = "*RANDOMTEXT-ERROR*"
 End Function
 
-Public Function f_Left(ByVal s As String) As String
+Public Function f_Left(ByVal S As String) As String
     Dim tmpS As String
     On Error GoTo zxc
     
-    tmpS = Trim(ReverseString(Replace(s, ",", " ")))
+    tmpS = Trim(ReverseString(Replace(S, ",", " ")))
     If InStr(tmpS, " ") = 0 Then GoTo zxc
     
     tmpS = ReverseString(Trim(Mid(tmpS, 1, InStr(tmpS, " "))))
-    s = Mid(s, 1, Len(s) - Len(tmpS) - 1)
-    If Right(s, 1) = " " Then s = Mid(s, 1, Len(s) - 1)
+    S = Mid(S, 1, Len(S) - Len(tmpS) - 1)
+    If Right(S, 1) = " " Then S = Mid(S, 1, Len(S) - 1)
     
-    f_Left = Left(s, Val(tmpS))
+    f_Left = Left(S, Val(tmpS))
     
     
 Exit Function
@@ -1655,85 +1248,85 @@ zxc:
     f_Left = "*LEFT-ERROR*"
 End Function
 
-Public Function f_UCase(ByVal s As String) As String
+Public Function f_UCase(ByVal S As String) As String
     On Error GoTo zxc
     
-    f_UCase = UCase(s)
+    f_UCase = UCase(S)
 Exit Function
 zxc:
     f_UCase = "*UCASE-ERROR*"
 End Function
 
-Public Function f_LCase(ByVal s As String) As String
+Public Function f_LCase(ByVal S As String) As String
     On Error GoTo zxc
     
-    f_LCase = LCase(s)
+    f_LCase = LCase(S)
 Exit Function
 zxc:
     f_LCase = "*LCASE-ERROR*"
 End Function
 
-Public Function f_Chr(ByVal s As String) As String
+Public Function f_Chr(ByVal S As String) As String
     On Error GoTo zxc
     
-    f_Chr = Chr(Val(s))
+    f_Chr = Chr(Val(S))
 Exit Function
 zxc:
     f_Chr = "*CHR-ERROR*"
 End Function
 
-Public Function f_Len(ByVal s As String) As String
+Public Function f_Len(ByVal S As String) As String
     On Error GoTo zxc
     
-    f_Len = Trim(Str(Len(s)))
+    f_Len = Trim(Str(Len(S)))
 Exit Function
 zxc:
     f_Len = "*LEN-ERROR*"
 End Function
 
 
-Public Function f_Asc(ByVal s As String) As String
+Public Function f_Asc(ByVal S As String) As String
     On Error GoTo zxc
-    f_Asc = Asc(Trim(s))
+    f_Asc = Asc(Trim(S))
 Exit Function
 zxc:
     f_Asc = "*ASC-ERROR*"
 End Function
 
 
-Public Function Has_Functions(ByVal s As String) As Boolean
+Public Function Has_Functions(ByVal S As String) As Boolean
 
-    If InStr(s, "(") > 0 And InStr(s, ")") > 0 Then
+    If InStr(S, "(") > 0 And InStr(S, ")") > 0 Then
         Has_Functions = True
     Else
         Has_Functions = False
     End If
 End Function
 
-Public Function Msgbux(ByVal s As String)
-    frmConsole.List1.AddItem s, 0
+Public Function Msgbux(ByVal S As String)
+    frmConsole.List1.AddItem S, 0
 End Function
 
-Public Function Pipe_Commands(ByVal s As String, ByVal consoleID As Integer)
+Public Function Pipe_Commands(ByVal S As String, ByVal ConsoleID As Integer)
     Dim n As Integer, tmpS As String
     
     Dim CLine As ConsoleLine
     CLine = Console_Line_Defaults
     
     For n = 1 To 10
-        tmpS = Trim(GetPart(s, n, "|"))
+        tmpS = Trim(GetPart(S, n, "|"))
         
         If tmpS <> "" Then
             CLine.Caption = tmpS
-            Run_Command CLine, consoleID
+            Run_Command CLine, ConsoleID
         End If
     Next n
 End Function
 
-Public Function CompareIF(ByVal s1 As String, ByVal s2 As String, ByVal sOperator As String, ByVal consoleID As Integer) As Boolean
+Public Function CompareIF(ByVal s1 As String, ByVal s2 As String, ByVal sOperator As String, ByVal ConsoleID As Integer) As Boolean
     
-    s1 = ReplaceVariables(s1, consoleID)
-    s2 = ReplaceVariables(s2, consoleID)
+    s1 = ReplaceVariables(s1, ConsoleID)
+    s2 = ReplaceVariables(s2, ConsoleID)
     
     s1 = RemoveSurroundingQuotes(s1)
     s2 = RemoveSurroundingQuotes(s2)
@@ -1821,81 +1414,81 @@ Public Function CompareIF(ByVal s1 As String, ByVal s2 As String, ByVal sOperato
     
 End Function
 
-Public Sub ScriptError(ByVal qTmp As String, sCommand As String, scriptSource As String, LineNumber As Integer, ByVal consoleID As Integer)
+Public Sub ScriptError(ByVal qTmp As String, sCommand As String, scriptSource As String, LineNumber As Integer, ByVal ConsoleID As Integer)
     
     qTmp = " * Warning * > " & Trim(qTmp) & " in " & _
     IU(FileTitleOnly(scriptSource)) & " > Line " & _
     Trim(Str(LineNumber)) & " > " & sCommand
     
-    SayError qTmp, consoleID
+    SayError qTmp, ConsoleID
     
 End Sub
 
 
-Public Function GetOperator(ByVal s As String) As String
+Public Function GetOperator(ByVal S As String) As String
 
 
 
     GetOperator = ""
     
     'not equal
-    If InStr(s, "!") > 0 Then GetOperator = "!": Exit Function
+    If InStr(S, "!") > 0 Then GetOperator = "!": Exit Function
     
     'greater than or equals to
-    If InStr(s, ">=") > 0 Then GetOperator = ">=": Exit Function
+    If InStr(S, ">=") > 0 Then GetOperator = ">=": Exit Function
     
     'less than or equals to
-    If InStr(s, "<=") > 0 Then GetOperator = "<=": Exit Function
+    If InStr(S, "<=") > 0 Then GetOperator = "<=": Exit Function
     
     'greater than
-    If InStr(s, ">") > 0 Then GetOperator = ">": Exit Function
+    If InStr(S, ">") > 0 Then GetOperator = ">": Exit Function
     
     'less than
-    If InStr(s, "<") > 0 Then GetOperator = "<": Exit Function
+    If InStr(S, "<") > 0 Then GetOperator = "<": Exit Function
     
    
     'equals
-    If InStr(s, "=") > 0 Then GetOperator = "=": Exit Function
+    If InStr(S, "=") > 0 Then GetOperator = "=": Exit Function
     
     'contains
-    If InStr(s, "^") > 0 Then GetOperator = "^": Exit Function
+    If InStr(S, "^") > 0 Then GetOperator = "^": Exit Function
 
     'doesn't contain
-    If InStr(s, "~") > 0 Then GetOperator = "~": Exit Function
+    If InStr(S, "~") > 0 Then GetOperator = "~": Exit Function
     
 
 End Function
 
-Public Function Mask(ByVal s As String) As String
+Public Function Mask(ByVal S As String) As String
     Dim inQuotes As Boolean
     Dim tmpS As String
     inQuotes = False
     
     Dim n As Integer
-    For n = 1 To Len(s)
+    For n = 1 To Len(S)
         
-        If Mid(s, n, 1) = Chr(34) Then inQuotes = Not (inQuotes)
+        If Mid(S, n, 1) = Chr(34) Then inQuotes = Not (inQuotes)
         
         If inQuotes = True Then
-            If Mid(s, n, 1) = "=" Then
+            If Mid(S, n, 1) = "=" Then
                 tmpS = tmpS & Chr(240)
-            ElseIf Mid(s, n, 1) = ">" Then
+            ElseIf Mid(S, n, 1) = ">" Then
                 tmpS = tmpS & Chr(241)
-            ElseIf Mid(s, n, 1) = "<" Then
+            ElseIf Mid(S, n, 1) = "<" Then
                 tmpS = tmpS & Chr(242)
-            ElseIf Mid(s, n, 1) = "^" Then
+            ElseIf Mid(S, n, 1) = "^" Then
                 tmpS = tmpS & Chr(243)
-            ElseIf Mid(s, n, 1) = "~" Then
+            ElseIf Mid(S, n, 1) = "~" Then
                 tmpS = tmpS & Chr(244)
-            ElseIf Mid(s, n, 1) = ">=" Then
+            ElseIf Mid(S, n, 1) = ">=" Then
                 tmpS = tmpS & Chr(245)
-            ElseIf Mid(s, n, 1) = "<=" Then
+            ElseIf Mid(S, n, 1) = "<=" Then
                 tmpS = tmpS & Chr(246)
             Else
-                tmpS = tmpS & Mid(s, n, 1)
+                tmpS = tmpS & Mid(S, n, 1)
             End If
         Else
-            tmpS = tmpS & Mid(s, n, 1)
+            tmpS = tmpS & Mid(S, n, 1)
         End If
         
     Next n
@@ -1904,36 +1497,36 @@ Public Function Mask(ByVal s As String) As String
     
 End Function
 
-Public Function UnMask(ByVal s As String) As String
+Public Function UnMask(ByVal S As String) As String
     
-    s = Replace(s, Chr(240), "=")
-    s = Replace(s, Chr(241), ">")
-    s = Replace(s, Chr(242), "<")
-    s = Replace(s, Chr(243), "^")
-    s = Replace(s, Chr(244), "~")
-    s = Replace(s, Chr(245), ">=")
-    s = Replace(s, Chr(246), "<=")
+    S = Replace(S, Chr(240), "=")
+    S = Replace(S, Chr(241), ">")
+    S = Replace(S, Chr(242), "<")
+    S = Replace(S, Chr(243), "^")
+    S = Replace(S, Chr(244), "~")
+    S = Replace(S, Chr(245), ">=")
+    S = Replace(S, Chr(246), "<=")
     
     
-    UnMask = s
+    UnMask = S
 End Function
 
 
-Public Function SumUp(sValue As String, ByVal consoleID As Integer) As String
+Public Function SumUp(sValue As String, ByVal ConsoleID As Integer) As String
     
     SumUp = sValue
 
     If InStr(SumUp, "*") > 0 Or InStr(SumUp, "-") > 0 Or InStr(SumUp, "^") > 0 Or _
         InStr(SumUp, "/") > 0 Or InStr(SumUp, "+") > 0 Or InStr(SumUp, "%") > 0 Then
-        SumUp = ReplaceVariables(SumUp, consoleID)
+        SumUp = ReplaceVariables(SumUp, ConsoleID)
         If IsNumeric(Mid(SumUp, 1, NextEmptyOperator(SumUp) - 1)) Or Val(SumUp) < 0 Then
             SumUp = Trim(Str(sumProcess(SumUp)))
         End If
     End If
 End Function
 
-Public Function KillOps(s As String) As String
-    KillOps = s
+Public Function KillOps(S As String) As String
+    KillOps = S
     KillOps = Replace(KillOps, "+", "")
     KillOps = Replace(KillOps, "-", "")
     KillOps = Replace(KillOps, "/", "")
@@ -1943,29 +1536,29 @@ Public Function KillOps(s As String) As String
 End Function
 
 
-Public Function NextEmptyOperator(s As String) As Long
+Public Function NextEmptyOperator(S As String) As Long
     NextEmptyOperator = 9999
 
-    If InStr(s, "*") Then NextEmptyOperator = InStr(s, "*")
+    If InStr(S, "*") Then NextEmptyOperator = InStr(S, "*")
     
-    If InStr(s, "+") And InStr(s, "+") < NextEmptyOperator Then
-        NextEmptyOperator = InStr(s, "+")
+    If InStr(S, "+") And InStr(S, "+") < NextEmptyOperator Then
+        NextEmptyOperator = InStr(S, "+")
     End If
 
-    If InStr(s, "-") And InStr(s, "-") < NextEmptyOperator Then
-        NextEmptyOperator = InStr(s, "-")
+    If InStr(S, "-") And InStr(S, "-") < NextEmptyOperator Then
+        NextEmptyOperator = InStr(S, "-")
     End If
 
-    If InStr(s, "/") And InStr(s, "/") < NextEmptyOperator Then
-        NextEmptyOperator = InStr(s, "/")
+    If InStr(S, "/") And InStr(S, "/") < NextEmptyOperator Then
+        NextEmptyOperator = InStr(S, "/")
     End If
     
-    If InStr(s, "^") And InStr(s, "^") < NextEmptyOperator Then
-        NextEmptyOperator = InStr(s, "^")
+    If InStr(S, "^") And InStr(S, "^") < NextEmptyOperator Then
+        NextEmptyOperator = InStr(S, "^")
     End If
         
-    If InStr(s, "%") And InStr(s, "%") < NextEmptyOperator Then
-        NextEmptyOperator = InStr(s, "%")
+    If InStr(S, "%") And InStr(S, "%") < NextEmptyOperator Then
+        NextEmptyOperator = InStr(S, "%")
     End If
     
     
@@ -1974,21 +1567,21 @@ Public Function NextEmptyOperator(s As String) As Long
     If NextEmptyOperator = 9999 Then NextEmptyOperator = 0
 End Function
 
-Public Function Bracketize(ByVal s As String, ReplaceLoosely As Boolean) As String
+Public Function Bracketize(ByVal S As String, ReplaceLoosely As Boolean) As String
     Dim n As Long
     Dim BracketValue As Integer
     Dim tmpS As String, midString As String * 1
     
-    If Len(s) > 32096 Then 'no more than 32kb - way too slow!
-        SayComm "Warning: Processing large data may take a while... (" & FormatKB(Len(s)) & ")"
+    If Len(S) > 32096 Then 'no more than 32kb - way too slow!
+        SayCOMM "Warning: Processing large data may take a while... (" & FormatKB(Len(S)) & ")"
         DoEvents
         'Bracketize = s
         'Exit Function
     End If
     
-    For n = 1 To Len(s)
+    For n = 1 To Len(S)
     
-        midString = Mid(s, n, 1)
+        midString = Mid(S, n, 1)
     
         If midString = "(" Then
             BracketValue = BracketValue + 1
@@ -2029,87 +1622,87 @@ NextOne:
     Bracketize = tmpS
 End Function
 
-Public Function MaskSpacesInQuotes(ByVal s As String) As String
+Public Function MaskSpacesInQuotes(ByVal S As String) As String
     Dim n As Long, tmpS As String
     Dim inQuotes As Boolean
     inQuotes = False
     
-    For n = 1 To Len(s)
-        If Mid(s, n, 1) = Chr(34) Then
+    For n = 1 To Len(S)
+        If Mid(S, n, 1) = Chr(34) Then
             inQuotes = Not (inQuotes)
         End If
         
-        If Mid(s, n, 1) = " " Then
+        If Mid(S, n, 1) = " " Then
             If inQuotes = True Then
                 tmpS = tmpS & Chr(240)
             Else
-                tmpS = tmpS & Mid(s, n, 1)
+                tmpS = tmpS & Mid(S, n, 1)
             End If
         Else
-            tmpS = tmpS & Mid(s, n, 1)
+            tmpS = tmpS & Mid(S, n, 1)
         End If
     Next n
     
     MaskSpacesInQuotes = tmpS
 End Function
 
-Public Function MaskCharInQuotes(ByVal s As String, sCharToMask As String) As String
+Public Function MaskCharInQuotes(ByVal S As String, sCharToMask As String) As String
     Dim n As Long, tmpS As String
     Dim inQuotes As Boolean
     inQuotes = False
     
-    For n = 1 To Len(s)
-        If Mid(s, n, 1) = Chr(34) Then
+    For n = 1 To Len(S)
+        If Mid(S, n, 1) = Chr(34) Then
             inQuotes = Not (inQuotes)
         End If
         
-        If Mid(s, n, 1) = sCharToMask Then
+        If Mid(S, n, 1) = sCharToMask Then
             If inQuotes = True Then
                 tmpS = tmpS & Chr(240)
             Else
-                tmpS = tmpS & Mid(s, n, 1)
+                tmpS = tmpS & Mid(S, n, 1)
             End If
         Else
-            tmpS = tmpS & Mid(s, n, 1)
+            tmpS = tmpS & Mid(S, n, 1)
         End If
     Next n
     
     MaskCharInQuotes = tmpS
 End Function
 
-Public Function UnBracketize(ByVal s As String) As String
-    s = Replace(s, "[{[", "(")
-    s = Replace(s, "]}]", ")")
-    UnBracketize = s
+Public Function UnBracketize(ByVal S As String) As String
+    S = Replace(S, "[{[", "(")
+    S = Replace(S, "]}]", ")")
+    UnBracketize = S
 End Function
 
-Public Function RemoveSurroundingQuotes(ByVal s As String) As String
-    s = Trim(s)
+Public Function RemoveSurroundingQuotes(ByVal S As String) As String
+    S = Trim(S)
     
-    If Right(s, 1) = Chr(34) And Left(s, 1) = Chr(34) Then
-        s = Mid(s, 2, Len(s) - 2)
+    If Right(S, 1) = Chr(34) And Left(S, 1) = Chr(34) Then
+        S = Mid(S, 2, Len(S) - 2)
     End If
     
-    RemoveSurroundingQuotes = s
+    RemoveSurroundingQuotes = S
 End Function
 
-Public Function RemoveSurroundingBrackets(ByVal s As String) As String
-    s = Trim(s)
+Public Function RemoveSurroundingBrackets(ByVal S As String) As String
+    S = Trim(S)
     
-    If Right(s, 1) = ")" And Left(s, 1) = "(" Then
-        s = Mid(s, 2, Len(s) - 2)
+    If Right(S, 1) = ")" And Left(S, 1) = "(" Then
+        S = Mid(S, 2, Len(S) - 2)
     End If
     
-    If Mid(s, 1, 1) = "(" Then s = Mid(s, 2, Len(s))
+    If Mid(S, 1, 1) = "(" Then S = Mid(S, 2, Len(S))
     
-    RemoveSurroundingBrackets = s
+    RemoveSurroundingBrackets = S
 End Function
 
-Public Function ConvertToNumbers(ByVal s As String) As String
+Public Function ConvertToNumbers(ByVal S As String) As String
     Dim n As Long, tChr As Integer
     
-    For n = 1 To Len(s)
-        tChr = Asc(Mid(s, n, 1))
+    For n = 1 To Len(S)
+        tChr = Asc(Mid(S, n, 1))
         If tChr > 47 Then
             If tChr < 127 Then
                 'ConvertToNumbers = ConvertToNumbers & tChr & "-"
