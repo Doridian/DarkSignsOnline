@@ -26,6 +26,7 @@ Private DoneForever As Boolean
 Private Retries As Integer
 Private WithEvents HttpRequest As cHttpRequest
 Attribute HttpRequest.VB_VarHelpID = -1
+Private ResponseSent As Boolean
 
 Private Const HTTPREQUEST_SETCREDENTIALS_FOR_SERVER As Long = 0
 
@@ -33,6 +34,7 @@ Private Sub Class_Initialize()
     Set HttpRequest = Nothing
     Done = True
     DoneForever = False
+    ResponseSent = False
     Retries = 0
 End Sub
 
@@ -41,6 +43,10 @@ Public Function SafeToDelete() As Boolean
 End Function
 
 Private Sub SetDoneForever()
+    If Not ResponseSent Then
+        basWorld.Process "9999[error]", Url, consoleID, IsCustomDownload
+        ResponseSent = True
+    End If
     DoneForever = True
     Done = True
     basWorld.CleanHttpRequests
@@ -108,8 +114,9 @@ Private Sub HttpRequest_OnResponseFinished()
         Exit Sub
     End If
 
-    SetDoneForever
     basWorld.Process HttpRequest.ResponseText, Url, consoleID, IsCustomDownload
+    ResponseSent = True
+    SetDoneForever
 End Sub
 
 Private Sub ManageSockError(Reason As String)
