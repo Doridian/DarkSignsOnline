@@ -2,7 +2,7 @@
 require('_top.php');
 require_once('api/config.php');
 
-$verify = $_REQUEST['verify'];
+$verify = $_REQUEST['code'];
 if (empty($verify)) {
     die("<h1>No verification code provided</h1>");
 }
