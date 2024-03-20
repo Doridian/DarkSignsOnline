@@ -13,8 +13,8 @@ if ($_POST['pw'] !== $_SERVER['PHP_AUTH_PW']) {
     die('Invalid password');
 }
 
-$domain = $_POST['d'];
-$dInfo = getDomainInfo($domain);
+$d = strtolower(trim($_POST['d']));
+$dInfo = getDomainInfo($d);
 
 if ($dInfo[0] < 0) {
     die('Domain not found');
