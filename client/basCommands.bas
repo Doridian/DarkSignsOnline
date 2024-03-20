@@ -3,6 +3,25 @@ Option Explicit
 
 Public AuthorizePayment As Boolean
 
+Private scrConsole(1 To 4) As ScriptControl
+Private scrConsoleContext(1 To 4) As clsScriptFunctions
+
+Public Sub InitBasCommands()
+    Dim X As Integer
+    For X = 1 To 4
+        Set scrConsole(X) = New ScriptControl
+        scrConsole(X).AllowUI = False
+        scrConsole(X).Timeout = 0
+        scrConsole(X).UseSafeSubset = True
+        scrConsole(X).Language = "VBScript"
+
+        Set scrConsoleContext(X) = New clsScriptFunctions
+        scrConsoleContext(X).ConsoleID = X
+
+        scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
+    Next
+End Sub
+
 Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Optional ScriptFrom As String, Optional FromScript As Boolean = True, Optional IsFromScript As Boolean)
     If ConsoleID < 1 Then
         ConsoleID = 1
@@ -10,20 +29,9 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     If ConsoleID > 4 Then
         ConsoleID = 4
     End If
-
-    Dim S As New ScriptControl
-    S.AllowUI = False
-    S.Timeout = 0
-    S.UseSafeSubset = True
-    S.Language = "VBScript"
-
-    Dim G As clsScriptFunctions
-    Set G = New clsScriptFunctions
-    G.ConsoleID = ConsoleID
-    G.ScriptFrom = ScriptFrom
-
-    S.AddObject "DSO", G, True
     
+    scrConsoleContext(ConsoleID).ScriptFrom = ScriptFrom
+
     Dim tmpS As String
     tmpS = CLine.Caption
     Dim promptEndIdx As Integer
@@ -33,7 +41,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     End If
 
     On Error GoTo EvalError
-    S.AddCode Trim(tmpS)
+    scrConsole(ConsoleID).AddCode Trim(tmpS)
     On Error GoTo 0
 
     GoTo ScriptEnd
@@ -274,9 +282,9 @@ zzz:
     New_Console_Line ConsoleID
 End Function
 
-Public Sub DrawItUp(ByVal S As String, ByVal ConsoleID As Integer)
-    S = Trim(S)
-    If InStr(S, " ") = 0 Then
+Public Sub DrawItUp(ByVal s As String, ByVal ConsoleID As Integer)
+    s = Trim(s)
+    If InStr(s, " ") = 0 Then
         SayError "Invalid Parameters - Type HELP DRAW for more information.", ConsoleID
         ShowHelp "draw", ConsoleID
         Exit Sub
@@ -287,34 +295,34 @@ Public Sub DrawItUp(ByVal S As String, ByVal ConsoleID As Integer)
     Dim sColor As String
     Dim sMode As String
     
-    yPos = Trim(Mid(S, 1, InStr(S, " ")))
-    S = Trim(Mid(S, InStr(S, " "), Len(S)))
+    yPos = Trim(Mid(s, 1, InStr(s, " ")))
+    s = Trim(Mid(s, InStr(s, " "), Len(s)))
     
-    If InStr(S, " ") = 0 Then
+    If InStr(s, " ") = 0 Then
         SayError "Invalid Parameters - Type HELP DRAW for more information.", ConsoleID
         ShowHelp "draw", ConsoleID
         Exit Sub
     End If
     
-    R = Val(Trim(Mid(S, 1, InStr(S, " "))))
-    S = Trim(Mid(S, InStr(S, " "), Len(S)))
+    R = Val(Trim(Mid(s, 1, InStr(s, " "))))
+    s = Trim(Mid(s, InStr(s, " "), Len(s)))
     
-    If InStr(S, " ") = 0 Then
+    If InStr(s, " ") = 0 Then
         SayError "Invalid Parameters - Type HELP DRAW for more information.", ConsoleID
         Exit Sub
     End If
     
-    G = Val(Trim(Mid(S, 1, InStr(S, " "))))
-    S = Trim(Mid(S, InStr(S, " "), Len(S)))
+    G = Val(Trim(Mid(s, 1, InStr(s, " "))))
+    s = Trim(Mid(s, InStr(s, " "), Len(s)))
     
-    If InStr(S, " ") = 0 Then
+    If InStr(s, " ") = 0 Then
         SayError "Invalid Parameters", ConsoleID
         ShowHelp "draw", ConsoleID
         Exit Sub
     End If
     
-    b = Val(Trim(Mid(S, 1, InStr(S, " "))))
-    sMode = Trim(Mid(S, InStr(S, " "), Len(S)))
+    b = Val(Trim(Mid(s, 1, InStr(s, " "))))
+    sMode = Trim(Mid(s, InStr(s, " "), Len(s)))
      
     Dim yIndex As Integer, n As Integer
     yIndex = Val(Replace(yPos, "-", "")) + 1
@@ -551,14 +559,14 @@ Public Function IsInCommandsSubdirectory(ByVal sFile As String) As String
     Next n
 End Function
 
-Public Sub SetYDiv(S As String)
+Public Sub SetYDiv(s As String)
     On Error GoTo zxc
     
-    S = Trim(Replace(S, "=", ""))
-    If S = "" Then Exit Sub
+    s = Trim(Replace(s, "=", ""))
+    If s = "" Then Exit Sub
     
     Dim n As Integer
-    n = Val(S)
+    n = Val(s)
     
     If n < 0 Then n = 0
     If n > 720 Then n = 720
@@ -568,7 +576,7 @@ Public Sub SetYDiv(S As String)
 zxc:
 End Sub
 
-Public Sub ConnectToDomain(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub ConnectToDomain(ByVal s As String, ByVal ConsoleID As Integer)
     Dim sDomain As String
     Dim sPort As String
     Dim sFilename As String
@@ -579,25 +587,25 @@ Public Sub ConnectToDomain(ByVal S As String, ByVal ConsoleID As Integer)
     '    referals(ActiveConsole) = "A"
     'End If
     
-    S = Replace(S, ":", " ")
-    S = Trim(S)
+    s = Replace(s, ":", " ")
+    s = Trim(s)
     
-    If S = "" Then GoTo zxc
+    If s = "" Then GoTo zxc
     
-    If InStr(S, " ") > 0 Then
-        sDomain = i(Mid(S, 1, InStr(S, " ")))
+    If InStr(s, " ") > 0 Then
+        sDomain = i(Mid(s, 1, InStr(s, " ")))
     Else
-        sDomain = i(S)
+        sDomain = i(s)
     End If
     
-    If InStr(S, " ") > 0 Then
-        sPort = Trim(Mid(S, InStr(S, " "), Len(S)))
-        S = Trim(Mid(S, InStr(S, " "), Len(S)))
+    If InStr(s, " ") > 0 Then
+        sPort = Trim(Mid(s, InStr(s, " "), Len(s)))
+        s = Trim(Mid(s, InStr(s, " "), Len(s)))
         If InStr(sPort, " ") > 0 Then sPort = Trim(Mid(sPort, 1, InStr(sPort, " ")))
         
-        If InStr(S, " ") > 0 Then
+        If InStr(s, " ") > 0 Then
             'there are parameters
-            sParams = Trim(Mid(S, InStr(S, " "), Len(S)))
+            sParams = Trim(Mid(s, InStr(s, " "), Len(s)))
         Else
             sParams = ""
         End If
@@ -633,23 +641,23 @@ zxc:
     
 End Sub
 
-Public Sub UploadToDomain(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub UploadToDomain(ByVal s As String, ByVal ConsoleID As Integer)
     Dim sDomain As String
     Dim sPort As String
     Dim sFilename As String
     Dim sFileData As String
     
-    S = Trim(S)
-    If InStr(S, " ") = 0 Then GoTo zxc
+    s = Trim(s)
+    If InStr(s, " ") = 0 Then GoTo zxc
     
     
-    sDomain = i(Mid(S, 1, InStr(S, " ")))
+    sDomain = i(Mid(s, 1, InStr(s, " ")))
 
-    S = Trim(Mid(S, InStr(S, " "), Len(S)))
-    If InStr(S, " ") = 0 Then GoTo zxc
+    s = Trim(Mid(s, InStr(s, " "), Len(s)))
+    If InStr(s, " ") = 0 Then GoTo zxc
     
-    sPort = i(Mid(S, 1, InStr(S, " ")))
-    sFilename = Trim(Mid(S, InStr(S, " "), Len(S)))
+    sPort = i(Mid(s, 1, InStr(s, " ")))
+    sFilename = Trim(Mid(s, InStr(s, " "), Len(s)))
     sFilename = fixPath(sFilename, ConsoleID)
     
 
@@ -679,19 +687,19 @@ zxc:
     
 End Sub
 
-Public Sub CloseDomainPort(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub CloseDomainPort(ByVal s As String, ByVal ConsoleID As Integer)
     Dim sDomain As String
     Dim sPort As String
     
-    S = Trim(S)
-    If InStr(S, " ") = 0 Then GoTo zxc
+    s = Trim(s)
+    If InStr(s, " ") = 0 Then GoTo zxc
     
     
-    sDomain = i(Mid(S, 1, InStr(S, " ")))
+    sDomain = i(Mid(s, 1, InStr(s, " ")))
     
-    S = Trim(Mid(S, InStr(S, " "), Len(S)))
+    s = Trim(Mid(s, InStr(s, " "), Len(s)))
     
-    sPort = S
+    sPort = s
   
     RunPage "domain_close.php", ConsoleID, True, _
     "port=" & EncodeURLParameter(Trim(sPort)) & _
@@ -707,23 +715,23 @@ zxc:
 End Sub
 
 
-Public Sub DownloadFromDomain(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub DownloadFromDomain(ByVal s As String, ByVal ConsoleID As Integer)
     Dim sDomain As String
     Dim sPort As String
     Dim sFilename As String
     Dim sFileData As String
     
-    S = Trim(S)
-    If InStr(S, " ") = 0 Then GoTo zxc
+    s = Trim(s)
+    If InStr(s, " ") = 0 Then GoTo zxc
     
     
-    sDomain = i(Mid(S, 1, InStr(S, " ")))
+    sDomain = i(Mid(s, 1, InStr(s, " ")))
     
-    S = Trim(Mid(S, InStr(S, " "), Len(S)))
-    If InStr(S, " ") = 0 Then GoTo zxc
+    s = Trim(Mid(s, InStr(s, " "), Len(s)))
+    If InStr(s, " ") = 0 Then GoTo zxc
     
-    sPort = i(Mid(S, 1, InStr(S, " ")))
-    sFilename = Trim(Mid(S, InStr(S, " "), Len(S)))
+    sPort = i(Mid(s, 1, InStr(s, " ")))
+    sFilename = Trim(Mid(s, InStr(s, " "), Len(s)))
     sFilename = fixPath(sFilename, ConsoleID)
     
 
@@ -747,34 +755,34 @@ zxc:
 End Sub
 
 
-Public Sub SubOwners(ByVal S As String, ByVal ConsoleID As Integer)
-    S = i(S)
+Public Sub SubOwners(ByVal s As String, ByVal ConsoleID As Integer)
+    s = i(s)
 
     Dim sDomain As String, sUsername As String
     
-    If InStr(S, " ") = 0 Then
+    If InStr(s, " ") = 0 Then
         SayError "Invalid Parameters.", ConsoleID
         ShowHelp "subowners", ConsoleID
         Exit Sub
     End If
     
-    sDomain = Trim(Mid(S, 1, InStr(S, " ")))
-    S = Trim(Mid(S, InStr(S, " ") + 1, Len(S)))
+    sDomain = Trim(Mid(s, 1, InStr(s, " ")))
+    s = Trim(Mid(s, InStr(s, " ") + 1, Len(s)))
     
-    If i(Mid(S, 1, 4)) = "list" Then
+    If i(Mid(s, 1, 4)) = "list" Then
         'list the domain names
            
             RunPage "domain_privileges.php", ConsoleID, True, _
             "returnwith=2001&list=" & EncodeURLParameter(Trim(sDomain))
 
-    ElseIf Mid(i(S), 1, 4) = "add " Then
-        sUsername = Trim(Mid(S, 5, Len(S)))
+    ElseIf Mid(i(s), 1, 4) = "add " Then
+        sUsername = Trim(Mid(s, 5, Len(s)))
             
             RunPage "domain_privileges.php", ConsoleID, True, _
             "returnwith=2001&add=" & EncodeURLParameter(Trim(sDomain)) & "&username=" & EncodeURLParameter(sUsername)
 
-    ElseIf Mid(i(S), 1, 7) = "remove " Then
-        sUsername = Trim(Mid(S, 8, Len(S)))
+    ElseIf Mid(i(s), 1, 7) = "remove " Then
+        sUsername = Trim(Mid(s, 8, Len(s)))
         
              RunPage "domain_privileges.php", ConsoleID, True, _
             "returnwith=2001&remove=" & EncodeURLParameter(Trim(sDomain)) & "&username=" & EncodeURLParameter(sUsername)
@@ -790,17 +798,17 @@ Public Sub SubOwners(ByVal S As String, ByVal ConsoleID As Integer)
     
 End Sub
 
-Public Sub RegisterDomain(ByVal S As String, ByVal ConsoleID As Integer)
-    S = i(S)
-    S = Trim(S)
+Public Sub RegisterDomain(ByVal s As String, ByVal ConsoleID As Integer)
+    s = i(s)
+    s = Trim(s)
     
-    If S = "" Then
+    If s = "" Then
         SayError "The REGISTER command requires a parameter.", ConsoleID
         ShowHelp "register", ConsoleID
         Exit Sub
     End If
     
-    If CountCharInString(S, ".") < 1 Or CountCharInString(S, ".") > 3 Or HasBadDomainChar(S) = True Or Len(S) < 5 Or Left(S, 1) = "." Or Right(S, 1) = "." Then
+    If CountCharInString(s, ".") < 1 Or CountCharInString(s, ".") > 3 Or HasBadDomainChar(s) = True Or Len(s) < 5 Or Left(s, 1) = "." Or Right(s, 1) = "." Then
         SayError "The domain name you specified is invalid or contains bad characters.{orange}", ConsoleID
         Say ConsoleID, "A domain name should be in the following form: MYDOMAIN.COM{lorange}", False
         Say ConsoleID, "Subdomains should be in the form: BLOG.MYDOMAIN.COM{lorange}", False
@@ -809,18 +817,18 @@ Public Sub RegisterDomain(ByVal S As String, ByVal ConsoleID As Integer)
         Exit Sub
     End If
     
-    Say ConsoleID, "{green 10}A registration request has been sent for " & S & ".", False
+    Say ConsoleID, "{green 10}A registration request has been sent for " & s & ".", False
     Say ConsoleID, "{lgreen 10}The result will be posted to the COMM.", False
     
     
     'RunPage "domain_register.php?returnwith=2000&d=" & Trim(s), consoleID
-    RunPage "domain_register.php", ConsoleID, True, "d=" & EncodeURLParameter(S)
+    RunPage "domain_register.php", ConsoleID, True, "d=" & EncodeURLParameter(s)
     
 End Sub
 
-Public Sub UnRegisterDomain(ByVal S As String, ByVal ConsoleID As Integer)
-    S = Trim(S)
-    If S = "" Then
+Public Sub UnRegisterDomain(ByVal s As String, ByVal ConsoleID As Integer)
+    s = Trim(s)
+    If s = "" Then
         SayError "The UNREGISTER command requires parameters.", ConsoleID
         ShowHelp "unregister", ConsoleID
         Exit Sub
@@ -830,9 +838,9 @@ Public Sub UnRegisterDomain(ByVal S As String, ByVal ConsoleID As Integer)
     Dim sDomain As String
     Dim sPass As String
     
-    If InStr(S, " ") > 0 Then
-        sDomain = LCase(Trim(Mid(S, 1, InStr(S, " "))))
-        sPass = Trim(Mid(S, InStr(S, " "), Len(S)))
+    If InStr(s, " ") > 0 Then
+        sDomain = LCase(Trim(Mid(s, 1, InStr(s, " "))))
+        sPass = Trim(Mid(s, InStr(s, " "), Len(s)))
     Else
         SayError "Your password is required as a final parameter.", ConsoleID
         ShowHelp "unregister", ConsoleID
@@ -847,7 +855,7 @@ Public Sub UnRegisterDomain(ByVal S As String, ByVal ConsoleID As Integer)
     "returnwith=2000&d=" & EncodeURLParameter(Trim(sDomain)) & "&pw=" & EncodeURLParameter(sPass)
 End Sub
 
-Public Sub ServerCommands(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub ServerCommands(ByVal s As String, ByVal ConsoleID As Integer)
     Dim sCommand As String
     Dim sDomain As String
     Dim sKey As String
@@ -856,16 +864,16 @@ Public Sub ServerCommands(ByVal S As String, ByVal ConsoleID As Integer)
     'check for a keycode, if it doesn't have one, its from a local script (so exit)
     
 
-    If InStr(S, ":----:") = 0 Then Exit Sub
+    If InStr(s, ":----:") = 0 Then Exit Sub
     
     'SERVER KEY:---:DOMAIN:----:WRITE
     
-    sKey = Trim(Mid(S, 1, InStr(S, ":----:") - 1))
+    sKey = Trim(Mid(s, 1, InStr(s, ":----:") - 1))
     sDomain = Trim(Mid(sKey, InStr(sKey, ":---:") + 5, Len(sKey)))
     sKey = Mid(sKey, 1, InStr(sKey, ":---:") - 1)
     
     
-    sCommand = Trim(Mid(S, InStr(S, ":----:") + 6, Len(S)))
+    sCommand = Trim(Mid(s, InStr(s, ":----:") + 6, Len(s)))
     
     'scommand is like: write birds.text hello
     'skey is like: 89302372367894
@@ -895,16 +903,16 @@ Public Sub ServerCommands(ByVal S As String, ByVal ConsoleID As Integer)
     End Select
 End Sub
 
-Public Sub ServerCommand_Append(S As String, sKey As String, sDomain As String, ByVal ConsoleID As Integer)
+Public Sub ServerCommand_Append(s As String, sKey As String, sDomain As String, ByVal ConsoleID As Integer)
 
     Dim sPostData As String
     Dim sFilename As String
     Dim sFileData As String
     
-    S = Trim(S)
-    If InStr(S, " ") = 0 Then Exit Sub
-    sFilename = Trim(Mid(S, 1, InStr(S, " ")))
-    sFileData = Trim(Mid(S, InStr(S, " "), Len(S)))
+    s = Trim(s)
+    If InStr(s, " ") = 0 Then Exit Sub
+    sFilename = Trim(Mid(s, 1, InStr(s, " ")))
+    sFileData = Trim(Mid(s, InStr(s, " "), Len(s)))
     
     sPostData = "append=" & EncodeURLParameter(sFilename) & _
         "&keycode=" & EncodeURLParameter(sKey) & _
@@ -916,16 +924,16 @@ Public Sub ServerCommand_Append(S As String, sKey As String, sDomain As String, 
 End Sub
 
 
-Public Sub ServerCommand_Write(S As String, sKey As String, sDomain As String, ByVal ConsoleID As Integer)
+Public Sub ServerCommand_Write(s As String, sKey As String, sDomain As String, ByVal ConsoleID As Integer)
 
     Dim sPostData As String
     Dim sFilename As String
     Dim sFileData As String
     
-    S = Trim(S)
-    If InStr(S, " ") = 0 Then Exit Sub
-    sFilename = Trim(Mid(S, 1, InStr(S, " ")))
-    sFileData = Trim(Mid(S, InStr(S, " "), Len(S)))
+    s = Trim(s)
+    If InStr(s, " ") = 0 Then Exit Sub
+    sFilename = Trim(Mid(s, 1, InStr(s, " ")))
+    sFileData = Trim(Mid(s, InStr(s, " "), Len(s)))
     
     sPostData = "write=" & EncodeURLParameter(sFilename) & _
         "&keycode=" & EncodeURLParameter(sKey) & _
@@ -937,28 +945,28 @@ Public Sub ServerCommand_Write(S As String, sKey As String, sDomain As String, B
 End Sub
 
 
-Public Sub TransferMoney(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub TransferMoney(ByVal s As String, ByVal ConsoleID As Integer)
     Dim sTo As String
     Dim sAmount As String
     Dim sDescription As String
 
-    S = Trim(S)
-    If InStr(S, " ") = 0 Then
+    s = Trim(s)
+    If InStr(s, " ") = 0 Then
         SayError "Invalid Parameters.", ConsoleID
         ShowHelp "transfer", ConsoleID
         Exit Sub
     End If
     
-    sTo = Trim(Mid(S, 1, InStr(S, " ")))
-    S = Trim(Mid(S, InStr(S, " "), Len(S)))
-    If InStr(S, " ") = 0 Then
+    sTo = Trim(Mid(s, 1, InStr(s, " ")))
+    s = Trim(Mid(s, InStr(s, " "), Len(s)))
+    If InStr(s, " ") = 0 Then
         SayError "Invalid Parameters.", ConsoleID
         ShowHelp "transfer", ConsoleID
         Exit Sub
     End If
     
-    sAmount = Trim(Mid(S, 1, InStr(S, " ")))
-    sDescription = Trim(Mid(S, InStr(S, " "), Len(S)))
+    sAmount = Trim(Mid(s, 1, InStr(s, " ")))
+    sDescription = Trim(Mid(s, InStr(s, " "), Len(s)))
     
     
     
@@ -995,58 +1003,58 @@ Public Sub TransferMoney(ByVal S As String, ByVal ConsoleID As Integer)
     
 End Sub
 
-Public Sub Lookup(ByVal S As String, ByVal ConsoleID As Integer)
-    S = i(S)
-    S = Trim(S)
-    If S = "" Then
+Public Sub Lookup(ByVal s As String, ByVal ConsoleID As Integer)
+    s = i(s)
+    s = Trim(s)
+    If s = "" Then
         SayError "The LOOKUP command requires a parameter.", ConsoleID
         ShowHelp "lookup", ConsoleID
         Exit Sub
     End If
     
     
-    RunPage "lookup.php?returnwith=2000&d=" & EncodeURLParameter(Trim(S)), ConsoleID
+    RunPage "lookup.php?returnwith=2000&d=" & EncodeURLParameter(Trim(s)), ConsoleID
     
 End Sub
 
-Public Sub f_Compile(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub f_Compile(ByVal s As String, ByVal ConsoleID As Integer)
     SayError "Compilation has been removed.", ConsoleID
 End Sub
 
 
-Public Function HasBadDomainChar(ByVal S As String) As Boolean
+Public Function HasBadDomainChar(ByVal s As String) As Boolean
     HasBadDomainChar = False
     
-    If InStr(S, "!") > 0 Then HasBadDomainChar = True
-    If InStr(S, "@") > 0 Then HasBadDomainChar = True
-    If InStr(S, "#") > 0 Then HasBadDomainChar = True
-    If InStr(S, "$") > 0 Then HasBadDomainChar = True
-    If InStr(S, "%") > 0 Then HasBadDomainChar = True
-    If InStr(S, "^") > 0 Then HasBadDomainChar = True
-    If InStr(S, "&") > 0 Then HasBadDomainChar = True
-    If InStr(S, "*") > 0 Then HasBadDomainChar = True
-    If InStr(S, "(") > 0 Then HasBadDomainChar = True
-    If InStr(S, ")") > 0 Then HasBadDomainChar = True
-    If InStr(S, "_") > 0 Then HasBadDomainChar = True
-    If InStr(S, "+") > 0 Then HasBadDomainChar = True
-    If InStr(S, "=") > 0 Then HasBadDomainChar = True
-    If InStr(S, "~") > 0 Then HasBadDomainChar = True
-    If InStr(S, "`") > 0 Then HasBadDomainChar = True
-    If InStr(S, "[") > 0 Then HasBadDomainChar = True
-    If InStr(S, "]") > 0 Then HasBadDomainChar = True
-    If InStr(S, "{") > 0 Then HasBadDomainChar = True
-    If InStr(S, "}") > 0 Then HasBadDomainChar = True
-    If InStr(S, "\") > 0 Then HasBadDomainChar = True
-    If InStr(S, "|") > 0 Then HasBadDomainChar = True
-    If InStr(S, ";") > 0 Then HasBadDomainChar = True
-    If InStr(S, Chr(34)) > 0 Then HasBadDomainChar = True
-    If InStr(S, "'") > 0 Then HasBadDomainChar = True
-    If InStr(S, ":") > 0 Then HasBadDomainChar = True
-    If InStr(S, ",") > 0 Then HasBadDomainChar = True
-    If InStr(S, "<") > 0 Then HasBadDomainChar = True
-    If InStr(S, ">") > 0 Then HasBadDomainChar = True
-    If InStr(S, "/") > 0 Then HasBadDomainChar = True
-    If InStr(S, "?") > 0 Then HasBadDomainChar = True
+    If InStr(s, "!") > 0 Then HasBadDomainChar = True
+    If InStr(s, "@") > 0 Then HasBadDomainChar = True
+    If InStr(s, "#") > 0 Then HasBadDomainChar = True
+    If InStr(s, "$") > 0 Then HasBadDomainChar = True
+    If InStr(s, "%") > 0 Then HasBadDomainChar = True
+    If InStr(s, "^") > 0 Then HasBadDomainChar = True
+    If InStr(s, "&") > 0 Then HasBadDomainChar = True
+    If InStr(s, "*") > 0 Then HasBadDomainChar = True
+    If InStr(s, "(") > 0 Then HasBadDomainChar = True
+    If InStr(s, ")") > 0 Then HasBadDomainChar = True
+    If InStr(s, "_") > 0 Then HasBadDomainChar = True
+    If InStr(s, "+") > 0 Then HasBadDomainChar = True
+    If InStr(s, "=") > 0 Then HasBadDomainChar = True
+    If InStr(s, "~") > 0 Then HasBadDomainChar = True
+    If InStr(s, "`") > 0 Then HasBadDomainChar = True
+    If InStr(s, "[") > 0 Then HasBadDomainChar = True
+    If InStr(s, "]") > 0 Then HasBadDomainChar = True
+    If InStr(s, "{") > 0 Then HasBadDomainChar = True
+    If InStr(s, "}") > 0 Then HasBadDomainChar = True
+    If InStr(s, "\") > 0 Then HasBadDomainChar = True
+    If InStr(s, "|") > 0 Then HasBadDomainChar = True
+    If InStr(s, ";") > 0 Then HasBadDomainChar = True
+    If InStr(s, Chr(34)) > 0 Then HasBadDomainChar = True
+    If InStr(s, "'") > 0 Then HasBadDomainChar = True
+    If InStr(s, ":") > 0 Then HasBadDomainChar = True
+    If InStr(s, ",") > 0 Then HasBadDomainChar = True
+    If InStr(s, "<") > 0 Then HasBadDomainChar = True
+    If InStr(s, ">") > 0 Then HasBadDomainChar = True
+    If InStr(s, "/") > 0 Then HasBadDomainChar = True
+    If InStr(s, "?") > 0 Then HasBadDomainChar = True
     
     
 End Function
@@ -1062,13 +1070,13 @@ End Sub
 Public Sub MusicCommand(ByVal sX As String)
     
     
-    Dim S As String
+    Dim s As String
     If InStr(sX, " ") > 0 Then
-        S = Mid(sX, 1, InStr(sX, " "))
+        s = Mid(sX, 1, InStr(sX, " "))
     Else
-        S = sX
+        s = sX
     End If
-    Select Case i(S)
+    Select Case i(s)
     
     Case "start": RegSave "music", "on"
     Case "on": RegSave "music", "on"
@@ -1121,7 +1129,7 @@ Public Sub ListKeys(ByVal ConsoleID As Integer)
 End Sub
 
 
-Public Sub SetUsername(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub SetUsername(ByVal s As String, ByVal ConsoleID As Integer)
 
     
     If Authorized = True Then
@@ -1130,7 +1138,7 @@ Public Sub SetUsername(ByVal S As String, ByVal ConsoleID As Integer)
     End If
     
     
-    If Trim(S) <> "" Then RegSave "myusernamedev", Trim(S)
+    If Trim(s) <> "" Then RegSave "myusernamedev", Trim(s)
     
         
     Dim tmpU As String, tmpP As String
@@ -1143,7 +1151,7 @@ Public Sub SetUsername(ByVal S As String, ByVal ConsoleID As Integer)
 
 End Sub
 
-Public Sub SetPassword(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub SetPassword(ByVal s As String, ByVal ConsoleID As Integer)
 
 
     If Authorized = True Then
@@ -1151,8 +1159,8 @@ Public Sub SetPassword(ByVal S As String, ByVal ConsoleID As Integer)
         Exit Sub
     End If
     
-    S = Trim(S)
-    RegSave "mypassworddev", S
+    s = Trim(s)
+    RegSave "mypassworddev", s
     
     Dim tmpU As String, tmpP As String
     If Trim(myUsername) = "" Then tmpU = "[not specified]" Else tmpU = myUsername
@@ -1188,36 +1196,36 @@ Public Sub DownADir(ByVal ConsoleID As Integer)
     
     If Len(cPath(ConsoleID)) < 2 Then Exit Sub
     
-    Dim S As String
-    S = Mid(cPath(ConsoleID), 1, Len(cPath(ConsoleID)) - 1)
-    S = ReverseString(S)
-    S = Mid(S, InStr(S, "\"), Len(S))
-    S = ReverseString(S)
+    Dim s As String
+    s = Mid(cPath(ConsoleID), 1, Len(cPath(ConsoleID)) - 1)
+    s = ReverseString(s)
+    s = Mid(s, InStr(s, "\"), Len(s))
+    s = ReverseString(s)
     
     
-    cPath(ConsoleID) = S
+    cPath(ConsoleID) = s
 zxc:
 End Sub
 
-Public Sub MakeDir(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub MakeDir(ByVal s As String, ByVal ConsoleID As Integer)
     
-    If InvalidChars(S) = True Then
-        SayError "Invalid Directory Name: " & S, ConsoleID
+    If InvalidChars(s) = True Then
+        SayError "Invalid Directory Name: " & s, ConsoleID
         Exit Sub
     End If
     
-    If Trim(S) = ".." Then DownADir ConsoleID: Exit Sub
-    If InStr(S, "..") > 0 Then
+    If Trim(s) = ".." Then DownADir ConsoleID: Exit Sub
+    If InStr(s, "..") > 0 Then
         GoTo errorDir
     End If
 
-    S = fixPath(S, ConsoleID)
+    s = fixPath(s, ConsoleID)
     
-    If DirExists(App.Path & "\user" & S) = True Then
+    If DirExists(App.Path & "\user" & s) = True Then
         'don't create it if it already exists
         GoTo errorDir
     Else
-        MakeADir App.Path & "\user" & S
+        MakeADir App.Path & "\user" & s
     End If
     
     Exit Sub
@@ -1227,15 +1235,15 @@ errorDir:
 End Sub
 
 
-Public Sub MoveRename(ByVal S As String, ByVal ConsoleID As Integer, Optional sTag As String)
+Public Sub MoveRename(ByVal s As String, ByVal ConsoleID As Integer, Optional sTag As String)
 
     Dim s1 As String, s2 As String
-    S = Trim(S)
-    S = Replace(S, "/", "\")
-    If InStr(S, " ") = 0 Then Exit Sub
+    s = Trim(s)
+    s = Replace(s, "/", "\")
+    If InStr(s, " ") = 0 Then Exit Sub
     
-    s1 = Trim(Mid(S, 1, InStr(S, " ")))
-    s2 = Trim(Mid(S, InStr(S, " "), Len(S)))
+    s1 = Trim(Mid(s, 1, InStr(s, " ")))
+    s2 = Trim(Mid(s, InStr(s, " "), Len(s)))
 
     s1 = fixPath(s1, ConsoleID)
     s2 = fixPath(s2, ConsoleID)
@@ -1306,22 +1314,22 @@ zxc:
     CopyAFile = False
 End Function
 
-Public Sub DeleteFiles(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub DeleteFiles(ByVal s As String, ByVal ConsoleID As Integer)
     
-    If Trim(S) = ".." Then DownADir ConsoleID: Exit Sub
-    If InStr(S, "..") > 0 Then
+    If Trim(s) = ".." Then DownADir ConsoleID: Exit Sub
+    If InStr(s, "..") > 0 Then
         GoTo errorDir
     End If
 
-    S = fixPath(S, ConsoleID)
+    s = fixPath(s, ConsoleID)
     
-    If InStr(i(S), "\system\") > 0 Then
+    If InStr(i(s), "\system\") > 0 Then
         SayError "Files in the main SYSTEM directory are protected.", ConsoleID
         Exit Sub
     End If
     
     
-    DelFiles App.Path & "\user" & S, ConsoleID
+    DelFiles App.Path & "\user" & s, ConsoleID
     
     Exit Sub
     
@@ -1329,23 +1337,23 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Sub EditFile(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
     
-    S = Trim(fixPath(S, ConsoleID))
+    s = Trim(fixPath(s, ConsoleID))
     
-    If Len(S) < 2 Then
+    If Len(s) < 2 Then
         SayError "The EDIT command requires a parameter.", ConsoleID
         ShowHelp "edit", ConsoleID
         Exit Sub
     End If
     
-    EditorFile_Short = GetShortName(S)
-    EditorFile_Long = S
+    EditorFile_Short = GetShortName(s)
+    EditorFile_Long = s
         
-    If FileExists(App.Path & "\user" & S) Then
+    If FileExists(App.Path & "\user" & s) Then
 
     Else
-        Say ConsoleID, "{green}File Not Found, Creating: " & S
+        Say ConsoleID, "{green}File Not Found, Creating: " & s
     
     End If
     
@@ -1364,9 +1372,9 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Sub ShowMail(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub ShowMail(ByVal s As String, ByVal ConsoleID As Integer)
     
-    S = Trim(fixPath(S, ConsoleID))
+    s = Trim(fixPath(s, ConsoleID))
     
     frmDSOMail.Show vbModal
      
@@ -1377,10 +1385,10 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Sub AppendAFile(ByVal S As String, ByVal ConsoleID As Integer)
-    S = Trim(S)
-    If InStr(S, " ") = 0 Then
-        SayError "Invalid Parameters: APPEND " & S, ConsoleID
+Public Sub AppendAFile(ByVal s As String, ByVal ConsoleID As Integer)
+    s = Trim(s)
+    If InStr(s, " ") = 0 Then
+        SayError "Invalid Parameters: APPEND " & s, ConsoleID
         Exit Sub
     End If
     
@@ -1389,15 +1397,15 @@ Public Sub AppendAFile(ByVal S As String, ByVal ConsoleID As Integer)
     Dim sFileData As String
     Dim AppendToStartOfFile As Boolean
     
-    sFile = Trim(fixPath(Mid(S, 1, InStr(S, " ")), ConsoleID))
-    S = Trim(Mid(S, InStr(S, " "), Len(S)))
+    sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), ConsoleID))
+    s = Trim(Mid(s, InStr(s, " "), Len(s)))
     
-    If Mid(i(S), 1, 6) = "start " Then
+    If Mid(i(s), 1, 6) = "start " Then
         AppendToStartOfFile = True
-        S = Trim(Mid(S, 7, Len(S)))
-    ElseIf Mid(i(S), 1, 4) = "end " Then
+        s = Trim(Mid(s, 7, Len(s)))
+    ElseIf Mid(i(s), 1, 4) = "end " Then
         AppendToStartOfFile = False
-        S = Trim(Mid(S, 5, Len(S)))
+        s = Trim(Mid(s, 5, Len(s)))
     Else
         AppendToStartOfFile = False
     End If
@@ -1411,9 +1419,9 @@ Public Sub AppendAFile(ByVal S As String, ByVal ConsoleID As Integer)
     
     'add it to the data
     If AppendToStartOfFile = True Then
-        sFileData = S & vbCrLf & sFileData
+        sFileData = s & vbCrLf & sFileData
     Else
-        sFileData = sFileData & vbCrLf & S
+        sFileData = sFileData & vbCrLf & s
     End If
     
     
@@ -1432,10 +1440,10 @@ Public Sub AppendAFile(ByVal S As String, ByVal ConsoleID As Integer)
     
 End Sub
 
-Public Sub WriteAFile(ByVal S As String, ByVal ConsoleID As Integer, ByVal ScriptFrom As String)
-    S = Trim(S)
-    If InStr(S, " ") = 0 Then
-        SayError "Invalid Parameters: WRITE " & S, ConsoleID
+Public Sub WriteAFile(ByVal s As String, ByVal ConsoleID As Integer, ByVal ScriptFrom As String)
+    s = Trim(s)
+    If InStr(s, " ") = 0 Then
+        SayError "Invalid Parameters: WRITE " & s, ConsoleID
         Exit Sub
     End If
     
@@ -1444,7 +1452,7 @@ Public Sub WriteAFile(ByVal S As String, ByVal ConsoleID As Integer, ByVal Scrip
     Dim sFileData As String
 
     
-    sFile = Trim(fixPath(Mid(S, 1, InStr(S, " ")), ConsoleID))
+    sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), ConsoleID))
     'If ScriptFrom <> "CONSOLE" Or ScriptFrom <> "BOOT" Then
             
     '    If DirExists(App.Path & "\user\temp") = False Then
@@ -1460,7 +1468,7 @@ Public Sub WriteAFile(ByVal S As String, ByVal ConsoleID As Integer, ByVal Scrip
     'End If
    ' MsgBox sFile
     
-    S = Trim(Mid(S, InStr(S, " "), Len(S)))
+    s = Trim(Mid(s, InStr(s, " "), Len(s)))
     
     If InStr(i(sFile), "\system\") > 0 Then
         SayError "Files in the main SYSTEM directory are protected.", ConsoleID
@@ -1470,32 +1478,32 @@ Public Sub WriteAFile(ByVal S As String, ByVal ConsoleID As Integer, ByVal Scrip
     
 
     're write it!
-    WriteFile App.Path & "\user" & sFile, S
+    WriteFile App.Path & "\user" & sFile, s
     
     
        
     
 End Sub
 
-Public Sub DisplayFile(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub DisplayFile(ByVal s As String, ByVal ConsoleID As Integer)
     
     Dim sFile As String
     Dim startLine As Integer
     Dim MaxLines As Integer
     
-    S = Trim(S)
+    s = Trim(s)
     
     
-    If InStr(S, " ") Then
+    If InStr(s, " ") Then
         'file start and end lines are specified
-        sFile = Trim(fixPath(Mid(S, 1, InStr(S, " ")), ConsoleID))
+        sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), ConsoleID))
         
-        S = Trim(Mid(S, InStr(S, " "), Len(S)))
+        s = Trim(Mid(s, InStr(s, " "), Len(s)))
         
-        If InStr(S, " ") Then
+        If InStr(s, " ") Then
             'both the start and amount of lines are specific
-            startLine = Val(Mid(S, 1, InStr(S, " ")))
-            MaxLines = Val(Trim(Mid(S, InStr(S, " "), Len(S))))
+            startLine = Val(Mid(s, 1, InStr(s, " ")))
+            MaxLines = Val(Trim(Mid(s, InStr(s, " "), Len(s))))
             
             If MaxLines < 1 Then
                 SayError "Invalid Parameter Value: " & Trim(Str(MaxLines)), ConsoleID
@@ -1507,12 +1515,12 @@ Public Sub DisplayFile(ByVal S As String, ByVal ConsoleID As Integer)
             End If
         Else
             'only the start line is specified
-            startLine = Val(S)
+            startLine = Val(s)
             MaxLines = 29999
         End If
     Else
         'its just the filename
-        sFile = Trim(fixPath(S, ConsoleID))
+        sFile = Trim(fixPath(s, ConsoleID))
         startLine = 1
         MaxLines = 29999
     End If
@@ -1549,26 +1557,26 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Function GetShortName(ByVal S As String) As String
-    S = ReverseString(S)
-    S = Replace(S, "/", "\")
+Public Function GetShortName(ByVal s As String) As String
+    s = ReverseString(s)
+    s = Replace(s, "/", "\")
     
-    If InStr(S, "\") > 0 Then
+    If InStr(s, "\") > 0 Then
     
-        S = Mid(S, 1, InStr(S, "\") - 1)
+        s = Mid(s, 1, InStr(s, "\") - 1)
         
     End If
     
-    GetShortName = Trim(ReverseString(S))
+    GetShortName = Trim(ReverseString(s))
 End Function
 
-Public Sub WaitNow(ByVal S As String, ByVal ConsoleID As Integer)
-   S = Trim(S)
+Public Sub WaitNow(ByVal s As String, ByVal ConsoleID As Integer)
+   s = Trim(s)
 
     
     's is ms
     Dim iMS As Long
-    iMS = Val(S)
+    iMS = Val(s)
     If iMS < 1 Then iMS = 1
     If iMS > 60000 Then iMS = 60000
     
@@ -1584,30 +1592,30 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Sub RunFileAsScript(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub RunFileAsScript(ByVal s As String, ByVal ConsoleID As Integer)
     
     
     
     
     Dim sParams As String
-    S = Trim(S)
-    If InStr(S, " ") > 0 Then
-        sParams = Trim(Mid(S, InStr(S, " "), Len(S)))
-        S = Trim(Mid(S, 1, InStr(S, " ")))
+    s = Trim(s)
+    If InStr(s, " ") > 0 Then
+        sParams = Trim(Mid(s, InStr(s, " "), Len(s)))
+        s = Trim(Mid(s, 1, InStr(s, " ")))
     End If
     
-    S = fixPath(S, ConsoleID)
+    s = fixPath(s, ConsoleID)
     
 
-    If FileExists(App.Path & "\user" & S) Then
+    If FileExists(App.Path & "\user" & s) Then
         'run it as a script
         
         WriteErrorLog "RunFileAsScript"
         Shift_Console_Lines ConsoleID
-        Run_Script S, ConsoleID, sParams, "CONSOLE"
+        Run_Script s, ConsoleID, sParams, "CONSOLE"
         
     Else
-        SayError "File Not Found: " & S, ConsoleID
+        SayError "File Not Found: " & s, ConsoleID
     End If
     
     
@@ -1622,19 +1630,19 @@ Public Sub DelFiles(sFiles As String, ByVal ConsoleID As Integer)
     Kill sFiles
 End Sub
 
-Public Sub RemoveDir(ByVal S As String, ByVal ConsoleID As Integer)
+Public Sub RemoveDir(ByVal s As String, ByVal ConsoleID As Integer)
     
-    If Trim(S) = ".." Then DownADir ConsoleID: Exit Sub
-    If InStr(S, "..") > 0 Then
+    If Trim(s) = ".." Then DownADir ConsoleID: Exit Sub
+    If InStr(s, "..") > 0 Then
         GoTo errorDir
     End If
 
-    S = fixPath(S, ConsoleID)
+    s = fixPath(s, ConsoleID)
     
-    If DirExists(App.Path & "\user" & S) = True Then
+    If DirExists(App.Path & "\user" & s) = True Then
         'don't create it if it already exists
-        If RemoveADir(App.Path & "\user" & S, ConsoleID) = False Then
-            SayError "Directory Not Empty: " & S, ConsoleID
+        If RemoveADir(App.Path & "\user" & s, ConsoleID) = False Then
+            SayError "Directory Not Empty: " & s, ConsoleID
             Exit Sub
         End If
     Else
@@ -1647,74 +1655,74 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Function SayError(S As String, ByVal ConsoleID As Integer)
-    Say ConsoleID, "Error - " & S & " {orange}", False
+Public Function SayError(s As String, ByVal ConsoleID As Integer)
+    Say ConsoleID, "Error - " & s & " {orange}", False
 End Function
 
-Public Function RemoveADir(S As String, cosoleID As Integer) As Boolean
+Public Function RemoveADir(s As String, cosoleID As Integer) As Boolean
     On Error GoTo zxc
-    RmDir S
+    RmDir s
     RemoveADir = True
     Exit Function
 zxc:
     RemoveADir = False
 End Function
 
-Public Sub MakeADir(S As String)
+Public Sub MakeADir(s As String)
     On Error Resume Next
-    MkDir S
+    MkDir s
 End Sub
 
-Public Sub ChangeDir(ByVal S As String, ByVal ConsoleID As Integer)
-    S = Trim(S)
+Public Sub ChangeDir(ByVal s As String, ByVal ConsoleID As Integer)
+    s = Trim(s)
     
-    If InvalidChars(S) = True Then
-        SayError "Invalid Directory Name: " & S, ConsoleID
+    If InvalidChars(s) = True Then
+        SayError "Invalid Directory Name: " & s, ConsoleID
         Exit Sub
     End If
     
-    If S = ".." Then DownADir ConsoleID: Exit Sub
-    If InStr(S, "..") > 0 Then
+    If s = ".." Then DownADir ConsoleID: Exit Sub
+    If InStr(s, "..") > 0 Then
         GoTo errorDir
     End If
-    S = Replace(S, "/", "\")
-    If S = "." Then Exit Sub
-    If InStr(S, ".\") > 0 Then Exit Sub
-    If InStr(S, "\.") > 0 Then Exit Sub
+    s = Replace(s, "/", "\")
+    If s = "." Then Exit Sub
+    If InStr(s, ".\") > 0 Then Exit Sub
+    If InStr(s, "\.") > 0 Then Exit Sub
     
 
-    S = fixPath(S, ConsoleID)
+    s = fixPath(s, ConsoleID)
     
     'say consoleID, "path is " & s, False
     
-    If DirExists(App.Path & "\user" & S) = True Then
+    If DirExists(App.Path & "\user" & s) = True Then
         
-        S = Replace(S, "\\", "\")
-        S = S & "\"
-        S = Replace(S, "\\", "\")
+        s = Replace(s, "\\", "\")
+        s = s & "\"
+        s = Replace(s, "\\", "\")
         
-        cPath(ConsoleID) = S
+        cPath(ConsoleID) = s
     Else
         GoTo errorDir
     End If
     
     Exit Sub
 errorDir:
-    SayError "Directory Not Found: " & S, ConsoleID
+    SayError "Directory Not Found: " & s, ConsoleID
 End Sub
 
-Public Function fixPath(ByVal S As String, ByVal ConsoleID As Integer) As String
+Public Function fixPath(ByVal s As String, ByVal ConsoleID As Integer) As String
     'file.s will come out as -> /file.s
     '/file.s will come out as -> /file.s
     'system/file.s will come out as -> /system/file.s
     'etc
     
-    S = Trim(S)
+    s = Trim(s)
     
-    If Mid(S, 1, 1) = "/" Then S = "\" & Mid(S, 2, Len(S))
+    If Mid(s, 1, 1) = "/" Then s = "\" & Mid(s, 2, Len(s))
     
-    If Mid(S, 1, 1) = "\" Then
-        fixPath = S
+    If Mid(s, 1, 1) = "\" Then
+        fixPath = s
     Else
         
         cPath(ConsoleID) = Replace(cPath(ConsoleID), "/", "\")
@@ -1724,7 +1732,7 @@ Public Function fixPath(ByVal S As String, ByVal ConsoleID As Integer) As String
         End If
     End If
     
-    fixPath = fixPath & "\" & S
+    fixPath = fixPath & "\" & s
     
     fixPath = Replace(fixPath, "../", "")
     fixPath = Replace(fixPath, "//", "/")
@@ -1825,31 +1833,31 @@ zxc:
 End Sub
 
 
-Public Sub PauseConsole(S As String, ByVal ConsoleID As Integer)
+Public Sub PauseConsole(s As String, ByVal ConsoleID As Integer)
     If Data_For_Run_Function_Enabled(ConsoleID) = 1 Then Exit Sub
     
     ConsolePaused(ConsoleID) = True
     
     Dim propSpace As String
     
-    If Trim(Kill_Property_Space(S)) = "" Then
-        propSpace = "{" & Trim(Get_Property_Space(S)) & "}"
+    If Trim(Kill_Property_Space(s)) = "" Then
+        propSpace = "{" & Trim(Get_Property_Space(s)) & "}"
         
         If Len(propSpace) > 3 Then
-            S = propSpace & "Press any key to continue..."
+            s = propSpace & "Press any key to continue..."
         Else
-            S = "Press any key to continue..."
+            s = "Press any key to continue..."
         End If
     
     End If
     
 
 
-    If Has_Property_Space(S) = True Then
-        Say ConsoleID, S, False
+    If Has_Property_Space(s) = True Then
+        Say ConsoleID, s, False
     Else
         'include the default property space
-        Say ConsoleID, S & "{lblue 10}", False
+        Say ConsoleID, s & "{lblue 10}", False
     End If
     
     Do
@@ -1896,8 +1904,8 @@ Public Sub ListColors(ByVal ConsoleID As Integer)
     
 End Sub
 
-Sub ShowCol(ByVal S As String, ByVal ConsoleID As Integer)
-    Say ConsoleID, S & " (**" & S & "**) {" & S & " 8}", False
+Sub ShowCol(ByVal s As String, ByVal ConsoleID As Integer)
+    Say ConsoleID, s & " (**" & s & "**) {" & s & " 8}", False
 End Sub
 
 Public Sub ShowHelp(sP, ByVal ConsoleID As Integer)
