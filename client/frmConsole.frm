@@ -1066,7 +1066,7 @@ Private Sub Form_Unload(Cancel As Integer)
             Cancel = 1  'cancel the unload
             Exit Sub    'exit the sub
         End If
-        Send "QUIT :www.darksignsonline.com, Dark Signs Online"    'send the quit message
+        Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
         lstUsers.Clear  'clear the list entries
         display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
         sockIRC.Close_   'close the connection
@@ -1131,7 +1131,7 @@ Private Sub lblUsername_Click()
         "Set your username by typing: USERNAME [username]" & vbCrLf & _
         "Set your password by typing: PASSWORD [password]" & vbCrLf & vbCrLf & _
         "Dark Signs requires that each user has their own account." & vbCrLf & vbCrLf & _
-        "Visit www.darksignsonline.com to create a new account." _
+        "Visit darksignsonline.com to create a new account." _
         , vbInformation, "About"
         
     End If

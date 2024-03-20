@@ -550,10 +550,6 @@ Public Sub ConnectToDomain(ByVal s As String, ByVal consoleID As Integer)
         sDomain = i(s)
     End If
     
-    ' User Error..
-    'If Left(sDomain, 4) = "www." Then sDomain = Mid(sDomain, 5, Len(sDomain))
-    'sDomain = Replace(sDomain, "http://", "")
-    
     If InStr(s, " ") > 0 Then
         sPort = Trim(Mid(s, InStr(s, " "), Len(s)))
         s = Trim(Mid(s, InStr(s, " "), Len(s)))
@@ -652,8 +648,6 @@ Public Sub CloseDomainPort(ByVal s As String, ByVal consoleID As Integer)
     
     
     sDomain = i(Mid(s, 1, InStr(s, " ")))
-    If Left(sDomain, 4) = "www." Then sDomain = Mid(sDomain, 5, Len(sDomain))
-    sDomain = Replace(sDomain, "http://", "")
     
     s = Trim(Mid(s, InStr(s, " "), Len(s)))
     
@@ -684,8 +678,6 @@ Public Sub DownloadFromDomain(ByVal s As String, ByVal consoleID As Integer)
     
     
     sDomain = i(Mid(s, 1, InStr(s, " ")))
-    If Left(sDomain, 4) = "www." Then sDomain = Mid(sDomain, 5, Len(sDomain))
-    sDomain = Replace(sDomain, "http://", "")
     
     s = Trim(Mid(s, InStr(s, " "), Len(s)))
     If InStr(s, " ") = 0 Then GoTo zxc
@@ -717,10 +709,7 @@ End Sub
 
 Public Sub SubOwners(ByVal s As String, ByVal consoleID As Integer)
     s = i(s)
-    s = Replace(s, "http://", ""): s = Replace(s, "www.", "")
-    
-    s = Trim(s)
-    
+
     Dim sDomain As String, sUsername As String
     
     If InStr(s, " ") = 0 Then
@@ -912,8 +901,7 @@ Public Sub TransferMoney(ByVal s As String, ByVal consoleID As Integer)
     Dim sTo As String
     Dim sAmount As String
     Dim sDescription As String
-    
-    s = Replace(s, "http://", ""): s = Replace(s, "www.", "")
+
     s = Trim(s)
     If InStr(s, " ") = 0 Then
         SayError "Invalid Parameters.", consoleID

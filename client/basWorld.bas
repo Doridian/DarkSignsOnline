@@ -316,7 +316,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             frmConsole.Shape1.BackColor = iOrange: DoEvents
             SayComm "Unable to log in. Please check your username and password."
                 
-            MsgBox "Your username and password was denied by the server." & vbCrLf & vbCrLf & "Username: " & myUsername & vbCrLf & "Password: [hidden]" & vbCrLf & vbCrLf & "If the information above is not correct, use the USERNAME command to change your username, or the PASSWORD command to change your password. Then type LOGIN again. Contact us if you continue to experience problems." & vbCrLf & vbCrLf & "http://www.darksignsonline.com", vbCritical, "Account Information"
+            MsgBox "Your username and password was denied by the server." & vbCrLf & vbCrLf & "Username: " & myUsername & vbCrLf & "Password: [hidden]" & vbCrLf & vbCrLf & "If the information above is not correct, use the USERNAME command to change your username, or the PASSWORD command to change your password. Then type LOGIN again. Contact us if you continue to experience problems." & vbCrLf & vbCrLf & "https://darksignsonline.com", vbCritical, "Account Information"
                 
         
         Case "1003" 'account disabled
@@ -325,7 +325,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             frmConsole.lblUsername.Caption = "Access Denied."
             frmConsole.Shape1.BackColor = iOrange: DoEvents
             SayComm "Sorry, your account (" & myUsername & ") is disabled."
-            MsgBox "Sorry, your account (" & myUsername & ") is disabled." & vbCrLf & vbCrLf & "This probably means that your account has expired." & vbCrLf & vbCrLf & "Please visit the website to renew your account, or contact us if you believe this is an error." & vbCrLf & vbCrLf & "http://www.darksignsonline.com", vbCritical, "Account Information"
+            MsgBox "Sorry, your account (" & myUsername & ") is disabled." & vbCrLf & vbCrLf & "This probably means that your account has expired." & vbCrLf & vbCrLf & "Please visit the website to renew your account, or contact us if you believe this is an error." & vbCrLf & vbCrLf & "https://darksignsonline.com", vbCritical, "Account Information"
         
         
         '2000 is just a general show in the comm, all purpose
