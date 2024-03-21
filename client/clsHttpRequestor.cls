@@ -86,7 +86,7 @@ Public Sub Send()
         HttpRequest.SetCredentials UserName, Password, HTTPREQUEST_SETCREDENTIALS_FOR_SERVER
     End If
 
-    HttpRequest.SetRequestHeader "User-Agent", "Mozilla/4.0 (compatible; Win32; VbAsyncSocket; Dark Signs Online " & VersionStr() & ")"
+    HttpRequest.SetRequestHeader "User-Agent", "Mozilla/4.0 (compatible; Win32; VbAsyncSocket; DarkSignsOnline/" & VersionStr() & ")"
 
     If Method = "POST" Then
         HttpRequest.SetRequestHeader "Content-Type", "application/x-www-form-urlencoded"

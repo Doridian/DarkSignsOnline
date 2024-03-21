@@ -62,7 +62,7 @@ jobs:
 
         $hash = git rev-parse HEAD
         $vbp = Get-Content .\client\DSO.vbp
-        $vbp = $vbp -replace '^VersionComments=.*$', "VersionComments=""git $hash"""
+        $vbp = $vbp -replace '^VersionComments=.*$', "VersionComments=""git-$hash"""
         $vbp = $vbp -replace '^VersionFileDescription=.*$', "VersionFileDescription=""DSO public build $hash"""
         $vbp | Set-Content .\client\DSO.vbp
     # Build process
