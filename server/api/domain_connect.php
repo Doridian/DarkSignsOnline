@@ -44,7 +44,7 @@ switch ($ver) {
 		echo $d . '_' . $port . '::' . dso_b64_encode($preamble . implode("\r\n", $lines));
 		break;
 	case 2:
-		$params =  $_REQUEST['params'];
+		$params = $_REQUEST['params'];
 		echo $d . ':-:' . $port . ':-:' . dso_b64_encode($code_a);
 		if (!empty($params)) {
 			foreach ($params as $v) {
