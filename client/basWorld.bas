@@ -286,7 +286,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             frmConsole.Shape1.BackColor = iGreen: DoEvents
             SayCOMM "You have been authorized as " & myUsername & "."
             SayCOMM "Welcome to the Dark Signs Network!"
-            SayCOMM "Dark Signs Online - PreRelease Build 1337"
+            SayCOMM "Dark Signs Online - Version " & VersionStr()
             If Command <> "" Then
                 Dim CLine As ConsoleLine
                 CLine = Console_Line_Defaults

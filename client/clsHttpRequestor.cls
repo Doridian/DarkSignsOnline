@@ -85,14 +85,8 @@ Public Sub Send()
     If UserName <> "" And Password <> "" Then
         HttpRequest.SetCredentials UserName, Password, HTTPREQUEST_SETCREDENTIALS_FOR_SERVER
     End If
-    
-    Dim VersionStr As String
-    If App.Minor > 0 Then
-        VersionStr = App.Major & "." & App.Minor & "." & App.Revision
-    Else
-        VersionStr = App.Comments
-    End If
-    HttpRequest.SetRequestHeader "User-Agent", "Mozilla/4.0 (compatible; Win32; VbAsyncSocket; Dark Signs Online " & VersionStr & ")"
+
+    HttpRequest.SetRequestHeader "User-Agent", "Mozilla/4.0 (compatible; Win32; VbAsyncSocket; Dark Signs Online " & VersionStr() & ")"
 
     If Method = "POST" Then
         HttpRequest.SetRequestHeader "Content-Type", "application/x-www-form-urlencoded"

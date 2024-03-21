@@ -46,6 +46,14 @@ Public Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal
        
 Public Declare Function StrFormatByteSize Lib "shlwapi" Alias "StrFormatByteSizeA" (ByVal dw As Long, ByVal pszBuf As String, ByRef cchBuf As Long) As String
 
+Public Function VersionStr() As String
+    If App.Minor > 0 Then
+        VersionStr = App.Major & "." & App.Minor & "." & App.Revision
+    Else
+        VersionStr = App.Comments
+    End If
+End Function
+
 Public Function GetFile(ByVal fn As String) As String
     
     'fn = Replace(fn, "/", "\")
