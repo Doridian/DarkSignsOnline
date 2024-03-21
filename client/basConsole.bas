@@ -6,7 +6,6 @@ Public ActiveConsole As Integer
 
 Public ConsoleHistory(1 To 4, 1 To 9999) As ConsoleLine
 Public Console(1 To 4, 0 To 299) As ConsoleLine
-Public CurrentLine(1 To 4) As Integer
 Public ConsoleScrollInt(1 To 4) As Integer
 
 Public scrConsoleContext(1 To 4) As clsScriptFunctions
@@ -70,23 +69,23 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal conso
 
         RecentCommandsIndex(consoleID) = 0
         'kill the no longer required underscore
-        Console(consoleID, CurrentLine(consoleID)).Caption = Replace(Console(consoleID, CurrentLine(consoleID)).Caption, "_", "")
+        Console(consoleID, 1).Caption = Replace(Console(consoleID, 1).Caption, "_", "")
         'save in recent typed commands
-        AddToRecentCommands Console(consoleID, CurrentLine(consoleID)).Caption
+        AddToRecentCommands Console(consoleID, 1).Caption
         
         'process the command, unless it is input
         If WaitingForInput(consoleID) = True Then
-            tmpS = Trim(Console(consoleID, CurrentLine(consoleID)).Caption)
+            tmpS = Trim(Console(consoleID, 1).Caption)
             If InStr(tmpS, ">") > 0 Then tmpS = Mid(tmpS, InStr(tmpS, ">") + 1, Len(tmpS))
             WaitingForInputReturn(consoleID) = Trim(tmpS)
             cPath(consoleID) = cPath_tmp(consoleID)
             WaitingForInput(consoleID) = False
             Shift_Console_Lines consoleID
-            Console(consoleID, CurrentLine(consoleID)).Caption = Console_Prompt(True, consoleID)
-            Console(consoleID, CurrentLine(consoleID)) = Console_Line_Defaults
+            Console(consoleID, 1).Caption = Console_Prompt(True, consoleID)
+            Console(consoleID, 1) = Console_Line_Defaults
         Else
             
-            Run_Command Console(consoleID, CurrentLine(consoleID)), consoleID, False
+            Run_Command Console(consoleID, 1), consoleID, False
             
         End If
 
@@ -214,7 +213,7 @@ Public Sub MoveUnderscoreRight(ByVal consoleID As Integer)
     On Error GoTo zxc
     Dim part1 As String, part2 As String, s As String
     
-    s = Console(consoleID, CurrentLine(consoleID)).Caption
+    s = Console(consoleID, 1).Caption
     If Right(s, 1) = "_" Then Exit Sub
     
     If InStr(s, "_") = 0 Then Exit Sub
@@ -226,32 +225,32 @@ Public Sub MoveUnderscoreRight(ByVal consoleID As Integer)
 
     'If InStr(s, "_") < Len(Console_Prompt(True)) Then Exit Sub
     
-    Console(consoleID, CurrentLine(consoleID)).Caption = s
+    Console(consoleID, 1).Caption = s
 zxc:
 End Sub
 
 Public Sub MoveUnderscoreToHome(ByVal consoleID As Integer)
     On Error GoTo zxc
     Dim s As String
-    s = Console(consoleID, CurrentLine(consoleID)).Caption
+    s = Console(consoleID, 1).Caption
     If InStr(s, "_") = 0 Then Exit Sub
     
 
     s = Console_Prompt(False, consoleID) & "_" & Trim(Replace(Mid(s, Len(Console_Prompt(False, consoleID)), 999), "_", ""))
 
     
-    Console(consoleID, CurrentLine(consoleID)).Caption = s
+    Console(consoleID, 1).Caption = s
 zxc:
 End Sub
 
 Public Sub MoveUnderscoreToEnd(ByVal consoleID As Integer)
     On Error GoTo zxc
     Dim s As String
-    s = Console(consoleID, CurrentLine(consoleID)).Caption
+    s = Console(consoleID, 1).Caption
     
     s = Replace(s, "_", "") & "_"
 
-    Console(consoleID, CurrentLine(consoleID)).Caption = s
+    Console(consoleID, 1).Caption = s
 zxc:
 End Sub
 
@@ -259,7 +258,7 @@ Public Sub MoveUnderscoreLeft(ByVal consoleID As Integer)
     On Error GoTo zxc
     Dim part1 As String, part2 As String, s As String
     
-    s = Console(consoleID, CurrentLine(consoleID)).Caption
+    s = Console(consoleID, 1).Caption
     If InStr(s, "_") = 0 Then Exit Sub
     part1 = Mid(s, 1, InStr(s, "_") - 2)
     part2 = Mid(s, InStr(s, "_") - 1, Len(s))
@@ -268,17 +267,17 @@ Public Sub MoveUnderscoreLeft(ByVal consoleID As Integer)
     
     If InStr(s, "_") < Len(Console_Prompt(True, consoleID)) Then Exit Sub
     
-    Console(consoleID, CurrentLine(consoleID)).Caption = s
+    Console(consoleID, 1).Caption = s
 zxc:
 End Sub
 
 Public Sub Insert_Char(ByVal sChar As String, ByVal consoleID As Integer)
     Dim tmpS As String
     
-    tmpS = Replace(Console(consoleID, CurrentLine(consoleID)).Caption, "_", sChar + "_")
+    tmpS = Replace(Console(consoleID, 1).Caption, "_", sChar + "_")
     
     
-    Console(consoleID, CurrentLine(consoleID)).Caption = tmpS
+    Console(consoleID, 1).Caption = tmpS
     
     DoEvents
 End Sub
@@ -286,21 +285,19 @@ End Sub
 Public Sub New_Console_Line_InProgress(ByVal consoleID As Integer)
     Shift_Console_Lines consoleID
     
-    Console(consoleID, CurrentLine(consoleID)) = Console_Line_Defaults
-    Console(consoleID, CurrentLine(consoleID)).Caption = " "
+    Console(consoleID, 1) = Console_Line_Defaults
+    Console(consoleID, 1).Caption = " "
 End Sub
 
 Public Sub New_Console_Line(ByVal consoleID As Integer)
     Shift_Console_Lines consoleID
     
-    Console(consoleID, CurrentLine(consoleID)) = Console_Line_Defaults
+    Console(consoleID, 1) = Console_Line_Defaults
     'add the standard prompt if required
-    Console(consoleID, CurrentLine(consoleID)).Caption = Console_Prompt(True, consoleID)
+    Console(consoleID, 1).Caption = Console_Prompt(True, consoleID)
 End Sub
 
 Public Sub Shift_Console_Lines(ByVal consoleID As Integer)
-
-
     Dim n As Integer
     For n = 299 To 2 Step -1
         Console(consoleID, n) = Console(consoleID, n - 1)
@@ -334,7 +331,7 @@ Public Sub RemLastKey(ByVal consoleID As Integer)
     
     'backspace
     Dim tmpS As String
-    tmpS = Console(consoleID, CurrentLine(consoleID)).Caption
+    tmpS = Console(consoleID, 1).Caption
     
     'tmpS = Remove_Property_Space(tmpS) 'this was causing the backspace error
     
@@ -351,7 +348,7 @@ Public Sub RemLastKey(ByVal consoleID As Integer)
     If Len(part1) < Len(Console_Prompt(False, consoleID)) Then Exit Sub
     
     
-    Console(consoleID, CurrentLine(consoleID)).Caption = tmpS
+    Console(consoleID, 1).Caption = tmpS
 zxc:
 End Sub
 
@@ -360,7 +357,7 @@ Public Sub RemNextKey(ByVal consoleID As Integer)
     
     'backspace
     Dim tmpS As String
-    tmpS = Console(consoleID, CurrentLine(consoleID)).Caption
+    tmpS = Console(consoleID, 1).Caption
     If InStr(tmpS, "_") = 0 Then Exit Sub 'no underscore found = error -> exit
     
     Dim part1 As String, part2 As String
@@ -377,7 +374,7 @@ Public Sub RemNextKey(ByVal consoleID As Integer)
 
     
     
-    Console(consoleID, CurrentLine(consoleID)).Caption = tmpS
+    Console(consoleID, 1).Caption = tmpS
 zxc:
 End Sub
 
@@ -387,10 +384,8 @@ Public Sub Reset_Console(ByVal consoleID As Integer)
     For n = 1 To 299
         Console(consoleID, n) = Console_Line_Defaults
     Next n
-
-    CurrentLine(consoleID) = 1
     
-    Console(consoleID, CurrentLine(consoleID)).Caption = Console_Prompt(True, consoleID)
+    Console(consoleID, 1).Caption = Console_Prompt(True, consoleID)
     
 End Sub
 
@@ -698,37 +693,42 @@ Public Function SAY(ByVal consoleID As Integer, s As String, Optional withNewLin
 
     Dim tmpLine As ConsoleLine, propertySpace As String
     
-    tmpLine = Console(consoleID, CurrentLine(consoleID))
+    tmpLine = Console(consoleID, 1)
     
+    'If withNewLineAfter = True Then
+        'Shift_Console_Lines consoleID
+        'Console(consoleID, 1) = Console_Line_Defaults
+    'End If
+
     'If withNewLineAfter = False Then
     s = PreSpace & s
         
         
     
 If SkipPropertySpace = 1 Then
-    Console(consoleID, CurrentLine(consoleID)).Caption = s
+    Console(consoleID, 1).Caption = s
     GoTo SkipPropertySpaceNow
 End If
 
     If Has_Property_Space(s) = True Then
         propertySpace = i(Get_Property_Space(s)) & " "
         propertySpace = Replace(propertySpace, ",", " ")
-        Console(consoleID, CurrentLine(consoleID)).FontColor = propertySpace_Color(propertySpace)
-        Console(consoleID, CurrentLine(consoleID)).FontSize = propertySpace_Size(propertySpace)
-        Console(consoleID, CurrentLine(consoleID)).FontName = propertySpace_Name(propertySpace)
-        Console(consoleID, CurrentLine(consoleID)).FontBold = propertySpace_Bold(propertySpace)
-        Console(consoleID, CurrentLine(consoleID)).FontItalic = propertySpace_Italic(propertySpace)
-        Console(consoleID, CurrentLine(consoleID)).FontUnderline = propertySpace_Underline(propertySpace)
-        Console(consoleID, CurrentLine(consoleID)).FontStrikeThru = propertySpace_Strikethru(propertySpace)
-        If InStr(propertySpace, "flash ") > 0 Then Console(consoleID, CurrentLine(consoleID)).Flash = True Else Console(consoleID, CurrentLine(consoleID)).Flash = False
-        If InStr(propertySpace, "flashfast ") > 0 Then Console(consoleID, CurrentLine(consoleID)).FlashFast = True Else Console(consoleID, CurrentLine(consoleID)).FlashFast = False
-        If InStr(propertySpace, "flashslow ") > 0 Then Console(consoleID, CurrentLine(consoleID)).FlashSlow = True Else Console(consoleID, CurrentLine(consoleID)).FlashSlow = False
-        If InStr(propertySpace, "center ") > 0 Then Console(consoleID, CurrentLine(consoleID)).Center = True Else Console(consoleID, CurrentLine(consoleID)).Center = False
-        If InStr(propertySpace, "right ") > 0 Then Console(consoleID, CurrentLine(consoleID)).Right = True Else Console(consoleID, CurrentLine(consoleID)).Right = False
+        Console(consoleID, 1).FontColor = propertySpace_Color(propertySpace)
+        Console(consoleID, 1).FontSize = propertySpace_Size(propertySpace)
+        Console(consoleID, 1).FontName = propertySpace_Name(propertySpace)
+        Console(consoleID, 1).FontBold = propertySpace_Bold(propertySpace)
+        Console(consoleID, 1).FontItalic = propertySpace_Italic(propertySpace)
+        Console(consoleID, 1).FontUnderline = propertySpace_Underline(propertySpace)
+        Console(consoleID, 1).FontStrikeThru = propertySpace_Strikethru(propertySpace)
+        If InStr(propertySpace, "flash ") > 0 Then Console(consoleID, 1).Flash = True Else Console(consoleID, 1).Flash = False
+        If InStr(propertySpace, "flashfast ") > 0 Then Console(consoleID, 1).FlashFast = True Else Console(consoleID, 1).FlashFast = False
+        If InStr(propertySpace, "flashslow ") > 0 Then Console(consoleID, 1).FlashSlow = True Else Console(consoleID, 1).FlashSlow = False
+        If InStr(propertySpace, "center ") > 0 Then Console(consoleID, 1).Center = True Else Console(consoleID, 1).Center = False
+        If InStr(propertySpace, "right ") > 0 Then Console(consoleID, 1).Right = True Else Console(consoleID, 1).Right = False
     End If
     
 
-    Console(consoleID, CurrentLine(consoleID)).Caption = Remove_Property_Space(s)
+    Console(consoleID, 1).Caption = Remove_Property_Space(s)
 
 DoEvents
 
@@ -737,10 +737,10 @@ SkipPropertySpaceNow:
 
     
     'don't allow multiple lines!
-    If InStr(Console(consoleID, CurrentLine(consoleID)).Caption, vbCr) > 0 Then
+    If InStr(Console(consoleID, 1).Caption, vbCr) > 0 Then
         'this prevents each say line from being more than one line, stops corruption in console
-        Console(consoleID, CurrentLine(consoleID)).Caption = Mid(Console(consoleID, CurrentLine(consoleID)).Caption, 1, InStr(Console(consoleID, CurrentLine(consoleID)).Caption, vbCr) - 1)
-        Console(consoleID, CurrentLine(consoleID)).Caption = Console(consoleID, CurrentLine(consoleID)).Caption  '& "   --- only the first line is shown ---"
+        Console(consoleID, 1).Caption = Mid(Console(consoleID, 1).Caption, 1, InStr(Console(consoleID, 1).Caption, vbCr) - 1)
+        Console(consoleID, 1).Caption = Console(consoleID, 1).Caption  '& "   --- only the first line is shown ---"
     End If
     
     
@@ -748,14 +748,13 @@ SkipPropertySpaceNow:
     If withNewLineAfter = True Then
         'go to the next line
         New_Console_Line consoleID
-        
-        'put the current line back at the next line
-        Console(consoleID, CurrentLine(consoleID)) = tmpLine
     Else
-       
-       
+        Console(consoleID, 2) = Console(consoleID, 1)
     End If
-    
+
+    'put the current line back at the next line
+    Console(consoleID, 1) = tmpLine
+
     DoEvents
 End Function
 

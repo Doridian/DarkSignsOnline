@@ -724,11 +724,11 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     Else
         If KeyCode = vbKeyUp Or KeyCode = vbKeyDown Then
             Dim tmpS As String, tmpInputString As String
-            If InStr(Console(ActiveConsole, CurrentLine(ActiveConsole)).Caption, ">") > 0 Then
-                tmpS = Mid(Console(ActiveConsole, CurrentLine(ActiveConsole)).Caption, InStr(Console(ActiveConsole, CurrentLine(ActiveConsole)).Caption, ">") + 1, Len(Console(ActiveConsole, CurrentLine(ActiveConsole)).Caption))
-                tmpInputString = Mid(Console(ActiveConsole, CurrentLine(ActiveConsole)).Caption, 1, InStr(Console(ActiveConsole, CurrentLine(ActiveConsole)).Caption, ">") + 1)
+            If InStr(Console(ActiveConsole, 1).Caption, ">") > 0 Then
+                tmpS = Mid(Console(ActiveConsole, 1).Caption, InStr(Console(ActiveConsole, 1).Caption, ">") + 1, Len(Console(ActiveConsole, 1).Caption))
+                tmpInputString = Mid(Console(ActiveConsole, 1).Caption, 1, InStr(Console(ActiveConsole, 1).Caption, ">") + 1)
             Else
-                tmpS = Console(ActiveConsole, CurrentLine(ActiveConsole)).Caption
+                tmpS = Console(ActiveConsole, 1).Caption
                 tmpInputString = ""
             End If
             tmpS = Trim(Replace(tmpS, "_", ""))
@@ -738,7 +738,7 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
         If KeyCode = vbKeyDown Then
             If RecentCommandsIndex(ActiveConsole) <= 0 Then Exit Sub
             RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) - 1
-            Console(ActiveConsole, CurrentLine(ActiveConsole)).Caption = tmpInputString & RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole)) & "_"
+            Console(ActiveConsole, 1).Caption = tmpInputString & RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole)) & "_"
             Exit Sub
         End If
         If KeyCode = vbKeyUp Then
@@ -746,7 +746,7 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
             If Trim(RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole) + 1)) = "" Then Exit Sub
             RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) + 1
             If RecentCommandsIndex(ActiveConsole) = 1 Then RecentCommands(ActiveConsole, 0) = tmpS
-            Console(ActiveConsole, CurrentLine(ActiveConsole)).Caption = tmpInputString & RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole)) & "_"
+            Console(ActiveConsole, 1).Caption = tmpInputString & RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole)) & "_"
             Exit Sub
         End If
     End If
@@ -778,7 +778,7 @@ End Sub
 
 Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
  Dim tmpS As String, tmpInputString As String, tmpS2 As String, iTmp As Long, tmpS3 As String, tmpSP As String, globalITMP As Long, firstParam As Boolean
- tmpS = Console(consoleID, CurrentLine(consoleID)).Caption
+ tmpS = Console(consoleID, 1).Caption
  If autoCompActive(consoleID) = True Then
     tmpS = autoCompLast(consoleID)
  Else
@@ -827,7 +827,7 @@ Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
   Else
    tmpS3 = tmpS3 & " "
   End If
-   Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpSP & tmpS3 & "_"
+   Console(consoleID, 1).Caption = tmpInputString & tmpSP & tmpS3 & "_"
    autoCompActive(consoleID) = True
    autoILast(consoleID) = autoILast(consoleID) + 1
    Exit Sub
@@ -845,7 +845,7 @@ acSubEnd1:
  On Error GoTo 0
  If tmpS3 <> "" Then
   If LCase(Right(tmpS3, 3)) = ".ds" Then tmpS3 = Mid(tmpS3, 1, Len(tmpS3) - 3)
-  Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpS3 & " _"
+  Console(consoleID, 1).Caption = tmpInputString & tmpS3 & " _"
   autoCompActive(consoleID) = True
   autoILast(consoleID) = autoILast(consoleID) + 1
   Exit Sub
@@ -869,7 +869,7 @@ acSubEnd2:
      On Error GoTo 0
      If tmpS3 <> "" Then
          If LCase(Right(tmpS3, 3)) = ".ds" Then tmpS3 = Mid(tmpS3, 1, Len(tmpS3) - 3)
-         Console(consoleID, CurrentLine(consoleID)).Caption = tmpInputString & tmpS3 & " _"
+         Console(consoleID, 1).Caption = tmpInputString & tmpS3 & " _"
          autoCompActive(consoleID) = True
          autoILast(consoleID) = autoILast(consoleID) + 1
          Exit Sub

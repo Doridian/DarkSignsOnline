@@ -269,7 +269,6 @@ Public Sub EDIT(file As String)
     AssertCLIOnly
     Yield
     EditFile file, PrivConsoleID
-    Yield
 End Sub
 
 Public Sub SAY(s As String)
