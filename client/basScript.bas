@@ -41,7 +41,9 @@ Public Type NextFunction
 End Type
 
 Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, Optional IsRoot As Boolean = False)
-    ScriptParameters(0) = filename
+    If ScriptParameters(0) = "" Then
+        ScriptParameters(0) = filename
+    End If
     If consoleID < 1 Then
         consoleID = 1
     End If

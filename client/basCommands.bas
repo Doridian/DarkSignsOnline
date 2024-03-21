@@ -185,7 +185,7 @@ ScriptEnd:
         Case "logout": LogoutNow consoleID
         Case "wait": 'WaitNow sP, consoleID
         
-        Case "connect": ConnectToDomain sP, consoleID
+        'Case "connect": ConnectToDomain sP, consoleID
         Case "upload": UploadToDomain sP, consoleID
         Case "closeport": CloseDomainPort sP, consoleID 'Used to close server ports.
         Case "download": DownloadFromDomain sP, consoleID
@@ -484,9 +484,9 @@ Public Sub ListMyDomains(ByVal consoleID As Integer)
     RunPage "my_domains.php?type=domain", consoleID, False, "", 0
 End Sub
 
-Public Sub ListMySubDomains(ByVal domain As String, ByVal consoleID As Integer)
+Public Sub ListMySubDomains(ByVal Domain As String, ByVal consoleID As Integer)
     SayCOMM "Downloading subdomain list..."
-    RunPage "my_domains.php?domain=" & EncodeURLParameter(domain) & "&type=subdomain", consoleID, False, "", 0
+    RunPage "my_domains.php?domain=" & EncodeURLParameter(Domain) & "&type=subdomain", consoleID, False, "", 0
 End Sub
 
 Public Sub ListMyIPs(ByVal consoleID As Integer)
@@ -545,69 +545,35 @@ Public Sub SetYDiv(s As String)
 zxc:
 End Sub
 
-Public Sub ConnectToDomain(ByVal s As String, ByVal consoleID As Integer)
-    Dim sDomain As String
-    Dim sPort As String
+Public Sub ConnectToDomain(sDomain As String, sPort As Integer, sParams() As String, ByVal consoleID As Integer)
     Dim sFilename As String
     Dim sFileData As String
-    Dim sParams As String
-    
-    'If IsFromScript = False Then
-    '    referals(ActiveConsole) = "A"
-    'End If
-    
-    s = Replace(s, ":", " ")
-    s = Trim(s)
-    
-    If s = "" Then GoTo zxc
-    
-    If InStr(s, " ") > 0 Then
-        sDomain = i(Mid(s, 1, InStr(s, " ")))
-    Else
-        sDomain = i(s)
-    End If
-    
-    If InStr(s, " ") > 0 Then
-        sPort = Trim(Mid(s, InStr(s, " "), Len(s)))
-        s = Trim(Mid(s, InStr(s, " "), Len(s)))
-        If InStr(sPort, " ") > 0 Then sPort = Trim(Mid(sPort, 1, InStr(sPort, " ")))
-        
-        If InStr(s, " ") > 0 Then
-            'there are parameters
-            sParams = Trim(Mid(s, InStr(s, " "), Len(s)))
-        Else
-            sParams = ""
-        End If
-    End If
-    
 
-    If sPort = "" Then sPort = "80"
+    If sPort <= 0 Then
+        sPort = 80
+    End If
     
-    If Val(sPort) < 1 Then
+    If sPort < 1 Then
         SayError "Invalid Port Number: " & sPort, consoleID
         Exit Sub
     End If
-    If Val(sPort) > 65536 Then
+    If sPort > 65535 Then
         SayError "Invalid Port Number: " & sPort, consoleID
         Exit Sub
     End If
-    
-    
+
     SayCOMM "Connecting to " & UCase(sDomain) & ":" & sPort & "..."
     SAY consoleID, "{green}Connecting to " & UCase(sDomain) & ":" & sPort & "...", False
     
-    RunPage "domain_connect.php?params=" & EncodeURLParameter(sParams) & _
-    "&d=" & EncodeURLParameter(sDomain) & _
-    "&port=" & EncodeURLParameter(sPort), consoleID
-    
+    Dim PostData As String
+    PostData = "c=1"
+    Dim X As Integer
+    For X = 1 To UBound(sParams)
+        PostData = PostData & "&params[]=" & EncodeURLParameter(sParams(X))
+    Next
 
-
-    
-    Exit Sub
-zxc:
-    SayError "Invalid Parameters", consoleID
-    ShowHelp "connect", consoleID
-    
+    RunPage "domain_connect.php?d=" & EncodeURLParameter(sDomain) & _
+            "&port=" & EncodeURLParameter(sPort), consoleID, True, PostData
 End Sub
 
 Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)

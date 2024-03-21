@@ -232,6 +232,37 @@ Public Function DRAW(YPos As Variant, R As Variant, G As Variant, b As Variant, 
     Yield
 End Function
 
+Public Function CONNECT(ParamArray XArr() As Variant)
+    Dim Domain As String
+    Domain = XArr(0)
+    Dim Port As Integer
+    Port = XArr(1)
+
+    Yield
+
+    If Port < 1 Or Port > 65535 Then
+        Err.Raise 9999, "DSO", "Invalid Port Number: " & Port
+        Exit Function
+    End If
+
+    basWorld.SayCOMM "Connecting to " & UCase(Domain) & ":" & Port & "..."
+    basConsole.SAY consoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "...", False
+
+    Dim PostData As String
+    PostData = "c=1"
+    If UBound(XArr) >= 2 Then
+        Dim X As Integer
+        For X = 2 To UBound(XArr)
+            PostData = PostData & "&params[]=" & EncodeURLParameter(XArr(X))
+        Next
+    End If
+
+    RunPage "domain_connect.php?d=" & EncodeURLParameter(Domain) & _
+            "&port=" & EncodeURLParameter(Port), consoleID, True, PostData
+
+    Yield
+End Function
+
 Public Sub LOGIN()
     LoginNow PrivConsoleID
     Yield

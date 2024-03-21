@@ -27,7 +27,7 @@ Private Const INTERNET_MAX_URL_LENGTH As Long = 2048
 Private Const URL_ESCAPE_PERCENT As Long = &H1000&
 
 Private Type ProcessQueueEntry
-    Data As String
+    data As String
     DataSource As String
     consoleID As Integer
     IsCustomDownload As Integer
@@ -217,7 +217,7 @@ End Sub
 
 Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Integer, ByVal IsCustomDownload As Integer)
     Dim NewEntry As ProcessQueueEntry
-    NewEntry.Data = s
+    NewEntry.data = s
     NewEntry.DataSource = sSource
     NewEntry.consoleID = consoleID
     NewEntry.IsCustomDownload = IsCustomDownload
@@ -239,7 +239,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
     Dim consoleID As Integer
     Dim IsCustomDownload As Integer
 
-    s = ProcessQueue(Index).Data
+    s = ProcessQueue(Index).data
     sSource = ProcessQueue(Index).DataSource
     consoleID = ProcessQueue(Index).consoleID
     IsCustomDownload = ProcessQueue(Index).IsCustomDownload
@@ -363,26 +363,39 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
 '            UpdateChat sTimes, sMessages
             
         Case "4100":
-            
-
             If Len(s) < 20 And InStr(i(s), "not found") > 0 Then
                 SAY consoleID, "Connection Failed.{orange}", False
                 New_Console_Line ActiveConsole
             Else
-                Dim sParameters As String
-                If InStr(s, "::") > 0 Then
-                    sParameters = Mid(s, 1, InStr(s, "::") - 1)
-                    s = Mid(s, InStr(s, "::") + 2, Len(s))
-                End If
+                Dim DomainSplit() As String
+                DomainSplit = Split(s, ":-:")
+                ' 0 = domain
+                ' 1 = port
+                ' 2 = code
+                ' 3+ = params
             
-                Dim b64decoded() As Byte
-                b64decoded = basConsole.DecodeBase64(s)
-                Dim newS As String
-                newS = StrConv(b64decoded, vbUnicode)
+                Dim DomainConnectParams() As String
+                ReDim DomainConnectParams(0 To UBound(DomainSplit) - 3)
+    
+                Dim strDomain As String
+                strDomain = DomainSplit(0)
+                Dim strPort As String
+                strPort = DomainSplit(1)
+                
+                Dim X As Integer
+                For X = 0 To UBound(DomainConnectParams)
+                    Dim b64decoded() As Byte
+                    b64decoded = basConsole.DecodeBase64(DomainSplit(X + 2))
+                    Dim newS As String
+                    DomainConnectParams(X) = StrConv(b64decoded, vbUnicode)
+                Next
 
-                Dim S4100EmptyParams(0 To 0) As String
-                WriteClean App.Path & "\user\system\temp.dat", newS
-                Run_Script "\system\temp.dat", consoleID, S4100EmptyParams, Left(sParameters, InStr(sParameters, "_") - 1)
+                Dim strCode As String
+                strCode = DomainConnectParams(0)
+                DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
+
+                WriteClean App.Path & "\user\system\temp.dat", strCode
+                Run_Script "\system\temp.dat", consoleID, DomainConnectParams, DomainConnectParams(0)
             End If
             
         Case "4300" 'file library upload complete
