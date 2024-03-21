@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Private consoleID As Integer
+Private PrivConsoleID As Integer
 Private ScriptFrom As String
 Private IsCLIInput As Boolean
 Private IsConfigured As Boolean
@@ -21,6 +21,22 @@ Private SControl As ScriptControl
 Public Aborted As Boolean
 
 Private PendingCustomDownloads() As Integer
+
+Public Property Get Username() As String
+    Username = myUsername
+End Property
+
+Public Property Get ConsoleID() As String
+    ConsoleID = PrivConsoleID
+End Property
+
+Public Property Get TimeStr() As String
+    TimeStr = DateTime.Time$
+End Property
+
+Public Property Get DateStr() As String
+    DateStr = DateTime.Date$
+End Property
 
 Private Sub Class_Initialize()
     ReDim PendingCustomDownloads(0 To 0)
@@ -49,7 +65,7 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
         Exit Sub
     End If
     IsConfigured = True
-    consoleID = NewConsoleID
+    PrivConsoleID = NewConsoleID
     ScriptFrom = NewScriptFrom
     IsCLIInput = NewIsCLIInput
     Set SControl = NewScriptControl
@@ -129,7 +145,7 @@ Private Function DoDownload(Url As String, UsePost As Boolean, PostData As Strin
     AddCustomDownload ResIndex
 
     Yield
-    RunPage Url, consoleID, UsePost, PostData, ResIndex, True
+    RunPage Url, PrivConsoleID, UsePost, PostData, ResIndex, True
 End Function
 
 Public Function WAITFOR(ResIndexRaw As Variant) As String
@@ -159,18 +175,18 @@ Public Sub SayCOMM(s As String)
 End Sub
 
 Public Sub CD(dir As String)
-    ChangeDir dir, consoleID
+    ChangeDir dir, PrivConsoleID
     Yield
 End Sub
 
 Public Sub SAY(s As String)
-    basConsole.SAY consoleID, s
+    basConsole.SAY PrivConsoleID, s
     Yield
 End Sub
 
 Public Sub RUN(Script As String)
     Yield
-    Run_Script cPath(consoleID) & "/" & Script, consoleID, "", "RUN"
+    Run_Script cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, "", "RUN"
     Yield
 End Sub
 
@@ -178,13 +194,17 @@ Public Function DOWNLOAD(Url As String) As Integer
      DOWNLOAD = DoDownload(Url, True, "", True)
 End Function
 
+Public Function DRAW(Opt As String)
+    DrawItUp Opt, PrivConsoleID
+End Function
+
 Public Sub LOGIN()
-    LoginNow consoleID
+    LoginNow PrivConsoleID
 End Sub
 
 Public Sub Yield()
     DoEvents
-    If CancelScript(consoleID) Then
+    If CancelScript(PrivConsoleID) Then
         Aborted = True
         Err.Raise 9001, "DSO", "Script canceled by Ctrl+C"
     End If
