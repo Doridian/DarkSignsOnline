@@ -45,7 +45,7 @@ switch ($ver) {
 		break;
 	case 2:
 		$params = $_REQUEST['params'];
-		echo $d . ':-:' . $port . ':-:' . dso_b64_encode($code_a);
+		echo $d . ':-:' . $port . ':-:' . dso_b64_encode($code_a[0]);
 		if (!empty($params)) {
 			foreach ($params as $v) {
 				echo ':-:' . dso_b64_encode($v);
