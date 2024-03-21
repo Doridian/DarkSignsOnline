@@ -232,7 +232,7 @@ Public Function DRAW(YPos As Variant, R As Variant, G As Variant, b As Variant, 
     Yield
 End Function
 
-Public Function CONNECT(ParamArray XArr() As Variant)
+Public Function Connect(ParamArray XArr() As Variant)
     Dim Domain As String
     Domain = XArr(0)
     Dim Port As Integer
@@ -273,6 +273,14 @@ Public Sub LOGOUT()
     LogoutNow PrivConsoleID
     Yield
 End Sub
+
+Public Sub UPLOAD(Domain As String, Port As Variant, Filename As String)
+    AssertCLIOnly
+    Yield
+    UploadToDomain Domain, Port, Filename, consoleID
+    Yield
+End Sub
+
 
 Public Function ArgC() As Integer
     ArgC = UBound(PrivParameters)

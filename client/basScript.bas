@@ -40,10 +40,7 @@ Public Type NextFunction
     FunctionName As String
 End Type
 
-Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, Optional IsRoot As Boolean = False)
-    If ScriptParameters(0) = "" Then
-        ScriptParameters(0) = filename
-    End If
+Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, Optional IsRoot As Boolean = False)
     If consoleID < 1 Then
         consoleID = 1
     End If
@@ -52,37 +49,6 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
     End If
     Dim OldPath As String
     OldPath = cPath(consoleID)
-
-    If Right(Trim(filename), 1) = ">" Then Exit Function
-    If Trim(filename) = "." Or Trim(filename) = ".." Then Exit Function
-    If InStr(filename, Chr(34) & Chr(34)) Then Exit Function
-    
-    DoEvents
-
-    Dim ShortFileName As String
-    'file name should be from local dir, i.e: \system\startup.ds
-    ShortFileName = filename
-    filename = App.Path & "\user" & filename
-    'make sure it is not a directory
-    If DirExists(filename) = True Then Exit Function
-
-    If FileExists(filename) = False Then
-        SayCOMM "File Not Found: " & filename
-        Exit Function
-    End If
-    
-    Dim FF As Long
-    Dim tmpS As String
-    Dim tmpAll As String
-    tmpAll = ""
-    FF = FreeFile
-    Open filename For Input As #FF
-        Do Until EOF(FF)
-            tmpS = ""
-            Line Input #FF, tmpS
-            tmpAll = tmpAll & Trim(tmpS) & vbCrLf
-        Loop
-    Close #FF
 
     CancelScript(consoleID) = False
 
@@ -122,6 +88,45 @@ ScriptEnd:
     G.CleanupScriptTasks
     New_Console_Line consoleID
     cPath(consoleID) = OldPath
+End Function
+
+Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, Optional IsRoot As Boolean = False)
+    If ScriptParameters(0) = "" Then
+        ScriptParameters(0) = filename
+    End If
+
+    If Right(Trim(filename), 1) = ">" Then Exit Function
+    If Trim(filename) = "." Or Trim(filename) = ".." Then Exit Function
+    If InStr(filename, Chr(34) & Chr(34)) Then Exit Function
+    
+    DoEvents
+
+    Dim ShortFileName As String
+    'file name should be from local dir, i.e: \system\startup.ds
+    ShortFileName = filename
+    filename = App.Path & "\user" & filename
+    'make sure it is not a directory
+    If DirExists(filename) = True Then Exit Function
+
+    If FileExists(filename) = False Then
+        SayCOMM "File Not Found: " & filename
+        Exit Function
+    End If
+    
+    Dim FF As Long
+    Dim tmpS As String
+    Dim tmpAll As String
+    tmpAll = ""
+    FF = FreeFile
+    Open filename For Input As #FF
+        Do Until EOF(FF)
+            tmpS = ""
+            Line Input #FF, tmpS
+            tmpAll = tmpAll & Trim(tmpS) & vbCrLf
+        Loop
+    Close #FF
+
+    Run_Script_Code tmpAll, consoleID, ScriptParameters, ScriptFrom, IsRoot
 End Function
 
 

@@ -375,7 +375,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 ' 3+ = params
             
                 Dim DomainConnectParams() As String
-                ReDim DomainConnectParams(0 To UBound(DomainSplit) - 3)
+                ReDim DomainConnectParams(0 To UBound(DomainSplit) - 2)
     
                 Dim strDomain As String
                 strDomain = DomainSplit(0)
@@ -394,8 +394,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 strCode = DomainConnectParams(0)
                 DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
 
-                WriteClean App.Path & "\user\system\temp.dat", strCode
-                Run_Script "\system\temp.dat", consoleID, DomainConnectParams, DomainConnectParams(0)
+                Run_Script_Code strCode, consoleID, DomainConnectParams, DomainConnectParams(0)
             End If
             
         Case "4300" 'file library upload complete

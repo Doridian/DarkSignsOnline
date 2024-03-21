@@ -186,7 +186,7 @@ ScriptEnd:
         Case "wait": 'WaitNow sP, consoleID
         
         'Case "connect": ConnectToDomain sP, consoleID
-        Case "upload": UploadToDomain sP, consoleID
+        'Case "upload": UploadToDomain sP, consoleID
         Case "closeport": CloseDomainPort sP, consoleID 'Used to close server ports.
         Case "download": DownloadFromDomain sP, consoleID
         Case "register": RegisterDomain sP, consoleID
@@ -576,27 +576,10 @@ Public Sub ConnectToDomain(sDomain As String, sPort As Integer, sParams() As Str
             "&port=" & EncodeURLParameter(sPort), consoleID, True, PostData
 End Sub
 
-Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
-    Dim sDomain As String
-    Dim sPort As String
-    Dim sFilename As String
+Public Sub UploadToDomain(ByVal sDomain As String, ByVal sPort As Integer, ByVal sFilename As String, ByVal consoleID As Integer)
     Dim sFileData As String
-    
-    s = Trim(s)
-    If InStr(s, " ") = 0 Then GoTo zxc
-    
-    
-    sDomain = i(Mid(s, 1, InStr(s, " ")))
-
-    s = Trim(Mid(s, InStr(s, " "), Len(s)))
-    If InStr(s, " ") = 0 Then GoTo zxc
-    
-    sPort = i(Mid(s, 1, InStr(s, " ")))
-    sFilename = Trim(Mid(s, InStr(s, " "), Len(s)))
     sFilename = fixPath(sFilename, consoleID)
-    
 
-    
     If FileExists(App.Path & "\user" & sFilename) = True Then
         Dim tempStrA As String
 
@@ -614,12 +597,6 @@ Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
         SayError "File Not Found:" & sFilename, consoleID
         Exit Sub
     End If
-
-    Exit Sub
-zxc:
-    SayError "Invalid Parameters", consoleID
-    ShowHelp "upload", consoleID
-    
 End Sub
 
 Public Sub CloseDomainPort(ByVal s As String, ByVal consoleID As Integer)
