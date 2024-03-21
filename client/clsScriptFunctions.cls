@@ -24,6 +24,7 @@ Public Aborted As Boolean
 
 Private PrivRedirectOutput As Boolean
 Private PrivOutput As String
+Private PrivIsRoot As Boolean
 
 Private PendingCustomDownloads() As Integer
 
@@ -103,6 +104,7 @@ End Function
 
 Public Function ReadLine(Prompt As String) As String
     If PrivRedirectOutput Then
+        Yield
         Exit Function
     End If
 
@@ -120,6 +122,7 @@ End Function
 
 Public Function GetKey() As Integer
     If PrivRedirectOutput Then
+        Yield
         Exit Function
     End If
 
@@ -132,6 +135,7 @@ End Function
 
 Public Function GetASCII() As Integer
     If PrivRedirectOutput Then
+        Yield
         Exit Function
     End If
 
@@ -142,7 +146,7 @@ Public Function GetASCII() As Integer
     GetASCII = GetAsciiWaiting(consoleID)
 End Function
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewRedirect As Boolean)
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewRedirect As Boolean, NewIsRoot As Boolean)
     If IsConfigured Then
         Exit Sub
     End If
@@ -154,6 +158,7 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     PrivParameters = NewPrivParameters
     FileKey = NewFileKey
     PrivRedirectOutput = NewRedirect
+    PrivIsRoot = NewIsRoot
 End Sub
 
 Private Sub AddCustomDownload(ByVal ResIndex As Integer)
@@ -229,7 +234,7 @@ Private Function DoDownload(Url As String, UsePost As Boolean, PostData As Strin
 
     AddCustomDownload ResIndex
 
-    RunPage Url, PrivConsoleID, UsePost, PostData, ResIndex, True
+    RunPage Url, PrivConsoleID, UsePost, PostData, ResIndex, NoAuth
     Yield
 End Function
 
@@ -261,27 +266,30 @@ End Sub
 Public Sub SAY(s As String)
     If PrivRedirectOutput Then
         PrivOutput = PrivOutput & s & vbCrLf
+        Yield
         Exit Sub
     End If
     basConsole.SAY PrivConsoleID, s
     Yield
 End Sub
 
-Private Sub SayMultiline(ScriptOutput As String)
-    Dim X As Integer
+Public Sub SayMultiline(s As String)
     If PrivRedirectOutput Then
-        PrivOutput = PrivOutput & ScriptOutput
-    Else
-        Dim ScriptOutSplit() As String
-        ScriptOutSplit = Split(ScriptOutput, vbCrLf)
-        For X = LBound(ScriptOutSplit) To UBound(ScriptOutSplit)
-            Yield
-            basConsole.SAY PrivConsoleID, ScriptOutSplit(X)
-        Next
+        PrivOutput = PrivOutput & s & vbCrLf
+        Yield
+        Exit Sub
     End If
+
+    Dim X As Integer
+    Dim ScriptOutSplit() As String
+    ScriptOutSplit = Split(s, vbCrLf)
+    For X = LBound(ScriptOutSplit) To UBound(ScriptOutSplit)
+        Yield
+        basConsole.SAY PrivConsoleID, ScriptOutSplit(X)
+    Next
 End Sub
 
-Public Function RUN(ParamArray XArr() As Variant) As String
+Public Sub RUN(ParamArray XArr() As Variant)
     Dim X As Integer
     Dim Script As String
     Script = XArr(0)
@@ -294,8 +302,24 @@ Public Function RUN(ParamArray XArr() As Variant) As String
 
     Yield
     ' TODO: Add PATH resolution in /system/commands
-    RUN = Run_Script(cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, SParamArr, "RUN", "", False)
-    SayMultiline RUN
+    Run_Script cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, SParamArr, "RUN", "", False, False
+    Yield
+End Sub
+
+Public Function CallScript(ParamArray XArr() As Variant) As String
+    Dim X As Integer
+    Dim Script As String
+    Script = XArr(0)
+
+    Dim SParamArr() As String
+    ReDim SParamArr(0 To UBound(XArr))
+    For X = 0 To UBound(XArr)
+        SParamArr(X) = "" & XArr(X)
+    Next
+
+    Yield
+    ' TODO: Add PATH resolution in /system/commands
+    CallScript = Run_Script(cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, SParamArr, "CALL", "", False, Not PrivIsRoot)
     Yield
 End Function
 
@@ -305,6 +329,7 @@ End Function
 
 Public Function DRAW(YPos As Variant, R As Variant, G As Variant, b As Variant, Mode As String)
     If PrivRedirectOutput Then
+        Yield
         Exit Function
     End If
     DrawItUp YPos, R, G, b, Mode, PrivConsoleID
@@ -325,7 +350,9 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     End If
 
     basWorld.SayCOMM "Connecting to " & UCase(Domain) & ":" & Port & "..."
-    basConsole.SAY consoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "...", False
+    If Not PrivRedirectOutput Then
+        basConsole.SAY consoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "...", False
+    End If
 
     Dim PostData As String
     PostData = "ver=2"
@@ -374,8 +401,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
         strCode = DomainConnectParams(0)
         DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
 
-        Connect = Run_Script_Code(strCode, consoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False)
-        SayMultiline Connect
+        Connect = Run_Script_Code(strCode, consoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, Not PrivIsRoot)
     End If
 
     Yield
@@ -401,10 +427,14 @@ End Sub
 
 
 Public Function ArgC() As Integer
+    Yield
+
     ArgC = UBound(PrivParameters)
 End Function
 
 Public Function ArgV(Number As Variant) As String
+    Yield
+
     If Number < LBound(PrivParameters) Or Number > UBound(PrivParameters) Then
         ArgV = ""
         Exit Function

@@ -14,7 +14,7 @@ Public WaitingForInputReturn(1 To 4) As String
 Public CancelScript(1 To 4) As Boolean
 
 
-Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean) As String
+Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean) As String
     If consoleID < 1 Then
         consoleID = 1
     End If
@@ -34,7 +34,7 @@ Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, Sc
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure consoleID, ScriptFrom, False, s, ScriptParameters, FileKey, Not IsRoot
+    G.Configure consoleID, ScriptFrom, False, s, ScriptParameters, FileKey, RedirectOutput, IsRoot
     s.AddObject "DSO", G, True
 
     New_Console_Line_InProgress consoleID
@@ -65,7 +65,7 @@ ScriptEnd:
     cPath(consoleID) = OldPath
 End Function
 
-Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean) As String
+Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean) As String
     If ScriptParameters(0) = "" Then
         ScriptParameters(0) = filename
     End If
@@ -101,7 +101,7 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
         Loop
     Close #FF
 
-    Run_Script = Run_Script_Code(tmpAll, consoleID, ScriptParameters, ScriptFrom, FileKey, IsRoot)
+    Run_Script = Run_Script_Code(tmpAll, consoleID, ScriptParameters, ScriptFrom, FileKey, IsRoot, RedirectOutput)
 End Function
 
 Public Function DownloadUserURL(ByVal VarVal As String, VarIndex As Integer, consoleID As Integer) As Integer
