@@ -14,6 +14,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private PrivConsoleID As Integer
+Private PrivParameters() As String
 Private ScriptFrom As String
 Private IsCLIInput As Boolean
 Private IsConfigured As Boolean
@@ -86,7 +87,7 @@ Public Sub Quit()
     Err.Raise 9002, "DSO", "Script exited"
 End Sub
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl)
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String)
     If IsConfigured Then
         Exit Sub
     End If
@@ -95,14 +96,15 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     ScriptFrom = NewScriptFrom
     IsCLIInput = NewIsCLIInput
     Set SControl = NewScriptControl
+    PrivParameters = NewPrivParameters
 End Sub
 
-Private Sub AddCustomDownload(ResIndex As Integer)
+Private Sub AddCustomDownload(ByVal ResIndex As Integer)
     ReDim Preserve PendingCustomDownloads(0 To UBound(PendingCustomDownloads) + 1)
     PendingCustomDownloads(UBound(PendingCustomDownloads)) = ResIndex
 End Sub
 
-Private Function HasPendingCustomDownload(ResIndex As Integer) As Boolean
+Private Function HasPendingCustomDownload(ByVal ResIndex As Integer) As Boolean
     HasPendingCustomDownload = False
     If UBound(PendingCustomDownloads) < 1 Then
         Exit Function
@@ -118,7 +120,7 @@ Private Function HasPendingCustomDownload(ResIndex As Integer) As Boolean
     Next
 End Function
 
-Private Sub RemoveCustomDownload(ResIndex As Integer)
+Private Sub RemoveCustomDownload(ByVal ResIndex As Integer)
     If UBound(PendingCustomDownloads) < 1 Then
         Exit Sub
     End If
@@ -174,14 +176,7 @@ Private Function DoDownload(Url As String, UsePost As Boolean, PostData As Strin
     Yield
 End Function
 
-Public Function WAITFOR(ResIndexRaw As Variant) As String
-    If VarType(ResIndexRaw) <> vbInteger Then
-        WAITFOR = "[invalid]"
-        Exit Function
-    End If
-    Dim ResIndex As Integer
-    ResIndex = ResIndexRaw
-
+Public Function WAITFOR(ResIndex As Variant) As String
     While Not DownloadDone(ResIndex)
         Yield
         If Not HasPendingCustomDownload(ResIndex) Then
@@ -211,9 +206,20 @@ Public Sub SAY(s As String)
     Yield
 End Sub
 
-Public Sub RUN(Script As String)
+Public Sub RUN(ParamArray XArr() As Variant)
+    Dim Script As String
+    Script = XArr(0)
+
+    Dim SParamArr() As String
+    ReDim SParamArr(0 To UBound(XArr))
+    Dim X As Integer
+    For X = 0 To UBound(XArr)
+        SParamArr(X) = "" & XArr(X)
+    Next
+
     Yield
-    Run_Script cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, "", "RUN"
+    ' TODO: Add PATH resolution in /system/commands
+    Run_Script cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, SParamArr, "RUN"
     Yield
 End Sub
 
@@ -221,7 +227,7 @@ Public Function DOWNLOAD(Url As String) As Integer
      DOWNLOAD = DoDownload(Url, True, "", True)
 End Function
 
-Public Function DRAW(YPos As Long, R As Long, G As Long, b As Long, Mode As String)
+Public Function DRAW(YPos As Variant, R As Variant, G As Variant, b As Variant, Mode As String)
     DrawItUp YPos, R, G, b, Mode, PrivConsoleID
     Yield
 End Function
@@ -236,6 +242,19 @@ Public Sub LOGOUT()
     LogoutNow PrivConsoleID
     Yield
 End Sub
+
+Public Function ArgC() As Integer
+    ArgC = UBound(PrivParameters)
+End Function
+
+Public Function ArgV(Number As Variant) As String
+    If Number < LBound(PrivParameters) Or Number > UBound(PrivParameters) Then
+        ArgV = ""
+        Exit Function
+    End If
+
+    ArgV = PrivParameters(Number)
+End Function
 
 Public Sub Yield()
     DoEvents

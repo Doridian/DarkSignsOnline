@@ -1269,18 +1269,16 @@ Private Sub tmrStart_Timer()
 End Sub
 
 Public Sub Start_Console(ByVal consoleID As Integer)
-    
     Reset_Console consoleID
 
-
+    
+    Dim EmptyParams(0 To 0) As String
     If consoleID = 1 Then
         'run the primary startup script
-        Run_Script "\system\startup.ds", consoleID, "", "BOOT", True
+        Run_Script "\system\startup.ds", consoleID, EmptyParams, "BOOT", True
     Else
-        Run_Script "\system\newconsole.ds", consoleID, "", "BOOT", True
+        Run_Script "\system\newconsole.ds", consoleID, EmptyParams, "BOOT", True
     End If
-    
-    
 End Sub
 
 

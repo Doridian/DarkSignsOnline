@@ -40,7 +40,8 @@ Public Type NextFunction
     FunctionName As String
 End Type
 
-Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters As String, ScriptFrom As String, Optional IsRoot As Boolean = False)
+Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, Optional IsRoot As Boolean = False)
+    ScriptParameters(0) = filename
     If consoleID < 1 Then
         consoleID = 1
     End If
@@ -91,7 +92,7 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure consoleID, ScriptFrom, False, s
+    G.Configure consoleID, ScriptFrom, False, s, ScriptParameters
     s.AddObject "DSO", G, True
 
     New_Console_Line_InProgress consoleID

@@ -290,10 +290,11 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 New_Console_Line consoleID
             End If
             
-            Run_Script "\system\login-1.ds", 1, "", "BOOT", True
-            Run_Script "\system\login-2.ds", 2, "", "BOOT", True
-            Run_Script "\system\login-3.ds", 3, "", "BOOT", True
-            Run_Script "\system\login-4.ds", 4, "", "BOOT", True
+            Dim EmptyParams(0 To 0) As String
+            Run_Script "\system\login-1.ds", 1, EmptyParams, "BOOT", True
+            Run_Script "\system\login-2.ds", 2, EmptyParams, "BOOT", True
+            Run_Script "\system\login-3.ds", 3, EmptyParams, "BOOT", True
+            Run_Script "\system\login-4.ds", 4, EmptyParams, "BOOT", True
             
             If frmConsole.getConnected Then
                 frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
@@ -379,8 +380,9 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 Dim newS As String
                 newS = StrConv(b64decoded, vbUnicode)
 
+                Dim S4100EmptyParams(0 To 0) As String
                 WriteClean App.Path & "\user\system\temp.dat", newS
-                Run_Script "\system\temp.dat", consoleID, sParameters, Left(sParameters, InStr(sParameters, "_") - 1)
+                Run_Script "\system\temp.dat", consoleID, S4100EmptyParams, Left(sParameters, InStr(sParameters, "_") - 1)
             End If
             
         Case "4300" 'file library upload complete

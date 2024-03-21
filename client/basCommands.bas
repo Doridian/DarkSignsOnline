@@ -15,8 +15,9 @@ Public Sub InitBasCommands()
         scrConsole(X).UseSafeSubset = True
         scrConsole(X).Language = "VBScript"
 
+        Dim EmptyArguments(0 To 0) As String
         Set scrConsoleContext(X) = New clsScriptFunctions
-        scrConsoleContext(X).Configure X, "", True, scrConsole(X)
+        scrConsoleContext(X).Configure X, "", True, scrConsole(X), EmptyArguments
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
     Next
@@ -147,7 +148,6 @@ ScriptEnd:
         Case "rename": MoveRename sP, consoleID
         Case "copy": MoveRename sP, consoleID, "copyonly"
         
-        Case "run": RunFileAsScript sP, consoleID
         Case "edit": EditFile sP, consoleID
         Case "mail": ShowMail sP, consoleID
         
@@ -257,17 +257,17 @@ ScriptEnd:
             
                 'it's a file - run it
                 Shift_Console_Lines consoleID
-                Run_Script fixPath(sC, consoleID), consoleID, sP, referals(ActiveConsole)
+               ' Run_Script fixPath(sC, consoleID), consoleID, sP, referals(ActiveConsole)
             ElseIf FileExists(App.Path & "\user\system\commands\" & sC) = True Then
                 'it's a file - run it
                 Shift_Console_Lines consoleID
-                Run_Script "\system\commands\" & sC, consoleID, sP, referals(ActiveConsole)
+                'Run_Script "\system\commands\" & sC, consoleID, sP, referals(ActiveConsole)
             ElseIf FileExists(App.Path & "\user\system\commands\" & sC & ".ds") = True Then
                 'it's a file - run it
                 Shift_Console_Lines consoleID
-                Run_Script "\system\commands\" & sC & ".ds", consoleID, sP, referals(ActiveConsole)
+                'Run_Script "\system\commands\" & sC & ".ds", consoleID, sP, referals(ActiveConsole)
             ElseIf IsInCommandsSubdirectory(sC) <> "" Then
-                Run_Script IsInCommandsSubdirectory(sC), consoleID, sP, referals(ActiveConsole)
+                'Run_Script IsInCommandsSubdirectory(sC), consoleID, sP, referals(ActiveConsole)
             Else
                 'it is unknown
                 If Trim(sC) = "" Then
@@ -290,7 +290,7 @@ End Function
 
 ' -y r g b mode
 '  SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE
-Public Sub DrawItUp(YPos As Long, R As Long, G As Long, b As Long, Mode As String, consoleID As Integer)
+Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String, ByVal consoleID As Integer)
     Dim sColor As String
     Dim sMode As String
      
@@ -1325,7 +1325,8 @@ Public Sub EditFile(ByVal s As String, ByVal consoleID As Integer)
     
     If Trim(EditorRunFile) <> "" Then
         Shift_Console_Lines consoleID
-        Run_Script EditorRunFile, consoleID, "", "CONSOLE"
+        Dim EmptyArguments(0 To 0) As String
+        Run_Script EditorRunFile, consoleID, EmptyArguments, "CONSOLE"
     End If
     
     
@@ -1548,34 +1549,6 @@ Public Sub WaitNow(ByVal s As String, ByVal consoleID As Integer)
     frmConsole.tmrWait(consoleID).Enabled = False
     frmConsole.tmrWait(consoleID).Interval = iMS
     frmConsole.tmrWait(consoleID).Enabled = True
-    
-    Exit Sub
-    
-errorDir:
-    'say consoleID, "Directory Not Found: " & s & " {orange}", False
-End Sub
-
-Public Sub RunFileAsScript(ByVal s As String, ByVal consoleID As Integer)
-    Dim sParams As String
-    s = Trim(s)
-    If InStr(s, " ") > 0 Then
-        sParams = Trim(Mid(s, InStr(s, " "), Len(s)))
-        s = Trim(Mid(s, 1, InStr(s, " ")))
-    End If
-    
-    s = fixPath(s, consoleID)
-    
-
-    If FileExists(App.Path & "\user" & s) Then
-        'run it as a script
-        
-        Shift_Console_Lines consoleID
-        Run_Script s, consoleID, sParams, "CONSOLE"
-        
-    Else
-        SayError "File Not Found: " & s, consoleID
-    End If
-    
     
     Exit Sub
     
