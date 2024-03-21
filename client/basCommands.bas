@@ -15,9 +15,10 @@ Public Sub InitBasCommands()
         scrConsole(X).UseSafeSubset = True
         scrConsole(X).Language = "VBScript"
 
-        Dim EmptyArguments(0 To 0) As String
+        Dim CLIArguments(0 To 0) As String
+        CLIArguments(0) = "/dev/tty" & X
         Set scrConsoleContext(X) = New clsScriptFunctions
-        scrConsoleContext(X).Configure X, "", True, scrConsole(X), EmptyArguments
+        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
     Next
