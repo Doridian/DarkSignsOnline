@@ -80,7 +80,7 @@ Function GetFileClean(ByVal filename As String) As String
     Dim Handle As Integer
     
     ' ensure that the file exists
-    If Len(Dir$(filename)) = 0 Then
+    If Len(dir$(filename)) = 0 Then
         Err.Raise 53   ' File not found
     End If
     
@@ -249,13 +249,6 @@ zz:
 End Function
 
 Public Function WriteFile(fn As String, s As String) As Boolean
-    
-    s = UnBracketize(s)
-    
-    's = Replace(s, vbCrLf, vbCr)
-    's = Replace(s, vbLf, vbCr)
-    's = Replace(s, vbCr, vbCrLf)
-    
     'write to a file (don't append)
     On Error GoTo zxc
     Dim FF As Long
@@ -400,13 +393,9 @@ End Function
 
 Public Function DirExists(ByVal sDirName As String) As Boolean
     Dim s As String
-    
-
     s = Trim(Replace(sDirName, "/", "\"))
     
     If Right(s, 1) <> "\" Then s = s & "\"
-    
-    
     
     If WriteFile(s & "testbqva.txt", "data here") = True Then
         Kill s & "testbqva.txt"
@@ -416,85 +405,6 @@ Public Function DirExists(ByVal sDirName As String) As Boolean
     End If
 End Function
 
-Public Function sumProcess(s As String) As Double
-    On Error Resume Next
-
-    Dim tmpS As String, tmpS2 As String, tmpS3 As String
-    Dim nextOp As Double, nextOpSymbol As String
-    Dim nextOpSecond As Double, nextOpSymbolSecond As String
-    Dim postVal As Double
-    ''''''''''
-    tmpS = s
-
-    nextOp = NextEmptyOperator(tmpS)
-    sumProcess = Val(Mid(tmpS, 1, nextOp - 1))
-    
-zStart:
-    nextOp = NextEmptyOperator(tmpS)
-
-    If nextOp = 0 Then GoTo zDone
-        tmpS = Mid(tmpS, nextOp, Len(tmpS))
-        nextOpSymbol = Mid(tmpS, 1, 1)
-
-        nextOpSecond = NextEmptyOperator(Mid(tmpS, 2, Len(tmpS)))
-        If nextOpSecond = 0 Then nextOpSecond = 9999
-        
-        tmpS2 = Mid(tmpS, 1, nextOpSecond)
-        
-        
-        tmpS3 = Mid(tmpS, 1, nextOpSecond)
-        tmpS2 = KillOps(tmpS2)
-        postVal = Val(tmpS2)
-        
-        Select Case nextOpSymbol
-        Case "+": sumProcess = sumProcess + postVal
-        Case "-": sumProcess = sumProcess - postVal
-        Case "*": sumProcess = sumProcess * postVal
-        Case "/": sumProcess = sumProcess / postVal
-        Case "^": sumProcess = sumProcess ^ postVal
-        Case "%": sumProcess = sumProcess Mod postVal
-        End Select
-        
-        tmpS = Mid(tmpS, Len(tmpS3) + 1, Len(tmpS))
-
-    GoTo zStart
-zDone:
-
-    sumProcess = Int(sumProcess)
-
-End Function
-
-
-Public Function KillOps(s As String) As String
-    KillOps = s
-    KillOps = Replace(KillOps, "+", "")
-    KillOps = Replace(KillOps, "-", "")
-    KillOps = Replace(KillOps, "/", "")
-    KillOps = Replace(KillOps, "*", "")
-    KillOps = Replace(KillOps, "%", "")
-    KillOps = Replace(KillOps, "^", "")
-End Function
-
-
-'Public Function NextEmptyOperator(s As String) As Long
-'    NextEmptyOperator = 9999
-'
-'    If InStr(s, "*") Then NextEmptyOperator = InStr(s, "*")
-'
-'    If InStr(s, "+") And InStr(s, "+") < NextEmptyOperator Then
-'        NextEmptyOperator = InStr(s, "+")
-'    End If
-'
-'    If InStr(s, "-") And InStr(s, "-") < NextEmptyOperator Then
-'        NextEmptyOperator = InStr(s, "-")
-'    End If
-'
-'    If InStr(s, "/") And InStr(s, "/") < NextEmptyOperator Then
-'        NextEmptyOperator = InStr(s, "/")
-'    End If
-'
-'    If NextEmptyOperator = 9999 Then NextEmptyOperator = 0
-'End Function
 
 Public Function CountCharsInString(ByVal s As String, ByVal sFind As String) As Long
     Dim n As Long

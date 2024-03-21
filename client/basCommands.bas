@@ -64,229 +64,6 @@ ScriptCancelled:
 ScriptEnd:
     scrConsoleContext(consoleID).CleanupScriptTasks
     New_Console_Line consoleID
-    Exit Function
-
-    Dim n As Integer, tmpS2 As String
-    
-    Dim sC As String 'the main command
-    Dim sP As String 'any parameters
-
-    'kill double spaces - MUST BE BEFORE REPLACES VARIABLES
-    'tmpS = Replace(tmpS, "  ", " ")
-    
-    'tmpS2 = tmpS
-    
-    If InStr(tmpS, ">") > 0 And InStr(tmpS, "<") = 0 Then
-    If InStr(i(tmpS), i(cPath(consoleID))) > 0 Then
-        'get rid of the input string
-        tmpS = Trim(Mid(tmpS, InStr(tmpS, ">") + 1, Len(tmpS)))
-    End If
-    End If
-    
-
-
-    
-    
-    'change $var=yes to $var =yes   (note the space!!)
-    If Mid(tmpS, 1, 1) = "$" Then
-        If InStr(tmpS, "=") > 0 Then
-            tmpS = Mid(tmpS, 1, InStr(tmpS, "=") - 1) & " " & Mid(tmpS, InStr(tmpS, "="), Len(tmpS))
-            tmpS = Replace(tmpS, "  = ", " = ")
-        End If
-    End If
-    
-    
-
-    If InStr(tmpS, " ") > 0 Then
-        
-    
-        'it has parameters
-        sC = Trim(Mid(tmpS, 1, InStr(tmpS, " ") - 1))
-        sP = Mid(tmpS, InStr(tmpS, " ") + 1, Len(tmpS))
-        
-        'MsgBox sC & vbCrLf & vbCrLf & sP
-        
-        
-        'replace variables on the parameters only
-        sP = ReplaceVariables(sP, consoleID)
-        
-        
-    Else
-        'it has no parameters
-        sC = Trim(tmpS)
-        sP = ""
-    End If
-    
-    
-
-    
-    If Mid(sC, 1, 1) = "@" Then Exit Function
-    
-    'can it be run from a script?
-    If Len(Trim(sC)) > 2 Then
-    If InStr(LimitedCommandString, ":" & i(sC) & ":") > 0 Then
-        'then it cannot be run
-        If FromScript = True Then 'then don't allow it
-            SayError "Command blocked by commands-security.dat: " & UCase(sC) & " " & sP, consoleID
-            GoTo zzz
-        End If
-    End If
-    End If
-    
-    Select Case i(sC)
-    
-        'Case "draw": DrawItUp sP, ConsoleID ': Exit Function
-    
-        Case "dir": ListDirectoryContents consoleID, sP
-        Case "ls": ListDirectoryContents consoleID, sP
-        Case "cd": ChangeDir sP, consoleID
-        Case "cd..": DownADir consoleID
-        Case "md": MakeDir sP, consoleID
-        Case "rd": RemoveDir sP, consoleID
-        Case "del": DeleteFiles sP, consoleID
-        Case "delete": DeleteFiles sP, consoleID
-        Case "move": MoveRename sP, consoleID
-        Case "rename": MoveRename sP, consoleID
-        Case "copy": MoveRename sP, consoleID, "copyonly"
-        
-        Case "edit": EditFile sP, consoleID
-        Case "mail": ShowMail sP, consoleID
-        
-        Case "display": DisplayFile sP, consoleID
-        Case "cat": DisplayFile sP, consoleID
-        Case "lineup": Shift_Console_Lines_Reverse consoleID
-        Case "append": AppendAFile sP, consoleID
-        Case "write": WriteAFile sP, consoleID, ScriptFrom
-        
-        Case "clear": ClearConsole consoleID
-        Case "cls": ClearConsole consoleID
-        Case "time": SAY consoleID, Format(Time, "h:mm AMPM"), False
-        Case "date": SAY consoleID, Date, False
-        Case "now": SAY consoleID, Now, False
-        Case "restart": frmConsole.Start_Console consoleID: Exit Function
-        Case "say": SAY consoleID, sP, False, FromScript
-        Case "sayall": SayAll consoleID, sP, False, FromScript
-        Case "sayline":
-            'Shift_Console_Lines_Reverse (consoleID)
-            
-            SAY consoleID, sP, False, FromScript
-            If FromScript = True Then Exit Function
-            
-        Case "listcolors": ListColors consoleID
-        Case "listkeys": ListKeys consoleID
-        Case "music": MusicCommand sP
-        Case "help": ShowHelp sP, consoleID
-        Case "pause": PauseConsole sP, consoleID: Exit Function
-        Case "saycomm": SayCOMM sP, consoleID
-        Case "username": SetUsername sP, consoleID
-        Case "password": SetPassword sP, consoleID
-        Case "stats": ShowStats consoleID
-        Case "login": LoginNow consoleID
-        Case "logout": LogoutNow consoleID
-        Case "wait": 'WaitNow sP, consoleID
-        
-        'Case "connect": ConnectToDomain sP, consoleID
-        'Case "upload": UploadToDomain sP, consoleID
-        Case "closeport": CloseDomainPort sP, consoleID 'Used to close server ports.
-        Case "download": DownloadFromDomain sP, consoleID
-        Case "register": RegisterDomain sP, consoleID
-        Case "subowners": SubOwners sP, consoleID
-        Case "unregister": UnRegisterDomain sP, consoleID
-        Case "transfer": TransferMoney sP, consoleID
-        Case "lookup": Lookup sP, consoleID
-        Case "mydomains": ListMyDomains consoleID
-        Case "mysubdomains": ListMySubDomains sP, consoleID
-        Case "myips": ListMyIPs consoleID
-        
-        Case "server": If FromScript = True Then ServerCommands sP, consoleID
-        
-        'Case "chatsend": frmConsole.ChatSend sP, consoleID
-        Case "chatview": frmConsole.ChatView sP, consoleID
-        
-        Case "ydiv": SetYDiv sP
-        
-    Case "."
-    Case ".."
-    Case "all"
-    Case "exit"
-    Case "for"
-    Case "next"
-    Case "goto"
-    Case "if"
-    Case "endif"
-    Case "else"
-    Case "elseif"
-    Case "else if"
-    Case "end if"
-    Case "end"
-    Case "me"
-    Case "waitfor"
-    Case "public"
-    Case "private"
-        
-        ' Test func
-        Case "compile": f_Compile sP, consoleID
-        
-        
-        Case "hello": SAY consoleID, "I am your console, not your friend! {green 24 georgia}", False
-        Case "hi": SAY consoleID, "Hello to you as well! {green 24 georgia}", False
-        Case "why": SAY consoleID, "That is a question that I cannot answer. {blue 24 georgia}", False
-        Case "wow": SAY consoleID, "Yeah...{blue 18 georgia}", False: SAY consoleID, "it's pretty good...{blue 18 georgia center}", False: SAY consoleID, ":){blue 18 georgia right}", False:: SAY consoleID, "w00t!{center blue 24 bold georgia}", False
-        Case "fuck": SAY consoleID, "I object to that sort of thing. {grey 24 georgia}", False
-        Case "lol": SAY consoleID, UCase("j") & "{wingdings 144 center green}", False
-        Case "ok":  SAY consoleID, "That's not a real command!{red impact 48 center nobold}", False
-                    SAY consoleID, "What's wrong with you!?{red impact 48 center nobold}", False
-        
-
-        
-        Case Else:
-        
-
-            'other alternatives!
-            If Mid(sC, 1, 1) = "$" And Len(sC) > 1 Then
-                'it's a variable being set
-                
-                SetVariable sC, sP, consoleID, ScriptFrom
-                
-                If FromScript = True Then
-                    If InStr(sP, "(") = 0 Then
-                        'only exit function if it doesn't have a function.
-                        Exit Function
-                    End If
-                End If
-            ElseIf FileExists(App.Path & "\user" & fixPath(sC, consoleID)) = True Then
-            
-                'it's a file - run it
-                Shift_Console_Lines consoleID
-               ' Run_Script fixPath(sC, consoleID), consoleID, sP, referals(ActiveConsole)
-            ElseIf FileExists(App.Path & "\user\system\commands\" & sC) = True Then
-                'it's a file - run it
-                Shift_Console_Lines consoleID
-                'Run_Script "\system\commands\" & sC, consoleID, sP, referals(ActiveConsole)
-            ElseIf FileExists(App.Path & "\user\system\commands\" & sC & ".ds") = True Then
-                'it's a file - run it
-                Shift_Console_Lines consoleID
-                'Run_Script "\system\commands\" & sC & ".ds", consoleID, sP, referals(ActiveConsole)
-            ElseIf IsInCommandsSubdirectory(sC) <> "" Then
-                'Run_Script IsInCommandsSubdirectory(sC), consoleID, sP, referals(ActiveConsole)
-            Else
-                'it is unknown
-                If Trim(sC) = "" Then
-                Else
-                    If Len(Trim(Replace(Replace(sC, vbCr, ""), vbLf, ""))) > 1 Then
-                        
-                        SayError "Unrecognized Command: " & sC, consoleID
-                        
-                    End If
-                End If
-            End If
-    
-    
-            
-    End Select
-    
-zzz:
-    New_Console_Line consoleID
 End Function
 
 ' -y r g b mode
@@ -929,11 +706,6 @@ Public Sub Lookup(ByVal s As String, ByVal consoleID As Integer)
     
 End Sub
 
-Public Sub f_Compile(ByVal s As String, ByVal consoleID As Integer)
-    SayError "Compilation has been removed.", consoleID
-End Sub
-
-
 Public Function HasBadDomainChar(ByVal s As String) As Boolean
     HasBadDomainChar = False
     
@@ -972,10 +744,8 @@ Public Function HasBadDomainChar(ByVal s As String) As Boolean
 End Function
 
 Public Sub ShowStats(ByVal consoleID As Integer)
-    
     SayCOMM "Downloading stats..."
     RunPage "get_user_stats.php?returnwith=2000", consoleID
-
 End Sub
 
 
@@ -1704,8 +1474,6 @@ End Sub
 
 
 Public Sub PauseConsole(s As String, ByVal consoleID As Integer)
-    If Data_For_Run_Function_Enabled(consoleID) = 1 Then Exit Sub
-    
     ConsolePaused(consoleID) = True
     
     Dim propSpace As String

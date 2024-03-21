@@ -601,7 +601,7 @@ Dim chatToStatus As Boolean
 Dim oldnick$    'the backup if the nick change failed
 Dim nick$       'our global nickname var
 Dim channel$    'our channel var
-Dim Data$       'the var that will hold the data of a single command
+Dim data$       'the var that will hold the data of a single command
 Dim MyRandNum$
 Dim connected As Boolean  'this var will be used to check if we timed out, and will be set to true if get connected
 '--------------------------------------------------------------
@@ -686,10 +686,10 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     autoCompActive(ActiveConsole) = False
     
     'it's getkey!
-    If GetKeyWaiting(ActiveConsole) = "1" Then
+    If GetKeyWaiting(ActiveConsole) = -1 Then
         GetKeyWaiting(ActiveConsole) = KeyCode: Exit Sub
     End If
-    If GetAsciiWaiting(ActiveConsole) = "1" Then Exit Sub
+    If GetAsciiWaiting(ActiveConsole) = 1 Then Exit Sub
     'If GetAsciiWaiting(ActiveConsole) = "2" Then Exit Sub
 
     
@@ -930,7 +930,6 @@ Private Sub Form_Load()
     
     Me.Move 0, 0, Screen.Width, Screen.Height
     LoadLimitedCommands
-    LoadFunctionArray
     
     cPath(1) = "\": cPath(2) = "\": cPath(3) = "\": cPath(4) = "\": cPath(5) = "\"
     Start_Comm
@@ -1364,26 +1363,26 @@ Sub processCommand()
 
     ' the next line will reply to the PING message of the server
     ' preventing us from going idle and being kicked
-    If InStr(Data$, "PING") > 0 Then
+    If InStr(data$, "PING") > 0 Then
         Dim params$    ' parameters that will be filtered from the pong message
-        params$ = Right$(Data$, Len(Data$) - (InStr(Data$, "PING") + 4))
+        params$ = Right$(data$, Len(data$) - (InStr(data$, "PING") + 4))
             'take the paramaters from the right of the message starting from the first character after the PING message
         Send "PONG " + params$   ' send the pong message to the server, together with the parameters
         display "PING? PONG!"
     End If
     
     'This section processes all other commands
-    If Left$(Data$, 1) = ":" Then   'if the message starts with a colon (standard IRC message)
+    If Left$(data$, 1) = ":" Then   'if the message starts with a colon (standard IRC message)
         Dim Pos%, pos2%    '2 position variables we need to extract the nickname of whoever that issued the command
         Dim from$, rest$    'these will hold the sender of the command and the rest of the message
         Dim Command$        'this will hold the type of the command (eg.: PRIVMSG)
         params$ = ""        'and the parameters
-        Pos% = InStr(Data$, " ")    'get the position of the first space character
+        Pos% = InStr(data$, " ")    'get the position of the first space character
         If Pos% > 0 Then    'if a space is found
-            pos2% = InStr(Data$, "!")   'search for an exclamation mark
+            pos2% = InStr(data$, "!")   'search for an exclamation mark
             If Pos% < pos2% Or pos2% <= 0 Then pos2% = Pos%   'if a space is found AFTER the space, it should not be used
-            from$ = Mid$(Data$, 2, pos2% - 2)   'parse the sender, starting from the second character (after the ":")
-            rest$ = Mid$(Data$, Pos% + 1, Len(Data$) - pos2%)  'parse the rest of the message starting from the first character AFTER the first space
+            from$ = Mid$(data$, 2, pos2% - 2)   'parse the sender, starting from the second character (after the ":")
+            rest$ = Mid$(data$, Pos% + 1, Len(data$) - pos2%)  'parse the rest of the message starting from the first character AFTER the first space
             rest$ = Replace(rest$, Chr(2), "")
             
             'IMPORTANT: pos% is now used to hold the first space in (!) rest$ (!), *NOT* in data$
@@ -1585,10 +1584,10 @@ Private Sub sockIRC_DataArrival(ByVal bytesTotal As Long)
         temp$ = Mid(ArrivedData$, X, 1)
         If temp$ = Chr$(10) Then    'if we received a newline character (this is the end of the message)
             processCommand  'process the entire command
-            Data$ = ""      'clear the data$
+            data$ = ""      'clear the data$
         'if we received a newline character or a carriage return, dont add them to the message
         ElseIf temp$ <> Chr$(13) Then
-            Data$ = Data$ + temp$
+            data$ = data$ + temp$
         End If
     Next
 End Sub
