@@ -232,6 +232,7 @@ Public Sub LOGIN()
 End Sub
 
 Public Sub LOGOUT()
+    AssertCLIOnly
     LogoutNow PrivConsoleID
     Yield
 End Sub
