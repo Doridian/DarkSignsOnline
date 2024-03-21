@@ -144,8 +144,8 @@ Private Function DoDownload(Url As String, UsePost As Boolean, PostData As Strin
 
     AddCustomDownload ResIndex
 
-    Yield
     RunPage Url, PrivConsoleID, UsePost, PostData, ResIndex, True
+    Yield
 End Function
 
 Public Function WAITFOR(ResIndexRaw As Variant) As String
@@ -167,6 +167,7 @@ Public Function WAITFOR(ResIndexRaw As Variant) As String
     WAITFOR = DownloadResults(ResIndex)
     DownloadInUse(ResIndex) = False
     RemoveCustomDownload ResIndex
+    Yield
 End Function
 
 Public Sub SayCOMM(s As String)
@@ -194,12 +195,14 @@ Public Function DOWNLOAD(Url As String) As Integer
      DOWNLOAD = DoDownload(Url, True, "", True)
 End Function
 
-Public Function DRAW(Opt As String)
-    DrawItUp Opt, PrivConsoleID
+Public Function DRAW(YPos As Long, R As Long, G As Long, B As Long, Mode As String)
+    DrawItUp YPos, R, G, B, Mode, PrivConsoleID
+    Yield
 End Function
 
 Public Sub LOGIN()
     LoginNow PrivConsoleID
+    Yield
 End Sub
 
 Public Sub Yield()
