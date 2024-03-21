@@ -470,6 +470,10 @@ End Function
 
 Public Sub Yield()
     DoEvents
+    If Aborted Then
+        ' Force a timeout, no legitimate script should be able to get here
+        While True: Wend
+    End If
     If CancelScript(PrivConsoleID) Then
         Aborted = True
         Err.Raise vbObjectError + 9001, "DSO", "Script canceled by Ctrl+C"
