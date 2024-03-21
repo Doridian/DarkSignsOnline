@@ -78,21 +78,21 @@ Public Sub LoginNow(ByVal consoleID As Integer)
     isBad = False
 
     If Authorized = True Then
-        SAY consoleID, "You are already logged in and authorized as " & myUsername & ".{green}", False
+        SayRaw consoleID, "You are already logged in and authorized as " & myUsername & ".{green}", False
         Exit Sub
     Else
         If myUsername = "" Then
-            SAY consoleID, "{14, orange,  center}Your username is not right - type: USERNAME [username] to set it."
+            SayRaw consoleID, "{14, orange,  center}Your username is not right - type: USERNAME [username] to set it."
             isBad = True
         End If
         If myPassword = "" Then
-            SAY consoleID, "{14, orange, center}Your password is not right - type: PASSWORD [password] to set it."
+            SayRaw consoleID, "{14, orange, center}Your password is not right - type: PASSWORD [password] to set it."
             isBad = True
         End If
         
         If isBad = True Then
-            SAY consoleID, "Warning - You are not logged in!{16 center underline}"
-            SAY consoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
+            SayRaw consoleID, "Warning - You are not logged in!{16 center underline}"
+            SayRaw consoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
             Exit Sub
         End If
     
@@ -121,8 +121,8 @@ End Sub
 
 Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer, Optional NoAuth As Boolean)
     If Not NoAuth And InStr(i(sUrl), "auth.php") = 0 And Not Authorized Then
-        SAY consoleID, "You must be logged in to do that!{36 center orange impact nobold}", False
-        SAY consoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}", False
+        SayRaw consoleID, "You must be logged in to do that!{36 center orange impact nobold}", False
+        SayRaw consoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}", False
 
         If IsCustomDownload > 0 Then
             basWorld.Process "[error]not logged in", sUrl, consoleID, IsCustomDownload
@@ -338,12 +338,10 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
         
         '2000 is just a general show in the comm, all purpose
         Case "2000":
-            'MsgBox s
             SayCommMultiLines s, consoleID
             
         Case "2001":
-            'MsgBox s
-            SayMultiLines s, consoleID
+            SayRawMultiLines s, consoleID
         
         Case "2003":
             If (s = "success") Then
@@ -355,7 +353,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             
             
         Case "2004": ' Domain querys.
-            SayMultiLines s, consoleID
+            SayRawMultiLines s, consoleID
         
         Case "3001": 'update chat
             
@@ -466,44 +464,26 @@ End Sub
 
 
 Public Sub SayCommMultiLines(ByVal s As String, consoleID As Integer)
-    Dim p1 As String, p2 As String, p3 As String, p4 As String, p5 As String
-    Dim p6 As String, p7 As String, p8 As String, p9 As String, p10 As String
-    
-    'this can be sent data divided with the string "newline" (without quotes)
-    'and it wil be shown properly up to 10 lines
-    
-    p1 = GetPart(s, 1, "newline"): p2 = GetPart(s, 2, "newline"):
-    p3 = GetPart(s, 3, "newline"): p4 = GetPart(s, 4, "newline")
-    p5 = GetPart(s, 5, "newline"): p6 = GetPart(s, 6, "newline")
-    p7 = GetPart(s, 7, "newline"): p8 = GetPart(s, 8, "newline")
-    p9 = GetPart(s, 9, "newline"): p10 = GetPart(s, 10, "newline")
-    If Trim(p1) <> "" Then SayCOMM p1: If Trim(p2) <> "" Then SayCOMM p2
-    If Trim(p3) <> "" Then SayCOMM p3: If Trim(p4) <> "" Then SayCOMM p4
-    If Trim(p5) <> "" Then SayCOMM p5: If Trim(p6) <> "" Then SayCOMM p6
-    If Trim(p7) <> "" Then SayCOMM p7: If Trim(p8) <> "" Then SayCOMM p8
-    If Trim(p9) <> "" Then SayCOMM p9: If Trim(p10) <> "" Then SayCOMM p10
+    Dim sA() As String
+    sA = Split(s, vbCrLf)
+
+    Dim n As Integer
+    For n = 0 To UBound(sA)
+        SayCOMM sA(n), consoleID
+    Next n
 End Sub
 
 
-Public Sub SayMultiLines(ByVal s As String, consoleID As Integer)
+Public Sub SayRawMultiLines(ByVal s As String, consoleID As Integer)
     Dim sA() As String
     sA = Split(s, vbCrLf)
-    Dim iCount As Integer
-    
-    Dim n As Integer, tmpS As String
+
+    Dim n As Integer
     For n = 0 To UBound(sA)
-        tmpS = Trim(sA(n))
-        If tmpS <> "" Then
-            iCount = iCount + 1
-            SAY consoleID, tmpS, False
-            
-            If iCount Mod 20 = 0 Then PauseConsole "", consoleID
-        End If
+        SayRaw consoleID, sA(n)
     Next n
-    
-    SAY consoleID, "{12 green}Line(s) Found: " & Trim(Str(iCount)), False
-    
-    New_Console_Line consoleID
+
+    SayRaw consoleID, "{12 green}Line(s) Found: " & Trim(UBound(sA) + 1)
 End Sub
 
 

@@ -280,7 +280,7 @@ Public Sub SAY(s As String)
         Yield
         Exit Sub
     End If
-    basConsole.SAY PrivConsoleID, s
+    basConsole.SayRaw PrivConsoleID, s
     Yield
 End Sub
 
@@ -293,7 +293,7 @@ Public Sub SayLine(s As String)
         Yield
         Exit Sub
     End If
-    basConsole.SAY PrivConsoleID, s, False
+    basConsole.SayRaw PrivConsoleID, s, False
 End Sub
 
 Public Sub SayAll(s As String)
@@ -308,7 +308,7 @@ Public Sub SayAll(s As String)
     ScriptOutSplit = Split(s, vbCrLf)
     For X = LBound(ScriptOutSplit) To UBound(ScriptOutSplit)
         Yield
-        basConsole.SAY PrivConsoleID, ScriptOutSplit(X)
+        basConsole.SayRaw PrivConsoleID, ScriptOutSplit(X)
     Next
 End Sub
 
@@ -374,7 +374,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
 
     basWorld.SayCOMM "Connecting to " & UCase(Domain) & ":" & Port & "..."
     If Not PrivDisableOutput Then
-        basConsole.SAY consoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "...", False
+        basConsole.SayRaw consoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "...", False
     End If
 
     Dim PostData As String
