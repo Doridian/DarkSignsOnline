@@ -671,7 +671,7 @@ Public Sub SayAll(ByVal consoleID As Integer, s As String, Optional withNewLineA
     Dim n As Long, rc As Long
     For n = 0 To UBound(sA)
         
-        SAY consoleID, sA(n), withNewLineAfter, FromScript, SkipPropertySpace
+        SAY consoleID, sA(n), withNewLineAfter, SkipPropertySpace
         
     
         
@@ -691,9 +691,7 @@ Public Sub SayAll(ByVal consoleID As Integer, s As String, Optional withNewLineA
     
 End Sub
 
-Public Function SAY(ByVal consoleID As Integer, s As String, Optional withNewLineAfter As Boolean = True, Optional FromScript As Boolean = False, Optional SkipPropertySpace As Integer)
-    
-
+Public Function SAY(ByVal consoleID As Integer, s As String, Optional withNewLineAfter As Boolean = True, Optional SkipPropertySpace As Integer)
     If consoleID > 4 Then Exit Function
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
     
@@ -701,11 +699,6 @@ Public Function SAY(ByVal consoleID As Integer, s As String, Optional withNewLin
     Dim tmpLine As ConsoleLine, propertySpace As String
     
     tmpLine = Console(consoleID, CurrentLine(consoleID))
-    
-    If withNewLineAfter = False And FromScript = False Then
-        Shift_Console_Lines consoleID
-        Console(consoleID, 1) = Console_Line_Defaults
-    End If
     
     'If withNewLineAfter = False Then
     s = PreSpace & s

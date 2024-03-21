@@ -985,25 +985,18 @@ errorDir:
 End Sub
 
 Public Sub EditFile(ByVal s As String, ByVal consoleID As Integer)
-    
-    s = Trim(fixPath(s, consoleID))
-    
-    If Len(s) < 2 Then
-        SayError "The EDIT command requires a parameter.", consoleID
-        ShowHelp "edit", consoleID
+    s = fixPath(s, consoleID)
+    If s = "" Then
         Exit Sub
     End If
-    
+
     EditorFile_Short = GetShortName(s)
     EditorFile_Long = s
-        
-    If FileExists(App.Path & "\user" & s) Then
 
+    If FileExists(App.Path & "\user" & s) Then
     Else
         SAY consoleID, "{green}File Not Found, Creating: " & s
-    
     End If
-    
     
     frmEditor.Show vbModal
     
@@ -1015,7 +1008,6 @@ Public Sub EditFile(ByVal s As String, ByVal consoleID As Integer)
     
     
     Exit Sub
-    
 errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
@@ -1191,7 +1183,7 @@ Public Sub DisplayFile(ByVal s As String, ByVal consoleID As Integer)
             If CLine >= startLine Then
                 If CLinePrinted < MaxLines Then
                     If Trim(tmpS) <> "" Then
-                        SAY consoleID, Chr(34) & "   " & tmpS & Chr(34), False, , 1
+                        SAY consoleID, Chr(34) & "   " & tmpS & Chr(34), , 1
                         CLinePrinted = CLinePrinted + 1
                         If CLinePrinted Mod 24 = 0 Then PauseConsole "", consoleID
                     End If

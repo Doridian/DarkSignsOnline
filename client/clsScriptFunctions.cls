@@ -265,6 +265,13 @@ Public Sub CD(dir As String)
     Yield
 End Sub
 
+Public Sub EDIT(file As String)
+    AssertCLIOnly
+    Yield
+    EditFile file, PrivConsoleID
+    Yield
+End Sub
+
 Public Sub SAY(s As String)
     If PrivRedirectOutput Then
         PrivOutput = PrivOutput & s & vbCrLf
@@ -276,6 +283,18 @@ Public Sub SAY(s As String)
     End If
     basConsole.SAY PrivConsoleID, s
     Yield
+End Sub
+
+Public Sub SayLine(s As String)
+    If PrivRedirectOutput Then
+        PrivOutput = PrivOutput & vbCr & s & vbCrLf
+        Yield
+    End If
+    If PrivDisableOutput Then
+        Yield
+        Exit Sub
+    End If
+    basConsole.SAY PrivConsoleID, s, False
 End Sub
 
 Public Sub SayMultiline(s As String)
