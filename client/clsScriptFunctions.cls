@@ -22,12 +22,30 @@ Public Aborted As Boolean
 
 Private PendingCustomDownloads() As Integer
 
-Public Property Get Username() As String
-    Username = myUsername
+Public Property Get UserName() As String
+    UserName = myUsername
 End Property
 
-Public Property Get ConsoleID() As String
-    ConsoleID = PrivConsoleID
+Public Property Let UserName(ByVal NewValue As String)
+    AssertCLIOnly
+    SetUsername NewValue, consoleID
+End Property
+
+Public Property Get Password() As String
+    If myPassword = "" Then
+        Password = ""
+    Else
+        Password = "[hidden]"
+    End If
+End Property
+
+Public Property Let Password(ByVal NewValue As String)
+    AssertCLIOnly
+    SetPassword NewValue, consoleID
+End Property
+
+Public Property Get consoleID() As String
+    consoleID = PrivConsoleID
 End Property
 
 Public Property Get TimeStr() As String
@@ -37,6 +55,14 @@ End Property
 Public Property Get DateStr() As String
     DateStr = DateTime.Date$
 End Property
+
+Private Sub AssertCLIOnly()
+    If IsCLIInput Then
+        Exit Sub
+    End If
+    Aborted = True
+    Err.Raise 9006, "DSO", "Script tried to execute CLI only functionality"
+End Sub
 
 Private Sub Class_Initialize()
     ReDim PendingCustomDownloads(0 To 0)
@@ -195,13 +221,18 @@ Public Function DOWNLOAD(Url As String) As Integer
      DOWNLOAD = DoDownload(Url, True, "", True)
 End Function
 
-Public Function DRAW(YPos As Long, R As Long, G As Long, B As Long, Mode As String)
-    DrawItUp YPos, R, G, B, Mode, PrivConsoleID
+Public Function DRAW(YPos As Long, R As Long, G As Long, b As Long, Mode As String)
+    DrawItUp YPos, R, G, b, Mode, PrivConsoleID
     Yield
 End Function
 
 Public Sub LOGIN()
     LoginNow PrivConsoleID
+    Yield
+End Sub
+
+Public Sub LOGOUT()
+    LogoutNow PrivConsoleID
     Yield
 End Sub
 
