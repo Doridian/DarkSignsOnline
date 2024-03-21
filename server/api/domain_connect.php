@@ -45,21 +45,10 @@ switch ($ver) {
 		break;
 	case 2:
 		$params = $_REQUEST['params'];
-		$preamble = 'Public Property Get ServerDomain() As String
-	ServerDomain = "' . $d . '"
-End Property
-
-Public Property Get ServerIP() As String
-	ServerIP = "' . $dInfo[3] . '"
-End Property
-
-Public Property Get ServerPort() As Integer
-	ServerPort = ' . $port . '
-End Property
-
-Public Property Get FileKey() As String
-	FileKey = "' . $dInfo[2] . '"
-End Property
+		$preamble = 'Public Const ServerDomain = "' . $d . '"
+Public Const ServerIP = "' . $dInfo[3] . '"
+Public Const ServerPort = ' . $port . '
+Public Const FileKey = "' . $dInfo[2] . '"
 ';
 		echo $d . ':-:' . $port . ':-:' . dso_b64_encode($preamble . $code_a[0]);
 		if (!empty($params)) {
