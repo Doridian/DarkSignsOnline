@@ -290,11 +290,10 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 New_Console_Line consoleID
             End If
             
-            Run_Script "\system\login-1.ds", 1, "", "BOOT"
-            Run_Script "\system\login-2.ds", 2, "", "BOOT"
-            Run_Script "\system\login-3.ds", 3, "", "BOOT"
-            Run_Script "\system\login-4.ds", 4, "", "BOOT"
-            
+            Run_Script "\system\login-1.ds", 1, "", "BOOT", True
+            Run_Script "\system\login-2.ds", 2, "", "BOOT", True
+            Run_Script "\system\login-3.ds", 3, "", "BOOT", True
+            Run_Script "\system\login-4.ds", 4, "", "BOOT", True
             
             If frmConsole.getConnected Then
                 frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message

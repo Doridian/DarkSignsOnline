@@ -40,7 +40,7 @@ Public Type NextFunction
     FunctionName As String
 End Type
 
-Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters As String, ScriptFrom As String)
+Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters As String, ScriptFrom As String, Optional IsRoot As Boolean = False)
     If consoleID < 1 Then
         consoleID = 1
     End If
@@ -112,8 +112,11 @@ EvalError:
     GoTo ScriptEnd
 
 ScriptCancelled:
-    SAY consoleID, "Script Stopped by User (CTRL + C){orange}", False
+    If IsRoot Then
+        SAY consoleID, "Script Stopped by User (CTRL + C){orange}", False
+    End If
 ScriptEnd:
+    G.CleanupScriptTasks
     New_Console_Line consoleID
     cPath(consoleID) = OldPath
 End Function
