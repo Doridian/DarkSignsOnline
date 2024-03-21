@@ -56,11 +56,11 @@ EvalError:
     If Err.Number = 9002 Then
         GoTo ScriptEnd
     End If
-    SayRaw consoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}", False
+    SayRaw consoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}"
     GoTo ScriptEnd
 
 ScriptCancelled:
-    SayRaw consoleID, "Script Stopped by User (CTRL + C){orange}", False
+    SayRaw consoleID, "Script Stopped by User (CTRL + C){orange}"
 ScriptEnd:
     scrConsoleContext(consoleID).CleanupScriptTasks
     New_Console_Line consoleID
@@ -469,15 +469,15 @@ Public Sub RegisterDomain(ByVal s As String, ByVal consoleID As Integer)
     
     If CountCharInString(s, ".") < 1 Or CountCharInString(s, ".") > 3 Or HasBadDomainChar(s) = True Or Len(s) < 5 Or Left(s, 1) = "." Or Right(s, 1) = "." Then
         SayError "The domain name you specified is invalid or contains bad characters.{orange}", consoleID
-        SayRaw consoleID, "A domain name should be in the following form: MYDOMAIN.COM{lorange}", False
-        SayRaw consoleID, "Subdomains should be in the form: BLOG.MYDOMAIN.COM{lorange}", False
-        SayRaw consoleID, "Valid domain name characters are:", False
-        SayRaw consoleID, "A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -{grey 8}", False
+        SayRaw consoleID, "A domain name should be in the following form: MYDOMAIN.COM{lorange}"
+        SayRaw consoleID, "Subdomains should be in the form: BLOG.MYDOMAIN.COM{lorange}"
+        SayRaw consoleID, "Valid domain name characters are:"
+        SayRaw consoleID, "A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -{grey 8}"
         Exit Sub
     End If
     
-    SayRaw consoleID, "{green 10}A registration request has been sent for " & s & ".", False
-    SayRaw consoleID, "{lgreen 10}The result will be posted to the COMM.", False
+    SayRaw consoleID, "{green 10}A registration request has been sent for " & s & "."
+    SayRaw consoleID, "{lgreen 10}The result will be posted to the COMM."
     
     
     'RunPage "domain_register.php?returnwith=2000&d=" & Trim(s), consoleID
@@ -506,8 +506,8 @@ Public Sub UnRegisterDomain(ByVal s As String, ByVal consoleID As Integer)
         Exit Sub
     End If
     
-    SayRaw consoleID, "{green 10}A unregistration request has been sent for " & sDomain & ".", False
-    SayRaw consoleID, "{lgreen 10}The result will be posted to the COMM.", False
+    SayRaw consoleID, "{green 10}A unregistration request has been sent for " & sDomain & "."
+    SayRaw consoleID, "{lgreen 10}The result will be posted to the COMM."
 
     
     RunPage "domain_unregister.php", consoleID, True, _
@@ -762,22 +762,18 @@ End Sub
 
 
 Public Sub ListKeys(ByVal consoleID As Integer)
-    
     Dim ss As String
     ss = "{gold}"
     
-    SayRaw consoleID, "Dark Signs Keyboard Actions{gold 14}", False
+    SayRaw consoleID, "Dark Signs Keyboard Actions{gold 14}"
     
-    SayRaw consoleID, "Page Up: Scroll the console up." & ss, False
-    SayRaw consoleID, "Page Down: Scroll the console down." & ss, False
+    SayRaw consoleID, "Page Up: Scroll the console up." & ss
+    SayRaw consoleID, "Page Down: Scroll the console down." & ss
     
-    SayRaw consoleID, "Shift + Page Up: Decrease size of the COMM." & ss, False
-    SayRaw consoleID, "Shift + Page Down: Incease size of the COMM." & ss, False
+    SayRaw consoleID, "Shift + Page Up: Decrease size of the COMM." & ss
+    SayRaw consoleID, "Shift + Page Down: Incease size of the COMM." & ss
     
-    SayRaw consoleID, "F11: Toggle maximum console display." & ss, False
-    
-    
-    
+    SayRaw consoleID, "F11: Toggle maximum console display." & ss
 End Sub
 
 
@@ -795,9 +791,9 @@ Public Sub SetUsername(ByVal s As String, ByVal consoleID As Integer)
     Else
         Password = "[hidden]"
     End If
-    SayRaw consoleID, "Your new details are shown below." & "{orange}", False
-    SayRaw consoleID, "Username: " & myUsername() & "{orange 16}", False
-    SayRaw consoleID, "Password: " & Password & "{orange 16}", False
+    SayRaw consoleID, "Your new details are shown below." & "{orange}"
+    SayRaw consoleID, "Username: " & myUsername() & "{orange 16}"
+    SayRaw consoleID, "Password: " & Password & "{orange 16}"
 End Sub
 
 Public Sub SetPassword(ByVal s As String, ByVal consoleID As Integer)
@@ -814,9 +810,9 @@ Public Sub SetPassword(ByVal s As String, ByVal consoleID As Integer)
     Else
         Password = "[hidden]"
     End If
-    SayRaw consoleID, "Your new details are shown below." & "{orange}", False
-    SayRaw consoleID, "Username: " & myUsername() & "{orange 16}", False
-    SayRaw consoleID, "Password: " & Password & "{orange 16}", False
+    SayRaw consoleID, "Your new details are shown below." & "{orange}"
+    SayRaw consoleID, "Username: " & myUsername() & "{orange 16}"
+    SayRaw consoleID, "Password: " & Password & "{orange 16}"
 End Sub
 
 Public Sub ClearConsole(ByVal consoleID As Integer)
@@ -1185,7 +1181,6 @@ Public Sub DisplayFile(ByVal s As String, ByVal consoleID As Integer)
                     If Trim(tmpS) <> "" Then
                         SayRaw consoleID, Chr(34) & "   " & tmpS & Chr(34), , 1
                         CLinePrinted = CLinePrinted + 1
-                        If CLinePrinted Mod 24 = 0 Then PauseConsole "", consoleID
                     End If
                 End If
             End If
@@ -1263,7 +1258,7 @@ errorDir:
 End Sub
 
 Public Function SayError(s As String, ByVal consoleID As Integer)
-    SayRaw consoleID, "Error - " & s & " {orange}", False
+    SayRaw consoleID, "Error - " & s & " {orange}"
 End Function
 
 Public Function RemoveADir(s As String, cosoleID As Integer) As Boolean
@@ -1378,13 +1373,13 @@ Public Sub ListDirectoryContents(ByVal consoleID As Integer, Optional ByVal sFil
             frmConsole.lfont.Caption = sAll
             
             If frmConsole.lfont.Width > (frmConsole.Width - 4200) Then
-                SayRaw consoleID, sAll & "{lyellow}", False
+                SayRaw consoleID, sAll & "{lyellow}"
                 sAll = ""
             End If
         End If
     Next n
     If sAll <> "" Then
-        SayRaw consoleID, sAll & "{lyellow}", False
+        SayRaw consoleID, sAll & "{lyellow}"
     End If
     
     sAll = ""
@@ -1407,54 +1402,23 @@ Public Sub ListDirectoryContents(ByVal consoleID As Integer, Optional ByVal sFil
             frmConsole.lfont.Caption = sAll
             
             If frmConsole.lfont.Width > (frmConsole.Width - 4700) Then
-                SayRaw consoleID, sAll & "{}", False
+                SayRaw consoleID, sAll & "{}"
                 sAll = ""
             End If
         End If
     Next n
     If sAll <> "" Then
         
-        SayRaw consoleID, sAll & "{}", False
+        SayRaw consoleID, sAll & "{}"
     End If
 NoFilesFound:
     sAll = ""
     
-    SayRaw consoleID, Trim(Str(fCount)) & " file(s) and " & Trim(Str(dCount)) & " dir(s) found in " & cPath(consoleID) & " {green 10}", False
+    SayRaw consoleID, Trim(Str(fCount)) & " file(s) and " & Trim(Str(dCount)) & " dir(s) found in " & cPath(consoleID) & " {green 10}"
     
     Exit Sub
 zxc:
     SayError "Path Not Found: " & cPath(consoleID), consoleID
-End Sub
-
-
-Public Sub PauseConsole(s As String, ByVal consoleID As Integer)
-    ConsolePaused(consoleID) = True
-    
-    Dim propSpace As String
-    
-    If Trim(Kill_Property_Space(s)) = "" Then
-        propSpace = "{" & Trim(Get_Property_Space(s)) & "}"
-        
-        If Len(propSpace) > 3 Then
-            s = propSpace & "Press any key to continue..."
-        Else
-            s = "Press any key to continue..."
-        End If
-    
-    End If
-    
-
-
-    If Has_Property_Space(s) = True Then
-        SayRaw consoleID, s, False
-    Else
-        SayRaw consoleID, s & "{lblue 10}", False
-    End If
-    
-    Do
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-    Loop Until ConsolePaused(consoleID) = False
-    
 End Sub
 
 Public Sub ListColors(ByVal consoleID As Integer)
@@ -1496,7 +1460,7 @@ Public Sub ListColors(ByVal consoleID As Integer)
 End Sub
 
 Sub ShowCol(ByVal s As String, ByVal consoleID As Integer)
-    SayRaw consoleID, s & " (**" & s & "**) {" & s & " 8}", False
+    SayRaw consoleID, s & " (**" & s & "**) {" & s & " 8}"
 End Sub
 
 Public Sub ShowHelp(sP, ByVal consoleID As Integer)
@@ -1506,373 +1470,373 @@ Public Sub ShowHelp(sP, ByVal consoleID As Integer)
 
     Select Case sP
     Case "help"
-        SayRaw consoleID, props & "Command: HELP", False
-        SayRaw consoleID, "{lgrey}Display the available console commands.", False
+        SayRaw consoleID, props & "Command: HELP"
+        SayRaw consoleID, "{lgrey}Display the available console commands."
     Case "restart"
-        SayRaw consoleID, props & "Command: RESTART", False
-        SayRaw consoleID, "{lgrey}Restart the console immediately.", False
+        SayRaw consoleID, props & "Command: RESTART"
+        SayRaw consoleID, "{lgrey}Restart the console immediately."
     Case "listcolors"
-        SayRaw consoleID, props & "Command: LISTCOLORS", False
-        SayRaw consoleID, "{lgrey}Display the available colors and color codes in the console.", False
+        SayRaw consoleID, props & "Command: LISTCOLORS"
+        SayRaw consoleID, "{lgrey}Display the available colors and color codes in the console."
     Case "listkeys"
-        SayRaw consoleID, props & "Command: LISTKEYS", False
-        SayRaw consoleID, "{lgrey}Display the available shortcut keys and their actions in the console.", False
+        SayRaw consoleID, props & "Command: LISTKEYS"
+        SayRaw consoleID, "{lgrey}Display the available shortcut keys and their actions in the console."
     
     Case "time"
-        SayRaw consoleID, props & "Command: TIME", False
-        SayRaw consoleID, "{lgrey}Display the current system time.", False
+        SayRaw consoleID, props & "Command: TIME"
+        SayRaw consoleID, "{lgrey}Display the current system time."
     Case "date"
-        SayRaw consoleID, props & "Command: DATE", False
-        SayRaw consoleID, "{lgrey}Display the current system date.", False
+        SayRaw consoleID, props & "Command: DATE"
+        SayRaw consoleID, "{lgrey}Display the current system date."
     Case "now"
-        SayRaw consoleID, props & "Command: NOW", False
-        SayRaw consoleID, "{lgrey}Display the current system date and time.", False
+        SayRaw consoleID, props & "Command: NOW"
+        SayRaw consoleID, "{lgrey}Display the current system date and time."
     Case "clear"
-        SayRaw consoleID, props & "Command: CLEAR", False
-        SayRaw consoleID, "{lgrey}Clear the console screen.", False
+        SayRaw consoleID, props & "Command: CLEAR"
+        SayRaw consoleID, "{lgrey}Clear the console screen."
     Case "stats"
-        SayRaw consoleID, props & "Command: STATS", False
-        SayRaw consoleID, "{lgrey}Display active information about the Dark Signs Network.", False
-        SayRaw consoleID, "{lorange}This information will be shown in the COMM window.", False
+        SayRaw consoleID, props & "Command: STATS"
+        SayRaw consoleID, "{lgrey}Display active information about the Dark Signs Network."
+        SayRaw consoleID, "{lorange}This information will be shown in the COMM window."
     
     Case "dir"
         
-        SayRaw consoleID, props & "Command: DIR optional-filter", False
-        SayRaw consoleID, "{lgrey}Display files and folders in the active directory.", False
-        SayRaw consoleID, "{lgrey}A filter can be appended to show only elements containing the filter keyword in their name.", False
+        SayRaw consoleID, props & "Command: DIR optional-filter"
+        SayRaw consoleID, "{lgrey}Display files and folders in the active directory."
+        SayRaw consoleID, "{lgrey}A filter can be appended to show only elements containing the filter keyword in their name."
         
     Case "pause"
-        SayRaw consoleID, props & "Command: PAUSE optional-msg", False
-        SayRaw consoleID, propsforexamples & "Example #1: PAUSE Press a key!", False
-        SayRaw consoleID, "{lgrey}Pause the console interface until the user presses a key.", False
+        SayRaw consoleID, props & "Command: PAUSE optional-msg"
+        SayRaw consoleID, propsforexamples & "Example #1: PAUSE Press a key!"
+        SayRaw consoleID, "{lgrey}Pause the console interface until the user presses a key."
     Case "cd"
-        SayRaw consoleID, props & "Command: CD directory-name", False
-        SayRaw consoleID, propsforexamples & "Example #1: CD myfiles", False
-        SayRaw consoleID, "{lgrey}Change the active path to the specified directory.", False
+        SayRaw consoleID, props & "Command: CD directory-name"
+        SayRaw consoleID, propsforexamples & "Example #1: CD myfiles"
+        SayRaw consoleID, "{lgrey}Change the active path to the specified directory."
     Case "rd"
-        SayRaw consoleID, props & "Command: RD directory-name", False
-        SayRaw consoleID, propsforexamples & "Example #1: RD myfiles", False
-        SayRaw consoleID, "{lgrey}Delete the directory with the specified name.", False
-        SayRaw consoleID, "{lorange}The directory must be empty, or it will not be deleted.", False
+        SayRaw consoleID, props & "Command: RD directory-name"
+        SayRaw consoleID, propsforexamples & "Example #1: RD myfiles"
+        SayRaw consoleID, "{lgrey}Delete the directory with the specified name."
+        SayRaw consoleID, "{lorange}The directory must be empty, or it will not be deleted."
     Case "del"
-        SayRaw consoleID, props & "Command: DEL filename", False
-        SayRaw consoleID, propsforexamples & "Example #1: DEL file.ds", False
-        SayRaw consoleID, "{lgrey}Delete the specified file or files.", False
-        SayRaw consoleID, "{lgrey}The wildcard symbol, *, can be used to delete multiple files at once.", False
-        SayRaw consoleID, "{lorange}Files in the system directory cannot be deleted.", False
-        SayRaw consoleID, "{orange}Be careful not to delete all of your files!", False
+        SayRaw consoleID, props & "Command: DEL filename"
+        SayRaw consoleID, propsforexamples & "Example #1: DEL file.ds"
+        SayRaw consoleID, "{lgrey}Delete the specified file or files."
+        SayRaw consoleID, "{lgrey}The wildcard symbol, *, can be used to delete multiple files at once."
+        SayRaw consoleID, "{lorange}Files in the system directory cannot be deleted."
+        SayRaw consoleID, "{orange}Be careful not to delete all of your files!"
         
     Case "md"
-        SayRaw consoleID, props & "Command: MD directory-name", False
-        SayRaw consoleID, propsforexamples & "Example #1: MD myfiles", False
-        SayRaw consoleID, "{lgrey}Create a new empty directory with the specified name.", False
-        SayRaw consoleID, "{lorange}The name of the directory should not contain space characters.", False
+        SayRaw consoleID, props & "Command: MD directory-name"
+        SayRaw consoleID, propsforexamples & "Example #1: MD myfiles"
+        SayRaw consoleID, "{lgrey}Create a new empty directory with the specified name."
+        SayRaw consoleID, "{lorange}The name of the directory should not contain space characters."
             
     Case "lookup"
-        SayRaw consoleID, props & "Command: LOOKUP domain-or-username", False
-        SayRaw consoleID, propsforexamples & "Example #1: LOOKUP website.com", False
-        SayRaw consoleID, propsforexamples & "Example #2: LOOKUP jsmith", False
-        SayRaw consoleID, "{lgrey}View information about the specified domain name or user account.", False
-        SayRaw consoleID, "{lgrey}This command can be used on both domain names and user accounts.", False
-        SayRaw consoleID, "{lorange}Data will be returned in the COMM window.", False
+        SayRaw consoleID, props & "Command: LOOKUP domain-or-username"
+        SayRaw consoleID, propsforexamples & "Example #1: LOOKUP website.com"
+        SayRaw consoleID, propsforexamples & "Example #2: LOOKUP jsmith"
+        SayRaw consoleID, "{lgrey}View information about the specified domain name or user account."
+        SayRaw consoleID, "{lgrey}This command can be used on both domain names and user accounts."
+        SayRaw consoleID, "{lorange}Data will be returned in the COMM window."
                    
     Case "username"
-        SayRaw consoleID, props & "Command: USERNAME your-username", False
-        SayRaw consoleID, propsforexamples & "Example #1: USERNAME jsmith", False
-        SayRaw consoleID, "{lgrey}Set or change your Dark Signs username.", False
-        SayRaw consoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled.", False
-        SayRaw consoleID, "{lorange}If you do not have an account, visit the website to create one.", False
+        SayRaw consoleID, props & "Command: USERNAME your-username"
+        SayRaw consoleID, propsforexamples & "Example #1: USERNAME jsmith"
+        SayRaw consoleID, "{lgrey}Set or change your Dark Signs username."
+        SayRaw consoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled."
+        SayRaw consoleID, "{lorange}If you do not have an account, visit the website to create one."
     Case "password"
-        SayRaw consoleID, props & "Command: PASSWORD your-password", False
-        SayRaw consoleID, propsforexamples & "Example #1: PASSWORD secret123", False
-        SayRaw consoleID, "{lgrey}Set or change your Dark Signs password.", False
-        SayRaw consoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled.", False
-        SayRaw consoleID, "{lorange}If you do not have an account, visit the website to create one.", False
+        SayRaw consoleID, props & "Command: PASSWORD your-password"
+        SayRaw consoleID, propsforexamples & "Example #1: PASSWORD secret123"
+        SayRaw consoleID, "{lgrey}Set or change your Dark Signs password."
+        SayRaw consoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled."
+        SayRaw consoleID, "{lorange}If you do not have an account, visit the website to create one."
     
     Case "ping"
-        SayRaw consoleID, props & "Command: PING domain-or-ip-server", False
-        SayRaw consoleID, propsforexamples & "Example #1: PING birds.com", False
-        SayRaw consoleID, "{lgrey}Check if the specified server exist on the network.", False
-        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\ping.ds", False
+        SayRaw consoleID, props & "Command: PING domain-or-ip-server"
+        SayRaw consoleID, propsforexamples & "Example #1: PING birds.com"
+        SayRaw consoleID, "{lgrey}Check if the specified server exist on the network."
+        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\ping.ds"
     
     Case "me"
-        SayRaw consoleID, props & "Command: ME", False
-        SayRaw consoleID, propsforexamples & "Example #1: ME", False
-        SayRaw consoleID, "{lgrey}Do nothing at all!", False
-        SayRaw consoleID, "{lorange}This is a useless secret command.", False
+        SayRaw consoleID, props & "Command: ME"
+        SayRaw consoleID, propsforexamples & "Example #1: ME"
+        SayRaw consoleID, "{lgrey}Do nothing at all!"
+        SayRaw consoleID, "{lorange}This is a useless secret command."
     
     Case "pingport"
-        SayRaw consoleID, props & "Command: PINGPORT domain-or-ip-server 80", False
-        SayRaw consoleID, propsforexamples & "Example #1: PINGPORT birds.com 80", False
-        SayRaw consoleID, "{lgrey}Check if a script is runnning on the server at the specified port number.", False
-        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\pingport.ds", False
+        SayRaw consoleID, props & "Command: PINGPORT domain-or-ip-server 80"
+        SayRaw consoleID, propsforexamples & "Example #1: PINGPORT birds.com 80"
+        SayRaw consoleID, "{lgrey}Check if a script is runnning on the server at the specified port number."
+        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\pingport.ds"
             
     Case "getip"
-        SayRaw consoleID, props & "Command: GETIP domain-or-ip-server", False
-        SayRaw consoleID, propsforexamples & "Example #1: GETIP birds.com", False
-        SayRaw consoleID, "{lgrey}Get the IP address of the specified server.", False
-        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\getip.ds", False
+        SayRaw consoleID, props & "Command: GETIP domain-or-ip-server"
+        SayRaw consoleID, propsforexamples & "Example #1: GETIP birds.com"
+        SayRaw consoleID, "{lgrey}Get the IP address of the specified server."
+        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\getip.ds"
             
     Case "getdomain"
-        SayRaw consoleID, props & "Command: GETDOMAIN domain-or-ip-server", False
-        SayRaw consoleID, propsforexamples & "Example #1: GETDOMAIN 12.55.192.111", False
-        SayRaw consoleID, "{lgrey}Get the domain name of the specified server.", False
-        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\getdomain.ds", False
+        SayRaw consoleID, props & "Command: GETDOMAIN domain-or-ip-server"
+        SayRaw consoleID, propsforexamples & "Example #1: GETDOMAIN 12.55.192.111"
+        SayRaw consoleID, "{lgrey}Get the domain name of the specified server."
+        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\getdomain.ds"
                             
     Case "connect"
-        SayRaw consoleID, props & "Command: CONNECT server port-number [optional-parameters]", False
-        SayRaw consoleID, propsforexamples & "Example #1: CONNECT home.com 80", False
-        SayRaw consoleID, "{lgrey}Connect to a server domain name or IP address on the specified port.", False
-        SayRaw consoleID, "{lgrey}If no port number is specified, the default port number is 80.", False
-        SayRaw consoleID, "{lorange}You must specify the port number if you are including optional parameters.", False
+        SayRaw consoleID, props & "Command: CONNECT server port-number [optional-parameters]"
+        SayRaw consoleID, propsforexamples & "Example #1: CONNECT home.com 80"
+        SayRaw consoleID, "{lgrey}Connect to a server domain name or IP address on the specified port."
+        SayRaw consoleID, "{lgrey}If no port number is specified, the default port number is 80."
+        SayRaw consoleID, "{lorange}You must specify the port number if you are including optional parameters."
  
         
             
     Case "move"
-        SayRaw consoleID, props & "Command: MOVE source-file destination-file", False
-        SayRaw consoleID, propsforexamples & "Example #1: MOVE myoldfile.ds mynewfile.ds", False
-        SayRaw consoleID, propsforexamples & "Example #2: MOVE /home/myoldfile.ds  /home/dir2/mynewfile.ds", False
-        SayRaw consoleID, "{lgrey}Rename the specified file.", False
-        SayRaw consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2.", False
-        SayRaw consoleID, "{lorange}File names should not contain space characters.", False
+        SayRaw consoleID, props & "Command: MOVE source-file destination-file"
+        SayRaw consoleID, propsforexamples & "Example #1: MOVE myoldfile.ds mynewfile.ds"
+        SayRaw consoleID, propsforexamples & "Example #2: MOVE /home/myoldfile.ds  /home/dir2/mynewfile.ds"
+        SayRaw consoleID, "{lgrey}Rename the specified file."
+        SayRaw consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2."
+        SayRaw consoleID, "{lorange}File names should not contain space characters."
     Case "rename"
-        SayRaw consoleID, props & "Command: RENAME source-file destination-file", False
-        SayRaw consoleID, propsforexamples & "Example #1: MD myoldfile.ds mynewfile.ds", False
-        SayRaw consoleID, propsforexamples & "Example #2: MD /home/myoldfile.ds  /home/dir2/mynewfile.ds", False
-        SayRaw consoleID, "{lgrey}Rename the specified file.", False
-        SayRaw consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2.", False
-        SayRaw consoleID, "{lorange}File names should not contain space characters.", False
+        SayRaw consoleID, props & "Command: RENAME source-file destination-file"
+        SayRaw consoleID, propsforexamples & "Example #1: MD myoldfile.ds mynewfile.ds"
+        SayRaw consoleID, propsforexamples & "Example #2: MD /home/myoldfile.ds  /home/dir2/mynewfile.ds"
+        SayRaw consoleID, "{lgrey}Rename the specified file."
+        SayRaw consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2."
+        SayRaw consoleID, "{lorange}File names should not contain space characters."
     Case "copy"
-        SayRaw consoleID, props & "Command: COPY source-file destination-file", False
-        SayRaw consoleID, propsforexamples & "Example #1: COPY myoldfile.ds mynewfile.ds", False
-        SayRaw consoleID, propsforexamples & "Example #2: COPY /home/myoldfile.ds  /home/dir2/mynewfile.ds", False
-        SayRaw consoleID, "{lgrey}Create a copy of the specified file.", False
-        SayRaw consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2.", False
-        SayRaw consoleID, "{lorange}File names should not contain space characters.", False
+        SayRaw consoleID, props & "Command: COPY source-file destination-file"
+        SayRaw consoleID, propsforexamples & "Example #1: COPY myoldfile.ds mynewfile.ds"
+        SayRaw consoleID, propsforexamples & "Example #2: COPY /home/myoldfile.ds  /home/dir2/mynewfile.ds"
+        SayRaw consoleID, "{lgrey}Create a copy of the specified file."
+        SayRaw consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2."
+        SayRaw consoleID, "{lorange}File names should not contain space characters."
     
     Case "saycomm"
-        SayRaw consoleID, props & "Command: SAYCOMM text", False
-        SayRaw consoleID, propsforexamples & "Example #1: SAYCOMM Connected to server", False
-        SayRaw consoleID, "{lgrey}Display the specified text in the COMM window.", False
+        SayRaw consoleID, props & "Command: SAYCOMM text"
+        SayRaw consoleID, propsforexamples & "Example #1: SAYCOMM Connected to server"
+        SayRaw consoleID, "{lgrey}Display the specified text in the COMM window."
         
     Case "run"
-        SayRaw consoleID, props & "Command: RUN file", False
-        SayRaw consoleID, propsforexamples & "Example #1: RUN myscript.ds", False
-        SayRaw consoleID, "{lgrey}Run the specified file as script in the console.", False
-        SayRaw consoleID, "{lgrey}Files not designed to be run as scripts may cause random errors to be displayed.", False
+        SayRaw consoleID, props & "Command: RUN file"
+        SayRaw consoleID, propsforexamples & "Example #1: RUN myscript.ds"
+        SayRaw consoleID, "{lgrey}Run the specified file as script in the console."
+        SayRaw consoleID, "{lgrey}Files not designed to be run as scripts may cause random errors to be displayed."
             
     Case "edit"
-        SayRaw consoleID, props & "Command: EDIT file", False
-        SayRaw consoleID, propsforexamples & "Example #1: EDIT myscript.ds", False
-        SayRaw consoleID, "{lgrey}Edit the specified file in the editing window. The console will pause while the editor is active.", False
-        SayRaw consoleID, "{lorange}Files in the editor are saved automatically.", False
+        SayRaw consoleID, props & "Command: EDIT file"
+        SayRaw consoleID, propsforexamples & "Example #1: EDIT myscript.ds"
+        SayRaw consoleID, "{lgrey}Edit the specified file in the editing window. The console will pause while the editor is active."
+        SayRaw consoleID, "{lorange}Files in the editor are saved automatically."
                 
 '    Case "wait"
-'        SayRaw consoleID, props & "Command: WAIT milliseconds", False
-'        SayRaw consoleID, propsforexamples & "Example #1: WAIT 1000", False
-'        SayRaw consoleID, "{lgrey}Pause the console for the specific amount of time (between 1 and 60000 ms).", False
-'        SayRaw consoleID, "{lorange}1000 millisends is equal to 1 second.", False
-'        SayRaw consoleID, "{orange}This command is only enabled in scripts.", False
+'        SayRaw consoleID, props & "Command: WAIT milliseconds"
+'        SayRaw consoleID, propsforexamples & "Example #1: WAIT 1000"
+'        SayRaw consoleID, "{lgrey}Pause the console for the specific amount of time (between 1 and 60000 ms)."
+'        SayRaw consoleID, "{lorange}1000 millisends is equal to 1 second."
+'        SayRaw consoleID, "{orange}This command is only enabled in scripts."
                     
     Case "upload"
-        SayRaw consoleID, props & "Command: UPLOAD server port-number file", False
-        SayRaw consoleID, propsforexamples & "Example #1: UPLOAD mywebsite.com 80 newscript.ds", False
-        SayRaw consoleID, "{lgrey}Upload a file to your domain name on the specified port.", False
-        SayRaw consoleID, "{lgrey}This script will then become connectable to all players.", False
-        SayRaw consoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own.", False
+        SayRaw consoleID, props & "Command: UPLOAD server port-number file"
+        SayRaw consoleID, propsforexamples & "Example #1: UPLOAD mywebsite.com 80 newscript.ds"
+        SayRaw consoleID, "{lgrey}Upload a file to your domain name on the specified port."
+        SayRaw consoleID, "{lgrey}This script will then become connectable to all players."
+        SayRaw consoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own."
     
     Case "closeport"
-        SayRaw consoleID, props & "Command: CLOSEPORT server port-number", False
-        SayRaw consoleID, propsforexamples & "Example #1: CLOSEPORT mywebsite.com 80", False
-        SayRaw consoleID, "{lgrey}Close port on the specified domain.", False
-        SayRaw consoleID, "{lgrey}The script running on this port is deleted.", False
-        SayRaw consoleID, "{lorange}You can only close ports on domain names (servers) which you own.", False
+        SayRaw consoleID, props & "Command: CLOSEPORT server port-number"
+        SayRaw consoleID, propsforexamples & "Example #1: CLOSEPORT mywebsite.com 80"
+        SayRaw consoleID, "{lgrey}Close port on the specified domain."
+        SayRaw consoleID, "{lgrey}The script running on this port is deleted."
+        SayRaw consoleID, "{lorange}You can only close ports on domain names (servers) which you own."
                                       
     Case "download"
-        SayRaw consoleID, props & "Command: DOWNLOAD server port-number file", False
-        SayRaw consoleID, propsforexamples & "Example #1: DOWNLOAD mywebsite.com 80 thescript.ds", False
-        SayRaw consoleID, "{lgrey}Download a script file from a sever that you own.", False
-        SayRaw consoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own.", False
+        SayRaw consoleID, props & "Command: DOWNLOAD server port-number file"
+        SayRaw consoleID, propsforexamples & "Example #1: DOWNLOAD mywebsite.com 80 thescript.ds"
+        SayRaw consoleID, "{lgrey}Download a script file from a sever that you own."
+        SayRaw consoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own."
                              
     Case "transfer"
-        SayRaw consoleID, props & "Command: TRANSFER recipient-username amount description", False
-        SayRaw consoleID, propsforexamples & "Example #1: TRANSFER admin 5 A payment for you", False
-        SayRaw consoleID, "{lgrey}Transfer an amount of money (DS$) to the specified username.", False
-        SayRaw consoleID, "{lorange}Each transfer requires manual authorization from the sender.", False
+        SayRaw consoleID, props & "Command: TRANSFER recipient-username amount description"
+        SayRaw consoleID, propsforexamples & "Example #1: TRANSFER admin 5 A payment for you"
+        SayRaw consoleID, "{lgrey}Transfer an amount of money (DS$) to the specified username."
+        SayRaw consoleID, "{lorange}Each transfer requires manual authorization from the sender."
                                     
     Case "ydiv"
-        SayRaw consoleID, props & "Command: YDIV height", False
-        SayRaw consoleID, propsforexamples & "Example #1: YDIV 240", False
-        SayRaw consoleID, "{lgrey}Change the default space between each console line.", False
-        SayRaw consoleID, "{lorange}The default YDIV is set to 60.", False
+        SayRaw consoleID, props & "Command: YDIV height"
+        SayRaw consoleID, propsforexamples & "Example #1: YDIV 240"
+        SayRaw consoleID, "{lgrey}Change the default space between each console line."
+        SayRaw consoleID, "{lorange}The default YDIV is set to 60."
                                            
     Case "display"
-        SayRaw consoleID, props & "Command: DISPLAY file optional-start-line optional-max-lines", False
-        SayRaw consoleID, propsforexamples & "Example #1: DISPLAY myfile.txt 1 5", False
-        SayRaw consoleID, "{lgrey}Output the specified file to the console, without running as a script.", False
-        SayRaw consoleID, "{lorange}In the example, the first five lines of myfile.txt will be displayed.", False
+        SayRaw consoleID, props & "Command: DISPLAY file optional-start-line optional-max-lines"
+        SayRaw consoleID, propsforexamples & "Example #1: DISPLAY myfile.txt 1 5"
+        SayRaw consoleID, "{lgrey}Output the specified file to the console, without running as a script."
+        SayRaw consoleID, "{lorange}In the example, the first five lines of myfile.txt will be displayed."
                                                    
     Case "append"
-        SayRaw consoleID, props & "Command: APPEND file optional-START-or-END text", False
-        SayRaw consoleID, propsforexamples & "Example #1: APPEND myfile.txt new data", False
-        SayRaw consoleID, propsforexamples & "Example #2: APPEND myfile.txt START new data", False
-        SayRaw consoleID, "{lgrey}Append (add) text or data to the specified file.", False
-        SayRaw consoleID, "{lgrey}Data will be added to the beginning of the file if the START keyword is used.", False
-        SayRaw consoleID, "{lgrey}Data will be added to the end of the file if the END keyword is used.", False
-        SayRaw consoleID, "{lorange}If the specified file doesn't exist, it will be created.", False
+        SayRaw consoleID, props & "Command: APPEND file optional-START-or-END text"
+        SayRaw consoleID, propsforexamples & "Example #1: APPEND myfile.txt new data"
+        SayRaw consoleID, propsforexamples & "Example #2: APPEND myfile.txt START new data"
+        SayRaw consoleID, "{lgrey}Append (add) text or data to the specified file."
+        SayRaw consoleID, "{lgrey}Data will be added to the beginning of the file if the START keyword is used."
+        SayRaw consoleID, "{lgrey}Data will be added to the end of the file if the END keyword is used."
+        SayRaw consoleID, "{lorange}If the specified file doesn't exist, it will be created."
                                                            
     Case "write"
-        SayRaw consoleID, props & "Command: WRITE file text", False
-        SayRaw consoleID, propsforexamples & "Example #1: WRITE myfile.txt new data", False
-        SayRaw consoleID, "{lgrey}Write text or data to the specified file.", False
-        SayRaw consoleID, "{lorange}If the specified file already exists, it will be overwritten.", False
-        SayRaw consoleID, "{lorange}Use APPEND to add data to an existing file.", False
+        SayRaw consoleID, props & "Command: WRITE file text"
+        SayRaw consoleID, propsforexamples & "Example #1: WRITE myfile.txt new data"
+        SayRaw consoleID, "{lgrey}Write text or data to the specified file."
+        SayRaw consoleID, "{lorange}If the specified file already exists, it will be overwritten."
+        SayRaw consoleID, "{lorange}Use APPEND to add data to an existing file."
         
 
     Case "register"
-        SayRaw consoleID, props & "Command: REGISTER domain-name", False
-        SayRaw consoleID, propsforexamples & "Example #1: REGISTER mynewwebsite.com", False
-        SayRaw consoleID, "{lgrey}Register a domain name on the Dark Signs Network.", False
-        SayRaw consoleID, "{lgrey}This command requires that you have the required amount of money (DS$) in your account.", False
-        SayRaw consoleID, "-", False
-        SayRaw consoleID, "{center orange nobold 14}- Check the latest prices in the COMM window. -", False
+        SayRaw consoleID, props & "Command: REGISTER domain-name"
+        SayRaw consoleID, propsforexamples & "Example #1: REGISTER mynewwebsite.com"
+        SayRaw consoleID, "{lgrey}Register a domain name on the Dark Signs Network."
+        SayRaw consoleID, "{lgrey}This command requires that you have the required amount of money (DS$) in your account."
+        SayRaw consoleID, "-"
+        SayRaw consoleID, "{center orange nobold 14}- Check the latest prices in the COMM window. -"
         RunPage "domain_register.php?returnwith=2000&prices=1", consoleID
         
          
     Case "unregister"
-        SayRaw consoleID, props & "Command: UNREGISTER domain-name account-password", False
-        SayRaw consoleID, propsforexamples & "Example #1: UNREGISTER myoldwebsite.com secret123", False
-        SayRaw consoleID, "{lgrey}Unregister a domain name that you own on the Dark Signs Network.", False
-        SayRaw consoleID, "{lorange}This command requires that you include your password for security.", False
+        SayRaw consoleID, props & "Command: UNREGISTER domain-name account-password"
+        SayRaw consoleID, propsforexamples & "Example #1: UNREGISTER myoldwebsite.com secret123"
+        SayRaw consoleID, "{lgrey}Unregister a domain name that you own on the Dark Signs Network."
+        SayRaw consoleID, "{lorange}This command requires that you include your password for security."
         
             
     Case "login"
-        SayRaw consoleID, props & "Command: LOGIN", False
-        SayRaw consoleID, "{lgrey}Attempt to log in to Dark Signs with your account username and password.", False
-        SayRaw consoleID, "{lgrey}This is only necessary if your status is 'not logged in'.", False
-        SayRaw consoleID, "{lorange}Use the USERNAME and PASSWORD commands to set or change your username or password.", False
+        SayRaw consoleID, props & "Command: LOGIN"
+        SayRaw consoleID, "{lgrey}Attempt to log in to Dark Signs with your account username and password."
+        SayRaw consoleID, "{lgrey}This is only necessary if your status is 'not logged in'."
+        SayRaw consoleID, "{lorange}Use the USERNAME and PASSWORD commands to set or change your username or password."
         
     Case "logout"
-        SayRaw consoleID, props & "Command: LOGOUT", False
-        SayRaw consoleID, "{lgrey}Log out of Dark Signs.", False
-        SayRaw consoleID, "{lgrey}This can be helpful if you want to log in as another user, or if a rare error occurs.", False
+        SayRaw consoleID, props & "Command: LOGOUT"
+        SayRaw consoleID, "{lgrey}Log out of Dark Signs."
+        SayRaw consoleID, "{lgrey}This can be helpful if you want to log in as another user, or if a rare error occurs."
             
     Case "mydomains"
-        SayRaw consoleID, props & "Command: MYDOMAINS", False
-        SayRaw consoleID, "{lgrey}List the domain names currently registered to you.", False
+        SayRaw consoleID, props & "Command: MYDOMAINS"
+        SayRaw consoleID, "{lgrey}List the domain names currently registered to you."
    
     Case "mysubdomains"
-        SayRaw consoleID, props & "Command: MYSUBDOMAINS", False
-        SayRaw consoleID, propsforexamples & "Example #1: MYSUBDOMAINS mySite.com", False
-        SayRaw consoleID, "{lgrey}List subdomains to a domain that is registed to you.", False
+        SayRaw consoleID, props & "Command: MYSUBDOMAINS"
+        SayRaw consoleID, propsforexamples & "Example #1: MYSUBDOMAINS mySite.com"
+        SayRaw consoleID, "{lgrey}List subdomains to a domain that is registed to you."
     
     Case "myips"
-        SayRaw consoleID, props & "Command: MYIPS", False
-        SayRaw consoleID, "{lgrey}List all IP addresses registed to you.", False
+        SayRaw consoleID, props & "Command: MYIPS"
+        SayRaw consoleID, "{lgrey}List all IP addresses registed to you."
      
     Case "music"
-        SayRaw consoleID, props & "Command: MUSIC [parameter]", False
-        SayRaw consoleID, propsforexamples & "Example #1: MUSIC NEXT", False
-        SayRaw consoleID, "{lgrey}Music parameters are START, STOP, NEXT, and PREV.", False
+        SayRaw consoleID, props & "Command: MUSIC [parameter]"
+        SayRaw consoleID, propsforexamples & "Example #1: MUSIC NEXT"
+        SayRaw consoleID, "{lgrey}Music parameters are START, STOP, NEXT, and PREV."
         
     Case "say"
-        SayRaw consoleID, props & "Command: SAY text (**optional-properties**)", False
-        SayRaw consoleID, propsforexamples & "Example #1: SAY consoleID, hello, this is green (**green**)", False
-        SayRaw consoleID, propsforexamples & "Example #2: SAY consoleID, this is bold and very large (**bold, 36**)", False
-        SayRaw consoleID, "{lgrey}Display the specified text in the console.", False
-        SayRaw consoleID, "{lgrey}Text properties can be modified by adding any number of the following keywords in bewtween (** **), in any order.", False
-        SayRaw consoleID, "{lgreen}Colors: Type SHOWCOLORS the display a list of colors.", False
-        SayRaw consoleID, "{lgreen}Fonts: Arial, Arial Black, Comic Sans MS, Courier New, Georgia, Impact,", False
-        SayRaw consoleID, "{lgreen}Fonts: Lucida Console, Tahoma, Times New Roman, Trebuchet MS, Verdana, Wingdings.", False
-        SayRaw consoleID, "{lgreen}Attributes: Bold, NoBold, Italic, NoItalic, Underline, NoUnderline, Strikethru, NoStrikethru.", False
-        SayRaw consoleID, "{lgreen}Extras: Flash, Flashfast, FlashSlow.", False
-        SayRaw consoleID, "{orange}Note: You cannot use SAY to display multiple lines of text.", False
-        SayRaw consoleID, "{orange}For multiple lines, use SAYALL instead.", False
+        SayRaw consoleID, props & "Command: SAY text (**optional-properties**)"
+        SayRaw consoleID, propsforexamples & "Example #1: SAY consoleID, hello, this is green (**green**)"
+        SayRaw consoleID, propsforexamples & "Example #2: SAY consoleID, this is bold and very large (**bold, 36**)"
+        SayRaw consoleID, "{lgrey}Display the specified text in the console."
+        SayRaw consoleID, "{lgrey}Text properties can be modified by adding any number of the following keywords in bewtween (** **), in any order."
+        SayRaw consoleID, "{lgreen}Colors: Type SHOWCOLORS the display a list of colors."
+        SayRaw consoleID, "{lgreen}Fonts: Arial, Arial Black, Comic Sans MS, Courier New, Georgia, Impact,"
+        SayRaw consoleID, "{lgreen}Fonts: Lucida Console, Tahoma, Times New Roman, Trebuchet MS, Verdana, Wingdings."
+        SayRaw consoleID, "{lgreen}Attributes: Bold, NoBold, Italic, NoItalic, Underline, NoUnderline, Strikethru, NoStrikethru."
+        SayRaw consoleID, "{lgreen}Extras: Flash, Flashfast, FlashSlow."
+        SayRaw consoleID, "{orange}Note: You cannot use SAY to display multiple lines of text."
+        SayRaw consoleID, "{orange}For multiple lines, use SAYALL instead."
     
     Case "sayall"
-        SayRaw consoleID, props & "Command: SAYALL text (**optional-properties**)", False
-        SayRaw consoleID, propsforexamples & "Example #1: SAYALL hello", False
-        SayRaw consoleID, "{lgrey}Same as the SAY command, except will display multiple lines.", False
-        SayRaw consoleID, "{lorange}Type HELP SAY for more information.", False
+        SayRaw consoleID, props & "Command: SAYALL text (**optional-properties**)"
+        SayRaw consoleID, propsforexamples & "Example #1: SAYALL hello"
+        SayRaw consoleID, "{lgrey}Same as the SAY command, except will display multiple lines."
+        SayRaw consoleID, "{lorange}Type HELP SAY for more information."
              
     Case "sayline"
-        SayRaw consoleID, props & "Command: SAYLINE text (**optional-properties**)", False
-        SayRaw consoleID, propsforexamples & "Example #1: SAYLINE hello", False
-        SayRaw consoleID, "{lgrey}Same as the SAY command, except text will be printed on the same line, without moving down.", False
-        SayRaw consoleID, "{lorange}Type HELP SAY for more information.", False
+        SayRaw consoleID, props & "Command: SAYLINE text (**optional-properties**)"
+        SayRaw consoleID, propsforexamples & "Example #1: SAYLINE hello"
+        SayRaw consoleID, "{lgrey}Same as the SAY command, except text will be printed on the same line, without moving down."
+        SayRaw consoleID, "{lorange}Type HELP SAY for more information."
            
     Case "remotedelete"
-        SayRaw consoleID, props & "Command: REMOTEDELETE domain filename", False
-        SayRaw consoleID, propsforexamples & "Example #1: REMOTEDELETE matrix.com myfile.ds", False
-        SayRaw consoleID, "{lgrey}Delete the specified file from the remote server.", False
-        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
+        SayRaw consoleID, props & "Command: REMOTEDELETE domain filename"
+        SayRaw consoleID, propsforexamples & "Example #1: REMOTEDELETE matrix.com myfile.ds"
+        SayRaw consoleID, "{lgrey}Delete the specified file from the remote server."
+        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
     
     Case "remoteupload"
-        SayRaw consoleID, props & "Command: REMOTEUPLOAD domain filename", False
-        SayRaw consoleID, propsforexamples & "Example #1: REMOTEUPLOAD matrix.com localfile.ds", False
-        SayRaw consoleID, "{lgrey}Upload a file from your local file system to your domain name file system.", False
-        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
+        SayRaw consoleID, props & "Command: REMOTEUPLOAD domain filename"
+        SayRaw consoleID, propsforexamples & "Example #1: REMOTEUPLOAD matrix.com localfile.ds"
+        SayRaw consoleID, "{lgrey}Upload a file from your local file system to your domain name file system."
+        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
            
     Case "remotedir"
-        SayRaw consoleID, props & "Command: REMOTEDIR domain", False
-        SayRaw consoleID, propsforexamples & "Example #1: REMOTEDIR matrix.com", False
-        SayRaw consoleID, "{lgrey}View files on the remote server.", False
-        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
+        SayRaw consoleID, props & "Command: REMOTEDIR domain"
+        SayRaw consoleID, propsforexamples & "Example #1: REMOTEDIR matrix.com"
+        SayRaw consoleID, "{lgrey}View files on the remote server."
+        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
                
     Case "remoteview"
-        SayRaw consoleID, props & "Command: REMOTEVIEW domain filename", False
-        SayRaw consoleID, propsforexamples & "Example #1: REMOTEVIEW google.com userlist.log", False
-        SayRaw consoleID, "{lgrey}Display the specified remote file in the console.", False
-        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
+        SayRaw consoleID, props & "Command: REMOTEVIEW domain filename"
+        SayRaw consoleID, propsforexamples & "Example #1: REMOTEVIEW google.com userlist.log"
+        SayRaw consoleID, "{lgrey}Display the specified remote file in the console."
+        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
     
     Case "draw"
-        SayRaw consoleID, props & "Command: DRAW -y Red(0-255) Green(0-255) Blue(0-255) mode", False
-        SayRaw consoleID, propsforexamples & "Example #1: DRAW -1 142 200 11 fadeout", False
-        SayRaw consoleID, "{lgrey}Print a background color stream to the console.", False
-        SayRaw consoleID, "{lgrey}The first parameter, -y, defines the console line.", False
-        SayRaw consoleID, "{lgrey}For example, -2 will draw to the second line up from the active line.", False
-        SayRaw consoleID, "{lgrey}The Red, Green, and Blue must be values between 0 and 255.", False
-        SayRaw consoleID, "{lorange}Available mode keywords: SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE.", False
-        SayRaw consoleID, "{orange}To use custom colors, use the DRAWCUSTOM command.", False
+        SayRaw consoleID, props & "Command: DRAW -y Red(0-255) Green(0-255) Blue(0-255) mode"
+        SayRaw consoleID, propsforexamples & "Example #1: DRAW -1 142 200 11 fadeout"
+        SayRaw consoleID, "{lgrey}Print a background color stream to the console."
+        SayRaw consoleID, "{lgrey}The first parameter, -y, defines the console line."
+        SayRaw consoleID, "{lgrey}For example, -2 will draw to the second line up from the active line."
+        SayRaw consoleID, "{lgrey}The Red, Green, and Blue must be values between 0 and 255."
+        SayRaw consoleID, "{lorange}Available mode keywords: SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE."
+        SayRaw consoleID, "{orange}To use custom colors, use the DRAWCUSTOM command."
     
         
     
     Case "subowners"
-        SayRaw consoleID, props & "Command: SUBOWNERS domain-name KEYWORD [optional-username]", False
-        SayRaw consoleID, propsforexamples & "Example #1: SUBOWNERS site.com LIST", False
-        SayRaw consoleID, propsforexamples & "Example #2: SUBOWNERS site.com ADD friendusername", False
-        SayRaw consoleID, propsforexamples & "Example #3: SUBOWNERS site.com REMOVE friendusername", False
-        SayRaw consoleID, "{lgrey}Add or remove other user privileges regarding your specified domain name.", False
-        SayRaw consoleID, "{lgrey}You can add users to this list as subowners of your domain name.", False
-        SayRaw consoleID, "{lorange}Subowners have permission to interact, upload, and download files from the domain.", False
-        SayRaw consoleID, "{lorange}Subowners have no ability to unregister or modify the domain name  privileges.", False
+        SayRaw consoleID, props & "Command: SUBOWNERS domain-name KEYWORD [optional-username]"
+        SayRaw consoleID, propsforexamples & "Example #1: SUBOWNERS site.com LIST"
+        SayRaw consoleID, propsforexamples & "Example #2: SUBOWNERS site.com ADD friendusername"
+        SayRaw consoleID, propsforexamples & "Example #3: SUBOWNERS site.com REMOVE friendusername"
+        SayRaw consoleID, "{lgrey}Add or remove other user privileges regarding your specified domain name."
+        SayRaw consoleID, "{lgrey}You can add users to this list as subowners of your domain name."
+        SayRaw consoleID, "{lorange}Subowners have permission to interact, upload, and download files from the domain."
+        SayRaw consoleID, "{lorange}Subowners have no ability to unregister or modify the domain name  privileges."
         
         
         
     Case "lineup"
-        SayRaw consoleID, props & "Command: LINEUP", False
-        SayRaw consoleID, "{lgrey}Move up an extra console line. Useful for some scripts.", False
+        SayRaw consoleID, props & "Command: LINEUP"
+        SayRaw consoleID, "{lgrey}Move up an extra console line. Useful for some scripts."
         
      'Case "chatsend"
-     '   SayRaw consoleID, props & "Command: CHATSEND Message to be sent to the chat.", False
-     '   SayRaw consoleID, propsforexamples & "Example #1: CHATSEND Hello World!", False
-     '   SayRaw consoleID, "{lgrey}A simple way to send messages to the chat from your console.", False
+     '   SayRaw consoleID, props & "Command: CHATSEND Message to be sent to the chat."
+     '   SayRaw consoleID, propsforexamples & "Example #1: CHATSEND Hello World!"
+     '   SayRaw consoleID, "{lgrey}A simple way to send messages to the chat from your console."
        
     
     Case "chatview"
-        SayRaw consoleID, props & "Command: CHATVIEW [parameter]", False
-        SayRaw consoleID, "{lgrey}If set to on, will display chat in the status window.", False
-        SayRaw consoleID, "{lgrey}CHATVIEW parameters are ON and OFF", False
+        SayRaw consoleID, props & "Command: CHATVIEW [parameter]"
+        SayRaw consoleID, "{lgrey}If set to on, will display chat in the status window."
+        SayRaw consoleID, "{lgrey}CHATVIEW parameters are ON and OFF"
 
     
     Case Else
-        SayRaw consoleID, props & "Available Commands", False
-        SayRaw consoleID, "{lgrey 8}APPEND, CD, CLEAR, CLOSEPORT, CONNECT, COPY, DATE, DEL, DIR, DISPLAY, DOWNLOAD, DRAW, EDIT", False
-        SayRaw consoleID, "{lgrey 8}GETIP, GETDOMAIN, LINEUP, LISTCOLORS, LISTKEYS, LOGIN, LOGOUT, LOOKUP, MD, MOVE, MUSIC", False
-        SayRaw consoleID, "{lgrey 8}MYDOMAINS, MYIPS, MYSUBDOMAINS, NOW, PASSWORD, PAUSE, PING, PINGPORT, RD, RENAME, REGISTER", False
-        SayRaw consoleID, "{lgrey 8}REMOTEDELETE, REMOTEDIR, REMOTEUPLOAD, REMOTEVIEW, RESTART, RUN, SAY, SAYALL, SAYCOMM, STATS", False
-        SayRaw consoleID, "{lgrey 8}SUBOWNERS, TIME, TRANSFER, UNREGISTER, UPLOAD, USERNAME, WRITE, YDIV", False
-        SayRaw consoleID, "{grey}For more specific help on a command, type: HELP [command]", False
+        SayRaw consoleID, props & "Available Commands"
+        SayRaw consoleID, "{lgrey 8}APPEND, CD, CLEAR, CLOSEPORT, CONNECT, COPY, DATE, DEL, DIR, DISPLAY, DOWNLOAD, DRAW, EDIT"
+        SayRaw consoleID, "{lgrey 8}GETIP, GETDOMAIN, LINEUP, LISTCOLORS, LISTKEYS, LOGIN, LOGOUT, LOOKUP, MD, MOVE, MUSIC"
+        SayRaw consoleID, "{lgrey 8}MYDOMAINS, MYIPS, MYSUBDOMAINS, NOW, PASSWORD, PAUSE, PING, PINGPORT, RD, RENAME, REGISTER"
+        SayRaw consoleID, "{lgrey 8}REMOTEDELETE, REMOTEDIR, REMOTEUPLOAD, REMOTEVIEW, RESTART, RUN, SAY, SAYALL, SAYCOMM, STATS"
+        SayRaw consoleID, "{lgrey 8}SUBOWNERS, TIME, TRANSFER, UNREGISTER, UPLOAD, USERNAME, WRITE, YDIV"
+        SayRaw consoleID, "{grey}For more specific help on a command, type: HELP [command]"
     End Select
 End Sub
 

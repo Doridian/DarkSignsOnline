@@ -51,12 +51,12 @@ EvalError:
     If Err.Number = 9002 Then
         GoTo ScriptEnd
     End If
-    SayRaw consoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}", False
+    SayRaw consoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}"
     GoTo ScriptEnd
 
 ScriptCancelled:
     If IsRoot Then
-        SayRaw consoleID, "Script Stopped by User (CTRL + C){orange}", False
+        SayRaw consoleID, "Script Stopped by User (CTRL + C){orange}"
     End If
 ScriptEnd:
     Run_Script_Code = G.ScriptGetOutput()

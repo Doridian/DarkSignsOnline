@@ -78,7 +78,7 @@ Public Sub LoginNow(ByVal consoleID As Integer)
     isBad = False
 
     If Authorized = True Then
-        SayRaw consoleID, "You are already logged in and authorized as " & myUsername & ".{green}", False
+        SayRaw consoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
         Exit Sub
     Else
         If myUsername = "" Then
@@ -121,8 +121,8 @@ End Sub
 
 Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer, Optional NoAuth As Boolean)
     If Not NoAuth And InStr(i(sUrl), "auth.php") = 0 And Not Authorized Then
-        SayRaw consoleID, "You must be logged in to do that!{36 center orange impact nobold}", False
-        SayRaw consoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}", False
+        SayRaw consoleID, "You must be logged in to do that!{36 center orange impact nobold}"
+        SayRaw consoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}"
 
         If IsCustomDownload > 0 Then
             basWorld.Process "[error]not logged in", sUrl, consoleID, IsCustomDownload

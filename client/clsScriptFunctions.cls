@@ -374,7 +374,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
 
     basWorld.SayCOMM "Connecting to " & UCase(Domain) & ":" & Port & "..."
     If Not PrivDisableOutput Then
-        basConsole.SayRaw consoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "...", False
+        basConsole.SayRaw consoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
     End If
 
     Dim PostData As String
