@@ -296,7 +296,7 @@ Public Sub SayLine(s As String)
     basConsole.SAY PrivConsoleID, s, False
 End Sub
 
-Public Sub SayMultiline(s As String)
+Public Sub SayAll(s As String)
     If PrivDisableOutput Then
         PrivOutput = PrivOutput & s & vbCrLf
         Yield

@@ -44,7 +44,9 @@ End Function
 
 Private Sub SetDoneForever()
     If Not ResponseSent Then
-        basWorld.Process "9999[error]", Url, consoleID, IsCustomDownload
+        If IsCustomDownload > 0 Then
+            basWorld.Process "[error]", Url, consoleID, IsCustomDownload
+        End If
         ResponseSent = True
     End If
     DoneForever = True

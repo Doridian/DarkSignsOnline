@@ -657,35 +657,6 @@ Public Function Font_Height(theFontName As String, theFontSize As String) As Int
     Font_Height = frmConsole.lfont.Height + yDiv
 End Function
 
-Public Sub SayAll(ByVal consoleID As Integer, s As String, Optional withNewLineAfter As Boolean = True, Optional FromScript As Boolean = False, Optional SkipPropertySpace As Integer)
-    Dim sA() As String
-    s = Replace(s, "$newilne", vbCrLf)
-    sA = Split(s, vbCrLf)
-    
-    
-    Dim n As Long, rc As Long
-    For n = 0 To UBound(sA)
-        
-        SAY consoleID, sA(n), withNewLineAfter, SkipPropertySpace
-        
-    
-        
-        rc = rc + 1
-        If rc Mod 20 = 0 Then
-            PauseConsole "", consoleID
-            
-        Else
-            If n < UBound(sA) Then
-                If FromScript = True Then
-                    Shift_Console_Lines consoleID
-                End If
-            End If
-        End If
-    Next n
-    
-    
-End Sub
-
 Public Function SAY(ByVal consoleID As Integer, s As String, Optional withNewLineAfter As Boolean = True, Optional SkipPropertySpace As Integer)
     If consoleID > 4 Then Exit Function
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
