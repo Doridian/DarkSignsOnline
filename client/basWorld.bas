@@ -27,7 +27,7 @@ Private Const INTERNET_MAX_URL_LENGTH As Long = 2048
 Private Const URL_ESCAPE_PERCENT As Long = &H1000&
 
 Private Type ProcessQueueEntry
-    data As String
+    Data As String
     DataSource As String
     consoleID As Integer
     IsCustomDownload As Integer
@@ -217,7 +217,7 @@ End Sub
 
 Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Integer, ByVal IsCustomDownload As Integer)
     Dim NewEntry As ProcessQueueEntry
-    NewEntry.data = s
+    NewEntry.Data = s
     NewEntry.DataSource = sSource
     NewEntry.consoleID = consoleID
     NewEntry.IsCustomDownload = IsCustomDownload
@@ -239,7 +239,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
     Dim consoleID As Integer
     Dim IsCustomDownload As Integer
 
-    s = ProcessQueue(Index).data
+    s = ProcessQueue(Index).Data
     sSource = ProcessQueue(Index).DataSource
     consoleID = ProcessQueue(Index).consoleID
     IsCustomDownload = ProcessQueue(Index).IsCustomDownload
@@ -291,10 +291,10 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             End If
             
             Dim EmptyParams(0 To 0) As String
-            Run_Script "\system\login-1.ds", 1, EmptyParams, "BOOT", "", True, False
-            Run_Script "\system\login-2.ds", 2, EmptyParams, "BOOT", "", True, False
-            Run_Script "\system\login-3.ds", 3, EmptyParams, "BOOT", "", True, False
-            Run_Script "\system\login-4.ds", 4, EmptyParams, "BOOT", "", True, False
+            Run_Script "\system\login-1.ds", 1, EmptyParams, "BOOT", "", True, False, False
+            Run_Script "\system\login-2.ds", 2, EmptyParams, "BOOT", "", True, False, False
+            Run_Script "\system\login-3.ds", 3, EmptyParams, "BOOT", "", True, False, False
+            Run_Script "\system\login-4.ds", 4, EmptyParams, "BOOT", "", True, False, False
             
             If frmConsole.getConnected Then
                 frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message

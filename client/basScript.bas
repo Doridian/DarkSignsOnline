@@ -14,7 +14,7 @@ Public WaitingForInputReturn(1 To 4) As String
 Public CancelScript(1 To 4) As Boolean
 
 
-Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean) As String
+Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
     If consoleID < 1 Then
         consoleID = 1
     End If
@@ -34,7 +34,7 @@ Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, Sc
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure consoleID, ScriptFrom, False, s, ScriptParameters, FileKey, RedirectOutput, IsRoot
+    G.Configure consoleID, ScriptFrom, False, s, ScriptParameters, FileKey, RedirectOutput, DisableOutput, IsRoot
     s.AddObject "DSO", G, True
 
     New_Console_Line_InProgress consoleID
@@ -65,7 +65,7 @@ ScriptEnd:
     cPath(consoleID) = OldPath
 End Function
 
-Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean) As String
+Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
     If ScriptParameters(0) = "" Then
         ScriptParameters(0) = filename
     End If
@@ -101,46 +101,9 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
         Loop
     Close #FF
 
-    Run_Script = Run_Script_Code(tmpAll, consoleID, ScriptParameters, ScriptFrom, FileKey, IsRoot, RedirectOutput)
+    Run_Script = Run_Script_Code(tmpAll, consoleID, ScriptParameters, ScriptFrom, FileKey, IsRoot, RedirectOutput, DisableOutput)
 End Function
 
-Public Function DownloadUserURL(ByVal VarVal As String, VarIndex As Integer, consoleID As Integer) As Integer
-    DownloadUserURL = DownloadURL(VarVal, VarIndex, consoleID, True)
-End Function
-
-Public Function DownloadURL(ByVal VarVal As String, VarIndex As Integer, consoleID As Integer, Optional NoAuth As Boolean) As Integer
-    Dim sUrl As String
-    Dim PostData As String
-
-    If InStr(Mid(VarVal, 1, 18), "(") > 0 Then
-        VarVal = Mid(VarVal, InStr(VarVal, "(") + 1, Len(VarVal))
-    End If
-
-    sUrl = Trim(VarVal)
-     
-    sUrl = Trim(sUrl) & "***"
-    sUrl = Replace(sUrl, ")***", "")
-    sUrl = Replace(sUrl, "***", "")
-    
-    If InStr(sUrl, "?") > 0 Then
-        PostData = Mid(sUrl, InStr(sUrl, "?") + 1, Len(sUrl))
-        sUrl = Mid(sUrl, 1, InStr(sUrl, "?") - 1)
-    Else
-        PostData = ""
-    End If
-    PostData = Trim(PostData)
-    sUrl = Trim(sUrl)
-    
-    Dim sDomain As String
-    If InStr(sUrl, "/") > 0 Then
-        sDomain = Mid(sUrl, 1, InStr(sUrl, "/") - 1)
-    Else
-        sDomain = sUrl
-    End If
-    
-
-    DownloadURL = RunPage(sUrl, consoleID, True, PostData, VarIndex, NoAuth)
-End Function
 
 Public Function DeleteAFile(sFile As String)
     On Error Resume Next

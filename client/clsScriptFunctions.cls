@@ -22,6 +22,7 @@ Private SControl As ScriptControl
 Private FileKey As String
 Public Aborted As Boolean
 
+Private PrivDisableOutput As Boolean
 Private PrivRedirectOutput As Boolean
 Private PrivOutput As String
 Private PrivIsRoot As Boolean
@@ -103,7 +104,7 @@ End Function
 
 
 Public Function ReadLine(Prompt As String) As String
-    If PrivRedirectOutput Then
+    If PrivDisableOutput Then
         Yield
         Exit Function
     End If
@@ -121,7 +122,7 @@ Public Function ReadLine(Prompt As String) As String
 End Function
 
 Public Function GetKey() As Integer
-    If PrivRedirectOutput Then
+    If PrivDisableOutput Then
         Yield
         Exit Function
     End If
@@ -134,7 +135,7 @@ Public Function GetKey() As Integer
 End Function
 
 Public Function GetASCII() As Integer
-    If PrivRedirectOutput Then
+    If PrivDisableOutput Then
         Yield
         Exit Function
     End If
@@ -146,7 +147,7 @@ Public Function GetASCII() As Integer
     GetASCII = GetAsciiWaiting(consoleID)
 End Function
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewRedirect As Boolean, NewIsRoot As Boolean)
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewRedirect As Boolean, NewDisableOutput As Boolean, NewIsRoot As Boolean)
     If IsConfigured Then
         Exit Sub
     End If
@@ -157,6 +158,7 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     Set SControl = NewScriptControl
     PrivParameters = NewPrivParameters
     FileKey = NewFileKey
+    PrivDisableOutput = NewDisableOutput
     PrivRedirectOutput = NewRedirect
     PrivIsRoot = NewIsRoot
 End Sub
@@ -267,6 +269,9 @@ Public Sub SAY(s As String)
     If PrivRedirectOutput Then
         PrivOutput = PrivOutput & s & vbCrLf
         Yield
+    End If
+    If PrivDisableOutput Then
+        Yield
         Exit Sub
     End If
     basConsole.SAY PrivConsoleID, s
@@ -274,7 +279,7 @@ Public Sub SAY(s As String)
 End Sub
 
 Public Sub SayMultiline(s As String)
-    If PrivRedirectOutput Then
+    If PrivDisableOutput Then
         PrivOutput = PrivOutput & s & vbCrLf
         Yield
         Exit Sub
@@ -302,7 +307,7 @@ Public Sub RUN(ParamArray XArr() As Variant)
 
     Yield
     ' TODO: Add PATH resolution in /system/commands
-    Run_Script cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, SParamArr, "RUN", "", False, False
+    Run_Script cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, SParamArr, "RUN", "", False, False, False
     Yield
 End Sub
 
@@ -319,7 +324,7 @@ Public Function CallScript(ParamArray XArr() As Variant) As String
 
     Yield
     ' TODO: Add PATH resolution in /system/commands
-    CallScript = Run_Script(cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, SParamArr, "CALL", "", False, Not PrivIsRoot)
+    CallScript = Run_Script(cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, SParamArr, "CALL", "", False, True, Not PrivIsRoot)
     Yield
 End Function
 
@@ -328,7 +333,7 @@ Public Function DOWNLOAD(Url As String) As Integer
 End Function
 
 Public Function DRAW(YPos As Variant, R As Variant, G As Variant, b As Variant, Mode As String)
-    If PrivRedirectOutput Then
+    If PrivDisableOutput Then
         Yield
         Exit Function
     End If
@@ -350,7 +355,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     End If
 
     basWorld.SayCOMM "Connecting to " & UCase(Domain) & ":" & Port & "..."
-    If Not PrivRedirectOutput Then
+    If Not PrivDisableOutput Then
         basConsole.SAY consoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "...", False
     End If
 
@@ -401,7 +406,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
         strCode = DomainConnectParams(0)
         DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
 
-        Connect = Run_Script_Code(strCode, consoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, Not PrivIsRoot)
+        Connect = Run_Script_Code(strCode, consoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, True, Not PrivIsRoot)
     End If
 
     Yield
