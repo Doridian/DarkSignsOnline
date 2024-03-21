@@ -27,7 +27,7 @@ Private Const INTERNET_MAX_URL_LENGTH As Long = 2048
 Private Const URL_ESCAPE_PERCENT As Long = &H1000&
 
 Private Type ProcessQueueEntry
-    Data As String
+    data As String
     DataSource As String
     consoleID As Integer
     IsCustomDownload As Integer
@@ -78,26 +78,26 @@ Public Sub LoginNow(ByVal consoleID As Integer)
     isBad = False
 
     If Authorized = True Then
-        Say consoleID, "You are already logged in and authorized as " & myUsername & ".{green}", False
+        SAY consoleID, "You are already logged in and authorized as " & myUsername & ".{green}", False
         Exit Sub
     Else
         If myUsername = "" Then
-            Say consoleID, "{14, orange,  center}Your username is not right - type: USERNAME [username] to set it."
+            SAY consoleID, "{14, orange,  center}Your username is not right - type: USERNAME [username] to set it."
             isBad = True
         End If
         If myPassword = "" Then
-            Say consoleID, "{14, orange, center}Your password is not right - type: PASSWORD [password] to set it."
+            SAY consoleID, "{14, orange, center}Your password is not right - type: PASSWORD [password] to set it."
             isBad = True
         End If
         
         If isBad = True Then
-            Say consoleID, "Warning - You are not logged in!{16 center underline}"
-            Say consoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
+            SAY consoleID, "Warning - You are not logged in!{16 center underline}"
+            SAY consoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
             Exit Sub
         End If
     
         
-        SayComm "Logging in..."
+        SayCOMM "Logging in..."
 
         RunPage "auth.php", consoleID, True, ""
     End If
@@ -107,7 +107,7 @@ Public Sub LogoutNow(ByVal consoleID As Integer)
     Authorized = False
     frmConsole.Shape1.BackColor = vbRed
     frmConsole.lblUsername.Caption = "You have been logged out."
-    SayComm "You have been logged out."
+    SayCOMM "You have been logged out."
     
     If frmConsole.getConnected Then
         frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
@@ -121,8 +121,8 @@ End Sub
 
 Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer, Optional NoAuth As Boolean)
     If InStr(i(sUrl), "auth.php") = 0 And Authorized = False Then
-        Say consoleID, "You must be logged in to do that!{36 center orange impact nobold}", False
-        Say consoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}", False
+        SAY consoleID, "You must be logged in to do that!{36 center orange impact nobold}", False
+        SAY consoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}", False
         Exit Function
     End If
  
@@ -168,7 +168,7 @@ Public Function myPassword() As String
     myPassword = RegLoad("myPasswordDev", "")
 End Function
 
-Public Sub SayComm(s As String, Optional ByVal consoleID As Integer)
+Public Sub SayCOMM(s As String, Optional ByVal consoleID As Integer)
     'send a message to the comm
     
     Dim n As Integer
@@ -217,7 +217,7 @@ End Sub
 
 Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Integer, ByVal IsCustomDownload As Integer)
     Dim NewEntry As ProcessQueueEntry
-    NewEntry.Data = s
+    NewEntry.data = s
     NewEntry.DataSource = sSource
     NewEntry.consoleID = consoleID
     NewEntry.IsCustomDownload = IsCustomDownload
@@ -239,21 +239,25 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
     Dim consoleID As Integer
     Dim IsCustomDownload As Integer
 
-    s = ProcessQueue(Index).Data
+    s = ProcessQueue(Index).data
     sSource = ProcessQueue(Index).DataSource
     consoleID = ProcessQueue(Index).consoleID
     IsCustomDownload = ProcessQueue(Index).IsCustomDownload
     
 
+    If IsCustomDownload > 0 Then
+        'put the data into a variable!
+        DownloadResults(IsCustomDownload) = s
+        DownloadDone(IsCustomDownload) = True
+        If DownloadAborted(IsCustomDownload) Then
+            DownloadInUse(IsCustomDownload) = False
+        End If
+        Exit Sub
+    End If
+
     'process incoming data that winhttp download
     s = Trim(s)
 
-    If IsCustomDownload > 0 Then
-        'put the data into a variable!
-        Vars(IsCustomDownload).VarValue = Bracketize(s, True)
-        Exit Sub
-    End If
-    
     Dim cCode As String
     'MsgBox s
     cCode = Mid(s, 1, 4)
@@ -276,21 +280,21 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             Authorized = True
             frmConsole.lblUsername.Caption = "You are online as " & myUsername & "."
             frmConsole.Shape1.BackColor = iGreen: DoEvents
-            SayComm "You have been authorized as " & myUsername & "."
-            SayComm "Welcome to the Dark Signs Network!"
-            SayComm "Dark Signs Online - PreRelease Build 1337"
+            SayCOMM "You have been authorized as " & myUsername & "."
+            SayCOMM "Welcome to the Dark Signs Network!"
+            SayCOMM "Dark Signs Online - PreRelease Build 1337"
             If Command <> "" Then
                 Dim CLine As ConsoleLine
                 CLine = Console_Line_Defaults
                 CLine.Caption = Command
-                Run_Command CLine, consoleID
+                New_Console_Line consoleID
             End If
             
-            Run_Script "\system\login-1.ds", 1, "", "BOOT"
-            Run_Script "\system\login-2.ds", 2, "", "BOOT"
-            Run_Script "\system\login-3.ds", 3, "", "BOOT"
-            Run_Script "\system\login-4.ds", 4, "", "BOOT"
-            
+            Dim EmptyParams(0 To 0) As String
+            Run_Script "\system\login-1.ds", 1, EmptyParams, "BOOT", True
+            Run_Script "\system\login-2.ds", 2, EmptyParams, "BOOT", True
+            Run_Script "\system\login-3.ds", 3, EmptyParams, "BOOT", True
+            Run_Script "\system\login-4.ds", 4, EmptyParams, "BOOT", True
             
             If frmConsole.getConnected Then
                 frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
@@ -314,7 +318,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             Authorized = False
             frmConsole.lblUsername.Caption = "Unable to log in."
             frmConsole.Shape1.BackColor = iOrange: DoEvents
-            SayComm "Unable to log in. Please check your username and password."
+            SayCOMM "Unable to log in. Please check your username and password."
                 
             MsgBox "Your username and password was denied by the server." & vbCrLf & vbCrLf & "Username: " & myUsername & vbCrLf & "Password: [hidden]" & vbCrLf & vbCrLf & "If the information above is not correct, use the USERNAME command to change your username, or the PASSWORD command to change your password. Then type LOGIN again. Contact us if you continue to experience problems." & vbCrLf & vbCrLf & "https://darksignsonline.com", vbCritical, "Account Information"
                 
@@ -324,7 +328,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             Authorized = False
             frmConsole.lblUsername.Caption = "Access Denied."
             frmConsole.Shape1.BackColor = iOrange: DoEvents
-            SayComm "Sorry, your account (" & myUsername & ") is disabled."
+            SayCOMM "Sorry, your account (" & myUsername & ") is disabled."
             MsgBox "Sorry, your account (" & myUsername & ") is disabled." & vbCrLf & vbCrLf & "This probably means that your account has expired." & vbCrLf & vbCrLf & "Please visit the website to renew your account, or contact us if you believe this is an error." & vbCrLf & vbCrLf & "https://darksignsonline.com", vbCritical, "Account Information"
         
         
@@ -339,10 +343,10 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
         
         Case "2003":
             If (s = "success") Then
-                SayComm "Upload Successful.", consoleID
+                SayCOMM "Upload Successful.", consoleID
             Else
                 MsgBox s
-                SayComm "Upload Failed.", consoleID
+                SayCOMM "Upload Failed.", consoleID
             End If
             
             
@@ -359,25 +363,39 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
 '            UpdateChat sTimes, sMessages
             
         Case "4100":
-            
-
             If Len(s) < 20 And InStr(i(s), "not found") > 0 Then
-                Say consoleID, "Connection Failed.{orange}", False
+                SAY consoleID, "Connection Failed.{orange}", False
                 New_Console_Line ActiveConsole
             Else
-                Dim sParameters As String
-                If InStr(s, "::") > 0 Then
-                    sParameters = Mid(s, 1, InStr(s, "::") - 1)
-                    s = Mid(s, InStr(s, "::") + 2, Len(s))
-                End If
+                Dim DomainSplit() As String
+                DomainSplit = Split(s, ":-:")
+                ' 0 = domain
+                ' 1 = port
+                ' 2 = code
+                ' 3+ = params
             
-                Dim b64decoded() As Byte
-                b64decoded = basConsole.DecodeBase64(s)
-                Dim newS As String
-                newS = StrConv(b64decoded, vbUnicode)
+                Dim DomainConnectParams() As String
+                ReDim DomainConnectParams(0 To UBound(DomainSplit) - 3)
+    
+                Dim strDomain As String
+                strDomain = DomainSplit(0)
+                Dim strPort As String
+                strPort = DomainSplit(1)
+                
+                Dim X As Integer
+                For X = 0 To UBound(DomainConnectParams)
+                    Dim b64decoded() As Byte
+                    b64decoded = basConsole.DecodeBase64(DomainSplit(X + 2))
+                    Dim newS As String
+                    DomainConnectParams(X) = StrConv(b64decoded, vbUnicode)
+                Next
 
-                WriteClean App.Path & "\user\system\temp.dat", newS
-                Run_Script "\system\temp.dat", consoleID, sParameters, Left(sParameters, InStr(sParameters, "_") - 1)
+                Dim strCode As String
+                strCode = DomainConnectParams(0)
+                DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
+
+                WriteClean App.Path & "\user\system\temp.dat", strCode
+                Run_Script "\system\temp.dat", consoleID, DomainConnectParams, DomainConnectParams(0)
             End If
             
         Case "4300" 'file library upload complete
@@ -415,7 +433,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 ffname = Replace(ffname, "\\", "\")
                 s = Mid(s, InStr(s, ":") + 1, Len(s))
                 WriteFile App.Path & "\user" & ffname, s
-                SayComm "Download Complete: " & ffname
+                SayCOMM "Download Complete: " & ffname
             Else
                 SayCommMultiLines s, consoleID
             End If
@@ -461,20 +479,16 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 frmDSOMailSend.Enabled = True
                 MsgBox "Mail failed to send." & vbNewLine & s
             End If
-            
-            
-            
-           ' MsgBox s
-        
+
         Case Else
 
             If Trim(Replace(s, vbCrLf, "")) = "" Then Exit Sub
             If InStr(i(sSource), "z_online") > 0 Then Exit Sub
             If InStr(i(sSource), "chat") > 0 Then Exit Sub
 
-            SayComm s
+            SayCOMM s
             MsgBox s
-            SayComm "The function [" & sSource & "] returned some strange data."
+            SayCOMM "The function [" & sSource & "] returned some strange data."
 
         
     End Select
@@ -496,11 +510,11 @@ Public Sub SayCommMultiLines(ByVal s As String, consoleID As Integer)
         p5 = GetPart(s, 5, "newline"): p6 = GetPart(s, 6, "newline")
         p7 = GetPart(s, 7, "newline"): p8 = GetPart(s, 8, "newline")
         p9 = GetPart(s, 9, "newline"): p10 = GetPart(s, 10, "newline")
-        If Trim(p1) <> "" Then SayComm p1: If Trim(p2) <> "" Then SayComm p2
-        If Trim(p3) <> "" Then SayComm p3: If Trim(p4) <> "" Then SayComm p4
-        If Trim(p5) <> "" Then SayComm p5: If Trim(p6) <> "" Then SayComm p6
-        If Trim(p7) <> "" Then SayComm p7: If Trim(p8) <> "" Then SayComm p8
-        If Trim(p9) <> "" Then SayComm p9: If Trim(p10) <> "" Then SayComm p10
+        If Trim(p1) <> "" Then SayCOMM p1: If Trim(p2) <> "" Then SayCOMM p2
+        If Trim(p3) <> "" Then SayCOMM p3: If Trim(p4) <> "" Then SayCOMM p4
+        If Trim(p5) <> "" Then SayCOMM p5: If Trim(p6) <> "" Then SayCOMM p6
+        If Trim(p7) <> "" Then SayCOMM p7: If Trim(p8) <> "" Then SayCOMM p8
+        If Trim(p9) <> "" Then SayCOMM p9: If Trim(p10) <> "" Then SayCOMM p10
 
 End Sub
 
@@ -516,13 +530,13 @@ Public Sub SayMultiLines(ByVal s As String, consoleID As Integer)
             tmpS = Trim(sA(n))
             If tmpS <> "" Then
                 iCount = iCount + 1
-                Say consoleID, tmpS, False
+                SAY consoleID, tmpS, False
                 
                 If iCount Mod 20 = 0 Then PauseConsole "", consoleID
             End If
         Next n
         
-        Say consoleID, "{12 green}Line(s) Found: " & Trim(Str(iCount)), False
+        SAY consoleID, "{12 green}Line(s) Found: " & Trim(Str(iCount)), False
         
         New_Console_Line consoleID
 
@@ -562,7 +576,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
             'this user just signed in!
             '----------------------------------------
             If i(tmpS) <> "admin" Then
-                SayComm "User " & Trim(tmpS) & " has signed in.", consoleID
+                SayCOMM "User " & Trim(tmpS) & " has signed in.", consoleID
             End If
         End If
         End If
@@ -579,7 +593,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
                 'this user has been signed out!
                 '----------------------------------------
                 If i(tmpS) <> "admin" Then
-                    SayComm "User " & Trim(tmpS) & " has signed out.", consoleID
+                    SayCOMM "User " & Trim(tmpS) & " has signed out.", consoleID
                 End If
             End If
         End If

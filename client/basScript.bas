@@ -1,7 +1,12 @@
 Attribute VB_Name = "basScript"
 Option Explicit
 
-Public Vars(1 To 9999) As Var
+Public DownloadAborted(1 To 99) As Boolean
+Public DownloadInUse(1 To 99) As Boolean
+Public DownloadDone(1 To 99) As Boolean
+Public DownloadResults(1 To 99) As String
+
+Public Vars(1 To 9999) As Var   ' TOOD: Remove
 Public VariableLengths(1 To 24) As String
 
 Public GetKeyWaiting(1 To 4) As String
@@ -35,7 +40,16 @@ Public Type NextFunction
     FunctionName As String
 End Type
 
-Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters As String, ScriptFrom As String)
+Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, Optional IsRoot As Boolean = False)
+    If ScriptParameters(0) = "" Then
+        ScriptParameters(0) = filename
+    End If
+    If consoleID < 1 Then
+        consoleID = 1
+    End If
+    If consoleID > 4 Then
+        consoleID = 4
+    End If
     Dim OldPath As String
     OldPath = cPath(consoleID)
 
@@ -44,50 +58,6 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
     If InStr(filename, Chr(34) & Chr(34)) Then Exit Function
     
     DoEvents
-    CancelScript(consoleID) = False
-    
-    Dim sParams() As String, n As Integer, n2 As Integer
-    ScriptParameters = Trim(ScriptParameters)
-    
-    Dim Args As Integer
-    Args = 0
-    
-        'for $1, $2, $3, etc
-        ScriptParameters = Trim(MaskSpacesInQuotes(ScriptParameters))
-        sParams = Split(ScriptParameters & "       ")
-        For n = 0 To UBound(sParams)
-            sParams(n) = Trim(Replace(sParams(n), Chr(240), " "))
-            sParams(n) = RemoveSurroundingQuotes(sParams(n))
-            If sParams(n) <> "" Then Args = Args + 1
-        Next n
-             
-        
-
-    Dim WaitForVariables() As String, WaitN As Integer, VarIndex As Integer
-    
-    Dim GotoEnabled As Boolean: GotoEnabled = False
-    Dim GotoString As String
-    
-    Dim ForEnabled As Boolean: ForEnabled = False
-    Dim ForLine As String
-    Dim ForStart As Long: ForStart = 1
-    Dim ForEnd As Long: ForEnd = 5
-    Dim ForStep As Long: ForStep = 1
-    Dim ForVariable As String
-    Dim ForVariableIndex As Integer
-    Dim ForStartLine As Integer
-    
-    Dim IFIndex As Integer
-    Dim IFa(1 To 19) As String
-    Dim IFb(1 To 19) As String
-    Dim IFOperator(1 To 19) As String
-    Dim IFTrue(1 To 19) As Boolean
-    Dim IFHasBeenTrue(1 To 19) As Boolean
-    Dim qTmp As String
-    
-    For n = 1 To UBound(IFHasBeenTrue)
-        IFHasBeenTrue(n) = False
-    Next n
 
     Dim ShortFileName As String
     'file name should be from local dir, i.e: \system\startup.ds
@@ -95,419 +65,61 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
     filename = App.Path & "\user" & filename
     'make sure it is not a directory
     If DirExists(filename) = True Then Exit Function
-    
+
     If FileExists(filename) = False Then
-        SayComm "File Not Found": Exit Function
+        SayCOMM "File Not Found: " & filename
+        Exit Function
     End If
     
-    
-    Dim Script(1 To 9999) As String, EncryptedScript() As String, FF As Long, MaxLines As Integer, tmpS As String, tmpS2 As String
+    Dim FF As Long
+    Dim tmpS As String
+    Dim tmpAll As String
+    tmpAll = ""
     FF = FreeFile
-    
+    Open filename For Input As #FF
+        Do Until EOF(FF)
+            tmpS = ""
+            Line Input #FF, tmpS
+            tmpAll = tmpAll & Trim(tmpS) & vbCrLf
+        Loop
+    Close #FF
 
-        Open filename For Input As #FF
-            Do Until EOF(FF)
-                Line Input #FF, tmpS
-                tmpS = Trim(tmpS)
-                tmpS = Replace(tmpS, "$referal", ScriptFrom)
-                tmpS = Replace(tmpS, "$args", Args)
-                'replace $1, $2, $3, etc, with the passed parameter values
-                For n = 1 To 19
-                    If UBound(sParams) >= n Then
+    CancelScript(consoleID) = False
 
-                        ' Added to prevent crash bug with ^< on a single line.
-                        If InStr(tmpS, "^<") = 1 Then tmpS = Replace(tmpS, "^<", "^ <")
-                        
-                        If Left(tmpS, 1) = "^" And IsNumeric(Mid(tmpS, 2, Len(tmpS))) = True Then
-                            tmpS = Mid(tmpS, 2, Len(tmpS))
-                            tmpS = DSODecode(tmpS)
-                            tmpS = Replace(tmpS, "$" & Trim(Str(n)), sParams(n - 1))
-                            tmpS = Replace(tmpS, "$p" & Trim(Str(n)), sParams(n - 1))
-                            tmpS = "^" & DSOEncode(tmpS)
-                        Else
-                            tmpS = Replace(tmpS, "$" & Trim(Str(n)), sParams(n - 1))
-                            tmpS = Replace(tmpS, "$p" & Trim(Str(n)), sParams(n - 1))
-                        End If
-                        
-                        
-                    End If
-                    
-                Next n
-    
-                tmpS = Replace(tmpS, Chr(9), "") 'replace TABS in case code is indented
-                If tmpS <> "" Then
-                    MaxLines = MaxLines + 1: Script(MaxLines) = tmpS
-                End If
-            Loop
-        Close #FF
+    Dim s As New ScriptControl
+    s.AllowUI = False
+    s.Timeout = 100
+    s.UseSafeSubset = True
+    s.Language = "VBScript"
 
-    DeleteAFile App.Path & "\user\system\temp.dat"
-    
-    Dim myLine As ConsoleLine
-    
-    For n = 1 To MaxLines
-Beginning:
+    Dim G As clsScriptFunctions
+    Set G = New clsScriptFunctions
+    G.Configure consoleID, ScriptFrom, False, s, ScriptParameters
+    s.AddObject "DSO", G, True
 
-        Do
-            If CancelScript(consoleID) = True Then GoTo ScriptCancelled
-            DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        Loop Until frmConsole.tmrWait(consoleID).Enabled = False
+    New_Console_Line_InProgress consoleID
+    On Error GoTo EvalError
+    s.AddCode tmpAll
+    On Error GoTo 0
 
-        
-        myLine = Console_Line_Defaults
-        myLine.Caption = Trim(Script(n))
-        
-        If Left(myLine.Caption, 1) = "^" Then
-            If IsNumeric(Mid(myLine.Caption, 2, Len(myLine.Caption))) = True Then
-                'decode the line, if it is marked with ^, it is encoded
-                myLine.Caption = Mid(myLine.Caption, 2, Len(myLine.Caption))
-                myLine.Caption = DSODecode(myLine.Caption)
-            Else
-                myLine.Caption = Mid(myLine.Caption, 2, Len(myLine.Caption))
-            End If
-        End If
-        
-        
-        
-        'is it a comment?
-        tmpS = Mid(Trim(myLine.Caption), 1, 1)
-        If tmpS = "'" Or tmpS = "/" Or tmpS = "\" Then GoTo NextLine
-        
-        'kill illegal chars if its not an IF statement
-        'myLine.Caption = Replace(myLine.Caption, ">", "-")
-        
-        tmpS = myLine.Caption
-        
-        
-        ScriptLog tmpS, n
-        
-        
-  
-        
-            '------------------------------------------------------------
-            'FOR LOOPS
-            If ForEnabled = True Then
-                If n < ForStartLine Then GoTo NextLine
-                If Mid(i(tmpS), 1, 4) = "next" Then
-                    tmpS = i(Replace(i(tmpS), "next", ""))
-                    'If tmpS <> I(Variables(ForVariableIndex, 1)) Then GoTo NextLine
-                    Vars(ForVariableIndex).VarValue = Val(Vars(ForVariableIndex).VarValue) + ForStep
-                    
-                    If ForStep > 0 And Val(Vars(ForVariableIndex).VarValue) > ForEnd Then
-                        ForEnabled = False
-                        GoTo NextLine
-                    ElseIf ForStep < 0 And Val(Vars(ForVariableIndex).VarValue) < ForEnd Then
-                        ForEnabled = False
-                        GoTo NextLine
-                    Else
-                        n = 1
-                        GoTo Beginning
-                    End If
-                    
-                End If
-            End If
-            If Mid(i(tmpS), 1, 4) = "for " Then
-                
-                'start a FOR loop'---------------???????????
-                'If GotoEnabled = True Then
-                '    ForEnabled = True
-                '    GoTo NextLine
-                'End If
-
-
-                If ForLine = i(tmpS) Then GoTo NextLine
-
-                ForLine = i(tmpS)
-                tmpS = Trim(Replace(tmpS, "for ", "")): tmpS = Trim(Replace(tmpS, "FOR ", "")): tmpS = Trim(Replace(tmpS, "For ", ""))
-                If InStr(tmpS, "=") = 0 Then GoTo NextLine
-                
-                
-                tmpS = Replace(tmpS, " TO ", " to "): tmpS = Replace(tmpS, " To ", " to "): tmpS = Replace(tmpS, " tO ", " to ")
-                If InStr(tmpS, " to ") = 0 Then GoTo NextLine
-
-                ForVariable = Trim(Mid(tmpS, 1, InStr(tmpS, "=") - 1))
-                
-                tmpS = i(Mid(tmpS, InStr(tmpS, "=") + 1, Len(tmpS)))
-                    
-                    If InStr(tmpS, "step") > 0 Then
-                        ForStep = Val(Trim(Mid(tmpS, InStr(tmpS, "step") + 4, Len(tmpS))))
-                        tmpS = i(Mid(tmpS, 1, InStr(tmpS, "step") - 2))
-                    Else: ForStep = 1
-                    End If
-                
-
-                ForStart = Val(ReplaceVariables(Mid(tmpS, 1, InStr(tmpS, "to") - 1), consoleID))
-                ForEnd = Val(ReplaceVariables(Mid(tmpS, InStr(tmpS, "to") + 2, Len(tmpS)), consoleID))
-                
-               
-                
-                'If ForStart > ForEnd Then GoTo NextLine
-                ForVariableIndex = VariableIndex(ForVariable)
-                
-                If ForVariableIndex = 0 Then
-                    SetVariable ForVariable, "= " & ForStart, consoleID, ScriptFrom
-                    ForVariableIndex = VariableIndex(ForVariable)
-                Else
-                    Vars(ForVariableIndex).VarValue = ForStart
-                End If
-
-                ForStartLine = n
-                ForEnabled = True
-                n = 1
-                GoTo Beginning
-            End If
-            '------------------------------------------------------------
-            
-            
-            
-            '------------------------------------------------------------
-            'IF STATEMENTS
-            
-            If Mid(i(tmpS), 1, 3) = "if " Then
-                IFIndex = IFIndex + 1
-                IFHasBeenTrue(IFIndex) = False
-                
-                If IFIndex > 1 Then
-                    If IFTrue(IFIndex - 1) = False Then
-                        GoTo AfterRun
-                    End If
-                End If
-
-            
-                qTmp = Trim(tmpS)
-                If Trim(Right(i(qTmp), 5)) = "then" Then qTmp = Trim(Mid(qTmp, 1, Len(qTmp) - 5))
-                qTmp = Trim(Mid(qTmp, 3, Len(qTmp)))
-                qTmp = Mask(qTmp)
-                
-               
-                IFOperator(IFIndex) = GetOperator(qTmp)
-
-                If IFOperator(IFIndex) = "" Then
-                    ScriptError "Invalid Operator in IF Statement", Trim(tmpS), ShortFileName, n, consoleID
-                    GoTo AfterRun
-                End If
-                
-                IFa(IFIndex) = Trim(Mid(qTmp, 1, InStr(qTmp, IFOperator(IFIndex)) - 1))
-                IFb(IFIndex) = Trim(Mid(qTmp, InStr(qTmp, IFOperator(IFIndex)) + Len(IFOperator(IFIndex)), Len(qTmp)))
-                
-                IFa(IFIndex) = UnMask(IFa(IFIndex))
-                IFb(IFIndex) = UnMask(IFb(IFIndex))
-                
-                'remove surrounding quotes
-                If Right(IFa(IFIndex), 1) = Chr(34) And Left(IFa(IFIndex), 1) = Chr(34) Then IFa(IFIndex) = Replace(IFa(IFIndex), Chr(34), "")
-                If Right(IFb(IFIndex), 1) = Chr(34) And Left(IFb(IFIndex), 1) = Chr(34) Then IFb(IFIndex) = Replace(IFb(IFIndex), Chr(34), "")
-                
-                'qTmp = UnMask(qTmp)
-                
-                
-                
-                IFTrue(IFIndex) = CompareIF(IFa(IFIndex), IFb(IFIndex), IFOperator(IFIndex), consoleID)
-                
-                If IFTrue(IFIndex) = True Then
-                    IFHasBeenTrue(IFIndex) = True
-                Else
-                    IFHasBeenTrue(IFIndex) = False
-                End If
-                
-
-
-                GoTo AfterRun
-                
-            ElseIf Mid(i(tmpS), 1, 7) = "elseif " Or Mid(i(tmpS), 1, 8) = "else if " Then
-                
-                If IFIndex > 1 Then
-                    If IFTrue(IFIndex - 1) = False Then
-                        GoTo AfterRun
-                    End If
-                End If
-                
-                If IFHasBeenTrue(IFIndex) = True Then
-                    IFTrue(IFIndex) = False
-                    GoTo AfterRun
-                End If
-                
-
-                
-                qTmp = Trim(tmpS)
-                If Trim(Right(i(qTmp), 5)) = "then" Then qTmp = Trim(Mid(qTmp, 1, Len(qTmp) - 5))
-                qTmp = Trim(Mid(qTmp, 8, Len(qTmp)))
-                qTmp = Mask(qTmp)
-                
- 
-                                
-                IFOperator(IFIndex) = GetOperator(qTmp)
-                
-                
-                If IFOperator(IFIndex) = "" Then
-                    ScriptError "Invalid Operator in ELSE IF Statement", Trim(tmpS), ShortFileName, n, consoleID
-                    GoTo AfterRun
-                End If
-                IFa(IFIndex) = Trim(Mid(qTmp, 1, InStr(qTmp, IFOperator(IFIndex)) - 1))
-                IFb(IFIndex) = Trim(Mid(qTmp, InStr(qTmp, IFOperator(IFIndex)) + 1, Len(qTmp)))
-                IFTrue(IFIndex) = CompareIF(IFa(IFIndex), IFb(IFIndex), IFOperator(IFIndex), consoleID)
-                
-
-                If IFTrue(IFIndex) = True Then
-                    IFHasBeenTrue(IFIndex) = True
-                Else
-                    IFHasBeenTrue(IFIndex) = False
-                End If
-                
-                GoTo AfterRun
-            End If
-            
-            If Mid(i(tmpS), 1, 5) = "endif" Or Mid(i(tmpS), 1, 6) = "end if" Then
-                IFHasBeenTrue(IFIndex) = True
-                IFTrue(IFIndex) = False
-                IFIndex = IFIndex - 1
-                
-                If IFIndex < 0 Then
-                    ScriptError "END IF detected that is not required or out of order", Trim(tmpS), ShortFileName, n, consoleID
-                    IFIndex = 0
-                End If
-                
-                GoTo AfterRun:
-            End If
-            
-            If Mid(i(tmpS), 1, 4) = "else" Then
-                            
-                If IFIndex > 1 Then
-                    If IFTrue(IFIndex - 1) = False Then
-                        GoTo AfterRun
-                    End If
-                End If
-                
-                If IFHasBeenTrue(IFIndex) = True Then
-                    IFTrue(IFIndex) = False
-                    GoTo AfterRun
-                End If
-                
-                If IFHasBeenTrue(IFIndex) = False Then
-                    IFTrue(IFIndex) = True
-                    GoTo AfterRun
-                End If
-                
-            End If
-AfterIf:
-            '------------------------------------------------------------
-            
-            
-            '------------------------------------------------------------
-            'IS THE SCRIPT INSIDE AN IF STATEMENT?
-            If IFIndex > 0 Then
-                If IFTrue(IFIndex) = False Then GoTo AfterRun
-            End If
-            '------------------------------------------------------------
-            myLine.Caption = tmpS
-            
-            
-            
-            
-            
-        
-        
-        
-        
-        
-RunACommand:
-            '-----------------
-            'GOTO
-            If GotoEnabled = True Then
-                'the commented line is replacing variables, not necessary really, too slow
-                If Trim(Left(myLine.Caption, 1)) = "@" Then
-                    'If i(myLine.Caption) = "@" & i(GotoString) Or i(myLine.Caption) = "@ " & i(GotoString) Then
-                    If i(ReplaceVariables(myLine.Caption, consoleID)) = "@" & i(GotoString) Or i(ReplaceVariables(myLine.Caption, consoleID)) = "@ " & i(GotoString) Then
-                        GotoString = ""
-                        GotoEnabled = False
-                    Else
-                        GoTo NextLine
-                    End If
-                End If
-                GoTo NextLine
-            End If
-            If Mid(i(myLine.Caption), 1, 5) = "goto " Then
-                'GotoString = i(Mid(i(myLine.Caption), 5, Len(myLine.Caption)))
-                GotoString = i(Mid(i(myLine.Caption), 5, Len(myLine.Caption)))
-                GotoString = i(ReplaceVariables(GotoString, consoleID))
-                If Left(GotoString, 1) = "@" Then GotoString = Mid(GotoString, 2, Len(GotoString))
-                If GotoString <> "" Then
-                    GotoEnabled = True
-                    n = 0:
-                    IFIndex = 0 'also reset the IF statements index
-                    For n2 = 1 To 19
-                        IFTrue(n2) = False
-                        IFHasBeenTrue(n2) = False
-                    Next n2
-                    ForEnabled = False ': ForStart = 1: ForEnd = 5: ForStep = 1 'reset FOR
-                    ForLine = ""
-                    GoTo NextLine
-                End If
-            End If
-            '-----------------
-        
-        
-        
-           
-        'WATFOR $var1, $var2, etc (wait for remote commands)
-        If Mid(i(myLine.Caption), 1, 9) = "wait for " Or Mid(i(myLine.Caption), 1, 8) = "waitfor " Then
-            tmpS = Trim(Mid(myLine.Caption, 10, Len(myLine.Caption)))
-            tmpS = Replace(tmpS, " ", ",")
-            tmpS = Replace(tmpS, ",,", ","): tmpS = Replace(tmpS, ",,", ","): tmpS = Replace(tmpS, ",,", ",")
-            WaitForVariables = Split(tmpS, ",")
-            
-            For WaitN = 0 To UBound(WaitForVariables)
-                
-                tmpS = Trim(WaitForVariables(WaitN))
-                
-                If tmpS <> "" Then
-                    
-                    
-                    VarIndex = VariableIndex(tmpS)
-                    If VarIndex = 0 Then GoTo NextWaitFor
-
-                    Do
-                        If CancelScript(consoleID) = True Then GoTo ScriptCancelled
-                        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-                        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-                    Loop Until i(Vars(VarIndex).VarValue) <> "[loading]"
-                
-                End If
-NextWaitFor:
-            Next
-            GoTo AfterRun
-        End If
-        
-        If i(myLine.Caption) = "exit" Then GoTo ScriptEnd
-    
-    
-
-        Run_Command myLine, consoleID, ScriptFrom, True, True
-        
-        Do
-            DoEvents: DoEvents: DoEvents: DoEvents
-            
-            If CancelScript(consoleID) = True Then
-                Add_Key vbKeyReturn, False, consoleID
-                GoTo ScriptCancelled
-            End If
-        Loop While WaitingForInput(consoleID) = True
-        
-AfterRun:
-
-
-        
-NextLine:
-    Next n
-    
-    If GotoEnabled = True Then
-        ScriptError "GOTO Tag Not Found: " & GotoString, Trim(tmpS), ShortFileName, n, consoleID
-    End If
-    
-    cPath(consoleID) = OldPath
+    GoTo ScriptEnd
     Exit Function
+EvalError:
+    If Err.Number = 9001 Then
+        GoTo ScriptCancelled
+    End If
+    If Err.Number = 9002 Then
+        GoTo ScriptEnd
+    End If
+    SAY consoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}", False
+    GoTo ScriptEnd
+
 ScriptCancelled:
-    Say consoleID, "Script Stopped by User (CTRL + C){orange}", False
+    If IsRoot Then
+        SAY consoleID, "Script Stopped by User (CTRL + C){orange}", False
+    End If
 ScriptEnd:
+    G.CleanupScriptTasks
     New_Console_Line consoleID
     cPath(consoleID) = OldPath
 End Function
@@ -1261,7 +873,7 @@ Public Function f_Run(ByVal s As String, consoleID As Integer) As String
 
     Data_For_Run_Function_Enabled(consoleID) = 1
     Data_For_Run_Function(consoleID) = ""
-    Run_Command tmpLine, consoleID, False
+    'Run_Command tmpLine, ConsoleID, False
     Data_For_Run_Function_Enabled(consoleID) = 0
     
     If Left(Data_For_Run_Function(consoleID), 2) = vbCrLf Then
@@ -1714,22 +1326,6 @@ Public Function Msgbux(ByVal s As String)
     frmConsole.List1.AddItem s, 0
 End Function
 
-Public Function Pipe_Commands(ByVal s As String, ByVal consoleID As Integer)
-    Dim n As Integer, tmpS As String
-    
-    Dim CLine As ConsoleLine
-    CLine = Console_Line_Defaults
-    
-    For n = 1 To 10
-        tmpS = Trim(GetPart(s, n, "|"))
-        
-        If tmpS <> "" Then
-            CLine.Caption = tmpS
-            Run_Command CLine, consoleID
-        End If
-    Next n
-End Function
-
 Public Function CompareIF(ByVal s1 As String, ByVal s2 As String, ByVal sOperator As String, ByVal consoleID As Integer) As Boolean
     
     s1 = ReplaceVariables(s1, consoleID)
@@ -1980,7 +1576,7 @@ Public Function Bracketize(ByVal s As String, ReplaceLoosely As Boolean) As Stri
     Dim tmpS As String, midString As String * 1
     
     If Len(s) > 32096 Then 'no more than 32kb - way too slow!
-        SayComm "Warning: Processing large data may take a while... (" & FormatKB(Len(s)) & ")"
+        SayCOMM "Warning: Processing large data may take a while... (" & FormatKB(Len(s)) & ")"
         DoEvents
         'Bracketize = s
         'Exit Function

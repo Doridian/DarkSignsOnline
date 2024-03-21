@@ -610,12 +610,13 @@ Dim autoCompActive(1 To 4) As Boolean
 Dim autoCompLast(1 To 4) As String
 Dim autoILast(1 To 4) As Integer
 
+
 Sub CommLarger()
     If Comm.Height < ((Me.Height / 3) * 2) Then
         Comm.Height = Comm.Height + 480
     End If
     
-    SayComm ""
+    SayCOMM ""
 End Sub
 
 
@@ -626,7 +627,7 @@ Sub CommSmaller()
         Comm.Height = 0
     End If
     
-    SayComm ""
+    SayCOMM ""
 End Sub
 
 
@@ -677,7 +678,8 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     
     If Shift = 2 And KeyCode = vbKeyC Then
         'cancel the running script
-        CancelScript(ActiveConsole) = True: Exit Sub
+        CancelScript(ActiveConsole) = True
+        Exit Sub
     End If
     
     
@@ -808,14 +810,14 @@ Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
   tmpSP = ""
  End If
  On Error GoTo acSubEnd1
- tmpS3 = Dir(tmpS2 & tmpS & "*", vbDirectory)
+ tmpS3 = dir(tmpS2 & tmpS & "*", vbDirectory)
  If tmpS3 = "" Then GoTo acSubEnd1
  While tmpS3 = "." Or tmpS3 = ".." Or globalITMP < autoILast(consoleID)
   If tmpS3 <> "." And tmpS3 <> ".." Then
     globalITMP = globalITMP + 1
   End If
   tmpS3 = ""
-  tmpS3 = Dir()
+  tmpS3 = dir()
   If tmpS3 = "" Then GoTo acSubEnd1
  Wend
  On Error GoTo 0
@@ -832,12 +834,12 @@ Private Sub AutoComplete(consoleID As String, Optional fromAC As Boolean)
  End If
 acSubEnd1:
  If firstParam = False Then GoTo acSubEnd3
- tmpS3 = Dir(App.Path & "\user\system\commands\" & tmpS & "*")
+ tmpS3 = dir(App.Path & "\user\system\commands\" & tmpS & "*")
  On Error GoTo acSubEnd2
  While globalITMP < autoILast(consoleID)
   tmpS3 = ""
   globalITMP = globalITMP + 1
-  tmpS3 = Dir()
+  tmpS3 = dir()
   If tmpS3 = "" Then GoTo acSubEnd2
  Wend
  On Error GoTo 0
@@ -856,12 +858,12 @@ acSubEnd2:
      sPath = Replace(frmConsole.Dir1.List(n), App.Path & "\user", "")
      iTmp = InStrRev(sPath, "\")
      On Error GoTo acSubEnd3
-     tmpS3 = Dir(App.Path & "\user" & sPath & "\" & tmpS & "*")
+     tmpS3 = dir(App.Path & "\user" & sPath & "\" & tmpS & "*")
      globalITMP = globalITMP + 1
      While globalITMP < autoILast(consoleID)
         tmpS3 = ""
         globalITMP = globalITMP + 1
-        tmpS3 = Dir()
+        tmpS3 = dir()
         If tmpS3 = "" Then GoTo acSubEnd3
      Wend
      On Error GoTo 0
@@ -907,13 +909,15 @@ Public Sub setConnected(Value As Boolean)
     connected = Value
 End Sub
 
-
-
 Private Sub Form_Load()
+    basCommands.InitBasCommands
     basWorld.InitBasWorld
+
     Dim X As Integer
     For X = 1 To 30
         Load tmrProcessQueue(X)
+        tmrProcessQueue(X).Enabled = False
+        tmrProcessQueue(X).Interval = 1
     Next
 
     curMsg = 0
@@ -1265,18 +1269,16 @@ Private Sub tmrStart_Timer()
 End Sub
 
 Public Sub Start_Console(ByVal consoleID As Integer)
-    
     Reset_Console consoleID
 
-
+    
+    Dim EmptyParams(0 To 0) As String
     If consoleID = 1 Then
         'run the primary startup script
-        Run_Script "\system\startup.ds", consoleID, "", "BOOT"
+        Run_Script "\system\startup.ds", consoleID, EmptyParams, "BOOT", True
     Else
-        Run_Script "\system\newconsole.ds", consoleID, "", "BOOT"
+        Run_Script "\system\newconsole.ds", consoleID, EmptyParams, "BOOT", True
     End If
-    
-    
 End Sub
 
 
@@ -1340,7 +1342,7 @@ End Sub
 
 Sub displaychat(Msg$)   'display a message in the chat field:
     If chatToStatus = True Then
-        SayComm Msg$
+        SayCOMM Msg$
     End If
     txtChat.Text = txtChat.Text + Msg$ + vbCrLf   ' add the message to the chat field
     txtChat.SelStart = Len(txtChat.Text)  'select the end of the message
@@ -1768,11 +1770,11 @@ Public Sub ChatView(ByVal s As String, ByVal consoleID As Integer)
     If s = "on" Then
         chatToStatus = True
         RegSave "CHATVIEW", "True"
-        SayComm "Chatview is now enabled."
+        SayCOMM "Chatview is now enabled."
     ElseIf s = "off" Then
         chatToStatus = False
         RegSave "CHATVIEW", False
-        SayComm "Chatview is now disabled."
+        SayCOMM "Chatview is now disabled."
     Else
        ShowHelp "chatview", consoleID
     End If

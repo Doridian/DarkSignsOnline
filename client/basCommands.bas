@@ -3,17 +3,74 @@ Option Explicit
 
 Public AuthorizePayment As Boolean
 
-Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Optional ScriptFrom As String, Optional fromScript As Boolean = True, Optional IsFromScript As Boolean)
-    'does it need to be piped? BLAH THIS ALLOWS FOR EXPLOITS!!!!
-    'If InStr(MaskCharInQuotes(CLine.Caption, "|"), "|") > 0 Then Pipe_Commands CLine.Caption, consoleID: Exit Function
-    
+Private scrConsole(1 To 4) As ScriptControl
+Private scrConsoleContext(1 To 4) As clsScriptFunctions
 
-    Dim tmpS As String, n As Integer, tmpS2 As String
+Public Sub InitBasCommands()
+    Dim X As Integer
+    For X = 1 To 4
+        Set scrConsole(X) = New ScriptControl
+        scrConsole(X).AllowUI = False
+        scrConsole(X).Timeout = 100
+        scrConsole(X).UseSafeSubset = True
+        scrConsole(X).Language = "VBScript"
+
+        Dim CLIArguments(0 To 0) As String
+        CLIArguments(0) = "/dev/tty" & X
+        Set scrConsoleContext(X) = New clsScriptFunctions
+        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments
+
+        scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
+    Next
+End Sub
+
+Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Optional ScriptFrom As String, Optional FromScript As Boolean = True)
+    If consoleID < 1 Then
+        consoleID = 1
+    End If
+    If consoleID > 4 Then
+        consoleID = 4
+    End If
+    Dim tmpS As String
+    tmpS = CLine.Caption
+    Dim promptEndIdx As Integer
+    promptEndIdx = InStr(tmpS, ">")
+    If promptEndIdx > 0 Then
+        tmpS = Mid(tmpS, promptEndIdx + 1)
+    End If
+
+    CancelScript(consoleID) = False
+    New_Console_Line_InProgress consoleID
+
+    scrConsoleContext(consoleID).Aborted = False
+    On Error GoTo EvalError
+    scrConsole(consoleID).AddCode Trim(tmpS)
+    On Error GoTo 0
+
+    GoTo ScriptEnd
+    Exit Function
+EvalError:
+    If Err.Number = 9001 Then
+        GoTo ScriptCancelled
+    End If
+    If Err.Number = 9002 Then
+        GoTo ScriptEnd
+    End If
+    SAY consoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") {red}", False
+    GoTo ScriptEnd
+
+ScriptCancelled:
+    SAY consoleID, "Script Stopped by User (CTRL + C){orange}", False
+ScriptEnd:
+    scrConsoleContext(consoleID).CleanupScriptTasks
+    New_Console_Line consoleID
+    Exit Function
+
+    Dim n As Integer, tmpS2 As String
     
     Dim sC As String 'the main command
     Dim sP As String 'any parameters
-    
-    tmpS = CLine.Caption
+
     'kill double spaces - MUST BE BEFORE REPLACES VARIABLES
     'tmpS = Replace(tmpS, "  ", " ")
     
@@ -69,7 +126,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
     If Len(Trim(sC)) > 2 Then
     If InStr(LimitedCommandString, ":" & i(sC) & ":") > 0 Then
         'then it cannot be run
-        If IsFromScript = True Then 'then don't allow it
+        If FromScript = True Then 'then don't allow it
             SayError "Command blocked by commands-security.dat: " & UCase(sC) & " " & sP, consoleID
             GoTo zzz
         End If
@@ -78,7 +135,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
     
     Select Case i(sC)
     
-        Case "draw": DrawItUp sP, consoleID ': Exit Function
+        'Case "draw": DrawItUp sP, ConsoleID ': Exit Function
     
         Case "dir": ListDirectoryContents consoleID, sP
         Case "ls": ListDirectoryContents consoleID, sP
@@ -92,7 +149,6 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
         Case "rename": MoveRename sP, consoleID
         Case "copy": MoveRename sP, consoleID, "copyonly"
         
-        Case "run": RunFileAsScript sP, consoleID
         Case "edit": EditFile sP, consoleID
         Case "mail": ShowMail sP, consoleID
         
@@ -104,24 +160,24 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
         
         Case "clear": ClearConsole consoleID
         Case "cls": ClearConsole consoleID
-        Case "time": Say consoleID, Format(Time, "h:mm AMPM"), False
-        Case "date": Say consoleID, Date, False
-        Case "now": Say consoleID, Now, False
+        Case "time": SAY consoleID, Format(Time, "h:mm AMPM"), False
+        Case "date": SAY consoleID, Date, False
+        Case "now": SAY consoleID, Now, False
         Case "restart": frmConsole.Start_Console consoleID: Exit Function
-        Case "say": Say consoleID, sP, False, fromScript
-        Case "sayall": SayAll consoleID, sP, False, fromScript
+        Case "say": SAY consoleID, sP, False, FromScript
+        Case "sayall": SayAll consoleID, sP, False, FromScript
         Case "sayline":
             'Shift_Console_Lines_Reverse (consoleID)
             
-            Say consoleID, sP, False, fromScript
-            If fromScript = True Then Exit Function
+            SAY consoleID, sP, False, FromScript
+            If FromScript = True Then Exit Function
             
         Case "listcolors": ListColors consoleID
         Case "listkeys": ListKeys consoleID
         Case "music": MusicCommand sP
         Case "help": ShowHelp sP, consoleID
         Case "pause": PauseConsole sP, consoleID: Exit Function
-        Case "saycomm": SayComm sP, consoleID
+        Case "saycomm": SayCOMM sP, consoleID
         Case "username": SetUsername sP, consoleID
         Case "password": SetPassword sP, consoleID
         Case "stats": ShowStats consoleID
@@ -129,7 +185,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
         Case "logout": LogoutNow consoleID
         Case "wait": 'WaitNow sP, consoleID
         
-        Case "connect": ConnectToDomain sP, consoleID
+        'Case "connect": ConnectToDomain sP, consoleID
         Case "upload": UploadToDomain sP, consoleID
         Case "closeport": CloseDomainPort sP, consoleID 'Used to close server ports.
         Case "download": DownloadFromDomain sP, consoleID
@@ -142,7 +198,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
         Case "mysubdomains": ListMySubDomains sP, consoleID
         Case "myips": ListMyIPs consoleID
         
-        Case "server": If IsFromScript = True Then ServerCommands sP, consoleID
+        Case "server": If FromScript = True Then ServerCommands sP, consoleID
         
         'Case "chatsend": frmConsole.ChatSend sP, consoleID
         Case "chatview": frmConsole.ChatView sP, consoleID
@@ -172,14 +228,14 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
         Case "compile": f_Compile sP, consoleID
         
         
-        Case "hello": Say consoleID, "I am your console, not your friend! {green 24 georgia}", False
-        Case "hi": Say consoleID, "Hello to you as well! {green 24 georgia}", False
-        Case "why": Say consoleID, "That is a question that I cannot answer. {blue 24 georgia}", False
-        Case "wow": Say consoleID, "Yeah...{blue 18 georgia}", False: Say consoleID, "it's pretty good...{blue 18 georgia center}", False: Say consoleID, ":){blue 18 georgia right}", False:: Say consoleID, "w00t!{center blue 24 bold georgia}", False
-        Case "fuck": Say consoleID, "I object to that sort of thing. {grey 24 georgia}", False
-        Case "lol": Say consoleID, UCase("j") & "{wingdings 144 center green}", False
-        Case "ok":  Say consoleID, "That's not a real command!{red impact 48 center nobold}", False
-                    Say consoleID, "What's wrong with you!?{red impact 48 center nobold}", False
+        Case "hello": SAY consoleID, "I am your console, not your friend! {green 24 georgia}", False
+        Case "hi": SAY consoleID, "Hello to you as well! {green 24 georgia}", False
+        Case "why": SAY consoleID, "That is a question that I cannot answer. {blue 24 georgia}", False
+        Case "wow": SAY consoleID, "Yeah...{blue 18 georgia}", False: SAY consoleID, "it's pretty good...{blue 18 georgia center}", False: SAY consoleID, ":){blue 18 georgia right}", False:: SAY consoleID, "w00t!{center blue 24 bold georgia}", False
+        Case "fuck": SAY consoleID, "I object to that sort of thing. {grey 24 georgia}", False
+        Case "lol": SAY consoleID, UCase("j") & "{wingdings 144 center green}", False
+        Case "ok":  SAY consoleID, "That's not a real command!{red impact 48 center nobold}", False
+                    SAY consoleID, "What's wrong with you!?{red impact 48 center nobold}", False
         
 
         
@@ -192,7 +248,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
                 
                 SetVariable sC, sP, consoleID, ScriptFrom
                 
-                If IsFromScript = True Then
+                If FromScript = True Then
                     If InStr(sP, "(") = 0 Then
                         'only exit function if it doesn't have a function.
                         Exit Function
@@ -202,17 +258,17 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
             
                 'it's a file - run it
                 Shift_Console_Lines consoleID
-                Run_Script fixPath(sC, consoleID), consoleID, sP, referals(ActiveConsole)
+               ' Run_Script fixPath(sC, consoleID), consoleID, sP, referals(ActiveConsole)
             ElseIf FileExists(App.Path & "\user\system\commands\" & sC) = True Then
                 'it's a file - run it
                 Shift_Console_Lines consoleID
-                Run_Script "\system\commands\" & sC, consoleID, sP, referals(ActiveConsole)
+                'Run_Script "\system\commands\" & sC, consoleID, sP, referals(ActiveConsole)
             ElseIf FileExists(App.Path & "\user\system\commands\" & sC & ".ds") = True Then
                 'it's a file - run it
                 Shift_Console_Lines consoleID
-                Run_Script "\system\commands\" & sC & ".ds", consoleID, sP, referals(ActiveConsole)
+                'Run_Script "\system\commands\" & sC & ".ds", consoleID, sP, referals(ActiveConsole)
             ElseIf IsInCommandsSubdirectory(sC) <> "" Then
-                Run_Script IsInCommandsSubdirectory(sC), consoleID, sP, referals(ActiveConsole)
+                'Run_Script IsInCommandsSubdirectory(sC), consoleID, sP, referals(ActiveConsole)
             Else
                 'it is unknown
                 If Trim(sC) = "" Then
@@ -230,60 +286,21 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Op
     End Select
     
 zzz:
-    WriteErrorLog "Run_Command - " & sC & " - " & sP
     New_Console_Line consoleID
 End Function
 
-Public Sub DrawItUp(ByVal s As String, ByVal consoleID As Integer)
-    s = Trim(s)
-    If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters - Type HELP DRAW for more information.", consoleID
-        ShowHelp "draw", consoleID
-        Exit Sub
-    End If
-    
-    Dim yPos As Long
-    Dim R As Long, G As Long, b As Long
+' -y r g b mode
+'  SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE
+Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String, ByVal consoleID As Integer)
     Dim sColor As String
     Dim sMode As String
-    
-    yPos = Trim(Mid(s, 1, InStr(s, " ")))
-    s = Trim(Mid(s, InStr(s, " "), Len(s)))
-    
-    If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters - Type HELP DRAW for more information.", consoleID
-        ShowHelp "draw", consoleID
-        Exit Sub
-    End If
-    
-    R = Val(Trim(Mid(s, 1, InStr(s, " "))))
-    s = Trim(Mid(s, InStr(s, " "), Len(s)))
-    
-    If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters - Type HELP DRAW for more information.", consoleID
-        Exit Sub
-    End If
-    
-    G = Val(Trim(Mid(s, 1, InStr(s, " "))))
-    s = Trim(Mid(s, InStr(s, " "), Len(s)))
-    
-    If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters", consoleID
-        ShowHelp "draw", consoleID
-        Exit Sub
-    End If
-    
-    b = Val(Trim(Mid(s, 1, InStr(s, " "))))
-    sMode = Trim(Mid(s, InStr(s, " "), Len(s)))
      
     Dim yIndex As Integer, n As Integer
-    yIndex = Val(Replace(yPos, "-", "")) + 1
+    yIndex = (YPos * -1) + 1
+
+    Console(consoleID, yIndex).DrawMode = Mode
     
-    
-    Console(consoleID, yIndex).DrawMode = i(sMode)
-    
-    Select Case i(sMode)
-    
+    Select Case Mode
     Case "fadecenter":
     
         Console(consoleID, yIndex).DrawEnabled = True
@@ -463,17 +480,17 @@ End Sub
 
 
 Public Sub ListMyDomains(ByVal consoleID As Integer)
-    SayComm "Downloading domain list..."
+    SayCOMM "Downloading domain list..."
     RunPage "my_domains.php?type=domain", consoleID, False, "", 0
 End Sub
 
-Public Sub ListMySubDomains(ByVal domain As String, ByVal consoleID As Integer)
-    SayComm "Downloading subdomain list..."
-    RunPage "my_domains.php?domain=" & EncodeURLParameter(domain) & "&type=subdomain", consoleID, False, "", 0
+Public Sub ListMySubDomains(ByVal Domain As String, ByVal consoleID As Integer)
+    SayCOMM "Downloading subdomain list..."
+    RunPage "my_domains.php?domain=" & EncodeURLParameter(Domain) & "&type=subdomain", consoleID, False, "", 0
 End Sub
 
 Public Sub ListMyIPs(ByVal consoleID As Integer)
-    SayComm "Downloading IP list..."
+    SayCOMM "Downloading IP list..."
     RunPage "my_domains.php?type=ip", consoleID, False, "", 0
 End Sub
 
@@ -528,69 +545,35 @@ Public Sub SetYDiv(s As String)
 zxc:
 End Sub
 
-Public Sub ConnectToDomain(ByVal s As String, ByVal consoleID As Integer)
-    Dim sDomain As String
-    Dim sPort As String
+Public Sub ConnectToDomain(sDomain As String, sPort As Integer, sParams() As String, ByVal consoleID As Integer)
     Dim sFilename As String
     Dim sFileData As String
-    Dim sParams As String
-    
-    'If IsFromScript = False Then
-    '    referals(ActiveConsole) = "A"
-    'End If
-    
-    s = Replace(s, ":", " ")
-    s = Trim(s)
-    
-    If s = "" Then GoTo zxc
-    
-    If InStr(s, " ") > 0 Then
-        sDomain = i(Mid(s, 1, InStr(s, " ")))
-    Else
-        sDomain = i(s)
-    End If
-    
-    If InStr(s, " ") > 0 Then
-        sPort = Trim(Mid(s, InStr(s, " "), Len(s)))
-        s = Trim(Mid(s, InStr(s, " "), Len(s)))
-        If InStr(sPort, " ") > 0 Then sPort = Trim(Mid(sPort, 1, InStr(sPort, " ")))
-        
-        If InStr(s, " ") > 0 Then
-            'there are parameters
-            sParams = Trim(Mid(s, InStr(s, " "), Len(s)))
-        Else
-            sParams = ""
-        End If
-    End If
-    
 
-    If sPort = "" Then sPort = "80"
+    If sPort <= 0 Then
+        sPort = 80
+    End If
     
-    If Val(sPort) < 1 Then
+    If sPort < 1 Then
         SayError "Invalid Port Number: " & sPort, consoleID
         Exit Sub
     End If
-    If Val(sPort) > 65536 Then
+    If sPort > 65535 Then
         SayError "Invalid Port Number: " & sPort, consoleID
         Exit Sub
     End If
-    
-    
-    SayComm "Connecting to " & UCase(sDomain) & ":" & sPort & "..."
-    Say consoleID, "{green}Connecting to " & UCase(sDomain) & ":" & sPort & "...", False
-    
-    RunPage "domain_connect.php?params=" & EncodeURLParameter(sParams) & _
-    "&d=" & EncodeURLParameter(sDomain) & _
-    "&port=" & EncodeURLParameter(sPort), consoleID
-    
 
+    SayCOMM "Connecting to " & UCase(sDomain) & ":" & sPort & "..."
+    SAY consoleID, "{green}Connecting to " & UCase(sDomain) & ":" & sPort & "...", False
+    
+    Dim PostData As String
+    PostData = "c=1"
+    Dim X As Integer
+    For X = 1 To UBound(sParams)
+        PostData = PostData & "&params[]=" & EncodeURLParameter(sParams(X))
+    Next
 
-    
-    Exit Sub
-zxc:
-    SayError "Invalid Parameters", consoleID
-    ShowHelp "connect", consoleID
-    
+    RunPage "domain_connect.php?d=" & EncodeURLParameter(sDomain) & _
+            "&port=" & EncodeURLParameter(sPort), consoleID, True, PostData
 End Sub
 
 Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
@@ -625,7 +608,7 @@ Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
         "&d=" & EncodeURLParameter(sDomain) & _
         "&filedata=" & EncodeURLParameter(tempStrA)
         
-        SayComm "Attempting to upload: " & UCase(sDomain) & ":" & i(sPort), consoleID
+        SayCOMM "Attempting to upload: " & UCase(sDomain) & ":" & i(sPort), consoleID
         
     Else
         SayError "File Not Found:" & sFilename, consoleID
@@ -657,7 +640,7 @@ Public Sub CloseDomainPort(ByVal s As String, ByVal consoleID As Integer)
     "port=" & EncodeURLParameter(Trim(sPort)) & _
     "&d=" & EncodeURLParameter(sDomain)
         
-    SayComm "Attempting to close port : " & UCase(sDomain) & ":" & i(sPort), consoleID
+    SayCOMM "Attempting to close port : " & UCase(sDomain) & ":" & i(sPort), consoleID
         
     Exit Sub
 zxc:
@@ -694,7 +677,7 @@ Public Sub DownloadFromDomain(ByVal s As String, ByVal consoleID As Integer)
         "&d=" & EncodeURLParameter(sDomain) & _
         "&filename=" & EncodeURLParameter(sFilename)
         
-        SayComm "Attempting to download: " & UCase(sDomain) & ":" & i(sPort), consoleID
+        SayCOMM "Attempting to download: " & UCase(sDomain) & ":" & i(sPort), consoleID
         
     
 
@@ -762,15 +745,15 @@ Public Sub RegisterDomain(ByVal s As String, ByVal consoleID As Integer)
     
     If CountCharInString(s, ".") < 1 Or CountCharInString(s, ".") > 3 Or HasBadDomainChar(s) = True Or Len(s) < 5 Or Left(s, 1) = "." Or Right(s, 1) = "." Then
         SayError "The domain name you specified is invalid or contains bad characters.{orange}", consoleID
-        Say consoleID, "A domain name should be in the following form: MYDOMAIN.COM{lorange}", False
-        Say consoleID, "Subdomains should be in the form: BLOG.MYDOMAIN.COM{lorange}", False
-        Say consoleID, "Valid domain name characters are:", False
-        Say consoleID, "A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -{grey 8}", False
+        SAY consoleID, "A domain name should be in the following form: MYDOMAIN.COM{lorange}", False
+        SAY consoleID, "Subdomains should be in the form: BLOG.MYDOMAIN.COM{lorange}", False
+        SAY consoleID, "Valid domain name characters are:", False
+        SAY consoleID, "A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -{grey 8}", False
         Exit Sub
     End If
     
-    Say consoleID, "{green 10}A registration request has been sent for " & s & ".", False
-    Say consoleID, "{lgreen 10}The result will be posted to the COMM.", False
+    SAY consoleID, "{green 10}A registration request has been sent for " & s & ".", False
+    SAY consoleID, "{lgreen 10}The result will be posted to the COMM.", False
     
     
     'RunPage "domain_register.php?returnwith=2000&d=" & Trim(s), consoleID
@@ -799,8 +782,8 @@ Public Sub UnRegisterDomain(ByVal s As String, ByVal consoleID As Integer)
         Exit Sub
     End If
     
-    Say consoleID, "{green 10}A unregistration request has been sent for " & sDomain & ".", False
-    Say consoleID, "{lgreen 10}The result will be posted to the COMM.", False
+    SAY consoleID, "{green 10}A unregistration request has been sent for " & sDomain & ".", False
+    SAY consoleID, "{lgreen 10}The result will be posted to the COMM.", False
 
     
     RunPage "domain_unregister.php", consoleID, True, _
@@ -939,7 +922,7 @@ Public Sub TransferMoney(ByVal s As String, ByVal consoleID As Integer)
             End If
 
     
-        SayComm "Processing Payment...", consoleID
+        SayCOMM "Processing Payment...", consoleID
     
         RunPage "transfer.php", consoleID, True, _
         "returnwith=2000" & _
@@ -1013,7 +996,7 @@ End Function
 
 Public Sub ShowStats(ByVal consoleID As Integer)
     
-    SayComm "Downloading stats..."
+    SayCOMM "Downloading stats..."
     RunPage "get_user_stats.php?returnwith=2000", consoleID
 
 End Sub
@@ -1066,15 +1049,15 @@ Public Sub ListKeys(ByVal consoleID As Integer)
     Dim ss As String
     ss = "{gold}"
     
-    Say consoleID, "Dark Signs Keyboard Actions{gold 14}", False
+    SAY consoleID, "Dark Signs Keyboard Actions{gold 14}", False
     
-    Say consoleID, "Page Up: Scroll the console up." & ss, False
-    Say consoleID, "Page Down: Scroll the console down." & ss, False
+    SAY consoleID, "Page Up: Scroll the console up." & ss, False
+    SAY consoleID, "Page Down: Scroll the console down." & ss, False
     
-    Say consoleID, "Shift + Page Up: Decrease size of the COMM." & ss, False
-    Say consoleID, "Shift + Page Down: Incease size of the COMM." & ss, False
+    SAY consoleID, "Shift + Page Up: Decrease size of the COMM." & ss, False
+    SAY consoleID, "Shift + Page Down: Incease size of the COMM." & ss, False
     
-    Say consoleID, "F11: Toggle maximum console display." & ss, False
+    SAY consoleID, "F11: Toggle maximum console display." & ss, False
     
     
     
@@ -1082,46 +1065,41 @@ End Sub
 
 
 Public Sub SetUsername(ByVal s As String, ByVal consoleID As Integer)
-
-    
     If Authorized = True Then
         SayError "You are already logged in.", consoleID
         Exit Sub
     End If
-    
-    
-    If Trim(s) <> "" Then RegSave "myusernamedev", Trim(s)
-    
-        
-    Dim tmpU As String, tmpP As String
-    If Trim(myUsername) = "" Then tmpU = "[not specified]" Else tmpU = myUsername
-    
-    Say consoleID, "Your new details are shown below." & "{orange}", False
-    Say consoleID, "Username: " & tmpU & "{orange 16}", False
-    Say consoleID, "Password: " & "[hidden]" & "{orange 16}", False
-    
 
+    RegSave "myUsernameDev", s
+    
+    Dim Password As String
+    If myPassword = "" Then
+        Password = ""
+    Else
+        Password = "[hidden]"
+    End If
+    SAY consoleID, "Your new details are shown below." & "{orange}", False
+    SAY consoleID, "Username: " & myUsername() & "{orange 16}", False
+    SAY consoleID, "Password: " & Password & "{orange 16}", False
 End Sub
 
 Public Sub SetPassword(ByVal s As String, ByVal consoleID As Integer)
-
-
     If Authorized = True Then
         SayError "You are already logged in.", consoleID
         Exit Sub
     End If
-    
-    s = Trim(s)
-    RegSave "mypassworddev", s
-    
-    Dim tmpU As String, tmpP As String
-    If Trim(myUsername) = "" Then tmpU = "[not specified]" Else tmpU = myUsername
-    
-    Say consoleID, "Your new details are shown below." & "{orange}", False
-    Say consoleID, "Username: " & tmpU & "{orange 16}", False
-    Say consoleID, "Password: " & "[hidden]" & "{orange 16}", False
 
-
+    RegSave "myPasswordDev", s
+    
+    Dim Password As String
+    If myPassword = "" Then
+        Password = ""
+    Else
+        Password = "[hidden]"
+    End If
+    SAY consoleID, "Your new details are shown below." & "{orange}", False
+    SAY consoleID, "Username: " & myUsername() & "{orange 16}", False
+    SAY consoleID, "Password: " & Password & "{orange 16}", False
 End Sub
 
 Public Sub ClearConsole(ByVal consoleID As Integer)
@@ -1305,7 +1283,7 @@ Public Sub EditFile(ByVal s As String, ByVal consoleID As Integer)
     If FileExists(App.Path & "\user" & s) Then
 
     Else
-        Say consoleID, "{green}File Not Found, Creating: " & s
+        SAY consoleID, "{green}File Not Found, Creating: " & s
     
     End If
     
@@ -1314,7 +1292,8 @@ Public Sub EditFile(ByVal s As String, ByVal consoleID As Integer)
     
     If Trim(EditorRunFile) <> "" Then
         Shift_Console_Lines consoleID
-        Run_Script EditorRunFile, consoleID, "", "CONSOLE"
+        Dim EmptyArguments(0 To 0) As String
+        Run_Script EditorRunFile, consoleID, EmptyArguments, "CONSOLE"
     End If
     
     
@@ -1495,7 +1474,7 @@ Public Sub DisplayFile(ByVal s As String, ByVal consoleID As Integer)
             If CLine >= startLine Then
                 If CLinePrinted < MaxLines Then
                     If Trim(tmpS) <> "" Then
-                        Say consoleID, Chr(34) & "   " & tmpS & Chr(34), False, , 1
+                        SAY consoleID, Chr(34) & "   " & tmpS & Chr(34), False, , 1
                         CLinePrinted = CLinePrinted + 1
                         If CLinePrinted Mod 24 = 0 Then PauseConsole "", consoleID
                     End If
@@ -1544,39 +1523,6 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Sub RunFileAsScript(ByVal s As String, ByVal consoleID As Integer)
-    
-    
-    
-    
-    Dim sParams As String
-    s = Trim(s)
-    If InStr(s, " ") > 0 Then
-        sParams = Trim(Mid(s, InStr(s, " "), Len(s)))
-        s = Trim(Mid(s, 1, InStr(s, " ")))
-    End If
-    
-    s = fixPath(s, consoleID)
-    
-
-    If FileExists(App.Path & "\user" & s) Then
-        'run it as a script
-        
-        WriteErrorLog "RunFileAsScript"
-        Shift_Console_Lines consoleID
-        Run_Script s, consoleID, sParams, "CONSOLE"
-        
-    Else
-        SayError "File Not Found: " & s, consoleID
-    End If
-    
-    
-    Exit Sub
-    
-errorDir:
-    'say consoleID, "Directory Not Found: " & s & " {orange}", False
-End Sub
-
 Public Sub DelFiles(sFiles As String, ByVal consoleID As Integer)
     On Error Resume Next
     Kill sFiles
@@ -1608,7 +1554,7 @@ errorDir:
 End Sub
 
 Public Function SayError(s As String, ByVal consoleID As Integer)
-    Say consoleID, "Error - " & s & " {orange}", False
+    SAY consoleID, "Error - " & s & " {orange}", False
 End Function
 
 Public Function RemoveADir(s As String, cosoleID As Integer) As Boolean
@@ -1626,13 +1572,11 @@ Public Sub MakeADir(s As String)
 End Sub
 
 Public Sub ChangeDir(ByVal s As String, ByVal consoleID As Integer)
-    s = Trim(s)
-    
     If InvalidChars(s) = True Then
         SayError "Invalid Directory Name: " & s, consoleID
         Exit Sub
     End If
-    
+
     If s = ".." Then DownADir consoleID: Exit Sub
     If InStr(s, "..") > 0 Then
         GoTo errorDir
@@ -1641,11 +1585,8 @@ Public Sub ChangeDir(ByVal s As String, ByVal consoleID As Integer)
     If s = "." Then Exit Sub
     If InStr(s, ".\") > 0 Then Exit Sub
     If InStr(s, "\.") > 0 Then Exit Sub
-    
 
     s = fixPath(s, consoleID)
-    
-    'say consoleID, "path is " & s, False
     
     If DirExists(App.Path & "\user" & s) = True Then
         
@@ -1728,14 +1669,14 @@ Public Sub ListDirectoryContents(ByVal consoleID As Integer, Optional ByVal sFil
             frmConsole.lfont.Caption = sAll
             
             If frmConsole.lfont.Width > (frmConsole.Width - 4200) Then
-                Say consoleID, sAll & "{lyellow}", False
+                SAY consoleID, sAll & "{lyellow}", False
                 'DrawItUp "0 0 0 0 solid", consoleID
                 sAll = ""
             End If
         End If
     Next n
     If sAll <> "" Then
-        Say consoleID, sAll & "{lyellow}", False
+        SAY consoleID, sAll & "{lyellow}", False
         'DrawItUp "0 0 0 0 solid", consoleID
     End If
     
@@ -1763,7 +1704,7 @@ Public Sub ListDirectoryContents(ByVal consoleID As Integer, Optional ByVal sFil
             frmConsole.lfont.Caption = sAll
             
             If frmConsole.lfont.Width > (frmConsole.Width - 4700) Then
-                Say consoleID, sAll & "{}", False
+                SAY consoleID, sAll & "{}", False
                 'DrawItUp "0 12 12 12 solid", consoleID
                 sAll = ""
             End If
@@ -1771,13 +1712,13 @@ Public Sub ListDirectoryContents(ByVal consoleID As Integer, Optional ByVal sFil
     Next n
     If sAll <> "" Then
         
-        Say consoleID, sAll & "{}", False
+        SAY consoleID, sAll & "{}", False
         'DrawItUp "0 12 12 12 solid", consoleID
     End If
 NoFilesFound:
     sAll = ""
     
-    Say consoleID, Trim(Str(fCount)) & " file(s) and " & Trim(Str(dCount)) & " dir(s) found in " & cPath(consoleID) & " {green 10}", False
+    SAY consoleID, Trim(Str(fCount)) & " file(s) and " & Trim(Str(dCount)) & " dir(s) found in " & cPath(consoleID) & " {green 10}", False
     
     Exit Sub
 zxc:
@@ -1806,10 +1747,10 @@ Public Sub PauseConsole(s As String, ByVal consoleID As Integer)
 
 
     If Has_Property_Space(s) = True Then
-        Say consoleID, s, False
+        SAY consoleID, s, False
     Else
         'include the default property space
-        Say consoleID, s & "{lblue 10}", False
+        SAY consoleID, s & "{lblue 10}", False
     End If
     
     Do
@@ -1857,7 +1798,7 @@ Public Sub ListColors(ByVal consoleID As Integer)
 End Sub
 
 Sub ShowCol(ByVal s As String, ByVal consoleID As Integer)
-    Say consoleID, s & " (**" & s & "**) {" & s & " 8}", False
+    SAY consoleID, s & " (**" & s & "**) {" & s & " 8}", False
 End Sub
 
 Public Sub ShowHelp(sP, ByVal consoleID As Integer)
@@ -1867,166 +1808,166 @@ Public Sub ShowHelp(sP, ByVal consoleID As Integer)
 
     Select Case sP
     Case "help"
-        Say consoleID, props & "Command: HELP", False
-        Say consoleID, "{lgrey}Display the available console commands.", False
+        SAY consoleID, props & "Command: HELP", False
+        SAY consoleID, "{lgrey}Display the available console commands.", False
     Case "restart"
-        Say consoleID, props & "Command: RESTART", False
-        Say consoleID, "{lgrey}Restart the console immediately.", False
+        SAY consoleID, props & "Command: RESTART", False
+        SAY consoleID, "{lgrey}Restart the console immediately.", False
     Case "listcolors"
-        Say consoleID, props & "Command: LISTCOLORS", False
-        Say consoleID, "{lgrey}Display the available colors and color codes in the console.", False
+        SAY consoleID, props & "Command: LISTCOLORS", False
+        SAY consoleID, "{lgrey}Display the available colors and color codes in the console.", False
     Case "listkeys"
-        Say consoleID, props & "Command: LISTKEYS", False
-        Say consoleID, "{lgrey}Display the available shortcut keys and their actions in the console.", False
+        SAY consoleID, props & "Command: LISTKEYS", False
+        SAY consoleID, "{lgrey}Display the available shortcut keys and their actions in the console.", False
     
     Case "time"
-        Say consoleID, props & "Command: TIME", False
-        Say consoleID, "{lgrey}Display the current system time.", False
+        SAY consoleID, props & "Command: TIME", False
+        SAY consoleID, "{lgrey}Display the current system time.", False
     Case "date"
-        Say consoleID, props & "Command: DATE", False
-        Say consoleID, "{lgrey}Display the current system date.", False
+        SAY consoleID, props & "Command: DATE", False
+        SAY consoleID, "{lgrey}Display the current system date.", False
     Case "now"
-        Say consoleID, props & "Command: NOW", False
-        Say consoleID, "{lgrey}Display the current system date and time.", False
+        SAY consoleID, props & "Command: NOW", False
+        SAY consoleID, "{lgrey}Display the current system date and time.", False
     Case "clear"
-        Say consoleID, props & "Command: CLEAR", False
-        Say consoleID, "{lgrey}Clear the console screen.", False
+        SAY consoleID, props & "Command: CLEAR", False
+        SAY consoleID, "{lgrey}Clear the console screen.", False
     Case "stats"
-        Say consoleID, props & "Command: STATS", False
-        Say consoleID, "{lgrey}Display active information about the Dark Signs Network.", False
-        Say consoleID, "{lorange}This information will be shown in the COMM window.", False
+        SAY consoleID, props & "Command: STATS", False
+        SAY consoleID, "{lgrey}Display active information about the Dark Signs Network.", False
+        SAY consoleID, "{lorange}This information will be shown in the COMM window.", False
     
     Case "dir"
         
-        Say consoleID, props & "Command: DIR optional-filter", False
-        Say consoleID, "{lgrey}Display files and folders in the active directory.", False
-        Say consoleID, "{lgrey}A filter can be appended to show only elements containing the filter keyword in their name.", False
+        SAY consoleID, props & "Command: DIR optional-filter", False
+        SAY consoleID, "{lgrey}Display files and folders in the active directory.", False
+        SAY consoleID, "{lgrey}A filter can be appended to show only elements containing the filter keyword in their name.", False
         
     Case "pause"
-        Say consoleID, props & "Command: PAUSE optional-msg", False
-        Say consoleID, propsforexamples & "Example #1: PAUSE Press a key!", False
-        Say consoleID, "{lgrey}Pause the console interface until the user presses a key.", False
+        SAY consoleID, props & "Command: PAUSE optional-msg", False
+        SAY consoleID, propsforexamples & "Example #1: PAUSE Press a key!", False
+        SAY consoleID, "{lgrey}Pause the console interface until the user presses a key.", False
     Case "cd"
-        Say consoleID, props & "Command: CD directory-name", False
-        Say consoleID, propsforexamples & "Example #1: CD myfiles", False
-        Say consoleID, "{lgrey}Change the active path to the specified directory.", False
+        SAY consoleID, props & "Command: CD directory-name", False
+        SAY consoleID, propsforexamples & "Example #1: CD myfiles", False
+        SAY consoleID, "{lgrey}Change the active path to the specified directory.", False
     Case "rd"
-        Say consoleID, props & "Command: RD directory-name", False
-        Say consoleID, propsforexamples & "Example #1: RD myfiles", False
-        Say consoleID, "{lgrey}Delete the directory with the specified name.", False
-        Say consoleID, "{lorange}The directory must be empty, or it will not be deleted.", False
+        SAY consoleID, props & "Command: RD directory-name", False
+        SAY consoleID, propsforexamples & "Example #1: RD myfiles", False
+        SAY consoleID, "{lgrey}Delete the directory with the specified name.", False
+        SAY consoleID, "{lorange}The directory must be empty, or it will not be deleted.", False
     Case "del"
-        Say consoleID, props & "Command: DEL filename", False
-        Say consoleID, propsforexamples & "Example #1: DEL file.ds", False
-        Say consoleID, "{lgrey}Delete the specified file or files.", False
-        Say consoleID, "{lgrey}The wildcard symbol, *, can be used to delete multiple files at once.", False
-        Say consoleID, "{lorange}Files in the system directory cannot be deleted.", False
-        Say consoleID, "{orange}Be careful not to delete all of your files!", False
+        SAY consoleID, props & "Command: DEL filename", False
+        SAY consoleID, propsforexamples & "Example #1: DEL file.ds", False
+        SAY consoleID, "{lgrey}Delete the specified file or files.", False
+        SAY consoleID, "{lgrey}The wildcard symbol, *, can be used to delete multiple files at once.", False
+        SAY consoleID, "{lorange}Files in the system directory cannot be deleted.", False
+        SAY consoleID, "{orange}Be careful not to delete all of your files!", False
         
     Case "md"
-        Say consoleID, props & "Command: MD directory-name", False
-        Say consoleID, propsforexamples & "Example #1: MD myfiles", False
-        Say consoleID, "{lgrey}Create a new empty directory with the specified name.", False
-        Say consoleID, "{lorange}The name of the directory should not contain space characters.", False
+        SAY consoleID, props & "Command: MD directory-name", False
+        SAY consoleID, propsforexamples & "Example #1: MD myfiles", False
+        SAY consoleID, "{lgrey}Create a new empty directory with the specified name.", False
+        SAY consoleID, "{lorange}The name of the directory should not contain space characters.", False
             
     Case "lookup"
-        Say consoleID, props & "Command: LOOKUP domain-or-username", False
-        Say consoleID, propsforexamples & "Example #1: LOOKUP website.com", False
-        Say consoleID, propsforexamples & "Example #2: LOOKUP jsmith", False
-        Say consoleID, "{lgrey}View information about the specified domain name or user account.", False
-        Say consoleID, "{lgrey}This command can be used on both domain names and user accounts.", False
-        Say consoleID, "{lorange}Data will be returned in the COMM window.", False
+        SAY consoleID, props & "Command: LOOKUP domain-or-username", False
+        SAY consoleID, propsforexamples & "Example #1: LOOKUP website.com", False
+        SAY consoleID, propsforexamples & "Example #2: LOOKUP jsmith", False
+        SAY consoleID, "{lgrey}View information about the specified domain name or user account.", False
+        SAY consoleID, "{lgrey}This command can be used on both domain names and user accounts.", False
+        SAY consoleID, "{lorange}Data will be returned in the COMM window.", False
                    
     Case "username"
-        Say consoleID, props & "Command: USERNAME your-username", False
-        Say consoleID, propsforexamples & "Example #1: USERNAME jsmith", False
-        Say consoleID, "{lgrey}Set or change your Dark Signs username.", False
-        Say consoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled.", False
-        Say consoleID, "{lorange}If you do not have an account, visit the website to create one.", False
+        SAY consoleID, props & "Command: USERNAME your-username", False
+        SAY consoleID, propsforexamples & "Example #1: USERNAME jsmith", False
+        SAY consoleID, "{lgrey}Set or change your Dark Signs username.", False
+        SAY consoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled.", False
+        SAY consoleID, "{lorange}If you do not have an account, visit the website to create one.", False
     Case "password"
-        Say consoleID, props & "Command: PASSWORD your-password", False
-        Say consoleID, propsforexamples & "Example #1: PASSWORD secret123", False
-        Say consoleID, "{lgrey}Set or change your Dark Signs password.", False
-        Say consoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled.", False
-        Say consoleID, "{lorange}If you do not have an account, visit the website to create one.", False
+        SAY consoleID, props & "Command: PASSWORD your-password", False
+        SAY consoleID, propsforexamples & "Example #1: PASSWORD secret123", False
+        SAY consoleID, "{lgrey}Set or change your Dark Signs password.", False
+        SAY consoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled.", False
+        SAY consoleID, "{lorange}If you do not have an account, visit the website to create one.", False
     
     Case "ping"
-        Say consoleID, props & "Command: PING domain-or-ip-server", False
-        Say consoleID, propsforexamples & "Example #1: PING birds.com", False
-        Say consoleID, "{lgrey}Check if the specified server exist on the network.", False
-        Say consoleID, "{lorange}You can modify this command in the file \system\commands\ping.ds", False
+        SAY consoleID, props & "Command: PING domain-or-ip-server", False
+        SAY consoleID, propsforexamples & "Example #1: PING birds.com", False
+        SAY consoleID, "{lgrey}Check if the specified server exist on the network.", False
+        SAY consoleID, "{lorange}You can modify this command in the file \system\commands\ping.ds", False
     
     Case "me"
-        Say consoleID, props & "Command: ME", False
-        Say consoleID, propsforexamples & "Example #1: ME", False
-        Say consoleID, "{lgrey}Do nothing at all!", False
-        Say consoleID, "{lorange}This is a useless secret command.", False
+        SAY consoleID, props & "Command: ME", False
+        SAY consoleID, propsforexamples & "Example #1: ME", False
+        SAY consoleID, "{lgrey}Do nothing at all!", False
+        SAY consoleID, "{lorange}This is a useless secret command.", False
     
     Case "pingport"
-        Say consoleID, props & "Command: PINGPORT domain-or-ip-server 80", False
-        Say consoleID, propsforexamples & "Example #1: PINGPORT birds.com 80", False
-        Say consoleID, "{lgrey}Check if a script is runnning on the server at the specified port number.", False
-        Say consoleID, "{lorange}You can modify this command in the file \system\commands\pingport.ds", False
+        SAY consoleID, props & "Command: PINGPORT domain-or-ip-server 80", False
+        SAY consoleID, propsforexamples & "Example #1: PINGPORT birds.com 80", False
+        SAY consoleID, "{lgrey}Check if a script is runnning on the server at the specified port number.", False
+        SAY consoleID, "{lorange}You can modify this command in the file \system\commands\pingport.ds", False
             
     Case "getip"
-        Say consoleID, props & "Command: GETIP domain-or-ip-server", False
-        Say consoleID, propsforexamples & "Example #1: GETIP birds.com", False
-        Say consoleID, "{lgrey}Get the IP address of the specified server.", False
-        Say consoleID, "{lorange}You can modify this command in the file \system\commands\getip.ds", False
+        SAY consoleID, props & "Command: GETIP domain-or-ip-server", False
+        SAY consoleID, propsforexamples & "Example #1: GETIP birds.com", False
+        SAY consoleID, "{lgrey}Get the IP address of the specified server.", False
+        SAY consoleID, "{lorange}You can modify this command in the file \system\commands\getip.ds", False
             
     Case "getdomain"
-        Say consoleID, props & "Command: GETDOMAIN domain-or-ip-server", False
-        Say consoleID, propsforexamples & "Example #1: GETDOMAIN 12.55.192.111", False
-        Say consoleID, "{lgrey}Get the domain name of the specified server.", False
-        Say consoleID, "{lorange}You can modify this command in the file \system\commands\getdomain.ds", False
+        SAY consoleID, props & "Command: GETDOMAIN domain-or-ip-server", False
+        SAY consoleID, propsforexamples & "Example #1: GETDOMAIN 12.55.192.111", False
+        SAY consoleID, "{lgrey}Get the domain name of the specified server.", False
+        SAY consoleID, "{lorange}You can modify this command in the file \system\commands\getdomain.ds", False
                             
     Case "connect"
-        Say consoleID, props & "Command: CONNECT server port-number [optional-parameters]", False
-        Say consoleID, propsforexamples & "Example #1: CONNECT home.com 80", False
-        Say consoleID, "{lgrey}Connect to a server domain name or IP address on the specified port.", False
-        Say consoleID, "{lgrey}If no port number is specified, the default port number is 80.", False
-        Say consoleID, "{lorange}You must specify the port number if you are including optional parameters.", False
+        SAY consoleID, props & "Command: CONNECT server port-number [optional-parameters]", False
+        SAY consoleID, propsforexamples & "Example #1: CONNECT home.com 80", False
+        SAY consoleID, "{lgrey}Connect to a server domain name or IP address on the specified port.", False
+        SAY consoleID, "{lgrey}If no port number is specified, the default port number is 80.", False
+        SAY consoleID, "{lorange}You must specify the port number if you are including optional parameters.", False
  
         
             
     Case "move"
-        Say consoleID, props & "Command: MOVE source-file destination-file", False
-        Say consoleID, propsforexamples & "Example #1: MOVE myoldfile.ds mynewfile.ds", False
-        Say consoleID, propsforexamples & "Example #2: MOVE /home/myoldfile.ds  /home/dir2/mynewfile.ds", False
-        Say consoleID, "{lgrey}Rename the specified file.", False
-        Say consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2.", False
-        Say consoleID, "{lorange}File names should not contain space characters.", False
+        SAY consoleID, props & "Command: MOVE source-file destination-file", False
+        SAY consoleID, propsforexamples & "Example #1: MOVE myoldfile.ds mynewfile.ds", False
+        SAY consoleID, propsforexamples & "Example #2: MOVE /home/myoldfile.ds  /home/dir2/mynewfile.ds", False
+        SAY consoleID, "{lgrey}Rename the specified file.", False
+        SAY consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2.", False
+        SAY consoleID, "{lorange}File names should not contain space characters.", False
     Case "rename"
-        Say consoleID, props & "Command: RENAME source-file destination-file", False
-        Say consoleID, propsforexamples & "Example #1: MD myoldfile.ds mynewfile.ds", False
-        Say consoleID, propsforexamples & "Example #2: MD /home/myoldfile.ds  /home/dir2/mynewfile.ds", False
-        Say consoleID, "{lgrey}Rename the specified file.", False
-        Say consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2.", False
-        Say consoleID, "{lorange}File names should not contain space characters.", False
+        SAY consoleID, props & "Command: RENAME source-file destination-file", False
+        SAY consoleID, propsforexamples & "Example #1: MD myoldfile.ds mynewfile.ds", False
+        SAY consoleID, propsforexamples & "Example #2: MD /home/myoldfile.ds  /home/dir2/mynewfile.ds", False
+        SAY consoleID, "{lgrey}Rename the specified file.", False
+        SAY consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2.", False
+        SAY consoleID, "{lorange}File names should not contain space characters.", False
     Case "copy"
-        Say consoleID, props & "Command: COPY source-file destination-file", False
-        Say consoleID, propsforexamples & "Example #1: COPY myoldfile.ds mynewfile.ds", False
-        Say consoleID, propsforexamples & "Example #2: COPY /home/myoldfile.ds  /home/dir2/mynewfile.ds", False
-        Say consoleID, "{lgrey}Create a copy of the specified file.", False
-        Say consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2.", False
-        Say consoleID, "{lorange}File names should not contain space characters.", False
+        SAY consoleID, props & "Command: COPY source-file destination-file", False
+        SAY consoleID, propsforexamples & "Example #1: COPY myoldfile.ds mynewfile.ds", False
+        SAY consoleID, propsforexamples & "Example #2: COPY /home/myoldfile.ds  /home/dir2/mynewfile.ds", False
+        SAY consoleID, "{lgrey}Create a copy of the specified file.", False
+        SAY consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2.", False
+        SAY consoleID, "{lorange}File names should not contain space characters.", False
     
     Case "saycomm"
-        Say consoleID, props & "Command: SAYCOMM text", False
-        Say consoleID, propsforexamples & "Example #1: SAYCOMM Connected to server", False
-        Say consoleID, "{lgrey}Display the specified text in the COMM window.", False
+        SAY consoleID, props & "Command: SAYCOMM text", False
+        SAY consoleID, propsforexamples & "Example #1: SAYCOMM Connected to server", False
+        SAY consoleID, "{lgrey}Display the specified text in the COMM window.", False
         
     Case "run"
-        Say consoleID, props & "Command: RUN file", False
-        Say consoleID, propsforexamples & "Example #1: RUN myscript.ds", False
-        Say consoleID, "{lgrey}Run the specified file as script in the console.", False
-        Say consoleID, "{lgrey}Files not designed to be run as scripts may cause random errors to be displayed.", False
+        SAY consoleID, props & "Command: RUN file", False
+        SAY consoleID, propsforexamples & "Example #1: RUN myscript.ds", False
+        SAY consoleID, "{lgrey}Run the specified file as script in the console.", False
+        SAY consoleID, "{lgrey}Files not designed to be run as scripts may cause random errors to be displayed.", False
             
     Case "edit"
-        Say consoleID, props & "Command: EDIT file", False
-        Say consoleID, propsforexamples & "Example #1: EDIT myscript.ds", False
-        Say consoleID, "{lgrey}Edit the specified file in the editing window. The console will pause while the editor is active.", False
-        Say consoleID, "{lorange}Files in the editor are saved automatically.", False
+        SAY consoleID, props & "Command: EDIT file", False
+        SAY consoleID, propsforexamples & "Example #1: EDIT myscript.ds", False
+        SAY consoleID, "{lgrey}Edit the specified file in the editing window. The console will pause while the editor is active.", False
+        SAY consoleID, "{lorange}Files in the editor are saved automatically.", False
                 
 '    Case "wait"
 '        Say consoleID, props & "Command: WAIT milliseconds", False
@@ -2036,184 +1977,184 @@ Public Sub ShowHelp(sP, ByVal consoleID As Integer)
 '        Say consoleID, "{orange}This command is only enabled in scripts.", False
                     
     Case "upload"
-        Say consoleID, props & "Command: UPLOAD server port-number file", False
-        Say consoleID, propsforexamples & "Example #1: UPLOAD mywebsite.com 80 newscript.ds", False
-        Say consoleID, "{lgrey}Upload a file to your domain name on the specified port.", False
-        Say consoleID, "{lgrey}This script will then become connectable to all players.", False
-        Say consoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own.", False
+        SAY consoleID, props & "Command: UPLOAD server port-number file", False
+        SAY consoleID, propsforexamples & "Example #1: UPLOAD mywebsite.com 80 newscript.ds", False
+        SAY consoleID, "{lgrey}Upload a file to your domain name on the specified port.", False
+        SAY consoleID, "{lgrey}This script will then become connectable to all players.", False
+        SAY consoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own.", False
     
     Case "closeport"
-        Say consoleID, props & "Command: CLOSEPORT server port-number", False
-        Say consoleID, propsforexamples & "Example #1: CLOSEPORT mywebsite.com 80", False
-        Say consoleID, "{lgrey}Close port on the specified domain.", False
-        Say consoleID, "{lgrey}The script running on this port is deleted.", False
-        Say consoleID, "{lorange}You can only close ports on domain names (servers) which you own.", False
+        SAY consoleID, props & "Command: CLOSEPORT server port-number", False
+        SAY consoleID, propsforexamples & "Example #1: CLOSEPORT mywebsite.com 80", False
+        SAY consoleID, "{lgrey}Close port on the specified domain.", False
+        SAY consoleID, "{lgrey}The script running on this port is deleted.", False
+        SAY consoleID, "{lorange}You can only close ports on domain names (servers) which you own.", False
                                       
     Case "download"
-        Say consoleID, props & "Command: DOWNLOAD server port-number file", False
-        Say consoleID, propsforexamples & "Example #1: DOWNLOAD mywebsite.com 80 thescript.ds", False
-        Say consoleID, "{lgrey}Download a script file from a sever that you own.", False
-        Say consoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own.", False
+        SAY consoleID, props & "Command: DOWNLOAD server port-number file", False
+        SAY consoleID, propsforexamples & "Example #1: DOWNLOAD mywebsite.com 80 thescript.ds", False
+        SAY consoleID, "{lgrey}Download a script file from a sever that you own.", False
+        SAY consoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own.", False
                              
     Case "transfer"
-        Say consoleID, props & "Command: TRANSFER recipient-username amount description", False
-        Say consoleID, propsforexamples & "Example #1: TRANSFER admin 5 A payment for you", False
-        Say consoleID, "{lgrey}Transfer an amount of money (DS$) to the specified username.", False
-        Say consoleID, "{lorange}Each transfer requires manual authorization from the sender.", False
+        SAY consoleID, props & "Command: TRANSFER recipient-username amount description", False
+        SAY consoleID, propsforexamples & "Example #1: TRANSFER admin 5 A payment for you", False
+        SAY consoleID, "{lgrey}Transfer an amount of money (DS$) to the specified username.", False
+        SAY consoleID, "{lorange}Each transfer requires manual authorization from the sender.", False
                                     
     Case "ydiv"
-        Say consoleID, props & "Command: YDIV height", False
-        Say consoleID, propsforexamples & "Example #1: YDIV 240", False
-        Say consoleID, "{lgrey}Change the default space between each console line.", False
-        Say consoleID, "{lorange}The default YDIV is set to 60.", False
+        SAY consoleID, props & "Command: YDIV height", False
+        SAY consoleID, propsforexamples & "Example #1: YDIV 240", False
+        SAY consoleID, "{lgrey}Change the default space between each console line.", False
+        SAY consoleID, "{lorange}The default YDIV is set to 60.", False
                                            
     Case "display"
-        Say consoleID, props & "Command: DISPLAY file optional-start-line optional-max-lines", False
-        Say consoleID, propsforexamples & "Example #1: DISPLAY myfile.txt 1 5", False
-        Say consoleID, "{lgrey}Output the specified file to the console, without running as a script.", False
-        Say consoleID, "{lorange}In the example, the first five lines of myfile.txt will be displayed.", False
+        SAY consoleID, props & "Command: DISPLAY file optional-start-line optional-max-lines", False
+        SAY consoleID, propsforexamples & "Example #1: DISPLAY myfile.txt 1 5", False
+        SAY consoleID, "{lgrey}Output the specified file to the console, without running as a script.", False
+        SAY consoleID, "{lorange}In the example, the first five lines of myfile.txt will be displayed.", False
                                                    
     Case "append"
-        Say consoleID, props & "Command: APPEND file optional-START-or-END text", False
-        Say consoleID, propsforexamples & "Example #1: APPEND myfile.txt new data", False
-        Say consoleID, propsforexamples & "Example #2: APPEND myfile.txt START new data", False
-        Say consoleID, "{lgrey}Append (add) text or data to the specified file.", False
-        Say consoleID, "{lgrey}Data will be added to the beginning of the file if the START keyword is used.", False
-        Say consoleID, "{lgrey}Data will be added to the end of the file if the END keyword is used.", False
-        Say consoleID, "{lorange}If the specified file doesn't exist, it will be created.", False
+        SAY consoleID, props & "Command: APPEND file optional-START-or-END text", False
+        SAY consoleID, propsforexamples & "Example #1: APPEND myfile.txt new data", False
+        SAY consoleID, propsforexamples & "Example #2: APPEND myfile.txt START new data", False
+        SAY consoleID, "{lgrey}Append (add) text or data to the specified file.", False
+        SAY consoleID, "{lgrey}Data will be added to the beginning of the file if the START keyword is used.", False
+        SAY consoleID, "{lgrey}Data will be added to the end of the file if the END keyword is used.", False
+        SAY consoleID, "{lorange}If the specified file doesn't exist, it will be created.", False
                                                            
     Case "write"
-        Say consoleID, props & "Command: WRITE file text", False
-        Say consoleID, propsforexamples & "Example #1: WRITE myfile.txt new data", False
-        Say consoleID, "{lgrey}Write text or data to the specified file.", False
-        Say consoleID, "{lorange}If the specified file already exists, it will be overwritten.", False
-        Say consoleID, "{lorange}Use APPEND to add data to an existing file.", False
+        SAY consoleID, props & "Command: WRITE file text", False
+        SAY consoleID, propsforexamples & "Example #1: WRITE myfile.txt new data", False
+        SAY consoleID, "{lgrey}Write text or data to the specified file.", False
+        SAY consoleID, "{lorange}If the specified file already exists, it will be overwritten.", False
+        SAY consoleID, "{lorange}Use APPEND to add data to an existing file.", False
         
 
     Case "register"
-        Say consoleID, props & "Command: REGISTER domain-name", False
-        Say consoleID, propsforexamples & "Example #1: REGISTER mynewwebsite.com", False
-        Say consoleID, "{lgrey}Register a domain name on the Dark Signs Network.", False
-        Say consoleID, "{lgrey}This command requires that you have the required amount of money (DS$) in your account.", False
-        Say consoleID, "-", False
-        Say consoleID, "{center orange nobold 14}- Check the latest prices in the COMM window. -", False
+        SAY consoleID, props & "Command: REGISTER domain-name", False
+        SAY consoleID, propsforexamples & "Example #1: REGISTER mynewwebsite.com", False
+        SAY consoleID, "{lgrey}Register a domain name on the Dark Signs Network.", False
+        SAY consoleID, "{lgrey}This command requires that you have the required amount of money (DS$) in your account.", False
+        SAY consoleID, "-", False
+        SAY consoleID, "{center orange nobold 14}- Check the latest prices in the COMM window. -", False
         'say consoleID, "-", False
         RunPage "domain_register.php?returnwith=2000&prices=1", consoleID
         
          
     Case "unregister"
-        Say consoleID, props & "Command: UNREGISTER domain-name account-password", False
-        Say consoleID, propsforexamples & "Example #1: UNREGISTER myoldwebsite.com secret123", False
-        Say consoleID, "{lgrey}Unregister a domain name that you own on the Dark Signs Network.", False
-        Say consoleID, "{lorange}This command requires that you include your password for security.", False
+        SAY consoleID, props & "Command: UNREGISTER domain-name account-password", False
+        SAY consoleID, propsforexamples & "Example #1: UNREGISTER myoldwebsite.com secret123", False
+        SAY consoleID, "{lgrey}Unregister a domain name that you own on the Dark Signs Network.", False
+        SAY consoleID, "{lorange}This command requires that you include your password for security.", False
         
             
     Case "login"
-        Say consoleID, props & "Command: LOGIN", False
-        Say consoleID, "{lgrey}Attempt to log in to Dark Signs with your account username and password.", False
-        Say consoleID, "{lgrey}This is only necessary if your status is 'not logged in'.", False
-        Say consoleID, "{lorange}Use the USERNAME and PASSWORD commands to set or change your username or password.", False
+        SAY consoleID, props & "Command: LOGIN", False
+        SAY consoleID, "{lgrey}Attempt to log in to Dark Signs with your account username and password.", False
+        SAY consoleID, "{lgrey}This is only necessary if your status is 'not logged in'.", False
+        SAY consoleID, "{lorange}Use the USERNAME and PASSWORD commands to set or change your username or password.", False
         
     Case "logout"
-        Say consoleID, props & "Command: LOGOUT", False
-        Say consoleID, "{lgrey}Log out of Dark Signs.", False
-        Say consoleID, "{lgrey}This can be helpful if you want to log in as another user, or if a rare error occurs.", False
+        SAY consoleID, props & "Command: LOGOUT", False
+        SAY consoleID, "{lgrey}Log out of Dark Signs.", False
+        SAY consoleID, "{lgrey}This can be helpful if you want to log in as another user, or if a rare error occurs.", False
             
     Case "mydomains"
-        Say consoleID, props & "Command: MYDOMAINS", False
-        Say consoleID, "{lgrey}List the domain names currently registered to you.", False
+        SAY consoleID, props & "Command: MYDOMAINS", False
+        SAY consoleID, "{lgrey}List the domain names currently registered to you.", False
    
     Case "mysubdomains"
-        Say consoleID, props & "Command: MYSUBDOMAINS", False
-        Say consoleID, propsforexamples & "Example #1: MYSUBDOMAINS mySite.com", False
-        Say consoleID, "{lgrey}List subdomains to a domain that is registed to you.", False
+        SAY consoleID, props & "Command: MYSUBDOMAINS", False
+        SAY consoleID, propsforexamples & "Example #1: MYSUBDOMAINS mySite.com", False
+        SAY consoleID, "{lgrey}List subdomains to a domain that is registed to you.", False
     
     Case "myips"
-        Say consoleID, props & "Command: MYIPS", False
-        Say consoleID, "{lgrey}List all IP addresses registed to you.", False
+        SAY consoleID, props & "Command: MYIPS", False
+        SAY consoleID, "{lgrey}List all IP addresses registed to you.", False
      
     Case "music"
-        Say consoleID, props & "Command: MUSIC [parameter]", False
-        Say consoleID, propsforexamples & "Example #1: MUSIC NEXT", False
-        Say consoleID, "{lgrey}Music parameters are START, STOP, NEXT, and PREV.", False
+        SAY consoleID, props & "Command: MUSIC [parameter]", False
+        SAY consoleID, propsforexamples & "Example #1: MUSIC NEXT", False
+        SAY consoleID, "{lgrey}Music parameters are START, STOP, NEXT, and PREV.", False
         
     Case "say"
-        Say consoleID, props & "Command: SAY text (**optional-properties**)", False
-        Say consoleID, propsforexamples & "Example #1: SAY consoleID, hello, this is green (**green**)", False
-        Say consoleID, propsforexamples & "Example #2: SAY consoleID, this is bold and very large (**bold, 36**)", False
-        Say consoleID, "{lgrey}Display the specified text in the console.", False
-        Say consoleID, "{lgrey}Text properties can be modified by adding any number of the following keywords in bewtween (** **), in any order.", False
-        Say consoleID, "{lgreen}Colors: Type SHOWCOLORS the display a list of colors.", False
-        Say consoleID, "{lgreen}Fonts: Arial, Arial Black, Comic Sans MS, Courier New, Georgia, Impact,", False
-        Say consoleID, "{lgreen}Fonts: Lucida Console, Tahoma, Times New Roman, Trebuchet MS, Verdana, Wingdings.", False
-        Say consoleID, "{lgreen}Attributes: Bold, NoBold, Italic, NoItalic, Underline, NoUnderline, Strikethru, NoStrikethru.", False
-        Say consoleID, "{lgreen}Extras: Flash, Flashfast, FlashSlow.", False
-        Say consoleID, "{orange}Note: You cannot use SAY to display multiple lines of text.", False
-        Say consoleID, "{orange}For multiple lines, use SAYALL instead.", False
+        SAY consoleID, props & "Command: SAY text (**optional-properties**)", False
+        SAY consoleID, propsforexamples & "Example #1: SAY consoleID, hello, this is green (**green**)", False
+        SAY consoleID, propsforexamples & "Example #2: SAY consoleID, this is bold and very large (**bold, 36**)", False
+        SAY consoleID, "{lgrey}Display the specified text in the console.", False
+        SAY consoleID, "{lgrey}Text properties can be modified by adding any number of the following keywords in bewtween (** **), in any order.", False
+        SAY consoleID, "{lgreen}Colors: Type SHOWCOLORS the display a list of colors.", False
+        SAY consoleID, "{lgreen}Fonts: Arial, Arial Black, Comic Sans MS, Courier New, Georgia, Impact,", False
+        SAY consoleID, "{lgreen}Fonts: Lucida Console, Tahoma, Times New Roman, Trebuchet MS, Verdana, Wingdings.", False
+        SAY consoleID, "{lgreen}Attributes: Bold, NoBold, Italic, NoItalic, Underline, NoUnderline, Strikethru, NoStrikethru.", False
+        SAY consoleID, "{lgreen}Extras: Flash, Flashfast, FlashSlow.", False
+        SAY consoleID, "{orange}Note: You cannot use SAY to display multiple lines of text.", False
+        SAY consoleID, "{orange}For multiple lines, use SAYALL instead.", False
     
     Case "sayall"
-        Say consoleID, props & "Command: SAYALL text (**optional-properties**)", False
-        Say consoleID, propsforexamples & "Example #1: SAYALL hello", False
-        Say consoleID, "{lgrey}Same as the SAY command, except will display multiple lines.", False
-        Say consoleID, "{lorange}Type HELP SAY for more information.", False
+        SAY consoleID, props & "Command: SAYALL text (**optional-properties**)", False
+        SAY consoleID, propsforexamples & "Example #1: SAYALL hello", False
+        SAY consoleID, "{lgrey}Same as the SAY command, except will display multiple lines.", False
+        SAY consoleID, "{lorange}Type HELP SAY for more information.", False
              
     Case "sayline"
-        Say consoleID, props & "Command: SAYLINE text (**optional-properties**)", False
-        Say consoleID, propsforexamples & "Example #1: SAYLINE hello", False
-        Say consoleID, "{lgrey}Same as the SAY command, except text will be printed on the same line, without moving down.", False
-        Say consoleID, "{lorange}Type HELP SAY for more information.", False
+        SAY consoleID, props & "Command: SAYLINE text (**optional-properties**)", False
+        SAY consoleID, propsforexamples & "Example #1: SAYLINE hello", False
+        SAY consoleID, "{lgrey}Same as the SAY command, except text will be printed on the same line, without moving down.", False
+        SAY consoleID, "{lorange}Type HELP SAY for more information.", False
            
     Case "remotedelete"
-        Say consoleID, props & "Command: REMOTEDELETE domain filename", False
-        Say consoleID, propsforexamples & "Example #1: REMOTEDELETE matrix.com myfile.ds", False
-        Say consoleID, "{lgrey}Delete the specified file from the remote server.", False
-        Say consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
+        SAY consoleID, props & "Command: REMOTEDELETE domain filename", False
+        SAY consoleID, propsforexamples & "Example #1: REMOTEDELETE matrix.com myfile.ds", False
+        SAY consoleID, "{lgrey}Delete the specified file from the remote server.", False
+        SAY consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
     
     Case "remoteupload"
-        Say consoleID, props & "Command: REMOTEUPLOAD domain filename", False
-        Say consoleID, propsforexamples & "Example #1: REMOTEUPLOAD matrix.com localfile.ds", False
-        Say consoleID, "{lgrey}Upload a file from your local file system to your domain name file system.", False
-        Say consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
+        SAY consoleID, props & "Command: REMOTEUPLOAD domain filename", False
+        SAY consoleID, propsforexamples & "Example #1: REMOTEUPLOAD matrix.com localfile.ds", False
+        SAY consoleID, "{lgrey}Upload a file from your local file system to your domain name file system.", False
+        SAY consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
            
     Case "remotedir"
-        Say consoleID, props & "Command: REMOTEDIR domain", False
-        Say consoleID, propsforexamples & "Example #1: REMOTEDIR matrix.com", False
-        Say consoleID, "{lgrey}View files on the remote server.", False
-        Say consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
+        SAY consoleID, props & "Command: REMOTEDIR domain", False
+        SAY consoleID, propsforexamples & "Example #1: REMOTEDIR matrix.com", False
+        SAY consoleID, "{lgrey}View files on the remote server.", False
+        SAY consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
                
     Case "remoteview"
-        Say consoleID, props & "Command: REMOTEVIEW domain filename", False
-        Say consoleID, propsforexamples & "Example #1: REMOTEVIEW google.com userlist.log", False
-        Say consoleID, "{lgrey}Display the specified remote file in the console.", False
-        Say consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
+        SAY consoleID, props & "Command: REMOTEVIEW domain filename", False
+        SAY consoleID, propsforexamples & "Example #1: REMOTEVIEW google.com userlist.log", False
+        SAY consoleID, "{lgrey}Display the specified remote file in the console.", False
+        SAY consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain.", False
     
     Case "draw"
-        Say consoleID, props & "Command: DRAW -y Red(0-255) Green(0-255) Blue(0-255) mode", False
-        Say consoleID, propsforexamples & "Example #1: DRAW -1 142 200 11 fadeout", False
-        Say consoleID, "{lgrey}Print a background color stream to the console.", False
-        Say consoleID, "{lgrey}The first parameter, -y, defines the console line.", False
-        Say consoleID, "{lgrey}For example, -2 will draw to the second line up from the active line.", False
-        Say consoleID, "{lgrey}The Red, Green, and Blue must be values between 0 and 255.", False
-        Say consoleID, "{lorange}Available mode keywords: SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE.", False
-        Say consoleID, "{orange}To use custom colors, use the DRAWCUSTOM command.", False
+        SAY consoleID, props & "Command: DRAW -y Red(0-255) Green(0-255) Blue(0-255) mode", False
+        SAY consoleID, propsforexamples & "Example #1: DRAW -1 142 200 11 fadeout", False
+        SAY consoleID, "{lgrey}Print a background color stream to the console.", False
+        SAY consoleID, "{lgrey}The first parameter, -y, defines the console line.", False
+        SAY consoleID, "{lgrey}For example, -2 will draw to the second line up from the active line.", False
+        SAY consoleID, "{lgrey}The Red, Green, and Blue must be values between 0 and 255.", False
+        SAY consoleID, "{lorange}Available mode keywords: SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE.", False
+        SAY consoleID, "{orange}To use custom colors, use the DRAWCUSTOM command.", False
     
         
     
     Case "subowners"
-        Say consoleID, props & "Command: SUBOWNERS domain-name KEYWORD [optional-username]", False
-        Say consoleID, propsforexamples & "Example #1: SUBOWNERS site.com LIST", False
-        Say consoleID, propsforexamples & "Example #2: SUBOWNERS site.com ADD friendusername", False
-        Say consoleID, propsforexamples & "Example #3: SUBOWNERS site.com REMOVE friendusername", False
-        Say consoleID, "{lgrey}Add or remove other user privileges regarding your specified domain name.", False
-        Say consoleID, "{lgrey}You can add users to this list as subowners of your domain name.", False
-        Say consoleID, "{lorange}Subowners have permission to interact, upload, and download files from the domain.", False
-        Say consoleID, "{lorange}Subowners have no ability to unregister or modify the domain name  privileges.", False
+        SAY consoleID, props & "Command: SUBOWNERS domain-name KEYWORD [optional-username]", False
+        SAY consoleID, propsforexamples & "Example #1: SUBOWNERS site.com LIST", False
+        SAY consoleID, propsforexamples & "Example #2: SUBOWNERS site.com ADD friendusername", False
+        SAY consoleID, propsforexamples & "Example #3: SUBOWNERS site.com REMOVE friendusername", False
+        SAY consoleID, "{lgrey}Add or remove other user privileges regarding your specified domain name.", False
+        SAY consoleID, "{lgrey}You can add users to this list as subowners of your domain name.", False
+        SAY consoleID, "{lorange}Subowners have permission to interact, upload, and download files from the domain.", False
+        SAY consoleID, "{lorange}Subowners have no ability to unregister or modify the domain name  privileges.", False
         
         
         
     Case "lineup"
-        Say consoleID, props & "Command: LINEUP", False
-        Say consoleID, "{lgrey}Move up an extra console line. Useful for some scripts.", False
+        SAY consoleID, props & "Command: LINEUP", False
+        SAY consoleID, "{lgrey}Move up an extra console line. Useful for some scripts.", False
         
      'Case "chatsend"
      '   Say consoleID, props & "Command: CHATSEND Message to be sent to the chat.", False
@@ -2222,20 +2163,20 @@ Public Sub ShowHelp(sP, ByVal consoleID As Integer)
        
     
     Case "chatview"
-        Say consoleID, props & "Command: CHATVIEW [parameter]", False
-        Say consoleID, "{lgrey}If set to on, will display chat in the status window.", False
-        Say consoleID, "{lgrey}CHATVIEW parameters are ON and OFF", False
+        SAY consoleID, props & "Command: CHATVIEW [parameter]", False
+        SAY consoleID, "{lgrey}If set to on, will display chat in the status window.", False
+        SAY consoleID, "{lgrey}CHATVIEW parameters are ON and OFF", False
 
     
     Case Else
-        Say consoleID, props & "Available Commands", False
+        SAY consoleID, props & "Available Commands", False
         'DrawItUp "0 0 0 0 solid", consoleID
-        Say consoleID, "{lgrey 8}APPEND, CD, CLEAR, CLOSEPORT, CONNECT, COPY, DATE, DEL, DIR, DISPLAY, DOWNLOAD, DRAW, EDIT", False
-        Say consoleID, "{lgrey 8}GETIP, GETDOMAIN, LINEUP, LISTCOLORS, LISTKEYS, LOGIN, LOGOUT, LOOKUP, MD, MOVE, MUSIC", False
-        Say consoleID, "{lgrey 8}MYDOMAINS, MYIPS, MYSUBDOMAINS, NOW, PASSWORD, PAUSE, PING, PINGPORT, RD, RENAME, REGISTER", False
-        Say consoleID, "{lgrey 8}REMOTEDELETE, REMOTEDIR, REMOTEUPLOAD, REMOTEVIEW, RESTART, RUN, SAY, SAYALL, SAYCOMM, STATS", False
-        Say consoleID, "{lgrey 8}SUBOWNERS, TIME, TRANSFER, UNREGISTER, UPLOAD, USERNAME, WRITE, YDIV", False
-        Say consoleID, "{grey}For more specific help on a command, type: HELP [command]", False
+        SAY consoleID, "{lgrey 8}APPEND, CD, CLEAR, CLOSEPORT, CONNECT, COPY, DATE, DEL, DIR, DISPLAY, DOWNLOAD, DRAW, EDIT", False
+        SAY consoleID, "{lgrey 8}GETIP, GETDOMAIN, LINEUP, LISTCOLORS, LISTKEYS, LOGIN, LOGOUT, LOOKUP, MD, MOVE, MUSIC", False
+        SAY consoleID, "{lgrey 8}MYDOMAINS, MYIPS, MYSUBDOMAINS, NOW, PASSWORD, PAUSE, PING, PINGPORT, RD, RENAME, REGISTER", False
+        SAY consoleID, "{lgrey 8}REMOTEDELETE, REMOTEDIR, REMOTEUPLOAD, REMOTEVIEW, RESTART, RUN, SAY, SAYALL, SAYCOMM, STATS", False
+        SAY consoleID, "{lgrey 8}SUBOWNERS, TIME, TRANSFER, UNREGISTER, UPLOAD, USERNAME, WRITE, YDIV", False
+        SAY consoleID, "{grey}For more specific help on a command, type: HELP [command]", False
     End Select
 End Sub
 
