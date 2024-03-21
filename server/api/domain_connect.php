@@ -5,6 +5,11 @@ require_once("function.php");
 
 echo '4100';
 
+$ver = (int)$_REQUEST['ver'];
+if ($ver < 1) {
+	$ver = 1;
+}
+
 $port = (int)$_REQUEST['port'];
 
 if ($port < 1 || $port > 65536) {
@@ -27,11 +32,27 @@ if (empty($code_a)) {
 	die('not found');
 }
 
-$preamble = "\$serverdomain = \"$d\"\r\n\$serverip = \"$dInfo[3]\"\r\n\$serverport = $port\r\n";
-$lines = explode("\r\n", $code_a[0]);
-foreach ($lines as $k => $v) {
-	$v = preg_replace('/(fileserver\()/i', "\$1$dInfo[2], $d, ", $v);
-	$v = preg_replace('/^(\s*SERVER )(WRITE |APPEND )/i', "\$1$dInfo[2]:---:$d:----:\$2", $v);
-	$lines[$k] = $v;
+switch ($ver) {
+	case 1:
+		$preamble = "\$serverdomain = \"$d\"\r\n\$serverip = \"$dInfo[3]\"\r\n\$serverport = $port\r\n";
+		$lines = explode("\r\n", $code_a[0]);
+		foreach ($lines as $k => $v) {
+			$v = preg_replace('/(fileserver\()/i', "\$1$dInfo[2], $d, ", $v);
+			$v = preg_replace('/^(\s*SERVER )(WRITE |APPEND )/i', "\$1$dInfo[2]:---:$d:----:\$2", $v);
+			$lines[$k] = $v;
+		}
+		echo $d . '_' . $port . '::' . dso_b64_encode($preamble . implode("\r\n", $lines));
+		break;
+	case 2:
+		$params =  $_REQUEST['params'];
+		echo $d . ':-:' . $port . ':-:' . dso_b64_encode($code_a);
+		if (!empty($params)) {
+			foreach ($params as $v) {
+				echo ':-:' . dso_b64_encode($v);
+			}
+		}
+		break;
+	default:
+		die('not found');
 }
-echo $d . '_' . $port . '::' . dso_b64_encode($preamble . implode("\r\n", $lines));
+

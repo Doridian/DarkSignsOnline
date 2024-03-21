@@ -249,7 +249,7 @@ Public Function CONNECT(ParamArray XArr() As Variant)
     basConsole.SAY consoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "...", False
 
     Dim PostData As String
-    PostData = "c=1"
+    PostData = "ver=2"
     If UBound(XArr) >= 2 Then
         Dim X As Integer
         For X = 2 To UBound(XArr)
