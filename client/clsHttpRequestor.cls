@@ -69,7 +69,7 @@ End Sub
 
 Public Sub Send()
     If DoneForever Then
-        SayComm "Request Send while DoneForever: " & Url
+        SayCOMM "Request Send while DoneForever: " & Url
         Exit Sub
     End If
 
@@ -94,7 +94,7 @@ End Sub
 
 Private Sub HttpRequest_OnError(ByVal ErrorNumber As Long, ByVal ErrorDescription As String)
     If Done Then
-        SayComm "Request OnError while Done: " & Url
+        SayCOMM "Request OnError while Done: " & Url
         Exit Sub
     End If
     Done = True
@@ -104,7 +104,7 @@ End Sub
 
 Private Sub HttpRequest_OnResponseFinished()
     If Done Then
-        SayComm "Request OnResponseFinished while Done: " & Url
+        SayCOMM "Request OnResponseFinished while Done: " & Url
         Exit Sub
     End If
     Done = True
@@ -121,12 +121,18 @@ End Sub
 
 Private Sub ManageSockError(Reason As String)
     If DoneForever Then
-        SayComm "Request ManageSockError while DoneForever: " & Url
+        SayCOMM "Request ManageSockError while DoneForever: " & Url
         Exit Sub
     End If
 
+    Dim AllowRetry As Boolean
+    AllowRetry = Retries < basWorld.MaxSockRetries
+    If IsCustomDownload > 0 And DownloadAborted(IsCustomDownload) Then
+        AllowRetry = False
+    End If
+
     'on error consider retrying
-    If Retries < basWorld.MaxSockRetries Then
+    If AllowRetry Then
         Retries = Retries + 1
         
         DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
@@ -139,9 +145,9 @@ Private Sub ManageSockError(Reason As String)
 
         If InStr(i(Url), "z_online") > 0 Then Exit Sub 'don't show these errors
         If InStr(i(Url), "chat") > 0 Then Exit Sub 'don't show these errors
-        SayComm "Connection failed to [" & Url & "] because of " & Reason & ". Retry " & Trim(Str(Retries)) & " of " & Trim(Str(basWorld.MaxSockRetries)) & "."
+        SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry " & Trim(Str(Retries)) & " of " & Trim(Str(basWorld.MaxSockRetries)) & "."
    Else
-        SayComm "Connection failed to [" & Url & "] because of " & Reason & ". Retry count expired."
+        SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry count expired."
         SetDoneForever
    End If
 End Sub

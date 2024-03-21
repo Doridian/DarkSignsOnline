@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Private ConsoleID As Integer
+Private consoleID As Integer
 Private ScriptFrom As String
 Private IsCLIInput As Boolean
 Private IsConfigured As Boolean
@@ -25,7 +25,7 @@ End Sub
 
 Public Sub Quit()
     Err.Raise 9002, "DSO", "Script exited"
-    CancelScript(ConsoleID) = True
+    CancelScript(consoleID) = True
 End Sub
 
 Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl)
@@ -33,36 +33,73 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
         Exit Sub
     End If
     IsConfigured = True
-    ConsoleID = NewConsoleID
+    consoleID = NewConsoleID
     ScriptFrom = NewScriptFrom
     IsCLIInput = NewIsCLIInput
     Set SControl = NewScriptControl
 End Sub
 
-Public Sub SayCOMM(S As String)
+Private Function DoDownload(Url As String, UsePost As Boolean, PostData As String, NoAuth As Boolean) As String
+    Dim ResIndex As Integer
+    For ResIndex = 1 To 99
+        If Not DownloadInUse(ResIndex) Then
+            Exit For
+        End If
+    Next
+    DownloadInUse(ResIndex) = True
+    DownloadDone(ResIndex) = False
+    
     Yield
-    basWorld.SayCOMM S
+    RunPage Url, consoleID, UsePost, PostData, ResIndex, True
+    
+    While Not DownloadDone(ResIndex)
+        DoEvents
+        If CancelScript(consoleID) Then
+            GoTo EndDownload
+        End If
+    Wend
+    
+    DoDownload = DownloadResults(ResIndex)
+    DownloadInUse(ResIndex) = False
+
+    Exit Function
+EndDownload:
+    DownloadAborted(ResIndex) = True
+    Err.Raise 9001, "DSO", "Script canceled by Ctrl+C"
+End Function
+
+Public Sub SayCOMM(s As String)
+    basWorld.SayCOMM s
+    Yield
 End Sub
 
 Public Sub CD(dir As String)
+    ChangeDir dir, consoleID
     Yield
-    ChangeDir dir, ConsoleID
 End Sub
 
-Public Sub SAY(S As String)
+Public Sub SAY(s As String)
+    basConsole.SAY consoleID, s
     Yield
-    basConsole.SAY ConsoleID, S
 End Sub
 
 Public Sub RUN(Script As String)
     Yield
-    Run_Script cPath(ConsoleID) & "/" & Script, ConsoleID, "", "RUN"
+    Run_Script cPath(consoleID) & "/" & Script, consoleID, "", "RUN"
+    Yield
+End Sub
+
+Public Function DOWNLOAD(Url As String) As String
+     DOWNLOAD = DoDownload(Url, True, "", True)
+End Function
+
+Public Sub LOGIN()
+    LoginNow consoleID
 End Sub
 
 Public Sub Yield()
     DoEvents
-    If CancelScript(ConsoleID) Then
+    If CancelScript(consoleID) Then
         Err.Raise 9001, "DSO", "Script canceled by Ctrl+C"
     End If
 End Sub
-
