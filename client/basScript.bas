@@ -45,24 +45,27 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
     GoTo ScriptEnd
     Exit Function
 EvalError:
+    If Err.Number = vbObjectError + 9002 Then
+        GoTo ScriptEnd
+    End If
+    If Not IsRoot Then
+        Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
+        Exit Function
+    End If
+    If Err.Number = vbObjectError + 9001 Then
+        GoTo ScriptCancelled
+    End If
+
     Dim ErrHelp As String
     ErrHelp = ""
     If Err.Number = 13 Then
         ErrHelp = "This error might mean a function you tried to use does not exist"
     End If
-    If Err.Number = 9001 Then
-        GoTo ScriptCancelled
-    End If
-    If Err.Number = 9002 Then
-        GoTo ScriptEnd
-    End If
     SayRaw ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") " & ErrHelp & " {red}"
     GoTo ScriptEnd
 
 ScriptCancelled:
-    If IsRoot Then
-        SayRaw ConsoleID, "Script Stopped by User (CTRL + C){orange}"
-    End If
+    SayRaw ConsoleID, "Script Stopped by User (CTRL + C){orange}"
 ScriptEnd:
     Run_Script_Code = G.ScriptGetOutput()
     G.CleanupScriptTasks

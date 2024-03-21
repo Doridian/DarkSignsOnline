@@ -165,16 +165,16 @@ NotASimpleCommand:
     GoTo ScriptEnd
 
 EvalError:
+    If Err.Number = vbObjectError + 9001 Then
+        GoTo ScriptCancelled
+    End If
+    If Err.Number = vbObjectError + 9002 Then
+        GoTo ScriptEnd
+    End If
     Dim ErrHelp As String
     ErrHelp = ""
     If Err.Number = 13 Then
         ErrHelp = "This error might mean the command you tried to use does not exist"
-    End If
-    If Err.Number = 9001 Then
-        GoTo ScriptCancelled
-    End If
-    If Err.Number = 9002 Then
-        GoTo ScriptEnd
     End If
     SayRaw ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") " & ErrHelp & " {red}"
     GoTo ScriptEnd

@@ -68,7 +68,7 @@ Private Sub AssertCLIOnly()
         Exit Sub
     End If
     Aborted = True
-    Err.Raise 9006, "DSO", "Script tried to execute CLI only functionality"
+    Err.Raise vbObjectError + 9006, "DSO", "Script tried to execute CLI only functionality"
 End Sub
 
 Private Sub Class_Initialize()
@@ -95,7 +95,7 @@ End Sub
 
 Public Sub Quit()
     Aborted = True
-    Err.Raise 9002, "DSO", "Script exited"
+    Err.Raise vbObjectError + 9002, "DSO", "Script exited"
 End Sub
 
 Public Function ScriptGetOutput() As String
@@ -227,7 +227,7 @@ Private Function DoDownload(Url As String, UsePost As Boolean, PostData As Strin
         End If
     Next
     If DoDownload <= 0 Then
-        Err.Raise 9100, "DSO", "No free download slots"
+        Err.Raise vbObjectError + 9100, "DSO", "No free download slots"
         Exit Function
     End If
 
@@ -370,7 +370,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     Yield
 
     If Port < 1 Or Port > 65535 Then
-        Err.Raise 9999, "DSO", "Invalid Port Number: " & Port
+        Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
         Exit Function
     End If
 
@@ -472,6 +472,6 @@ Public Sub Yield()
     DoEvents
     If CancelScript(PrivConsoleID) Then
         Aborted = True
-        Err.Raise 9001, "DSO", "Script canceled by Ctrl+C"
+        Err.Raise vbObjectError + 9001, "DSO", "Script canceled by Ctrl+C"
     End If
 End Sub
