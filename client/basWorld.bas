@@ -371,21 +371,24 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 DomainSplit = Split(s, ":-:")
                 ' 0 = domain
                 ' 1 = port
-                ' 2 = code
-                ' 3+ = params
+                ' 2 = filekey
+                ' 3 = code
+                ' 4+ = params
             
                 Dim DomainConnectParams() As String
-                ReDim DomainConnectParams(0 To UBound(DomainSplit) - 2)
+                ReDim DomainConnectParams(0 To UBound(DomainSplit) - 3)
     
                 Dim strDomain As String
                 strDomain = DomainSplit(0)
                 Dim strPort As String
                 strPort = DomainSplit(1)
+                Dim strFileKey As String
+                strFileKey = DomainSplit(2)
                 
                 Dim X As Integer
                 For X = 0 To UBound(DomainConnectParams)
                     Dim b64decoded() As Byte
-                    b64decoded = basConsole.DecodeBase64(DomainSplit(X + 2))
+                    b64decoded = basConsole.DecodeBase64(DomainSplit(X + 3))
                     Dim newS As String
                     DomainConnectParams(X) = StrConv(b64decoded, vbUnicode)
                 Next
@@ -394,7 +397,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 strCode = DomainConnectParams(0)
                 DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
 
-                Run_Script_Code strCode, consoleID, DomainConnectParams, DomainConnectParams(0)
+                Run_Script_Code strCode, consoleID, DomainConnectParams, DomainConnectParams(0), strFileKey
             End If
             
         Case "4300" 'file library upload complete

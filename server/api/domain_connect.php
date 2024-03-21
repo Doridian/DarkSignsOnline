@@ -48,9 +48,8 @@ switch ($ver) {
 		$preamble = 'Public Const ServerDomain = "' . $d . '"
 Public Const ServerIP = "' . $dInfo[3] . '"
 Public Const ServerPort = ' . $port . '
-Public Const FileKey = "' . $dInfo[2] . '"
 ';
-		echo $d . ':-:' . $port . ':-:' . dso_b64_encode($preamble . $code_a[0]);
+		echo $d . ':-:' . $port . ':-:' . $dInfo[2] . ':-:' . dso_b64_encode($preamble . $code_a[0]);
 		if (!empty($params)) {
 			foreach ($params as $v) {
 				echo ':-:' . dso_b64_encode($v);

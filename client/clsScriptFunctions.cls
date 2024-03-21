@@ -19,6 +19,7 @@ Private ScriptFrom As String
 Private IsCLIInput As Boolean
 Private IsConfigured As Boolean
 Private SControl As ScriptControl
+Private FileKey As String
 Public Aborted As Boolean
 
 Private PendingCustomDownloads() As Integer
@@ -87,7 +88,7 @@ Public Sub Quit()
     Err.Raise 9002, "DSO", "Script exited"
 End Sub
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String)
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String)
     If IsConfigured Then
         Exit Sub
     End If
@@ -97,6 +98,7 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     IsCLIInput = NewIsCLIInput
     Set SControl = NewScriptControl
     PrivParameters = NewPrivParameters
+    FileKey = NewFileKey
 End Sub
 
 Private Sub AddCustomDownload(ByVal ResIndex As Integer)
@@ -274,10 +276,10 @@ Public Sub LOGOUT()
     Yield
 End Sub
 
-Public Sub UPLOAD(Domain As String, Port As Variant, Filename As String)
+Public Sub UPLOAD(Domain As String, Port As Variant, filename As String)
     AssertCLIOnly
     Yield
-    UploadToDomain Domain, Port, Filename, consoleID
+    UploadToDomain Domain, Port, filename, consoleID
     Yield
 End Sub
 

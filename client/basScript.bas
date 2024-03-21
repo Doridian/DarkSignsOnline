@@ -40,7 +40,7 @@ Public Type NextFunction
     FunctionName As String
 End Type
 
-Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, Optional IsRoot As Boolean = False)
+Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, Optional FileKey As String, Optional IsRoot As Boolean = False)
     If consoleID < 1 Then
         consoleID = 1
     End If
@@ -60,7 +60,7 @@ Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, Sc
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure consoleID, ScriptFrom, False, s, ScriptParameters
+    G.Configure consoleID, ScriptFrom, False, s, ScriptParameters, FileKey
     s.AddObject "DSO", G, True
 
     New_Console_Line_InProgress consoleID
@@ -90,7 +90,7 @@ ScriptEnd:
     cPath(consoleID) = OldPath
 End Function
 
-Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, Optional IsRoot As Boolean = False)
+Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, Optional FileKey As String, Optional IsRoot As Boolean = False)
     If ScriptParameters(0) = "" Then
         ScriptParameters(0) = filename
     End If
@@ -126,7 +126,7 @@ Public Function Run_Script(filename As String, ByVal consoleID As Integer, Scrip
         Loop
     Close #FF
 
-    Run_Script_Code tmpAll, consoleID, ScriptParameters, ScriptFrom, IsRoot
+    Run_Script_Code tmpAll, consoleID, ScriptParameters, ScriptFrom, FileKey, IsRoot
 End Function
 
 
