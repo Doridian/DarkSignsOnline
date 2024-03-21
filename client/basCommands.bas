@@ -18,7 +18,7 @@ Public Sub InitBasCommands()
         Dim CLIArguments(0 To 0) As String
         CLIArguments(0) = "/dev/tty" & X
         Set scrConsoleContext(X) = New clsScriptFunctions
-        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, ""
+        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", False
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
     Next
@@ -322,36 +322,6 @@ Public Sub SetYDiv(s As String)
 zxc:
 End Sub
 
-Public Sub ConnectToDomain(sDomain As String, sPort As Integer, sParams() As String, ByVal consoleID As Integer)
-    Dim sFilename As String
-    Dim sFileData As String
-
-    If sPort <= 0 Then
-        sPort = 80
-    End If
-    
-    If sPort < 1 Then
-        SayError "Invalid Port Number: " & sPort, consoleID
-        Exit Sub
-    End If
-    If sPort > 65535 Then
-        SayError "Invalid Port Number: " & sPort, consoleID
-        Exit Sub
-    End If
-
-    SayCOMM "Connecting to " & UCase(sDomain) & ":" & sPort & "..."
-    SAY consoleID, "{green}Connecting to " & UCase(sDomain) & ":" & sPort & "...", False
-    
-    Dim PostData As String
-    PostData = "c=1"
-    Dim X As Integer
-    For X = 1 To UBound(sParams)
-        PostData = PostData & "&params[]=" & EncodeURLParameter(sParams(X))
-    Next
-
-    RunPage "domain_connect.php?d=" & EncodeURLParameter(sDomain) & _
-            "&port=" & EncodeURLParameter(sPort), consoleID, True, PostData
-End Sub
 
 Public Sub UploadToDomain(ByVal sDomain As String, ByVal sPort As Integer, ByVal sFilename As String, ByVal consoleID As Integer)
     Dim sFileData As String
@@ -1040,7 +1010,7 @@ Public Sub EditFile(ByVal s As String, ByVal consoleID As Integer)
     If Trim(EditorRunFile) <> "" Then
         Shift_Console_Lines consoleID
         Dim EmptyArguments(0 To 0) As String
-        Run_Script EditorRunFile, consoleID, EmptyArguments, "CONSOLE"
+        Run_Script EditorRunFile, consoleID, EmptyArguments, "CONSOLE", "", True
     End If
     
     

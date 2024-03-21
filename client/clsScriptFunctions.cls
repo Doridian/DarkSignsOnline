@@ -22,6 +22,9 @@ Private SControl As ScriptControl
 Private FileKey As String
 Public Aborted As Boolean
 
+Private PrivRedirectOutput As Boolean
+Private PrivOutput As String
+
 Private PendingCustomDownloads() As Integer
 
 Public Property Get UserName() As String
@@ -70,6 +73,7 @@ Private Sub Class_Initialize()
     ReDim PendingCustomDownloads(0 To 0)
     IsConfigured = False
     Aborted = False
+    PrivOutput = ""
 End Sub
 
 Public Sub CleanupScriptTasks()
@@ -81,6 +85,10 @@ Public Sub CleanupScriptTasks()
     End If
     ReDim PendingCustomDownloads(0 To 0)
     Aborted = True
+    GetKeyWaiting(consoleID) = 0
+    GetAsciiWaiting(consoleID) = 0
+    WaitingForInput(consoleID) = False
+    WaitingForInputReturn(consoleID) = ""
 End Sub
 
 Public Sub Quit()
@@ -88,7 +96,53 @@ Public Sub Quit()
     Err.Raise 9002, "DSO", "Script exited"
 End Sub
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String)
+Public Function ScriptGetOutput() As String
+    ScriptGetOutput = PrivOutput
+End Function
+
+
+Public Function ReadLine(Prompt As String) As String
+    If PrivRedirectOutput Then
+        Exit Function
+    End If
+
+    cPath_tmp(consoleID) = cPath(consoleID)
+    cPath(consoleID) = Prompt
+    WaitingForInput(consoleID) = True
+    
+    New_Console_Line consoleID
+
+    While WaitingForInput(consoleID)
+        Yield
+    Wend
+    ReadLine = WaitingForInputReturn(consoleID)
+End Function
+
+Public Function GetKey() As Integer
+    If PrivRedirectOutput Then
+        Exit Function
+    End If
+
+    GetKeyWaiting(consoleID) = -1
+    While GetKeyWaiting(consoleID) = -1
+        Yield
+    Wend
+    GetKey = GetKeyWaiting(consoleID)
+End Function
+
+Public Function GetASCII() As Integer
+    If PrivRedirectOutput Then
+        Exit Function
+    End If
+
+    GetAsciiWaiting(consoleID) = -1
+    While GetAsciiWaiting(consoleID) = -1
+        Yield
+    Wend
+    GetASCII = GetAsciiWaiting(consoleID)
+End Function
+
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewRedirect As Boolean)
     If IsConfigured Then
         Exit Sub
     End If
@@ -99,6 +153,7 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     Set SControl = NewScriptControl
     PrivParameters = NewPrivParameters
     FileKey = NewFileKey
+    PrivRedirectOutput = NewRedirect
 End Sub
 
 Private Sub AddCustomDownload(ByVal ResIndex As Integer)
@@ -194,7 +249,7 @@ Public Function WAITFOR(ResIndex As Variant) As String
 End Function
 
 Public Sub SayCOMM(s As String)
-    basWorld.SayCOMM s
+    basWorld.SayCOMM s, consoleID
     Yield
 End Sub
 
@@ -204,37 +259,59 @@ Public Sub CD(dir As String)
 End Sub
 
 Public Sub SAY(s As String)
+    If PrivRedirectOutput Then
+        PrivOutput = PrivOutput & s & vbCrLf
+        Exit Sub
+    End If
     basConsole.SAY PrivConsoleID, s
     Yield
 End Sub
 
-Public Sub RUN(ParamArray XArr() As Variant)
+Private Sub SayMultiline(ScriptOutput As String)
+    Dim X As Integer
+    If PrivRedirectOutput Then
+        PrivOutput = PrivOutput & ScriptOutput
+    Else
+        Dim ScriptOutSplit() As String
+        ScriptOutSplit = Split(ScriptOutput, vbCrLf)
+        For X = LBound(ScriptOutSplit) To UBound(ScriptOutSplit)
+            Yield
+            basConsole.SAY PrivConsoleID, ScriptOutSplit(X)
+        Next
+    End If
+End Sub
+
+Public Function RUN(ParamArray XArr() As Variant) As String
+    Dim X As Integer
     Dim Script As String
     Script = XArr(0)
 
     Dim SParamArr() As String
     ReDim SParamArr(0 To UBound(XArr))
-    Dim X As Integer
     For X = 0 To UBound(XArr)
         SParamArr(X) = "" & XArr(X)
     Next
 
     Yield
     ' TODO: Add PATH resolution in /system/commands
-    Run_Script cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, SParamArr, "RUN"
+    RUN = Run_Script(cPath(PrivConsoleID) & "/" & Script, PrivConsoleID, SParamArr, "RUN", "", False)
+    SayMultiline RUN
     Yield
-End Sub
+End Function
 
 Public Function DOWNLOAD(Url As String) As Integer
      DOWNLOAD = DoDownload(Url, True, "", True)
 End Function
 
 Public Function DRAW(YPos As Variant, R As Variant, G As Variant, b As Variant, Mode As String)
+    If PrivRedirectOutput Then
+        Exit Function
+    End If
     DrawItUp YPos, R, G, b, Mode, PrivConsoleID
     Yield
 End Function
 
-Public Function Connect(ParamArray XArr() As Variant)
+Public Function Connect(ParamArray XArr() As Variant) As String
     Dim Domain As String
     Domain = XArr(0)
     Dim Port As Integer
@@ -258,9 +335,48 @@ Public Function Connect(ParamArray XArr() As Variant)
             PostData = PostData & "&params[]=" & EncodeURLParameter(XArr(X))
         Next
     End If
+    
+    Dim DomainRequestIdx As Integer
+    DomainRequestIdx = DoDownload(API_Server & API_Path & "domain_connect.php?d=" & EncodeURLParameter(Domain) & _
+            "&port=" & EncodeURLParameter(Port), True, PostData, False)
+    Dim DomainRequest As String
+    DomainRequest = WAITFOR(DomainRequestIdx)
 
-    RunPage "domain_connect.php?d=" & EncodeURLParameter(Domain) & _
-            "&port=" & EncodeURLParameter(Port), consoleID, True, PostData
+    If DomainRequest = "not found" Then
+        SAY "Connection Failed.{orange}"
+    Else
+        Dim DomainSplit() As String
+        DomainSplit = Split(DomainRequest, ":-:")
+        ' 0 = domain
+        ' 1 = port
+        ' 2 = filekey
+        ' 3 = code
+        ' 4+ = params
+    
+        Dim DomainConnectParams() As String
+        ReDim DomainConnectParams(0 To UBound(DomainSplit) - 3)
+
+        Dim strDomain As String
+        strDomain = DomainSplit(0)
+        Dim strPort As String
+        strPort = DomainSplit(1)
+        Dim strFileKey As String
+        strFileKey = DomainSplit(2)
+
+        For X = 0 To UBound(DomainConnectParams)
+            Dim b64decoded() As Byte
+            b64decoded = basConsole.DecodeBase64(DomainSplit(X + 3))
+            Dim newS As String
+            DomainConnectParams(X) = StrConv(b64decoded, vbUnicode)
+        Next
+
+        Dim strCode As String
+        strCode = DomainConnectParams(0)
+        DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
+
+        Connect = Run_Script_Code(strCode, consoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False)
+        SayMultiline Connect
+    End If
 
     Yield
 End Function

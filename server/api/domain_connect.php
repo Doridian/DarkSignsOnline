@@ -3,8 +3,6 @@
 $rewrite_done = true;
 require_once("function.php");
 
-echo '4100';
-
 $ver = (int)$_REQUEST['ver'];
 if ($ver < 1) {
 	$ver = 1;
@@ -34,6 +32,7 @@ if (empty($code_a)) {
 
 switch ($ver) {
 	case 1:
+		echo '4100';
 		$preamble = "\$serverdomain = \"$d\"\r\n\$serverip = \"$dInfo[3]\"\r\n\$serverport = $port\r\n";
 		$lines = explode("\r\n", $code_a[0]);
 		foreach ($lines as $k => $v) {

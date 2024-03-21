@@ -291,10 +291,10 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             End If
             
             Dim EmptyParams(0 To 0) As String
-            Run_Script "\system\login-1.ds", 1, EmptyParams, "BOOT", True
-            Run_Script "\system\login-2.ds", 2, EmptyParams, "BOOT", True
-            Run_Script "\system\login-3.ds", 3, EmptyParams, "BOOT", True
-            Run_Script "\system\login-4.ds", 4, EmptyParams, "BOOT", True
+            Run_Script "\system\login-1.ds", 1, EmptyParams, "BOOT", "", True
+            Run_Script "\system\login-2.ds", 2, EmptyParams, "BOOT", "", True
+            Run_Script "\system\login-3.ds", 3, EmptyParams, "BOOT", "", True
+            Run_Script "\system\login-4.ds", 4, EmptyParams, "BOOT", "", True
             
             If frmConsole.getConnected Then
                 frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
@@ -361,44 +361,6 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
 '            sMessages = GetPart(s, 2, "*!*!*!*!*")
 '
 '            UpdateChat sTimes, sMessages
-            
-        Case "4100":
-            If Len(s) < 20 And InStr(i(s), "not found") > 0 Then
-                SAY consoleID, "Connection Failed.{orange}", False
-                New_Console_Line ActiveConsole
-            Else
-                Dim DomainSplit() As String
-                DomainSplit = Split(s, ":-:")
-                ' 0 = domain
-                ' 1 = port
-                ' 2 = filekey
-                ' 3 = code
-                ' 4+ = params
-            
-                Dim DomainConnectParams() As String
-                ReDim DomainConnectParams(0 To UBound(DomainSplit) - 3)
-    
-                Dim strDomain As String
-                strDomain = DomainSplit(0)
-                Dim strPort As String
-                strPort = DomainSplit(1)
-                Dim strFileKey As String
-                strFileKey = DomainSplit(2)
-                
-                Dim X As Integer
-                For X = 0 To UBound(DomainConnectParams)
-                    Dim b64decoded() As Byte
-                    b64decoded = basConsole.DecodeBase64(DomainSplit(X + 3))
-                    Dim newS As String
-                    DomainConnectParams(X) = StrConv(b64decoded, vbUnicode)
-                Next
-
-                Dim strCode As String
-                strCode = DomainConnectParams(0)
-                DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
-
-                Run_Script_Code strCode, consoleID, DomainConnectParams, DomainConnectParams(0), strFileKey
-            End If
             
         Case "4300" 'file library upload complete
             frmLibrary.lStatus.Caption = s

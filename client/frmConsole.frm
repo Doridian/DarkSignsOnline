@@ -689,7 +689,7 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     If GetKeyWaiting(ActiveConsole) = -1 Then
         GetKeyWaiting(ActiveConsole) = KeyCode: Exit Sub
     End If
-    If GetAsciiWaiting(ActiveConsole) = 1 Then Exit Sub
+    If GetAsciiWaiting(ActiveConsole) = -1 Then Exit Sub
     'If GetAsciiWaiting(ActiveConsole) = "2" Then Exit Sub
 
     
@@ -896,7 +896,7 @@ End Sub
 
 Private Sub Form_KeyPress(KeyAscii As Integer)
     'it's getascii!
-    If GetAsciiWaiting(ActiveConsole) = "1" Then
+    If GetAsciiWaiting(ActiveConsole) = -1 Then
         GetAsciiWaiting(ActiveConsole) = KeyAscii
     End If
 End Sub
@@ -1274,9 +1274,9 @@ Public Sub Start_Console(ByVal consoleID As Integer)
     Dim EmptyParams(0 To 0) As String
     If consoleID = 1 Then
         'run the primary startup script
-        Run_Script "\system\startup.ds", consoleID, EmptyParams, "BOOT", True
+        Run_Script "\system\startup.ds", consoleID, EmptyParams, "BOOT", "", True
     Else
-        Run_Script "\system\newconsole.ds", consoleID, EmptyParams, "BOOT", True
+        Run_Script "\system\newconsole.ds", consoleID, EmptyParams, "BOOT", "", True
     End If
 End Sub
 
