@@ -1421,6 +1421,33 @@ zxc:
     SayError "Path Not Found: " & cPath(consoleID), consoleID
 End Sub
 
+Public Sub PauseConsole(s As String, ByVal consoleID As Integer)
+    ConsolePaused(consoleID) = True
+
+    Dim propSpace As String
+
+    If Trim(Kill_Property_Space(s)) = "" Then
+        propSpace = "{" & Trim(Get_Property_Space(s)) & "}"
+
+        If Len(propSpace) > 3 Then
+            s = propSpace & "Press any key to continue..."
+        Else
+            s = "Press any key to continue..."
+        End If
+
+    End If
+
+    If Has_Property_Space(s) = True Then
+        SayRaw consoleID, s
+    Else
+        SayRaw consoleID, s & "{lblue 10}"
+    End If
+
+    Do
+        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+    Loop Until ConsolePaused(consoleID) = False
+End Sub
+
 Public Sub ListColors(ByVal consoleID As Integer)
     
     ShowCol "lred", consoleID
