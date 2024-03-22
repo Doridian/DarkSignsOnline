@@ -8,12 +8,14 @@ if ($ver < 1) {
 	$ver = 1;
 }
 
-echo '2003';
+if ($ver < 2) {
+	echo '2003';
+}
 
 $port = (int)$_POST['port'];
 if ($port < 1 || $port > 65535)
 {
-	die('Error: Port number must be between 1 and 65535.');
+	die('!Port number must be between 1 and 65535.');
 }
 
 $d = $_POST['d'];
@@ -33,10 +35,10 @@ if ($dInfo[0] > 0)
 	}
 	else
 	{
-		die('Restricted access.');
+		die('!Restricted access.');
 	}
 }
 else
 {
-	die('Domain does not exist.');
+	die('!Domain does not exist.');
 }

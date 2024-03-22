@@ -1000,7 +1000,11 @@ Public Function propertySpace_Size(ByVal s As String) As String
 End Function
 
 Public Sub LoadLimitedCommands()
+    On Error GoTo zxc
     LimitedCommandString = ":" & i(GetFile(App.Path & "\user\system\commands-security.dat")) & ":"
+    Exit Sub
+zxc:
+    LimitedCommandString = "::"
 End Sub
 
 Public Function EncodeBase64(ByRef arrData() As Byte) As String

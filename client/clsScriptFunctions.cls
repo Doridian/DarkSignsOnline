@@ -529,8 +529,31 @@ Public Sub UPLOAD(Domain As String, Port As Variant, filename As String)
     AssertCLIOnly
     
     Yield
-    UploadToDomain Domain, Port, filename, ConsoleID
+
+    Dim sFileData As String
+    sFileData = GetFileClean(ResolvePath(filename))
+
+    Dim tempStrA As String
+
+    tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
+
+    Dim PostData As String
+    PostData = "ver=2&port=" & EncodeURLParameter("" & Port) & _
+    "&d=" & EncodeURLParameter(Domain) & _
+    "&filedata=" & EncodeURLParameter(tempStrA)
+    
+    SayCOMM "Attempting to upload: " & UCase(Domain) & ":" & Port
+
+    Dim DomainRequestIdx As Integer
+    DomainRequestIdx = DoDownload(API_Server & API_Path & "domain_upload.php", True, PostData, False)
+    Dim DomainRequest As String
+    DomainRequest = WAITFOR(DomainRequestIdx)
+
     Yield
+
+    If Left(DomainRequest, 1) = "!" Then
+        Err.Raise vbObjectError + 9666, "DSO", "Could not upload file to " & UCase(Domain) & ":" & Port
+    End If
 End Sub
 
 
