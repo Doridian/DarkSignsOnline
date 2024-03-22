@@ -255,8 +255,10 @@ Public Function WAITFOR(ResIndex As Variant) As String
     Yield
 End Function
 
-Public Sub SayCOMM(s As String)
-    basWorld.SayCOMM s, ConsoleID
+Public Sub SayCOMM(s As Variant)
+    Dim sStr As String
+    sStr = "" & s
+    basWorld.SayCOMM sStr, ConsoleID
     Yield
 End Sub
 
@@ -271,41 +273,47 @@ Public Sub EDIT(file As String)
     EditFile file, PrivConsoleID
 End Sub
 
-Public Sub SAY(s As String)
+Public Sub SAY(s As Variant)
+    Dim sStr As String
+    sStr = "" & s
     If PrivRedirectOutput Then
-        PrivOutput = PrivOutput & s & vbCrLf
+        PrivOutput = PrivOutput & sStr & vbCrLf
         Yield
     End If
     If PrivDisableOutput Then
         Yield
         Exit Sub
     End If
-    basConsole.SayRaw PrivConsoleID, s
+    basConsole.SayRaw PrivConsoleID, sStr
     Yield
 End Sub
 
-Public Sub SayLine(s As String)
+Public Sub SayLine(s As Variant)
+    Dim sStr As String
+    sStr = "" & s
     If PrivRedirectOutput Then
-        PrivOutput = PrivOutput & vbCr & s & vbCrLf
+        PrivOutput = PrivOutput & vbCr & sStr & vbCrLf
         Yield
     End If
     If PrivDisableOutput Then
         Yield
         Exit Sub
     End If
-    basConsole.SayRaw PrivConsoleID, s, False
+    basConsole.SayRaw PrivConsoleID, sStr, False
 End Sub
 
-Public Sub SayAll(s As String)
+Public Sub SayAll(s As Variant)
+    Dim sStr As String
+    sStr = "" & s
     If PrivDisableOutput Then
-        PrivOutput = PrivOutput & s & vbCrLf
+        PrivOutput = PrivOutput & sStr & vbCrLf
         Yield
         Exit Sub
     End If
 
     Dim X As Integer
     Dim ScriptOutSplit() As String
-    ScriptOutSplit = Split(s, vbCrLf)
+    ScriptOutSplit = Split(sStr, vbCrLf)
     For X = LBound(ScriptOutSplit) To UBound(ScriptOutSplit)
         Yield
         basConsole.SayRaw PrivConsoleID, ScriptOutSplit(X)

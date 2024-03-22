@@ -102,7 +102,16 @@ ScriptEnd:
     New_Console_Line ConsoleID
 End Function
 
-Public Function ParseCommandLine(ConsoleID As Integer, tmpS As String, Optional OptionExplicit As Boolean = True) As String
+Public Function ParseCommandLine(ConsoleID As Integer, tmpS As String) As String
+    Dim OptionExplicit As Boolean
+    OptionExplicit = True
+    ParseCommandLine = ParseCommandLineInt(ConsoleID, tmpS, OptionExplicit)
+    If OptionExplicit Then
+        ParseCommandLine = "Option Explicit : " & ParseCommandLine
+    End If
+End Function
+
+Public Function ParseCommandLineInt(ConsoleID As Integer, tmpS As String, ByRef OptionExplicit As Boolean) As String
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
     ReDim CLIArgs(0 To 0)
@@ -177,7 +186,7 @@ CommandForNext:
             Exit Function
         End If
 
-        ParseCommandLine = ParseCommandLine(ConsoleID, Mid(tmpS, RestStart))
+        ParseCommandLineInt = ParseCommandLineInt(ConsoleID, Mid(tmpS, RestStart), OptionExplicit)
         Exit Function
     End If
 
@@ -198,38 +207,33 @@ CommandForNext:
     Dim CommandNeedFirstComma As Boolean
     ResolvedCommand = ResolveCommand(ConsoleID, Command, False)
 
-    If OptionExplicit Then
-        ParseCommandLine = "Option Explicit : "
-    Else
-        ParseCommandLine = ""
-    End If
-
     If ResolvedCommand <> "" Then
-        ParseCommandLine = ParseCommandLine & "RUN(""" & ResolvedCommand & """"
+        ParseCommandLineInt = "RUN(""" & ResolvedCommand & """"
         CommandNeedFirstComma = True
     Else
         ' Try running procedure with given name
-        ParseCommandLine = ParseCommandLine & "Call " & Command & "("
+        ParseCommandLineInt = "Call " & Command & "("
         CommandNeedFirstComma = False
     End If
 
     For X = 1 To UBound(CLIArgs)
         If X > 1 Or CommandNeedFirstComma Then
-            ParseCommandLine = ParseCommandLine & ", "
+            ParseCommandLineInt = ParseCommandLineInt & ", "
         End If
         If Left(CLIArgs(X), 1) = "$" And Not CLIArgsQuoted(X) Then
-            ParseCommandLine = ParseCommandLine & Mid(CLIArgs(X), 2)
+            ParseCommandLineInt = ParseCommandLineInt & Mid(CLIArgs(X), 2)
         Else
-            ParseCommandLine = ParseCommandLine & """" & VBEscapeSimple(CLIArgs(X)) & """"
+            ParseCommandLineInt = ParseCommandLineInt & """" & VBEscapeSimple(CLIArgs(X)) & """"
         End If
     Next X
-    ParseCommandLine = ParseCommandLine & ")"
+    ParseCommandLineInt = ParseCommandLineInt & ")"
     GoTo RunSplitCommand
 
 NotASimpleCommand:
-    ParseCommandLine = tmpS
+    OptionExplicit = False
+    ParseCommandLineInt = tmpS
     If RestStart > 0 Then
-        ParseCommandLine = Left(ParseCommandLine, RestStart - 2)
+        ParseCommandLineInt = Left(ParseCommandLineInt, RestStart - 2)
     End If
 
 RunSplitCommand:
@@ -237,7 +241,7 @@ RunSplitCommand:
         Exit Function
     End If
 
-    ParseCommandLine = ParseCommandLine & " : " & ParseCommandLine(ConsoleID, Mid(tmpS, RestStart), False)
+    ParseCommandLineInt = ParseCommandLineInt & " : " & ParseCommandLineInt(ConsoleID, Mid(tmpS, RestStart), OptionExplicit)
 End Function
 
 ' -y r g b mode
