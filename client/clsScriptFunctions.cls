@@ -349,7 +349,7 @@ Public Sub CLIParse(Src As String, Dest As String)
     SrcStr = GetFileClean(ResolvePath(PrivConsoleID, Src))
 
     Dim DestStr As String
-    DestStr = ParseCommandLine(SrcStr)
+    DestStr = ParseCommandLineOptional(SrcStr)
 
     Dest = SafePath(ResolvePath(PrivConsoleID, Dest))
 

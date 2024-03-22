@@ -36,6 +36,8 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
     Set G = New clsScriptFunctions
     G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, RedirectOutput, DisableOutput, IsRoot
     s.AddObject "DSO", G, True
+    
+    tmpAll = ParseCommandLineOptional(tmpAll, FileKey = "")
 
     New_Console_Line_InProgress ConsoleID
     On Error GoTo EvalError

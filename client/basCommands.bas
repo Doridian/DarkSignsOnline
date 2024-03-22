@@ -118,16 +118,35 @@ ScriptEnd:
     New_Console_Line ConsoleID
 End Function
 
-Public Function ParseCommandLine(tmpS As String, Optional AllowCommands As Boolean = True) As String
-    Dim OptionExplicit As Boolean
-    OptionExplicit = True
-    ParseCommandLine = ParseCommandLineInt(tmpS, OptionExplicit, AllowCommands)
-    If OptionExplicit Then
-        ParseCommandLine = "Option Explicit : " & ParseCommandLine
+Public Function ParseCommandLine(ByVal tmpS As String, Optional ByVal AllowCommands As Boolean = True) As String
+    Dim OptionDScript As Boolean
+    Dim OptionDScriptEverUsed As Boolean
+    OptionDScript = True
+    ParseCommandLine = ParseCommandLineInt2(tmpS, OptionDScript, OptionDScriptEverUsed, AllowCommands)
+End Function
+
+Public Function ParseCommandLineOptional(ByVal tmpS As String, Optional ByVal AllowCommands As Boolean = True) As String
+    Dim OptionDScript As Boolean
+    Dim OptionDScriptEverUsed As Boolean
+    OptionDScript = False
+    ParseCommandLineOptional = ParseCommandLineInt2(tmpS, OptionDScript, OptionDScriptEverUsed, AllowCommands)
+
+    If Not OptionDScriptEverUsed Then
+        ParseCommandLineOptional = tmpS
     End If
 End Function
 
-Private Function ParseCommandLineInt(tmpS As String, ByRef OptionExplicit As Boolean, AllowCommands As Boolean) As String
+Public Function ParseCommandLineInt2(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByRef OpenDScriptEverUsed As Boolean, ByVal AllowCommands As Boolean) As String
+    Dim OptionExplicit As Boolean
+    OptionExplicit = True
+    OpenDScriptEverUsed = Not Not OptionDScript
+    ParseCommandLineInt2 = ParseCommandLineInt(tmpS, OptionExplicit, OptionDScript, OpenDScriptEverUsed, AllowCommands)
+    If OptionExplicit Then
+        ParseCommandLineInt2 = "Option Explicit : " & ParseCommandLineInt2
+    End If
+End Function
+
+Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef OptionExplicit As Boolean, ByRef OptionDScript As Boolean, ByRef OpenDScriptEverUsed As Boolean, ByVal AllowCommands As Boolean) As String
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
     ReDim CLIArgs(0 To 0)
@@ -158,9 +177,9 @@ Private Function ParseCommandLineInt(tmpS As String, ByRef OptionExplicit As Boo
         End If
         
         If InComment And curC <> vbLf And curC <> vbCr And curC <> "_" Then
-            
+            GoTo CommandForNext
         End If
-        
+
         Select Case curC
             Case " ":
                 GoTo NextArg
@@ -255,7 +274,7 @@ CommandForNext:
             Exit Function
         End If
 
-        ParseCommandLineInt = ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit, AllowCommands)
+        ParseCommandLineInt = ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit, OptionDScript, OpenDScriptEverUsed, AllowCommands)
         Exit Function
     End If
 
@@ -267,12 +286,33 @@ CommandForNext:
         Case "for", "next", "while", "wend", "do", "loop", "until", _
                 "if", "else", "elseif", "end", _
                 "public", "private", "property", "dim", "sub", "function", _
-                "option", "const", "enum", "redim", "set", "goto", "type", _
+                "const", "enum", "redim", "set", "goto", "type", _
                 "throw", "catch", "try", "finally", "on":
+            GoTo NotASimpleCommand
+        Case "option":
+            If UBound(CLIArgs) >= 1 Then
+                Command = Trim(LCase(CLIArgs(1)))
+                If Command = "dscript" Then
+                    OpenDScriptEverUsed = True
+                    OptionDScript = True
+                ElseIf Command = "nodscript" Then
+                    OpenDScriptEverUsed = True
+                    OptionDScript = False
+                Else
+                    GoTo NotASimpleCommand
+                End If
+                ParseCommandLineInt = ""
+                GoTo RunSplitCommand
+            End If
             GoTo NotASimpleCommand
         Case "rem", "'":
             GoTo NotASimpleCommandButWithOE
     End Select
+    
+    ' We don't want to actually parse anything if we're not opted in
+    If Not OptionDScript Then
+        GoTo NotASimpleCommand
+    End If
 
     ' First, check if there is a command for it in /system/commands
     Dim ResolvedCommand As String
@@ -319,7 +359,7 @@ RunSplitCommand:
         Exit Function
     End If
 
-    ParseCommandLineInt = ParseCommandLineInt & RestSplit & ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit, AllowCommands)
+    ParseCommandLineInt = ParseCommandLineInt & RestSplit & ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit, OptionDScript, OpenDScriptEverUsed, AllowCommands)
 End Function
 
 ' -y r g b mode
