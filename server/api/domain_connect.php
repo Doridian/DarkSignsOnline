@@ -21,8 +21,8 @@ if ($dInfo[0] <= 0) {
 	die ('not found');
 }
 
-$stmt = $db->prepare("SELECT code FROM domain_scripts WHERE domain_id = ? AND port = ?");
-$stmt->bind_param('ii', $dInfo[0], $port);
+$stmt = $db->prepare("SELECT code FROM domain_scripts WHERE domain_id = ? AND port = ? AND ver = ?;");
+$stmt->bind_param('iii', $dInfo[0], $port, $ver);
 $stmt->execute();
 $exists = $stmt->get_result();
 $code_a = $exists->fetch_row();

@@ -3,6 +3,11 @@
 $rewrite_done = true;
 require_once("function.php");
 
+$ver = (int)$_REQUEST['ver'];
+if ($ver < 1) {
+	$ver = 1;
+}
+
 $returnwith = (string) (int) $_GET['returnwith'];
 $d = trim($_REQUEST['d']);
 if (trim($returnwith) == "0") {
@@ -26,8 +31,8 @@ if ($dInfo[0] <= 0) {
 	die ("Domain does not exist.");
 }
 
-$stmt = $db->prepare("DELETE FROM domain_scripts WHERE domain=? AND port=? AND owner=?;");
-$stmt->bind_param('iii', $dInfo[0], $port, $uid);
+$stmt = $db->prepare("DELETE FROM domain_scripts WHERE domain=? AND port=? AND owner=? AND ver=?;");
+$stmt->bind_param('iiii', $dInfo[0], $port, $uid, $ver);
 $stmt->execute();
 
 if ($stmt->affected_rows) {

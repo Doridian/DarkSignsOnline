@@ -10,6 +10,10 @@ $d = trim($_REQUEST['d']);
 
 $filename = $_REQUEST['filename'];
 
+$ver = (int)$_REQUEST['ver'];
+if ($ver < 1) {
+	$ver = 1;
+}
 
 if (trim($returnwith) == "") {
 	$returnwith = "2000";
@@ -26,8 +30,8 @@ if ($dInfo[0] <= 0) {
 	die ("Domain does not exist.");
 }
 
-$stmt = $db->prepare("SELECT code FROM domain_scripts WHERE domain=? AND port=? AND owner=?");
-$stmt->bind_param('iii', $dInfo[0], $port, $uid);
+$stmt = $db->prepare("SELECT code FROM domain_scripts WHERE domain=? AND port=? AND owner=? AND ver = ?");
+$stmt->bind_param('iiii', $dInfo[0], $port, $uid, $ver);
 $stmt->execute();
 $res = $stmt->get_result();
 $row = $res->fetch_assoc();
