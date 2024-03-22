@@ -53,6 +53,18 @@ Public Property Let Password(ByVal NewValue As String)
     SetPassword NewValue, ConsoleID
 End Property
 
+Public Property Get Dir() As String
+    AssertLocalOnly
+
+    Dir = cPath(PrivConsoleID)
+End Property
+
+Public Property Let Dir(ByVal NewValue As String)
+    AssertLocalOnly
+
+    ChangeDir NewValue, PrivConsoleID
+End Property
+
 Public Property Get ConsoleID() As String
     ConsoleID = PrivConsoleID
 End Property
@@ -276,10 +288,10 @@ Public Sub SayCOMM(ParamArray params() As Variant)
     Yield
 End Sub
 
-Public Sub CD(dir As String)
+Public Sub CD(Dir As String)
     AssertLocalOnly
 
-    ChangeDir dir, PrivConsoleID
+    ChangeDir Dir, PrivConsoleID
     Yield
 End Sub
 
