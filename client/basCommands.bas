@@ -182,7 +182,7 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Lo
             GoTo NextArg
         End If
         
-        If InComment And curC <> vbLf And curC <> vbCr And curC <> "_" Then
+        If InComment And curC <> vbLf And curC <> vbCr Then
             GoTo CommandForNext
         End If
 
@@ -214,8 +214,8 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Lo
                     ElseIf NextC = vbCr Then
                         IsSimpleCommand = False
                         X = X + 1
-                        If X < Len(tmpS) - 1 Then
-                            NextC = Mid(tmpS, X + 2, 1)
+                        If X < Len(tmpS) Then
+                            NextC = Mid(tmpS, X + 1, 1)
                             If NextC = vbLf Then
                                 X = X + 1
                             End If
