@@ -262,14 +262,14 @@ Public Function WAITFOR(ResIndex As Variant) As String
     Yield
 End Function
 
-Public Sub SayCOMM(ParamArray Params() As Variant)
+Public Sub SayCOMM(ParamArray params() As Variant)
     Dim X As Integer
     Dim sStr As String
-    For X = LBound(Params) To UBound(Params)
+    For X = LBound(params) To UBound(params)
         If sStr <> "" Then
             sStr = sStr & " "
         End If
-        sStr = sStr & Params(X)
+        sStr = sStr & params(X)
     Next X
 
     basWorld.SayCOMM sStr, ConsoleID
@@ -290,14 +290,14 @@ Public Sub EDIT(file As String)
     EditFile file, PrivConsoleID
 End Sub
 
-Public Sub SAY(ParamArray Params() As Variant)
+Public Sub SAY(ParamArray params() As Variant)
     Dim X As Integer
     Dim sStr As String
-    For X = LBound(Params) To UBound(Params)
+    For X = LBound(params) To UBound(params)
         If sStr <> "" Then
             sStr = sStr & " "
         End If
-        sStr = sStr & Params(X)
+        sStr = sStr & params(X)
     Next X
 
     If PrivRedirectOutput Then
@@ -324,14 +324,14 @@ Public Sub SayLine(s As String)
     basConsole.SayRaw PrivConsoleID, s, False
 End Sub
 
-Public Sub SayAll(ParamArray Params() As Variant)
+Public Sub SayAll(ParamArray params() As Variant)
     Dim X As Integer
     Dim sStr As String
-    For X = LBound(Params) To UBound(Params)
+    For X = LBound(params) To UBound(params)
         If sStr <> "" Then
             sStr = sStr & " "
         End If
-        sStr = sStr & Params(X)
+        sStr = sStr & params(X)
     Next X
 
     Dim ScriptOutSplit() As String
@@ -479,7 +479,10 @@ Public Function Connect(ParamArray XArr() As Variant) As String
         Dim strCode As String
         strCode = DomainConnectParams(0)
         DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
-
+        
+        If strFileKey = "" Then
+            strFileKey = "EMPTY"
+        End If
         Connect = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, True, Not PrivIsRoot, strPreamble)
     End If
 
