@@ -73,7 +73,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
 
     Dim RunStr As String
     RunStr = ParseCommandLine(ConsoleID, tmpS)
-    'SayCOMM "SHEXEC: " & RunStr, ConsoleID
+    SayCOMM "SHEXEC: " & RunStr, ConsoleID
 
     On Error GoTo EvalError
     scrConsole(ConsoleID).AddCode RunStr
@@ -112,6 +112,8 @@ Public Function ParseCommandLine(ConsoleID As Integer, tmpS As String, Optional 
     Dim InQuotes As String
     Dim X As Long
     Dim RestStart As Long
+    Dim IsSimpleCommand As Boolean
+    IsSimpleCommand = True
     RestStart = -1
     For X = 1 To Len(tmpS)
         curC = Mid(tmpS, X, 1)
@@ -132,9 +134,10 @@ Public Function ParseCommandLine(ConsoleID As Integer, tmpS As String, Optional 
                 GoTo NextArg
             Case """", "'":
                 InQuotes = curC
-                GoTo CommandForNext
+                GoTo NextArg
             Case ",", ";", "(", ")", "|", "=", vbCr, vbLf: ' These mean the user likely intended VBScript and not CLI
-                GoTo NotASimpleCommand
+                IsSimpleCommand = False
+                '   GoTo AddToArg
             Case ":":
                 RestStart = X + 1
                 X = Len(tmpS) + 1
@@ -165,10 +168,10 @@ NextArg:
 CommandForNext:
     Next X
 
-    If CLIArgsQuoted(0) Then
+    If CLIArgsQuoted(0) Or Not IsSimpleCommand Then
         GoTo NotASimpleCommand
     End If
-    
+
     If CLIArgs(0) = "" Then
         If RestStart < 0 Then
             Exit Function
@@ -225,6 +228,9 @@ CommandForNext:
 
 NotASimpleCommand:
     ParseCommandLine = tmpS
+    If RestStart > 0 Then
+        ParseCommandLine = Left(ParseCommandLine, RestStart - 2)
+    End If
 
 RunSplitCommand:
     If RestStart < 0 Then
