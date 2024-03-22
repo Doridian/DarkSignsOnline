@@ -118,16 +118,16 @@ ScriptEnd:
     New_Console_Line ConsoleID
 End Function
 
-Public Function ParseCommandLine(tmpS As String) As String
+Public Function ParseCommandLine(tmpS As String, Optional AllowCommands As Boolean = True) As String
     Dim OptionExplicit As Boolean
     OptionExplicit = True
-    ParseCommandLine = ParseCommandLineInt(tmpS, OptionExplicit)
+    ParseCommandLine = ParseCommandLineInt(tmpS, OptionExplicit, AllowCommands)
     If OptionExplicit Then
         ParseCommandLine = "Option Explicit : " & ParseCommandLine
     End If
 End Function
 
-Private Function ParseCommandLineInt(tmpS As String, ByRef OptionExplicit As Boolean) As String
+Private Function ParseCommandLineInt(tmpS As String, ByRef OptionExplicit As Boolean, AllowCommands As Boolean) As String
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
     ReDim CLIArgs(0 To 0)
@@ -237,7 +237,7 @@ CommandForNext:
             Exit Function
         End If
 
-        ParseCommandLineInt = ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit)
+        ParseCommandLineInt = ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit, AllowCommands)
         Exit Function
     End If
 
@@ -256,7 +256,12 @@ CommandForNext:
     ' First, check if there is a command for it in /system/commands
     Dim ResolvedCommand As String
     Dim CommandNeedFirstComma As Boolean
-    ResolvedCommand = ResolveCommand(0, Command)
+    
+    If AllowCommands Then
+        ResolvedCommand = ResolveCommand(0, Command)
+    Else
+        ResolvedCommand = ""
+    End If
 
     If ResolvedCommand <> "" Then
         ParseCommandLineInt = "RUN(""" & ResolvedCommand & """"
@@ -292,7 +297,7 @@ RunSplitCommand:
         Exit Function
     End If
 
-    ParseCommandLineInt = ParseCommandLineInt & RestSplit & ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit)
+    ParseCommandLineInt = ParseCommandLineInt & RestSplit & ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit, AllowCommands)
 End Function
 
 ' -y r g b mode
