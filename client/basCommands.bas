@@ -153,9 +153,11 @@ Public Function ParseCommandLineInt(ConsoleID As Integer, tmpS As String, ByRef 
                     Dim NextC As String
                     NextC = Mid(tmpS, X + 1, 1)
                     If NextC = vbLf Then
+                        IsSimpleCommand = False
                         X = X + 1
                         GoTo CommandForNext
                     ElseIf NextC = vbCr Then
+                        IsSimpleCommand = False
                         X = X + 1
                         If X < Len(tmpS) - 1 Then
                             NextC = Mid(tmpS, X + 2, 1)
