@@ -140,10 +140,10 @@ CommandForNext:
 
     ' Try running procedure with given name
     Dim RunStr As String
-    RunStr = "Option Explicit : " & Command & "("
+    RunStr = "Option Explicit : Call " & Command & "("
     For X = 1 To UBound(CLIArgs)
         If X > 1 Then
-            RunStr = ", " & RunStr
+            RunStr = RunStr & ", "
         End If
         If Left(CLIArgs(X), 1) = "$" And Not CLIArgsQuoted(X) Then
             RunStr = RunStr & Mid(CLIArgs(X), 2)
@@ -152,6 +152,7 @@ CommandForNext:
         End If
     Next X
     RunStr = RunStr & ")"
+    'SayCOMM "Running: " & RunStr, consoleID
     On Error GoTo EvalError
     scrConsole(consoleID).ExecuteStatement RunStr
     On Error GoTo 0
