@@ -141,6 +141,7 @@ Private Function ParseCommandLineInt(tmpS As String, ByRef OptionExplicit As Boo
     IsSimpleCommand = True
     RestStart = -1
     Dim RestSplit As String
+    Dim InComment As Boolean
     For X = 1 To Len(tmpS)
         curC = Mid(tmpS, X, 1)
         If InQuotes <> "" Then
@@ -155,15 +156,28 @@ Private Function ParseCommandLineInt(tmpS As String, ByRef OptionExplicit As Boo
            
             GoTo NextArg
         End If
+        
+        If InComment And curC <> vbLf And curC <> vbCr And curC <> "_" Then
+            
+        End If
+        
         Select Case curC
             Case " ":
                 GoTo NextArg
-            Case """", "'":
+            Case """":
                 InQuotes = curC
+                GoTo NextArg
+            Case "'":
+                If curArg <> "" Or CLIArgs(0) <> "" Then
+                    RestSplit = " "
+                    X = X - 1
+                    GoTo RestStartSet
+                End If
+                InComment = True
+                curArg = "'"
                 GoTo NextArg
             Case ",", ";", "(", ")", "|", "=", "&", "<", ">": ' These mean the user likely intended VBScript and not CLI
                 IsSimpleCommand = False
-                '   GoTo AddToArg
             Case "_":
                 If curArg = "" And X < Len(tmpS) Then
                     Dim NextC As String
@@ -212,9 +226,13 @@ AddToArg:
     End If
 NextArg:
     If curArg <> "" Or InQuotes <> "" Then
-        If CLIArgs(UBound(CLIArgs)) <> "" Then
+        If CLIArgs(UBound(CLIArgs)) <> "" Then ' Arg 1 and onward
             ReDim Preserve CLIArgs(0 To UBound(CLIArgs) + 1)
             ReDim Preserve CLIArgsQuoted(0 To UBound(CLIArgs))
+        Else ' Arg 0
+            If Trim(LCase(curArg)) = "rem" Then
+                InComment = True
+            End If
         End If
         CLIArgs(UBound(CLIArgs)) = curArg
         If InQuotes <> "" Then
@@ -243,20 +261,23 @@ CommandForNext:
 
     ' If we arrive here, it means the user probably intended to run a CLI command!
     Dim Command As String
-    Command = LCase(CLIArgs(0))
+    Command = Trim(LCase(CLIArgs(0)))
     
     Select Case Command
         Case "for", "next", "while", "wend", "do", "loop", "until", _
                 "if", "else", "elseif", "end", _
                 "public", "private", "property", "dim", "sub", "function", _
-                "option", "const", "enum", "redim", "set", "goto", "type":
+                "option", "const", "enum", "redim", "set", "goto", "type", _
+                "throw", "catch", "try", "finally", "on":
             GoTo NotASimpleCommand
+        Case "rem", "'":
+            GoTo NotASimpleCommandButWithOE
     End Select
-    
+
     ' First, check if there is a command for it in /system/commands
     Dim ResolvedCommand As String
     Dim CommandNeedFirstComma As Boolean
-    
+
     If AllowCommands Then
         ResolvedCommand = ResolveCommand(0, Command)
     Else
@@ -287,6 +308,7 @@ CommandForNext:
 
 NotASimpleCommand:
     OptionExplicit = False
+NotASimpleCommandButWithOE:
     ParseCommandLineInt = tmpS
     If RestStart > 0 Then
         ParseCommandLineInt = Left(ParseCommandLineInt, RestStart - 2)

@@ -351,9 +351,15 @@ Public Sub CLIParse(Src As String, Dest As String)
     Dim DestStr As String
     DestStr = ParseCommandLine(SrcStr)
 
+    Dest = SafePath(ResolvePath(PrivConsoleID, Dest))
+
+    On Error Resume Next
+    Kill Dest
+    On Error GoTo 0
+
     Dim FF As Long
     FF = FreeFile
-    Open SafePath(ResolvePath(PrivConsoleID, Dest)) For Binary As #FF
+    Open Dest For Binary As #FF
     Put #FF, , DestStr
     Close #FF
 End Sub
