@@ -1001,7 +1001,7 @@ End Function
 
 Public Sub LoadLimitedCommands()
     On Error GoTo zxc
-    LimitedCommandString = ":" & i(GetFile(App.Path & "\user\system\commands-security.dat")) & ":"
+    LimitedCommandString = ":" & i(GetFile(App.Path & "/user/system/commands-security.dat")) & ":"
     Exit Sub
 zxc:
     LimitedCommandString = "::"

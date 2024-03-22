@@ -633,23 +633,6 @@ Public Sub SetYDiv(s As String)
     yDiv = n
 End Sub
 
-
-Public Sub UploadToDomain(ByVal sDomain As String, ByVal sPort As Integer, ByVal sFilename As String, ByVal ConsoleID As Integer)
-    Dim sFileData As String
-    sFileData = GetFileClean(sFilename)
-
-    Dim tempStrA As String
-
-    tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
-
-    RunPage "domain_upload.php", ConsoleID, True, _
-    "ver=2&port=" & EncodeURLParameter(Trim(sPort)) & _
-    "&d=" & EncodeURLParameter(sDomain) & _
-    "&filedata=" & EncodeURLParameter(tempStrA)
-    
-    SayCOMM "Attempting to upload: " & UCase(sDomain) & ":" & i(sPort), ConsoleID
-End Sub
-
 Public Sub CloseDomainPort(ByVal s As String, ByVal ConsoleID As Integer)
     Dim sDomain As String
     Dim sPort As String
@@ -1463,7 +1446,7 @@ Public Sub ShowHelp(sP, ByVal ConsoleID As Integer)
         SayRaw ConsoleID, props & "Command: PING domain-or-ip-server"
         SayRaw ConsoleID, propsforexamples & "Example #1: PING birds.com"
         SayRaw ConsoleID, "{lgrey}Check if the specified server exist on the network."
-        SayRaw ConsoleID, "{lorange}You can modify this command in the file \system\commands\ping.ds"
+        SayRaw ConsoleID, "{lorange}You can modify this command in the file /system/commands/ping.ds"
     
     Case "me"
         SayRaw ConsoleID, props & "Command: ME"
@@ -1475,19 +1458,19 @@ Public Sub ShowHelp(sP, ByVal ConsoleID As Integer)
         SayRaw ConsoleID, props & "Command: PINGPORT domain-or-ip-server 80"
         SayRaw ConsoleID, propsforexamples & "Example #1: PINGPORT birds.com 80"
         SayRaw ConsoleID, "{lgrey}Check if a script is runnning on the server at the specified port number."
-        SayRaw ConsoleID, "{lorange}You can modify this command in the file \system\commands\pingport.ds"
+        SayRaw ConsoleID, "{lorange}You can modify this command in the file /system/commands/pingport.ds"
             
     Case "getip"
         SayRaw ConsoleID, props & "Command: GETIP domain-or-ip-server"
         SayRaw ConsoleID, propsforexamples & "Example #1: GETIP birds.com"
         SayRaw ConsoleID, "{lgrey}Get the IP address of the specified server."
-        SayRaw ConsoleID, "{lorange}You can modify this command in the file \system\commands\getip.ds"
+        SayRaw ConsoleID, "{lorange}You can modify this command in the file /system/commands/getip.ds"
             
     Case "getdomain"
         SayRaw ConsoleID, props & "Command: GETDOMAIN domain-or-ip-server"
         SayRaw ConsoleID, propsforexamples & "Example #1: GETDOMAIN 12.55.192.111"
         SayRaw ConsoleID, "{lgrey}Get the domain name of the specified server."
-        SayRaw ConsoleID, "{lorange}You can modify this command in the file \system\commands\getdomain.ds"
+        SayRaw ConsoleID, "{lorange}You can modify this command in the file /system/commands/getdomain.ds"
                             
     Case "connect"
         SayRaw ConsoleID, props & "Command: CONNECT server port-number [optional-parameters]"

@@ -295,10 +295,10 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             End If
             
             Dim EmptyParams(0 To 0) As String
-            Run_Script "\system\login-1.ds", 1, EmptyParams, "BOOT", "", True, False, False
-            Run_Script "\system\login-2.ds", 2, EmptyParams, "BOOT", "", True, False, False
-            Run_Script "\system\login-3.ds", 3, EmptyParams, "BOOT", "", True, False, False
-            Run_Script "\system\login-4.ds", 4, EmptyParams, "BOOT", "", True, False, False
+            Run_Script "/system/login-1.ds", 1, EmptyParams, "BOOT", "", True, False, False
+            Run_Script "/system/login-2.ds", 2, EmptyParams, "BOOT", "", True, False, False
+            Run_Script "/system/login-3.ds", 3, EmptyParams, "BOOT", "", True, False, False
+            Run_Script "/system/login-4.ds", 4, EmptyParams, "BOOT", "", True, False, False
             
             If frmConsole.getConnected Then
                 frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
@@ -379,8 +379,8 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             If InStr(s, ":") > 0 Then
                 sF1 = Trim(Mid(s, 1, InStr(s, ":") - 1))
                 sF2 = Trim(Mid(s, InStr(s, ":") + 1, Len(s)))
-                WriteFile App.Path & "\user\downloads\" & sF1, sF2
-                frmLibrary.lStatus = "File downloaded ok: \downloads\" & sF1
+                WriteFile App.Path & "/user/downloads/" & sF1, sF2
+                frmLibrary.lStatus = "File downloaded ok: /downloads/" & sF1
             Else
                 frmLibrary.lStatus = "File download error! (8234)"
             End If

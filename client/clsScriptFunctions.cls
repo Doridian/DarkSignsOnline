@@ -554,6 +554,8 @@ Public Sub UPLOAD(Domain As String, Port As Variant, filename As String)
     If Left(DomainRequest, 1) = "!" Then
         Err.Raise vbObjectError + 9666, "DSO", "Could not upload file to " & UCase(Domain) & ":" & Port
     End If
+
+    SayCOMM "Upload OK: " & UCase(Domain) & ":" & Port
 End Sub
 
 

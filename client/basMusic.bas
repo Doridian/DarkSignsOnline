@@ -60,7 +60,7 @@ Public Sub CheckMusic()
     
     On Error Resume Next
     With frmConsole
-        .FileMusic.Path = App.Path & "\user\home\mp3\"
+        .FileMusic.Path = App.Path & "/user/home/mp3/"
         .FileMusic.Refresh
         
         If .FileMusic.ListCount < 1 Then Exit Sub

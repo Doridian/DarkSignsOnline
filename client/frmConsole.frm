@@ -834,7 +834,7 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
  End If
 acSubEnd1:
  If firstParam = False Then GoTo acSubEnd3
- tmpS3 = Dir(App.Path & "\user\system\commands\" & tmpS & "*")
+ tmpS3 = Dir(App.Path & "/user/system/commands/" & tmpS & "*")
  On Error GoTo acSubEnd2
  While globalITMP < autoILast(ConsoleID)
   tmpS3 = ""
@@ -1274,9 +1274,9 @@ Public Sub Start_Console(ByVal ConsoleID As Integer)
     Dim EmptyParams(0 To 0) As String
     If ConsoleID = 1 Then
         'run the primary startup script
-        Run_Script "\system\startup.ds", ConsoleID, EmptyParams, "BOOT", "", True, False, False
+        Run_Script "/system/startup.ds", ConsoleID, EmptyParams, "BOOT", "", True, False, False
     Else
-        Run_Script "\system\newconsole.ds", ConsoleID, EmptyParams, "BOOT", "", True, False, False
+        Run_Script "/system/newconsole.ds", ConsoleID, EmptyParams, "BOOT", "", True, False, False
     End If
 End Sub
 
