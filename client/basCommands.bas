@@ -24,9 +24,9 @@ Public Sub InitBasCommands()
     Next
 End Sub
 
-Public Function ResolveCommand(ConsoleID As Integer, Command As String) As String
+Public Function ResolveCommand(ConsoleID As Integer, Command As String, Optional AddCPath As Boolean = True) As String
     If InStr(Command, "/") > 0 Or InStr(Command, "\") > 0 Or InStr(Command, ".") > 0 Then
-        If Left(Command, 1) = "/" Or Left(Command, 1) = "\" Then
+        If Left(Command, 1) = "/" Or Left(Command, 1) = "\" Or Not AddCPath Then
             ResolveCommand = Command
             Exit Function
         End If
@@ -34,6 +34,9 @@ Public Function ResolveCommand(ConsoleID As Integer, Command As String) As Strin
         Exit Function
     End If
     ResolveCommand = "system/commands/" & Command & ".ds"
+    If Not FileExists(App.Path & "/user/" & ResolveCommand) Then
+        ResolveCommand = ""
+    End If
 End Function
 
 
@@ -70,6 +73,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
 
     Dim RunStr As String
     RunStr = ParseCommandLine(ConsoleID, tmpS)
+    'SayCOMM "SHEXEC: " & RunStr, ConsoleID
 
     On Error GoTo EvalError
     scrConsole(ConsoleID).AddCode RunStr
@@ -98,7 +102,7 @@ ScriptEnd:
     New_Console_Line ConsoleID
 End Function
 
-Public Function ParseCommandLine(ConsoleID As Integer, tmpS As String) As String
+Public Function ParseCommandLine(ConsoleID As Integer, tmpS As String, Optional OptionExplicit As Boolean = True) As String
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
     ReDim CLIArgs(0 To 0)
@@ -107,6 +111,8 @@ Public Function ParseCommandLine(ConsoleID As Integer, tmpS As String) As String
     Dim curC As String
     Dim InQuotes As String
     Dim X As Long
+    Dim RestStart As Long
+    RestStart = -1
     For X = 1 To Len(tmpS)
         curC = Mid(tmpS, X, 1)
         If InQuotes <> "" Then
@@ -127,8 +133,12 @@ Public Function ParseCommandLine(ConsoleID As Integer, tmpS As String) As String
             Case """", "'":
                 InQuotes = curC
                 GoTo CommandForNext
-            Case ":", ",", ";", "(", ")", "|", "=", vbCr, vbLf: ' These mean the user likely intended VBScript and not CLI
+            Case ",", ";", "(", ")", "|", "=", vbCr, vbLf: ' These mean the user likely intended VBScript and not CLI
                 GoTo NotASimpleCommand
+            Case ":":
+                RestStart = X + 1
+                X = Len(tmpS) + 1
+                GoTo NextArg
             'Case Else:
             '   GoTo AddToArg
         End Select
@@ -158,6 +168,15 @@ CommandForNext:
     If CLIArgsQuoted(0) Then
         GoTo NotASimpleCommand
     End If
+    
+    If CLIArgs(0) = "" Then
+        If RestStart < 0 Then
+            Exit Function
+        End If
+
+        ParseCommandLine = ParseCommandLine(ConsoleID, Mid(tmpS, RestStart))
+        Exit Function
+    End If
 
     ' If we arrive here, it means the user probably intended to run a CLI command!
     Dim Command As String
@@ -174,13 +193,20 @@ CommandForNext:
     ' First, check if there is a command for it in /system/commands
     Dim ResolvedCommand As String
     Dim CommandNeedFirstComma As Boolean
-    ResolvedCommand = ResolveCommand(ConsoleID, Command)
-    If FileExists(App.Path & "/user/" & ResolvedCommand) Then
-        ParseCommandLine = "Option Explicit : RUN(""" & ResolvedCommand & """"
+    ResolvedCommand = ResolveCommand(ConsoleID, Command, False)
+
+    If OptionExplicit Then
+        ParseCommandLine = "Option Explicit : "
+    Else
+        ParseCommandLine = ""
+    End If
+
+    If ResolvedCommand <> "" Then
+        ParseCommandLine = ParseCommandLine & "RUN(""" & ResolvedCommand & """"
         CommandNeedFirstComma = True
     Else
         ' Try running procedure with given name
-        ParseCommandLine = "Option Explicit : Call " & Command & "("
+        ParseCommandLine = ParseCommandLine & "Call " & Command & "("
         CommandNeedFirstComma = False
     End If
 
@@ -195,10 +221,17 @@ CommandForNext:
         End If
     Next X
     ParseCommandLine = ParseCommandLine & ")"
-    Exit Function
+    GoTo RunSplitCommand
 
 NotASimpleCommand:
     ParseCommandLine = tmpS
+
+RunSplitCommand:
+    If RestStart < 0 Then
+        Exit Function
+    End If
+
+    ParseCommandLine = ParseCommandLine & " : " & ParseCommandLine(ConsoleID, Mid(tmpS, RestStart), False)
 End Function
 
 ' -y r g b mode
