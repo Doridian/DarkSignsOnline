@@ -124,6 +124,7 @@ Public Function ParseCommandLineInt(ConsoleID As Integer, tmpS As String, ByRef 
     Dim IsSimpleCommand As Boolean
     IsSimpleCommand = True
     RestStart = -1
+    Dim RestSplit As String
     For X = 1 To Len(tmpS)
         curC = Mid(tmpS, X, 1)
         If InQuotes <> "" Then
@@ -144,10 +145,17 @@ Public Function ParseCommandLineInt(ConsoleID As Integer, tmpS As String, ByRef 
             Case """", "'":
                 InQuotes = curC
                 GoTo NextArg
-            Case ",", ";", "(", ")", "|", "=", vbCr, vbLf: ' These mean the user likely intended VBScript and not CLI
+            Case ",", ";", "(", ")", "|", "=": ' These mean the user likely intended VBScript and not CLI
                 IsSimpleCommand = False
                 '   GoTo AddToArg
-            Case ":":
+            Case vbCr:
+                ' Just ignore it
+                GoTo CommandForNext
+            Case ":", vbLf:
+                RestSplit = curC
+                If RestSplit = vbLf Then
+                    RestSplit = vbCrLf
+                End If
                 RestStart = X + 1
                 X = Len(tmpS) + 1
                 GoTo NextArg
@@ -241,7 +249,7 @@ RunSplitCommand:
         Exit Function
     End If
 
-    ParseCommandLineInt = ParseCommandLineInt & " : " & ParseCommandLineInt(ConsoleID, Mid(tmpS, RestStart), OptionExplicit)
+    ParseCommandLineInt = ParseCommandLineInt & RestSplit & ParseCommandLineInt(ConsoleID, Mid(tmpS, RestStart), OptionExplicit)
 End Function
 
 ' -y r g b mode
