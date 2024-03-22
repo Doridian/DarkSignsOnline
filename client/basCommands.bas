@@ -512,7 +512,7 @@ Public Sub UploadToDomain(ByVal sDomain As String, ByVal sPort As Integer, ByVal
         tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
 
         RunPage "domain_upload.php", ConsoleID, True, _
-        "port=" & EncodeURLParameter(Trim(sPort)) & _
+        "ver=2&port=" & EncodeURLParameter(Trim(sPort)) & _
         "&d=" & EncodeURLParameter(sDomain) & _
         "&filedata=" & EncodeURLParameter(tempStrA)
         
@@ -539,7 +539,7 @@ Public Sub CloseDomainPort(ByVal s As String, ByVal ConsoleID As Integer)
     sPort = s
   
     RunPage "domain_close.php", ConsoleID, True, _
-    "port=" & EncodeURLParameter(Trim(sPort)) & _
+    "ver=2&port=" & EncodeURLParameter(Trim(sPort)) & _
     "&d=" & EncodeURLParameter(sDomain)
         
     SayCOMM "Attempting to close port : " & UCase(sDomain) & ":" & i(sPort), ConsoleID
@@ -570,20 +570,15 @@ Public Sub DownloadFromDomain(ByVal s As String, ByVal ConsoleID As Integer)
     sPort = i(Mid(s, 1, InStr(s, " ")))
     sFilename = Trim(Mid(s, InStr(s, " "), Len(s)))
     sFilename = fixPath(sFilename, ConsoleID)
-    
 
-
-        RunPage "domain_download.php", ConsoleID, True, _
-        "returnwith=4400" & _
-        "&port=" & EncodeURLParameter(Trim(sPort)) & _
-        "&d=" & EncodeURLParameter(sDomain) & _
-        "&filename=" & EncodeURLParameter(sFilename)
-        
-        SayCOMM "Attempting to download: " & UCase(sDomain) & ":" & i(sPort), ConsoleID
-        
+    RunPage "domain_download.php", ConsoleID, True, _
+    "returnwith=4400" & _
+    "&ver=2&port=" & EncodeURLParameter(Trim(sPort)) & _
+    "&d=" & EncodeURLParameter(sDomain) & _
+    "&filename=" & EncodeURLParameter(sFilename)
     
+    SayCOMM "Attempting to download: " & UCase(sDomain) & ":" & i(sPort), ConsoleID
 
-    
     Exit Sub
 zxc:
     SayError "Invalid Parameters", ConsoleID
