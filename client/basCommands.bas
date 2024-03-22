@@ -27,6 +27,7 @@ End Sub
 Public Function SafePath(Path As String) As String
     Path = Replace(Path, "\", "/")
     If Path = ".." Or Left(Path, 3) = "../" Or Right(Path, 3) = "/.." Or InStr(Path, "/../") > 0 Then
+        SafePath = App.Path & "/user/f/a/i/l/s/a/f/e.txt"
         Err.Raise vbObjectError + 9666, "DSO", "Invalid character in path"
         Exit Function
     End If
