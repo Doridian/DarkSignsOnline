@@ -35,6 +35,7 @@ End Property
 
 Public Property Let UserName(ByVal NewValue As String)
     AssertCLIOnly
+
     SetUsername NewValue, ConsoleID
 End Property
 
@@ -48,6 +49,7 @@ End Property
 
 Public Property Let Password(ByVal NewValue As String)
     AssertCLIOnly
+
     SetPassword NewValue, ConsoleID
 End Property
 
@@ -67,8 +69,14 @@ Private Sub AssertCLIOnly()
     If IsCLIInput Then
         Exit Sub
     End If
-    Aborted = True
-    Err.Raise vbObjectError + 9006, "DSO", "Script tried to execute CLI only functionality"
+    Err.Raise vbObjectError + 9006, "DSO", "CLI only functionality"
+End Sub
+
+Private Sub AssertLocalOnly()
+    If FileKey = "" Then
+        Exit Sub
+    End If
+    Err.Raise vbObjectError + 9007, "DSO", "local only functionality"
 End Sub
 
 Private Sub Class_Initialize()
@@ -101,7 +109,6 @@ End Sub
 Public Function ScriptGetOutput() As String
     ScriptGetOutput = PrivOutput
 End Function
-
 
 Public Function ReadLine(Prompt As String) As String
     If PrivDisableOutput Then
@@ -270,12 +277,15 @@ Public Sub SayCOMM(ParamArray Params() As Variant)
 End Sub
 
 Public Sub CD(dir As String)
+    AssertLocalOnly
+
     ChangeDir dir, PrivConsoleID
     Yield
 End Sub
 
 Public Sub EDIT(file As String)
     AssertCLIOnly
+
     Yield
     EditFile file, PrivConsoleID
 End Sub
@@ -333,6 +343,8 @@ Public Sub SayAll(ParamArray Params() As Variant)
 End Sub
 
 Public Sub CLIParse(Src As String, Dest As String)
+    AssertLocalOnly
+
     Dim SrcStr As String
     SrcStr = GetFileClean(ResolvePath(PrivConsoleID, Src))
 
@@ -351,6 +363,8 @@ Public Function ResolveCommand(Command As String) As String
 End Function
 
 Public Sub RUN(ParamArray XArr() As Variant)
+    AssertLocalOnly
+
     Dim Script As String
     Script = XArr(0)
     Dim X As Integer
@@ -366,6 +380,8 @@ Public Sub RUN(ParamArray XArr() As Variant)
 End Sub
 
 Public Function CallScript(ParamArray XArr() As Variant) As String
+    AssertLocalOnly
+
     Dim X As Integer
     Dim Script As String
     Script = XArr(0)
@@ -471,18 +487,22 @@ Public Function Connect(ParamArray XArr() As Variant) As String
 End Function
 
 Public Sub LOGIN()
+    AssertLocalOnly
+    
     LoginNow PrivConsoleID
     Yield
 End Sub
 
 Public Sub LOGOUT()
-    AssertCLIOnly
+    AssertLocalOnly
+    
     LogoutNow PrivConsoleID
     Yield
 End Sub
 
 Public Sub UPLOAD(Domain As String, Port As Variant, filename As String)
     AssertCLIOnly
+    
     Yield
     UploadToDomain Domain, Port, filename, ConsoleID
     Yield
@@ -491,18 +511,15 @@ End Sub
 
 Public Function ArgC() As Integer
     Yield
-
     ArgC = UBound(PrivParameters)
 End Function
 
 Public Function ArgV(Number As Variant) As String
     Yield
-
     If Number < LBound(PrivParameters) Or Number > UBound(PrivParameters) Then
         ArgV = ""
         Exit Function
     End If
-
     ArgV = PrivParameters(Number)
 End Function
 
