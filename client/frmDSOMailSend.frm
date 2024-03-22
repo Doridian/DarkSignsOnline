@@ -74,10 +74,10 @@ Private Sub btnSend_Click()
         "&subject=" & EncodeURLParameter(Me.msgSubject) & _
         "&message=" & EncodeURLParameter(Replace(Me.msgBody.Text, vbNewLine, Chr(6)))
 
-   RunPage "dsmail.php", consoleID, True, toSend
+   RunPage "dsmail.php", ConsoleID, True, toSend
    
    DisableAll
-  'RunPage "domain_filesystem.php", consoleID, True, sPostData, 0
+  'RunPage "domain_filesystem.php", ConsoleID, True, sPostData, 0
     
    
    btnSend.Caption = "Sending..."

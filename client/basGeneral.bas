@@ -222,12 +222,12 @@ zxc:
     MoveADirectory = False
 End Function
 
-Public Function CopyAFile(sSource As String, sDest As String, consoleID As Integer) As Boolean
+Public Function CopyAFile(sSource As String, sDest As String, ConsoleID As Integer) As Boolean
     On Error GoTo zxc
     
     
     If InStr(i(sDest), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", consoleID
+        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
         Exit Function
     End If
     

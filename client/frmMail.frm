@@ -170,7 +170,7 @@ Private Sub btnRefresh_Click()
         last = "0"
     End If
     
-    RunPage "dsmail.php?action=inbox&returnwith=7001&last=" & EncodeURLParameter(last), consoleID
+    RunPage "dsmail.php?action=inbox&returnwith=7001&last=" & EncodeURLParameter(last), ConsoleID
 End Sub
 
 Private Sub Form_Resize()

@@ -52,40 +52,40 @@ Public Const Max_Font_Size = 144
 Public Const PreSpace = "-->" 'this will indent the text
 
 
-Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal consoleID As Integer)
+Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal ConsoleID As Integer)
     If frmConsole.ChatBox.Visible = True Then Exit Sub
     
     Dim tmpS As String
     
-    If KeyCode = vbKeySpace Then Insert_Char " ", consoleID: Exit Sub
-    If KeyCode = vbKeyBack Then RemLastKey consoleID: Exit Sub
-    If KeyCode = vbKeyDelete Then RemNextKey consoleID: Exit Sub
-    If KeyCode = vbKeyHome Then MoveUnderscoreToHome consoleID: Exit Sub
-    If KeyCode = vbKeyEnd Then MoveUnderscoreToEnd consoleID: Exit Sub
-    If KeyCode = vbKeyLeft Then MoveUnderscoreLeft consoleID: Exit Sub
-    If KeyCode = vbKeyRight Then MoveUnderscoreRight consoleID: Exit Sub
+    If KeyCode = vbKeySpace Then Insert_Char " ", ConsoleID: Exit Sub
+    If KeyCode = vbKeyBack Then RemLastKey ConsoleID: Exit Sub
+    If KeyCode = vbKeyDelete Then RemNextKey ConsoleID: Exit Sub
+    If KeyCode = vbKeyHome Then MoveUnderscoreToHome ConsoleID: Exit Sub
+    If KeyCode = vbKeyEnd Then MoveUnderscoreToEnd ConsoleID: Exit Sub
+    If KeyCode = vbKeyLeft Then MoveUnderscoreLeft ConsoleID: Exit Sub
+    If KeyCode = vbKeyRight Then MoveUnderscoreRight ConsoleID: Exit Sub
     
     If KeyCode = vbKeyReturn Then
 
-        RecentCommandsIndex(consoleID) = 0
+        RecentCommandsIndex(ConsoleID) = 0
         'kill the no longer required underscore
-        Console(consoleID, 1).Caption = Replace(Console(consoleID, 1).Caption, "_", "")
+        Console(ConsoleID, 1).Caption = Replace(Console(ConsoleID, 1).Caption, "_", "")
         'save in recent typed commands
-        AddToRecentCommands Console(consoleID, 1).Caption
+        AddToRecentCommands Console(ConsoleID, 1).Caption
         
         'process the command, unless it is input
-        If WaitingForInput(consoleID) = True Then
-            tmpS = Trim(Console(consoleID, 1).Caption)
+        If WaitingForInput(ConsoleID) = True Then
+            tmpS = Trim(Console(ConsoleID, 1).Caption)
             If InStr(tmpS, ">") > 0 Then tmpS = Mid(tmpS, InStr(tmpS, ">") + 1, Len(tmpS))
-            WaitingForInputReturn(consoleID) = Trim(tmpS)
-            cPath(consoleID) = cPath_tmp(consoleID)
-            WaitingForInput(consoleID) = False
-            Shift_Console_Lines consoleID
-            Console(consoleID, 1).Caption = Console_Prompt(True, consoleID)
-            Console(consoleID, 1) = Console_Line_Defaults
+            WaitingForInputReturn(ConsoleID) = Trim(tmpS)
+            cPath(ConsoleID) = cPath_tmp(ConsoleID)
+            WaitingForInput(ConsoleID) = False
+            Shift_Console_Lines ConsoleID
+            Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
+            Console(ConsoleID, 1) = Console_Line_Defaults
         Else
             
-            Run_Command Console(consoleID, 1), consoleID, False
+            Run_Command Console(ConsoleID, 1), ConsoleID, False
             
         End If
 
@@ -96,9 +96,9 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal conso
     'letters upper case ascii codes
     If KeyCode >= 65 And KeyCode <= 90 Then
         If Shift = 1 Then
-            Insert_Char UCase(Chr(KeyCode)), consoleID
+            Insert_Char UCase(Chr(KeyCode)), ConsoleID
         Else
-            Insert_Char LCase(Chr(KeyCode)), consoleID
+            Insert_Char LCase(Chr(KeyCode)), ConsoleID
             GoTo End_Function
         End If
     End If
@@ -110,74 +110,74 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal conso
     'numbers
     If KeyCode >= 48 And KeyCode <= 57 Then
         Select Case KeyCode
-        Case 48: If Shift = 1 Then Insert_Char ")", consoleID Else Insert_Char "0", consoleID
-        Case 49: If Shift = 1 Then Insert_Char "!", consoleID Else Insert_Char "1", consoleID
-        Case 50: If Shift = 1 Then Insert_Char "@", consoleID Else Insert_Char "2", consoleID
-        Case 51: If Shift = 1 Then Insert_Char "#", consoleID Else Insert_Char "3", consoleID
-        Case 52: If Shift = 1 Then Insert_Char "$", consoleID Else Insert_Char "4", consoleID
-        Case 53: If Shift = 1 Then Insert_Char "%", consoleID Else Insert_Char "5", consoleID
-        Case 54: If Shift = 1 Then Insert_Char "^", consoleID Else Insert_Char "6", consoleID
-        Case 55: If Shift = 1 Then Insert_Char "&", consoleID Else Insert_Char "7", consoleID
-        Case 56: If Shift = 1 Then Insert_Char "*", consoleID Else Insert_Char "8", consoleID
-        Case 57: If Shift = 1 Then Insert_Char "(", consoleID Else Insert_Char "9", consoleID
+        Case 48: If Shift = 1 Then Insert_Char ")", ConsoleID Else Insert_Char "0", ConsoleID
+        Case 49: If Shift = 1 Then Insert_Char "!", ConsoleID Else Insert_Char "1", ConsoleID
+        Case 50: If Shift = 1 Then Insert_Char "@", ConsoleID Else Insert_Char "2", ConsoleID
+        Case 51: If Shift = 1 Then Insert_Char "#", ConsoleID Else Insert_Char "3", ConsoleID
+        Case 52: If Shift = 1 Then Insert_Char "$", ConsoleID Else Insert_Char "4", ConsoleID
+        Case 53: If Shift = 1 Then Insert_Char "%", ConsoleID Else Insert_Char "5", ConsoleID
+        Case 54: If Shift = 1 Then Insert_Char "^", ConsoleID Else Insert_Char "6", ConsoleID
+        Case 55: If Shift = 1 Then Insert_Char "&", ConsoleID Else Insert_Char "7", ConsoleID
+        Case 56: If Shift = 1 Then Insert_Char "*", ConsoleID Else Insert_Char "8", ConsoleID
+        Case 57: If Shift = 1 Then Insert_Char "(", ConsoleID Else Insert_Char "9", ConsoleID
         End Select
         GoTo End_Function
     End If
     'everything else
     Select Case KeyCode
-        Case "192": If Shift = 1 Then Insert_Char "~", consoleID Else Insert_Char "`", consoleID
-        Case "189": If Shift = 1 Then Insert_Char "-", consoleID Else Insert_Char "-", consoleID
-        Case "187": If Shift = 1 Then Insert_Char "+", consoleID Else Insert_Char "=", consoleID
-        Case "219": If Shift = 1 Then Insert_Char "{", consoleID Else Insert_Char "[", consoleID
-        Case "221": If Shift = 1 Then Insert_Char "}", consoleID Else Insert_Char "]", consoleID
-        Case "220": If Shift = 1 Then Insert_Char "|", consoleID Else Insert_Char "\", consoleID
-        Case "186": If Shift = 1 Then Insert_Char ":", consoleID Else Insert_Char ";", consoleID
-        Case "222": If Shift = 1 Then Insert_Char Chr(34), consoleID Else Insert_Char "'", consoleID
-        Case "188": If Shift = 1 Then Insert_Char "<", consoleID Else Insert_Char ",", consoleID
-        Case "190": If Shift = 1 Then Insert_Char ".", consoleID Else Insert_Char ".", consoleID
-        Case "191": If Shift = 1 Then Insert_Char "?", consoleID Else Insert_Char "/", consoleID
+        Case "192": If Shift = 1 Then Insert_Char "~", ConsoleID Else Insert_Char "`", ConsoleID
+        Case "189": If Shift = 1 Then Insert_Char "-", ConsoleID Else Insert_Char "-", ConsoleID
+        Case "187": If Shift = 1 Then Insert_Char "+", ConsoleID Else Insert_Char "=", ConsoleID
+        Case "219": If Shift = 1 Then Insert_Char "{", ConsoleID Else Insert_Char "[", ConsoleID
+        Case "221": If Shift = 1 Then Insert_Char "}", ConsoleID Else Insert_Char "]", ConsoleID
+        Case "220": If Shift = 1 Then Insert_Char "|", ConsoleID Else Insert_Char "\", ConsoleID
+        Case "186": If Shift = 1 Then Insert_Char ":", ConsoleID Else Insert_Char ";", ConsoleID
+        Case "222": If Shift = 1 Then Insert_Char Chr(34), ConsoleID Else Insert_Char "'", ConsoleID
+        Case "188": If Shift = 1 Then Insert_Char "<", ConsoleID Else Insert_Char ",", ConsoleID
+        Case "190": If Shift = 1 Then Insert_Char ".", ConsoleID Else Insert_Char ".", ConsoleID
+        Case "191": If Shift = 1 Then Insert_Char "?", ConsoleID Else Insert_Char "/", ConsoleID
         'numpad below
-        Case "110": Insert_Char ".", consoleID
-        Case "111": Insert_Char "/", consoleID
-        Case "106": Insert_Char "*", consoleID
-        Case "109": Insert_Char "-", consoleID
-        Case "107": Insert_Char "+", consoleID
+        Case "110": Insert_Char ".", ConsoleID
+        Case "111": Insert_Char "/", ConsoleID
+        Case "106": Insert_Char "*", ConsoleID
+        Case "109": Insert_Char "-", ConsoleID
+        Case "107": Insert_Char "+", ConsoleID
         
         
-        'Case 33: If Shift = 1 Then Insert_Char "!" , consoleID Else Insert_Char "1", consoleID
-        'Case 34: If Shift = 1 Then Insert_Char Chr(34) , consoleID Else Insert_Char "'", consoleID
-        Case 35: If Shift = 1 Then Insert_Char "#", consoleID Else Insert_Char "3", consoleID
-        Case 36: If Shift = 1 Then Insert_Char "$", consoleID Else Insert_Char "4", consoleID
-        'Case 37: If Shift = 1 Then Insert_Char "%", consoleID  Else Insert_Char "5", consoleID
-        'Case 38: If Shift = 1 Then Insert_Char "&", consoleID  Else Insert_Char "7", consoleID
-        'Case 39: If Shift = 1 Then Insert_Char Chr(34), consoleID Else Insert_Char "'", consoleID
-        'Case 40: If Shift = 1 Then Insert_Char "(" , consoleID Else Insert_Char "9", consoleID
-        Case 41: If Shift = 1 Then Insert_Char ")", consoleID Else Insert_Char "0", consoleID
-        Case 42: If Shift = 1 Then Insert_Char "*", consoleID Else Insert_Char "8", consoleID
-        Case 43: If Shift = 1 Then Insert_Char "+", consoleID Else Insert_Char "=", consoleID
-        Case 44: If Shift = 1 Then Insert_Char "<", consoleID Else Insert_Char ",", consoleID
-        'Case 45: If Shift = 1 Then Insert_Char "-", consoleID  Else Insert_Char "-", consoleID
-        Case 46: If Shift = 1 Then Insert_Char ".", consoleID Else Insert_Char ".", consoleID
-        Case 47: If Shift = 1 Then Insert_Char "?", consoleID Else Insert_Char "/", consoleID
-        Case 58: If Shift = 1 Then Insert_Char ":", consoleID Else Insert_Char ";", consoleID
-        Case 59: If Shift = 1 Then Insert_Char ":", consoleID Else Insert_Char ";", consoleID
-        Case 60: If Shift = 1 Then Insert_Char "<", consoleID Else Insert_Char ",", consoleID
-        Case 61: If Shift = 1 Then Insert_Char "+", consoleID Else Insert_Char "=", consoleID
-        Case 62: If Shift = 1 Then Insert_Char ".", consoleID Else Insert_Char ".", consoleID
-        Case 63: If Shift = 1 Then Insert_Char "?", consoleID Else Insert_Char "/", consoleID
-        Case 64: If Shift = 1 Then Insert_Char "@", consoleID Else Insert_Char "2", consoleID
+        'Case 33: If Shift = 1 Then Insert_Char "!" , ConsoleID Else Insert_Char "1", ConsoleID
+        'Case 34: If Shift = 1 Then Insert_Char Chr(34) , ConsoleID Else Insert_Char "'", ConsoleID
+        Case 35: If Shift = 1 Then Insert_Char "#", ConsoleID Else Insert_Char "3", ConsoleID
+        Case 36: If Shift = 1 Then Insert_Char "$", ConsoleID Else Insert_Char "4", ConsoleID
+        'Case 37: If Shift = 1 Then Insert_Char "%", ConsoleID  Else Insert_Char "5", ConsoleID
+        'Case 38: If Shift = 1 Then Insert_Char "&", ConsoleID  Else Insert_Char "7", ConsoleID
+        'Case 39: If Shift = 1 Then Insert_Char Chr(34), ConsoleID Else Insert_Char "'", ConsoleID
+        'Case 40: If Shift = 1 Then Insert_Char "(" , ConsoleID Else Insert_Char "9", ConsoleID
+        Case 41: If Shift = 1 Then Insert_Char ")", ConsoleID Else Insert_Char "0", ConsoleID
+        Case 42: If Shift = 1 Then Insert_Char "*", ConsoleID Else Insert_Char "8", ConsoleID
+        Case 43: If Shift = 1 Then Insert_Char "+", ConsoleID Else Insert_Char "=", ConsoleID
+        Case 44: If Shift = 1 Then Insert_Char "<", ConsoleID Else Insert_Char ",", ConsoleID
+        'Case 45: If Shift = 1 Then Insert_Char "-", ConsoleID  Else Insert_Char "-", ConsoleID
+        Case 46: If Shift = 1 Then Insert_Char ".", ConsoleID Else Insert_Char ".", ConsoleID
+        Case 47: If Shift = 1 Then Insert_Char "?", ConsoleID Else Insert_Char "/", ConsoleID
+        Case 58: If Shift = 1 Then Insert_Char ":", ConsoleID Else Insert_Char ";", ConsoleID
+        Case 59: If Shift = 1 Then Insert_Char ":", ConsoleID Else Insert_Char ";", ConsoleID
+        Case 60: If Shift = 1 Then Insert_Char "<", ConsoleID Else Insert_Char ",", ConsoleID
+        Case 61: If Shift = 1 Then Insert_Char "+", ConsoleID Else Insert_Char "=", ConsoleID
+        Case 62: If Shift = 1 Then Insert_Char ".", ConsoleID Else Insert_Char ".", ConsoleID
+        Case 63: If Shift = 1 Then Insert_Char "?", ConsoleID Else Insert_Char "/", ConsoleID
+        Case 64: If Shift = 1 Then Insert_Char "@", ConsoleID Else Insert_Char "2", ConsoleID
         
         'numpad stuff
-        Case 96: Insert_Char "0", consoleID
-        Case 97: Insert_Char "1", consoleID
-        Case 98: Insert_Char "2", consoleID
-        Case 99: Insert_Char "3", consoleID
-        Case 100: Insert_Char "4", consoleID
-        Case 101: Insert_Char "5", consoleID
-        Case 102: Insert_Char "6", consoleID
-        Case 103: Insert_Char "7", consoleID
-        Case 104: Insert_Char "8", consoleID
-        Case 105: Insert_Char "9", consoleID
+        Case 96: Insert_Char "0", ConsoleID
+        Case 97: Insert_Char "1", ConsoleID
+        Case 98: Insert_Char "2", ConsoleID
+        Case 99: Insert_Char "3", ConsoleID
+        Case 100: Insert_Char "4", ConsoleID
+        Case 101: Insert_Char "5", ConsoleID
+        Case 102: Insert_Char "6", ConsoleID
+        Case 103: Insert_Char "7", ConsoleID
+        Case 104: Insert_Char "8", ConsoleID
+        Case 105: Insert_Char "9", ConsoleID
         
         
         
@@ -209,11 +209,11 @@ SkipAddingIt:
     RecentCommandsIndex(ActiveConsole) = 0
 End Sub
 
-Public Sub MoveUnderscoreRight(ByVal consoleID As Integer)
+Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
     On Error GoTo zxc
     Dim part1 As String, part2 As String, s As String
     
-    s = Console(consoleID, 1).Caption
+    s = Console(ConsoleID, 1).Caption
     If Right(s, 1) = "_" Then Exit Sub
     
     If InStr(s, "_") = 0 Then Exit Sub
@@ -225,89 +225,89 @@ Public Sub MoveUnderscoreRight(ByVal consoleID As Integer)
 
     'If InStr(s, "_") < Len(Console_Prompt(True)) Then Exit Sub
     
-    Console(consoleID, 1).Caption = s
+    Console(ConsoleID, 1).Caption = s
 zxc:
 End Sub
 
-Public Sub MoveUnderscoreToHome(ByVal consoleID As Integer)
+Public Sub MoveUnderscoreToHome(ByVal ConsoleID As Integer)
     On Error GoTo zxc
     Dim s As String
-    s = Console(consoleID, 1).Caption
+    s = Console(ConsoleID, 1).Caption
     If InStr(s, "_") = 0 Then Exit Sub
     
 
-    s = Console_Prompt(False, consoleID) & "_" & Trim(Replace(Mid(s, Len(Console_Prompt(False, consoleID)), 999), "_", ""))
+    s = Console_Prompt(False, ConsoleID) & "_" & Trim(Replace(Mid(s, Len(Console_Prompt(False, ConsoleID)), 999), "_", ""))
 
     
-    Console(consoleID, 1).Caption = s
+    Console(ConsoleID, 1).Caption = s
 zxc:
 End Sub
 
-Public Sub MoveUnderscoreToEnd(ByVal consoleID As Integer)
+Public Sub MoveUnderscoreToEnd(ByVal ConsoleID As Integer)
     On Error GoTo zxc
     Dim s As String
-    s = Console(consoleID, 1).Caption
+    s = Console(ConsoleID, 1).Caption
     
     s = Replace(s, "_", "") & "_"
 
-    Console(consoleID, 1).Caption = s
+    Console(ConsoleID, 1).Caption = s
 zxc:
 End Sub
 
-Public Sub MoveUnderscoreLeft(ByVal consoleID As Integer)
+Public Sub MoveUnderscoreLeft(ByVal ConsoleID As Integer)
     On Error GoTo zxc
     Dim part1 As String, part2 As String, s As String
     
-    s = Console(consoleID, 1).Caption
+    s = Console(ConsoleID, 1).Caption
     If InStr(s, "_") = 0 Then Exit Sub
     part1 = Mid(s, 1, InStr(s, "_") - 2)
     part2 = Mid(s, InStr(s, "_") - 1, Len(s))
     
     s = part1 & "_" & Replace(part2, "_", "")
     
-    If InStr(s, "_") < Len(Console_Prompt(True, consoleID)) Then Exit Sub
+    If InStr(s, "_") < Len(Console_Prompt(True, ConsoleID)) Then Exit Sub
     
-    Console(consoleID, 1).Caption = s
+    Console(ConsoleID, 1).Caption = s
 zxc:
 End Sub
 
-Public Sub Insert_Char(ByVal sChar As String, ByVal consoleID As Integer)
+Public Sub Insert_Char(ByVal sChar As String, ByVal ConsoleID As Integer)
     Dim tmpS As String
     
-    tmpS = Replace(Console(consoleID, 1).Caption, "_", sChar + "_")
+    tmpS = Replace(Console(ConsoleID, 1).Caption, "_", sChar + "_")
     
     
-    Console(consoleID, 1).Caption = tmpS
+    Console(ConsoleID, 1).Caption = tmpS
     
     DoEvents
 End Sub
 
-Public Sub New_Console_Line_InProgress(ByVal consoleID As Integer)
-    Shift_Console_Lines consoleID
+Public Sub New_Console_Line_InProgress(ByVal ConsoleID As Integer)
+    Shift_Console_Lines ConsoleID
     
-    Console(consoleID, 1) = Console_Line_Defaults
-    Console(consoleID, 1).Caption = " "
+    Console(ConsoleID, 1) = Console_Line_Defaults
+    Console(ConsoleID, 1).Caption = " "
 End Sub
 
-Public Sub New_Console_Line(ByVal consoleID As Integer)
-    Shift_Console_Lines consoleID
+Public Sub New_Console_Line(ByVal ConsoleID As Integer)
+    Shift_Console_Lines ConsoleID
     
-    Console(consoleID, 1) = Console_Line_Defaults
+    Console(ConsoleID, 1) = Console_Line_Defaults
     'add the standard prompt if required
-    Console(consoleID, 1).Caption = Console_Prompt(True, consoleID)
+    Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
 End Sub
 
-Public Sub Shift_Console_Lines(ByVal consoleID As Integer)
+Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     Dim n As Integer
     For n = 299 To 2 Step -1
-        Console(consoleID, n) = Console(consoleID, n - 1)
+        Console(ConsoleID, n) = Console(ConsoleID, n - 1)
     Next n
     
     '--------------------------------------------------
     ' if the line is just something like "/> _" , it should be blanked
-    If InStr(Console(consoleID, 2).Caption, ">") > 0 Then
-        If Trim(Mid(Console(consoleID, 2).Caption, InStr(Console(consoleID, 2).Caption, ">") + 1, 99)) = "_" Then
-            Console(consoleID, 2).Caption = ""
+    If InStr(Console(ConsoleID, 2).Caption, ">") > 0 Then
+        If Trim(Mid(Console(ConsoleID, 2).Caption, InStr(Console(ConsoleID, 2).Caption, ">") + 1, 99)) = "_" Then
+            Console(ConsoleID, 2).Caption = ""
         End If
     End If
     '--------------------------------------------------
@@ -315,23 +315,23 @@ Public Sub Shift_Console_Lines(ByVal consoleID As Integer)
     DoEvents
 End Sub
 
-Public Sub Shift_Console_Lines_Reverse(ByVal consoleID As Integer)
+Public Sub Shift_Console_Lines_Reverse(ByVal ConsoleID As Integer)
     
         
     Dim n As Integer
     For n = 0 To 298
-        Console(consoleID, n) = Console(consoleID, n + 1)
+        Console(ConsoleID, n) = Console(ConsoleID, n + 1)
     Next n
     
     DoEvents
 End Sub
 
-Public Sub RemLastKey(ByVal consoleID As Integer)
+Public Sub RemLastKey(ByVal ConsoleID As Integer)
     On Error GoTo zxc
     
     'backspace
     Dim tmpS As String
-    tmpS = Console(consoleID, 1).Caption
+    tmpS = Console(ConsoleID, 1).Caption
     
     'tmpS = Remove_Property_Space(tmpS) 'this was causing the backspace error
     
@@ -345,19 +345,19 @@ Public Sub RemLastKey(ByVal consoleID As Integer)
 
     tmpS = part1 & "_" & part2
     
-    If Len(part1) < Len(Console_Prompt(False, consoleID)) Then Exit Sub
+    If Len(part1) < Len(Console_Prompt(False, ConsoleID)) Then Exit Sub
     
     
-    Console(consoleID, 1).Caption = tmpS
+    Console(ConsoleID, 1).Caption = tmpS
 zxc:
 End Sub
 
-Public Sub RemNextKey(ByVal consoleID As Integer)
+Public Sub RemNextKey(ByVal ConsoleID As Integer)
     On Error GoTo zxc
     
     'backspace
     Dim tmpS As String
-    tmpS = Console(consoleID, 1).Caption
+    tmpS = Console(ConsoleID, 1).Caption
     If InStr(tmpS, "_") = 0 Then Exit Sub 'no underscore found = error -> exit
     
     Dim part1 As String, part2 As String
@@ -370,22 +370,22 @@ Public Sub RemNextKey(ByVal consoleID As Integer)
     
     
         'it's regular input, don't allow it to backspace beyond the input string
-        If Len(part1) < Len(Console_Prompt(False, consoleID)) Then Exit Sub
+        If Len(part1) < Len(Console_Prompt(False, ConsoleID)) Then Exit Sub
 
     
     
-    Console(consoleID, 1).Caption = tmpS
+    Console(ConsoleID, 1).Caption = tmpS
 zxc:
 End Sub
 
-Public Sub Reset_Console(ByVal consoleID As Integer)
+Public Sub Reset_Console(ByVal ConsoleID As Integer)
     
     Dim n As Integer
     For n = 1 To 299
-        Console(consoleID, n) = Console_Line_Defaults
+        Console(ConsoleID, n) = Console_Line_Defaults
     Next n
     
-    Console(consoleID, 1).Caption = Console_Prompt(True, consoleID)
+    Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
     
 End Sub
 
@@ -579,8 +579,8 @@ ExitLoop:
 End Sub
 
 
-Public Function Console_FontSize(ByVal consoleIndex As Integer, ByVal consoleID As Integer) As String
-    Console_FontSize = Trim(Console(consoleID, consoleIndex).FontSize)
+Public Function Console_FontSize(ByVal consoleIndex As Integer, ByVal ConsoleID As Integer) As String
+    Console_FontSize = Trim(Console(ConsoleID, consoleIndex).FontSize)
     
     'if not specified, get the defaul
     If Console_FontSize = "" Then
@@ -595,8 +595,8 @@ Public Function Console_FontSize(ByVal consoleIndex As Integer, ByVal consoleID 
     If Console_FontSize > Max_Font_Size Then Console_FontSize = Max_Font_Size
 End Function
 
-Public Function Console_FontColor(ByVal consoleIndex As Integer, ByVal consoleID As Integer) As Long
-    Console_FontColor = Trim(Console(consoleID, consoleIndex).FontColor)
+Public Function Console_FontColor(ByVal consoleIndex As Integer, ByVal ConsoleID As Integer) As Long
+    Console_FontColor = Trim(Console(ConsoleID, consoleIndex).FontColor)
     
     If Console_FontColor = 0 Then
         'if no color is specified, make it white
@@ -605,8 +605,8 @@ Public Function Console_FontColor(ByVal consoleIndex As Integer, ByVal consoleID
     
 End Function
 
-Public Function Console_FontName(ByVal consoleIndex As Integer, ByVal consoleID As Integer) As String
-    Console_FontName = Trim(Console(consoleID, consoleIndex).FontName)
+Public Function Console_FontName(ByVal consoleIndex As Integer, ByVal ConsoleID As Integer) As String
+    Console_FontName = Trim(Console(ConsoleID, consoleIndex).FontName)
     
     'only allow certain fonts that exist on all computers
     If Is_Valid_Font(Console_FontName) = True Then
@@ -619,12 +619,12 @@ Public Function Console_FontName(ByVal consoleIndex As Integer, ByVal consoleID 
     
 End Function
 
-Public Function Console_Prompt(ByVal includeUnderscore As Boolean, ByVal consoleID As Integer) As String
+Public Function Console_Prompt(ByVal includeUnderscore As Boolean, ByVal ConsoleID As Integer) As String
     'get the console prompt that asks the user to enter information
     Dim ext As String
     If includeUnderscore = True Then ext = "_" Else ext = ""
     
-    Console_Prompt = cPath(consoleID) & ">" & " " & ext
+    Console_Prompt = cPath(ConsoleID) & ">" & " " & ext
 End Function
 
 Public Function Console_Line_Defaults() As ConsoleLine
@@ -657,18 +657,18 @@ Public Function Font_Height(theFontName As String, theFontSize As String) As Int
     Font_Height = frmConsole.lfont.Height + yDiv
 End Function
 
-Public Function SayRaw(ByVal consoleID As Integer, s As String, Optional withNewLineAfter As Boolean = True, Optional SkipPropertySpace As Integer)
-    If consoleID > 4 Then Exit Function
+Public Function SayRaw(ByVal ConsoleID As Integer, s As String, Optional withNewLineAfter As Boolean = True, Optional SkipPropertySpace As Integer)
+    If ConsoleID > 4 Then Exit Function
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
     
 
     Dim tmpLine As ConsoleLine, propertySpace As String
     
-    tmpLine = Console(consoleID, 1)
+    tmpLine = Console(ConsoleID, 1)
     
     'If withNewLineAfter = True Then
-        'Shift_Console_Lines consoleID
-        'Console(consoleID, 1) = Console_Line_Defaults
+        'Shift_Console_Lines ConsoleID
+        'Console(ConsoleID, 1) = Console_Line_Defaults
     'End If
 
     'If withNewLineAfter = False Then
@@ -677,29 +677,29 @@ Public Function SayRaw(ByVal consoleID As Integer, s As String, Optional withNew
         
     
 If SkipPropertySpace = 1 Then
-    Console(consoleID, 1).Caption = s
+    Console(ConsoleID, 1).Caption = s
     GoTo SkipPropertySpaceNow
 End If
 
     If Has_Property_Space(s) = True Then
         propertySpace = i(Get_Property_Space(s)) & " "
         propertySpace = Replace(propertySpace, ",", " ")
-        Console(consoleID, 1).FontColor = propertySpace_Color(propertySpace)
-        Console(consoleID, 1).FontSize = propertySpace_Size(propertySpace)
-        Console(consoleID, 1).FontName = propertySpace_Name(propertySpace)
-        Console(consoleID, 1).FontBold = propertySpace_Bold(propertySpace)
-        Console(consoleID, 1).FontItalic = propertySpace_Italic(propertySpace)
-        Console(consoleID, 1).FontUnderline = propertySpace_Underline(propertySpace)
-        Console(consoleID, 1).FontStrikeThru = propertySpace_Strikethru(propertySpace)
-        If InStr(propertySpace, "flash ") > 0 Then Console(consoleID, 1).Flash = True Else Console(consoleID, 1).Flash = False
-        If InStr(propertySpace, "flashfast ") > 0 Then Console(consoleID, 1).FlashFast = True Else Console(consoleID, 1).FlashFast = False
-        If InStr(propertySpace, "flashslow ") > 0 Then Console(consoleID, 1).FlashSlow = True Else Console(consoleID, 1).FlashSlow = False
-        If InStr(propertySpace, "center ") > 0 Then Console(consoleID, 1).Center = True Else Console(consoleID, 1).Center = False
-        If InStr(propertySpace, "right ") > 0 Then Console(consoleID, 1).Right = True Else Console(consoleID, 1).Right = False
+        Console(ConsoleID, 1).FontColor = propertySpace_Color(propertySpace)
+        Console(ConsoleID, 1).FontSize = propertySpace_Size(propertySpace)
+        Console(ConsoleID, 1).FontName = propertySpace_Name(propertySpace)
+        Console(ConsoleID, 1).FontBold = propertySpace_Bold(propertySpace)
+        Console(ConsoleID, 1).FontItalic = propertySpace_Italic(propertySpace)
+        Console(ConsoleID, 1).FontUnderline = propertySpace_Underline(propertySpace)
+        Console(ConsoleID, 1).FontStrikeThru = propertySpace_Strikethru(propertySpace)
+        If InStr(propertySpace, "flash ") > 0 Then Console(ConsoleID, 1).Flash = True Else Console(ConsoleID, 1).Flash = False
+        If InStr(propertySpace, "flashfast ") > 0 Then Console(ConsoleID, 1).FlashFast = True Else Console(ConsoleID, 1).FlashFast = False
+        If InStr(propertySpace, "flashslow ") > 0 Then Console(ConsoleID, 1).FlashSlow = True Else Console(ConsoleID, 1).FlashSlow = False
+        If InStr(propertySpace, "center ") > 0 Then Console(ConsoleID, 1).Center = True Else Console(ConsoleID, 1).Center = False
+        If InStr(propertySpace, "right ") > 0 Then Console(ConsoleID, 1).Right = True Else Console(ConsoleID, 1).Right = False
     End If
     
 
-    Console(consoleID, 1).Caption = Remove_Property_Space(s)
+    Console(ConsoleID, 1).Caption = Remove_Property_Space(s)
 
 DoEvents
 
@@ -708,23 +708,23 @@ SkipPropertySpaceNow:
 
     
     'don't allow multiple lines!
-    If InStr(Console(consoleID, 1).Caption, vbCr) > 0 Then
+    If InStr(Console(ConsoleID, 1).Caption, vbCr) > 0 Then
         'this prevents each say line from being more than one line, stops corruption in console
-        Console(consoleID, 1).Caption = Mid(Console(consoleID, 1).Caption, 1, InStr(Console(consoleID, 1).Caption, vbCr) - 1)
-        Console(consoleID, 1).Caption = Console(consoleID, 1).Caption  '& "   --- only the first line is shown ---"
+        Console(ConsoleID, 1).Caption = Mid(Console(ConsoleID, 1).Caption, 1, InStr(Console(ConsoleID, 1).Caption, vbCr) - 1)
+        Console(ConsoleID, 1).Caption = Console(ConsoleID, 1).Caption  '& "   --- only the first line is shown ---"
     End If
     
     
     
     If withNewLineAfter = True Then
         'go to the next line
-        New_Console_Line consoleID
+        New_Console_Line ConsoleID
     Else
-        Console(consoleID, 2) = Console(consoleID, 1)
+        Console(ConsoleID, 2) = Console(ConsoleID, 1)
     End If
 
     'put the current line back at the next line
-    Console(consoleID, 1) = tmpLine
+    Console(ConsoleID, 1) = tmpLine
 
     DoEvents
 End Function

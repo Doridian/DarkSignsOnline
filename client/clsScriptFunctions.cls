@@ -35,7 +35,7 @@ End Property
 
 Public Property Let UserName(ByVal NewValue As String)
     AssertCLIOnly
-    SetUsername NewValue, consoleID
+    SetUsername NewValue, ConsoleID
 End Property
 
 Public Property Get Password() As String
@@ -48,11 +48,11 @@ End Property
 
 Public Property Let Password(ByVal NewValue As String)
     AssertCLIOnly
-    SetPassword NewValue, consoleID
+    SetPassword NewValue, ConsoleID
 End Property
 
-Public Property Get consoleID() As String
-    consoleID = PrivConsoleID
+Public Property Get ConsoleID() As String
+    ConsoleID = PrivConsoleID
 End Property
 
 Public Property Get TimeStr() As String
@@ -87,10 +87,10 @@ Public Sub CleanupScriptTasks()
     End If
     ReDim PendingCustomDownloads(0 To 0)
     Aborted = True
-    GetKeyWaiting(consoleID) = 0
-    GetAsciiWaiting(consoleID) = 0
-    WaitingForInput(consoleID) = False
-    WaitingForInputReturn(consoleID) = ""
+    GetKeyWaiting(ConsoleID) = 0
+    GetAsciiWaiting(ConsoleID) = 0
+    WaitingForInput(ConsoleID) = False
+    WaitingForInputReturn(ConsoleID) = ""
 End Sub
 
 Public Sub Quit()
@@ -109,16 +109,16 @@ Public Function ReadLine(Prompt As String) As String
         Exit Function
     End If
 
-    cPath_tmp(consoleID) = cPath(consoleID)
-    cPath(consoleID) = Prompt
-    WaitingForInput(consoleID) = True
+    cPath_tmp(ConsoleID) = cPath(ConsoleID)
+    cPath(ConsoleID) = Prompt
+    WaitingForInput(ConsoleID) = True
     
-    New_Console_Line consoleID
+    New_Console_Line ConsoleID
 
-    While WaitingForInput(consoleID)
+    While WaitingForInput(ConsoleID)
         Yield
     Wend
-    ReadLine = WaitingForInputReturn(consoleID)
+    ReadLine = WaitingForInputReturn(ConsoleID)
 End Function
 
 Public Function GetKey() As Integer
@@ -127,11 +127,11 @@ Public Function GetKey() As Integer
         Exit Function
     End If
 
-    GetKeyWaiting(consoleID) = -1
-    While GetKeyWaiting(consoleID) = -1
+    GetKeyWaiting(ConsoleID) = -1
+    While GetKeyWaiting(ConsoleID) = -1
         Yield
     Wend
-    GetKey = GetKeyWaiting(consoleID)
+    GetKey = GetKeyWaiting(ConsoleID)
 End Function
 
 Public Function GetASCII() As Integer
@@ -140,11 +140,11 @@ Public Function GetASCII() As Integer
         Exit Function
     End If
 
-    GetAsciiWaiting(consoleID) = -1
-    While GetAsciiWaiting(consoleID) = -1
+    GetAsciiWaiting(ConsoleID) = -1
+    While GetAsciiWaiting(ConsoleID) = -1
         Yield
     Wend
-    GetASCII = GetAsciiWaiting(consoleID)
+    GetASCII = GetAsciiWaiting(ConsoleID)
 End Function
 
 Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewRedirect As Boolean, NewDisableOutput As Boolean, NewIsRoot As Boolean)
@@ -256,7 +256,7 @@ Public Function WAITFOR(ResIndex As Variant) As String
 End Function
 
 Public Sub SayCOMM(s As String)
-    basWorld.SayCOMM s, consoleID
+    basWorld.SayCOMM s, ConsoleID
     Yield
 End Sub
 
@@ -376,7 +376,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
 
     basWorld.SayCOMM "Connecting to " & UCase(Domain) & ":" & Port & "..."
     If Not PrivDisableOutput Then
-        basConsole.SayRaw consoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
+        basConsole.SayRaw ConsoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
     End If
 
     Dim PostData As String
@@ -430,7 +430,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
         strCode = DomainConnectParams(0)
         DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
 
-        Connect = Run_Script_Code(strCode, consoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, True, Not PrivIsRoot, strPreamble)
+        Connect = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, True, Not PrivIsRoot, strPreamble)
     End If
 
     Yield
@@ -450,7 +450,7 @@ End Sub
 Public Sub UPLOAD(Domain As String, Port As Variant, filename As String)
     AssertCLIOnly
     Yield
-    UploadToDomain Domain, Port, filename, consoleID
+    UploadToDomain Domain, Port, filename, ConsoleID
     Yield
 End Sub
 

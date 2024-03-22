@@ -29,7 +29,7 @@ Private Const URL_ESCAPE_PERCENT As Long = &H1000&
 Private Type ProcessQueueEntry
     Data As String
     DataSource As String
-    consoleID As Integer
+    ConsoleID As Integer
     IsCustomDownload As Integer
 End Type
 
@@ -73,37 +73,37 @@ Public Sub CleanHttpRequests()
     Next
 End Sub
 
-Public Sub LoginNow(ByVal consoleID As Integer)
+Public Sub LoginNow(ByVal ConsoleID As Integer)
     Dim isBad As Boolean
     isBad = False
 
     If Authorized = True Then
-        SayRaw consoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
+        SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
         Exit Sub
     Else
         If myUsername = "" Then
-            SayRaw consoleID, "{14, orange,  center}Your username is not right - type: USERNAME [username] to set it."
+            SayRaw ConsoleID, "{14, orange,  center}Your username is not right - type: USERNAME [username] to set it."
             isBad = True
         End If
         If myPassword = "" Then
-            SayRaw consoleID, "{14, orange, center}Your password is not right - type: PASSWORD [password] to set it."
+            SayRaw ConsoleID, "{14, orange, center}Your password is not right - type: PASSWORD [password] to set it."
             isBad = True
         End If
         
         If isBad = True Then
-            SayRaw consoleID, "Warning - You are not logged in!{16 center underline}"
-            SayRaw consoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
+            SayRaw ConsoleID, "Warning - You are not logged in!{16 center underline}"
+            SayRaw ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
             Exit Sub
         End If
     
         
         SayCOMM "Logging in..."
 
-        RunPage "auth.php", consoleID, True, ""
+        RunPage "auth.php", ConsoleID, True, ""
     End If
 End Sub
 
-Public Sub LogoutNow(ByVal consoleID As Integer)
+Public Sub LogoutNow(ByVal ConsoleID As Integer)
     Authorized = False
     frmConsole.Shape1.BackColor = vbRed
     frmConsole.lblUsername.Caption = "You have been logged out."
@@ -119,13 +119,13 @@ Public Sub LogoutNow(ByVal consoleID As Integer)
 End Sub
 
 
-Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer, Optional NoAuth As Boolean)
+Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer, Optional NoAuth As Boolean)
     If Not NoAuth And InStr(i(sUrl), "auth.php") = 0 And Not Authorized Then
-        SayRaw consoleID, "You must be logged in to do that!{36 center orange impact nobold}"
-        SayRaw consoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}"
+        SayRaw ConsoleID, "You must be logged in to do that!{36 center orange impact nobold}"
+        SayRaw ConsoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}"
 
         If IsCustomDownload > 0 Then
-            basWorld.Process "[error]not logged in", sUrl, consoleID, IsCustomDownload
+            basWorld.Process "[error]not logged in", sUrl, ConsoleID, IsCustomDownload
         End If
         Exit Function
     End If
@@ -134,7 +134,7 @@ Public Function RunPage(ByVal sUrl As String, ByVal consoleID As Integer, Option
     sUrl = Replace(sUrl, " ", "%20")
 
     Dim Requestor As New clsHttpRequestor
-    Requestor.consoleID = consoleID
+    Requestor.ConsoleID = ConsoleID
     Requestor.IsCustomDownload = IsCustomDownload
 
     If IsCustomDownload <= 0 Then
@@ -172,7 +172,7 @@ Public Function myPassword() As String
     myPassword = RegLoad("myPasswordDev", "")
 End Function
 
-Public Sub SayCOMM(s As String, Optional ByVal consoleID As Integer)
+Public Sub SayCOMM(s As String, Optional ByVal ConsoleID As Integer)
     'send a message to the comm
     
     Dim n As Integer
@@ -219,11 +219,11 @@ AllDone:
     frmConsole.CommLowerBorder.Move 0, frmConsole.Comm.Height - frmConsole.CommLowerBorder.Height, frmConsole.Comm.Width
 End Sub
 
-Public Sub Process(ByVal s As String, sSource As String, ByVal consoleID As Integer, ByVal IsCustomDownload As Integer)
+Public Sub Process(ByVal s As String, sSource As String, ByVal ConsoleID As Integer, ByVal IsCustomDownload As Integer)
     Dim NewEntry As ProcessQueueEntry
     NewEntry.Data = s
     NewEntry.DataSource = sSource
-    NewEntry.consoleID = consoleID
+    NewEntry.ConsoleID = ConsoleID
     NewEntry.IsCustomDownload = IsCustomDownload
     
     Dim X As Integer
@@ -240,12 +240,12 @@ End Sub
 Public Sub ProcessQueueEntry(ByVal Index As Integer)
     Dim s As String
     Dim sSource As String
-    Dim consoleID As Integer
+    Dim ConsoleID As Integer
     Dim IsCustomDownload As Integer
 
     s = ProcessQueue(Index).Data
     sSource = ProcessQueue(Index).DataSource
-    consoleID = ProcessQueue(Index).consoleID
+    ConsoleID = ProcessQueue(Index).ConsoleID
     IsCustomDownload = ProcessQueue(Index).IsCustomDownload
     
 
@@ -271,7 +271,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
         Case "0000" 'do nothing with the data
         
         Case "0001" 'it's the user list
-            LoadUserList s, consoleID
+            LoadUserList s, ConsoleID
         
         Case "1001" 'login ok
             userIP = s
@@ -291,7 +291,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 Dim CLine As ConsoleLine
                 CLine = Console_Line_Defaults
                 CLine.Caption = Command
-                New_Console_Line consoleID
+                New_Console_Line ConsoleID
             End If
             
             Dim EmptyParams(0 To 0) As String
@@ -310,7 +310,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             
             frmConsole.ConnectIRC
             'get stats
-            'RunPage "get_user_stats.php?returnwith=2000&fromlogin", consoleID
+            'RunPage "get_user_stats.php?returnwith=2000&fromlogin", ConsoleID
             'get recent chat data
             'RunPage "chat.php?get=1", ActiveConsole
             'mark as online
@@ -338,22 +338,22 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
         
         '2000 is just a general show in the comm, all purpose
         Case "2000":
-            SayCommMultiLines s, consoleID
+            SayCommMultiLines s, ConsoleID
             
         Case "2001":
-            SayRawMultiLines s, consoleID
+            SayRawMultiLines s, ConsoleID
         
         Case "2003":
             If (s = "success") Then
-                SayCOMM "Upload Successful.", consoleID
+                SayCOMM "Upload Successful.", ConsoleID
             Else
                 MsgBox s
-                SayCOMM "Upload Failed.", consoleID
+                SayCOMM "Upload Failed.", ConsoleID
             End If
             
             
         Case "2004": ' Domain querys.
-            SayRawMultiLines s, consoleID
+            SayRawMultiLines s, ConsoleID
         
         Case "3001": 'update chat
             
@@ -389,7 +389,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
         
         
             If Mid(i(s), 1, 5) = "error" Then
-                SayCommMultiLines s, consoleID
+                SayCommMultiLines s, ConsoleID
                 Exit Sub
             End If
         
@@ -401,7 +401,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 WriteFile App.Path & "\user" & ffname, s
                 SayCOMM "Download Complete: " & ffname
             Else
-                SayCommMultiLines s, consoleID
+                SayCommMultiLines s, ConsoleID
             End If
         
         Case "4500"
@@ -463,31 +463,31 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
 End Sub
 
 
-Public Sub SayCommMultiLines(ByVal s As String, consoleID As Integer)
+Public Sub SayCommMultiLines(ByVal s As String, ConsoleID As Integer)
     Dim sA() As String
     sA = Split(s, vbCrLf)
 
     Dim n As Integer
     For n = 0 To UBound(sA)
-        SayCOMM sA(n), consoleID
+        SayCOMM sA(n), ConsoleID
     Next n
 End Sub
 
 
-Public Sub SayRawMultiLines(ByVal s As String, consoleID As Integer)
+Public Sub SayRawMultiLines(ByVal s As String, ConsoleID As Integer)
     Dim sA() As String
     sA = Split(s, vbCrLf)
 
     Dim n As Integer
     For n = 0 To UBound(sA)
-        SayRaw consoleID, sA(n)
+        SayRaw ConsoleID, sA(n)
     Next n
 
-    SayRaw consoleID, "{12 green}Line(s) Found: " & Trim(UBound(sA) + 1)
+    SayRaw ConsoleID, "{12 green}Line(s) Found: " & Trim(UBound(sA) + 1)
 End Sub
 
 
-Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
+Public Sub LoadUserList(ByVal s As String, ByVal ConsoleID As Integer)
     s = Replace(s, "::", ":")
     s = Replace(s, vbCr, ""): s = Replace(s, vbLf, "")
     
@@ -520,7 +520,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
             'this user just signed in!
             '----------------------------------------
             If i(tmpS) <> "admin" Then
-                SayCOMM "User " & Trim(tmpS) & " has signed in.", consoleID
+                SayCOMM "User " & Trim(tmpS) & " has signed in.", ConsoleID
             End If
         End If
         End If
@@ -537,7 +537,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal consoleID As Integer)
                 'this user has been signed out!
                 '----------------------------------------
                 If i(tmpS) <> "admin" Then
-                    SayCOMM "User " & Trim(tmpS) & " has signed out.", consoleID
+                    SayCOMM "User " & Trim(tmpS) & " has signed out.", ConsoleID
                 End If
             End If
         End If
