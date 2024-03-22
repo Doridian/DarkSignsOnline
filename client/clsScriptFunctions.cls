@@ -255,9 +255,16 @@ Public Function WAITFOR(ResIndex As Variant) As String
     Yield
 End Function
 
-Public Sub SayCOMM(s As Variant)
+Public Sub SayCOMM(ParamArray Params() As Variant)
+    Dim X As Integer
     Dim sStr As String
-    sStr = "" & s
+    For X = LBound(Params) To UBound(Params)
+        If sStr <> "" Then
+            sStr = sStr & " "
+        End If
+        sStr = sStr & Params(X)
+    Next X
+
     basWorld.SayCOMM sStr, ConsoleID
     Yield
 End Sub
@@ -273,9 +280,16 @@ Public Sub EDIT(file As String)
     EditFile file, PrivConsoleID
 End Sub
 
-Public Sub SAY(s As Variant)
+Public Sub SAY(ParamArray Params() As Variant)
+    Dim X As Integer
     Dim sStr As String
-    sStr = "" & s
+    For X = LBound(Params) To UBound(Params)
+        If sStr <> "" Then
+            sStr = sStr & " "
+        End If
+        sStr = sStr & Params(X)
+    Next X
+
     If PrivRedirectOutput Then
         PrivOutput = PrivOutput & sStr & vbCrLf
         Yield
@@ -288,30 +302,28 @@ Public Sub SAY(s As Variant)
     Yield
 End Sub
 
-Public Sub SayLine(s As Variant)
-    Dim sStr As String
-    sStr = "" & s
+Public Sub SayLine(s As String)
     If PrivRedirectOutput Then
-        PrivOutput = PrivOutput & vbCr & sStr & vbCrLf
+        PrivOutput = PrivOutput & vbCr & s & vbCrLf
         Yield
     End If
     If PrivDisableOutput Then
         Yield
         Exit Sub
     End If
-    basConsole.SayRaw PrivConsoleID, sStr, False
+    basConsole.SayRaw PrivConsoleID, s, False
 End Sub
 
-Public Sub SayAll(s As Variant)
-    Dim sStr As String
-    sStr = "" & s
-    If PrivDisableOutput Then
-        PrivOutput = PrivOutput & sStr & vbCrLf
-        Yield
-        Exit Sub
-    End If
-
+Public Sub SayAll(ParamArray Params() As Variant)
     Dim X As Integer
+    Dim sStr As String
+    For X = LBound(Params) To UBound(Params)
+        If sStr <> "" Then
+            sStr = sStr & " "
+        End If
+        sStr = sStr & Params(X)
+    Next X
+
     Dim ScriptOutSplit() As String
     ScriptOutSplit = Split(sStr, vbCrLf)
     For X = LBound(ScriptOutSplit) To UBound(ScriptOutSplit)
