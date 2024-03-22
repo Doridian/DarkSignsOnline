@@ -73,7 +73,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
 
     Dim RunStr As String
     RunStr = ParseCommandLine(ConsoleID, tmpS)
-    SayCOMM "SHEXEC: " & RunStr, ConsoleID
+    'SayCOMM "SHEXEC: " & RunStr, ConsoleID
 
     On Error GoTo EvalError
     scrConsole(ConsoleID).AddCode RunStr
