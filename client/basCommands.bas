@@ -161,7 +161,15 @@ CommandForNext:
 
     ' If we arrive here, it means the user probably intended to run a CLI command!
     Dim Command As String
-    Command = CLIArgs(0)
+    Command = LCase(CLIArgs(0))
+    
+    Select Case Command
+        Case "for", "next", "while", "wend", "do", "loop", "until", _
+                "if", "else", "elseif", "end", _
+                "public", "private", "property", "dim", "sub", "function", _
+                "option", "const", "enum", "redim", "set", "goto", "type":
+            GoTo NotASimpleCommand
+    End Select
     
     ' First, check if there is a command for it in /system/commands
     Dim ResolvedCommand As String
