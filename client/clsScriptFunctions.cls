@@ -62,7 +62,7 @@ End Property
 Public Property Let Dir(ByVal NewValue As String)
     AssertLocalOnly
 
-    ChangeDir NewValue, PrivConsoleID
+    cPath(PrivConsoleID) = ResolvePath(Dir)
 End Property
 
 Public Property Get ConsoleID() As String
@@ -263,7 +263,7 @@ Public Function WAITFOR(ResIndex As Variant) As String
     While Not DownloadDone(ResIndex)
         Yield
         If Not HasPendingCustomDownload(ResIndex) Then
-            WAITFOR = "[invalid]"
+            Err.Raise vbObjectError + 9300, "DSO", "Invalid WaitFor Index " & ResIndex
             Exit Function
         End If
     Wend
@@ -291,7 +291,7 @@ End Sub
 Public Sub CD(Dir As String)
     AssertLocalOnly
 
-    ChangeDir Dir, PrivConsoleID
+    cPath(PrivConsoleID) = ResolvePath(Dir)
     Yield
 End Sub
 
@@ -299,7 +299,7 @@ Public Sub EDIT(file As String)
     AssertCLIOnly
 
     Yield
-    EditFile file, PrivConsoleID
+    EditFile ResolvePath(file), PrivConsoleID
 End Sub
 
 Public Sub SAY(ParamArray params() As Variant)
@@ -358,12 +358,12 @@ Public Sub CLIParse(Src As String, Dest As String)
     AssertLocalOnly
 
     Dim SrcStr As String
-    SrcStr = GetFileClean(ResolvePath(PrivConsoleID, Src))
+    SrcStr = GetFileClean(ResolvePath(Src))
 
     Dim DestStr As String
     DestStr = ParseCommandLineOptional(SrcStr)
 
-    Dest = SafePath(ResolvePath(PrivConsoleID, Dest))
+    Dest = SafePath(ResolvePath(Dest))
 
     On Error Resume Next
     Kill Dest
@@ -378,6 +378,10 @@ End Sub
 
 Public Function ResolveCommand(Command As String) As String
     ResolveCommand = basCommands.ResolveCommand(PrivConsoleID, Command)
+End Function
+
+Public Function ResolvePath(Path As String) As String
+    ResolvePath = basCommands.ResolvePath(PrivConsoleID, Path)
 End Function
 
 Public Sub RUN(ParamArray XArr() As Variant)

@@ -25,7 +25,8 @@ Public Sub InitBasCommands()
 End Sub
 
 Public Function SafePath(Path As String) As String
-    If InStr(Path, "..") > 0 Then
+    Path = Replace(Path, "\", "/")
+    If Path = ".." Or Left(Path, 3) = "../" Or Right(Path, 3) = "/.." Or InStr(Path, "/../") > 0 Then
         Err.Raise vbObjectError + 9666, "DSO", "Invalid character in path"
         Exit Function
     End If
@@ -33,24 +34,61 @@ Public Function SafePath(Path As String) As String
 End Function
 
 Public Function ResolvePath(ConsoleID As Integer, Path As String) As String
-    If Left(Path, 1) = "/" Or Left(Path, 1) = "\" Then
+    If Left(Path, 1) = "/" Or Left(Path, 1) = "\" Or ConsoleID = 0 Then
         ResolvePath = Path
+    Else
+        ResolvePath = cPath(ConsoleID) & "/" & Path
+    End If
+
+    ResolvePath = Replace(ResolvePath, "\", "/")
+    While InStr(ResolvePath, "//") > 0
+        ResolvePath = Replace(ResolvePath, "//", "/")
+    Wend
+    
+    If Left(ResolvePath, 1) = "/" Then
+        ResolvePath = Mid(ResolvePath, 2)
+    End If
+
+    Dim ResolvePathSplit() As String
+    ResolvePathSplit = Split(ResolvePath, "/")
+    
+    Dim ResolvePathSplitCut() As String
+    ReDim ResolvePathSplitCut(0 To 0)
+
+    Dim X As Long
+    ResolvePath = ""
+    Dim CurPath As String
+    For X = LBound(ResolvePathSplit) To UBound(ResolvePathSplit)
+        CurPath = ResolvePathSplit(X)
+        If CurPath = "." Or CurPath = "" Then
+            ' Don't do anything!
+        ElseIf CurPath = ".." Then
+            If UBound(ResolvePathSplitCut) > 0 Then
+                ReDim Preserve ResolvePathSplitCut(0 To UBound(ResolvePathSplitCut) - 1)
+            End If
+        Else
+            ReDim Preserve ResolvePathSplitCut(0 To UBound(ResolvePathSplitCut) + 1)
+            ResolvePathSplitCut(UBound(ResolvePathSplitCut)) = CurPath
+        End If
+    Next X
+
+    If UBound(ResolvePathSplitCut) = 0 Then
+        ResolvePath = "/"
         Exit Function
     End If
-    ResolvePath = cPath(ConsoleID) & "/" & Path
+
+    ResolvePathSplitCut(0) = ""
+    ResolvePath = Join(ResolvePathSplitCut, "/")
 End Function
 
 Public Function ResolveCommand(ConsoleID As Integer, Command As String) As String
-    If InStr(Command, "/") > 0 Or InStr(Command, "\") > 0 Or InStr(Command, ".") > 0 Then
-        If Left(Command, 1) = "/" Or Left(Command, 1) = "\" Or ConsoleID = 0 Then
-            ResolveCommand = Command
-            Exit Function
-        End If
-        ResolveCommand = cPath(ConsoleID) & "/" & Command
+    If InStr(Command, "/") > 0 Or InStr(Command, "\") > 0 Then
+        ResolveCommand = ResolvePath(ConsoleID, Command)
         Exit Function
     End If
+
     ResolveCommand = "system/commands/" & Command & ".ds"
-    If Not FileExists(App.Path & "/user/" & ResolveCommand) Then
+    If Not FileExists(SafePath(ResolveCommand)) Then
         ResolveCommand = ""
     End If
 End Function
@@ -635,25 +673,18 @@ End Sub
 
 Public Sub UploadToDomain(ByVal sDomain As String, ByVal sPort As Integer, ByVal sFilename As String, ByVal ConsoleID As Integer)
     Dim sFileData As String
-    sFilename = fixPath(sFilename, ConsoleID)
+    sFileData = GetFileClean(sFilename)
 
-    If FileExists(App.Path & "\user" & sFilename) = True Then
-        Dim tempStrA As String
+    Dim tempStrA As String
 
-        sFileData = GetFileClean(sFilename)
-        tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
+    tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
 
-        RunPage "domain_upload.php", ConsoleID, True, _
-        "ver=2&port=" & EncodeURLParameter(Trim(sPort)) & _
-        "&d=" & EncodeURLParameter(sDomain) & _
-        "&filedata=" & EncodeURLParameter(tempStrA)
-        
-        SayCOMM "Attempting to upload: " & UCase(sDomain) & ":" & i(sPort), ConsoleID
-        
-    Else
-        SayError "File Not Found:" & sFilename, ConsoleID
-        Exit Sub
-    End If
+    RunPage "domain_upload.php", ConsoleID, True, _
+    "ver=2&port=" & EncodeURLParameter(Trim(sPort)) & _
+    "&d=" & EncodeURLParameter(sDomain) & _
+    "&filedata=" & EncodeURLParameter(tempStrA)
+    
+    SayCOMM "Attempting to upload: " & UCase(sDomain) & ":" & i(sPort), ConsoleID
 End Sub
 
 Public Sub CloseDomainPort(ByVal s As String, ByVal ConsoleID As Integer)
@@ -701,7 +732,6 @@ Public Sub DownloadFromDomain(ByVal s As String, ByVal ConsoleID As Integer)
     
     sPort = i(Mid(s, 1, InStr(s, " ")))
     sFilename = Trim(Mid(s, InStr(s, " "), Len(s)))
-    sFilename = fixPath(sFilename, ConsoleID)
 
     RunPage "domain_download.php", ConsoleID, True, _
     "returnwith=4400" & _
@@ -1155,138 +1185,7 @@ Public Sub DownADir(ByVal ConsoleID As Integer)
 zxc:
 End Sub
 
-Public Sub MakeDir(ByVal s As String, ByVal ConsoleID As Integer)
-    
-    If InvalidChars(s) = True Then
-        SayError "Invalid Directory Name: " & s, ConsoleID
-        Exit Sub
-    End If
-    
-    If Trim(s) = ".." Then DownADir ConsoleID: Exit Sub
-    If InStr(s, "..") > 0 Then
-        GoTo errorDir
-    End If
-
-    s = fixPath(s, ConsoleID)
-    
-    If DirExists(App.Path & "\user" & s) = True Then
-        'don't create it if it already exists
-        GoTo errorDir
-    Else
-        MakeADir App.Path & "\user" & s
-    End If
-    
-    Exit Sub
-    
-errorDir:
-    'say ConsoleID, "Directory Not Found: " & s & " {orange}", False
-End Sub
-
-
-Public Sub MoveRename(ByVal s As String, ByVal ConsoleID As Integer, Optional sTag As String)
-
-    Dim s1 As String, s2 As String
-    s = Trim(s)
-    s = Replace(s, "/", "\")
-    If InStr(s, " ") = 0 Then Exit Sub
-    
-    s1 = Trim(Mid(s, 1, InStr(s, " ")))
-    s2 = Trim(Mid(s, InStr(s, " "), Len(s)))
-
-    s1 = fixPath(s1, ConsoleID)
-    s2 = fixPath(s2, ConsoleID)
-    
-    If InStr(i(s1), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
-        Exit Sub
-    End If
-    
-    If FileExists(App.Path & "\user" & s1) = False Then
-        SayError "File Not Found: " & s1, ConsoleID
-        Exit Sub
-    End If
-    
-    'now move it or copy it
-    If i(sTag) = "copyonly" Then
-        If CopyAFile(App.Path & "\user" & s1, App.Path & "\user" & s2, ConsoleID) = False Then
-            SayError "Invalid Destination File: " & s2, ConsoleID
-            Exit Sub
-        End If
-    Else
-        If MoveAFile(App.Path & "\user" & s1, App.Path & "\user" & s2, ConsoleID) = False Then
-            SayError "Invalid Destination File: " & s2, ConsoleID
-            Exit Sub
-        End If
-    End If
-    
-    
-    Exit Sub
-    
-errorDir:
-    'say ConsoleID, "Directory Not Found: " & s & " {orange}", False
-End Sub
-
-Public Function MoveAFile(Source As String, Dest As String, ConsoleID As Integer) As Boolean
-    On Error GoTo zxc
-
-    
-    If InStr(i(Dest), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
-        Exit Function
-    End If
-    
-    
-    FileCopy Source, Dest
-    Kill Source
-
-    MoveAFile = True
-    Exit Function
-zxc:
-    MoveAFile = False
-End Function
-
-Public Function CopyAFile(Source As String, Dest As String, ConsoleID As Integer) As Boolean
-    On Error GoTo zxc
-    
-    If InStr(i(Dest), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
-        Exit Function
-    End If
-    
-    FileCopy Source, Dest
-    'Kill Source 'don't kill it, this is for copy
-
-    CopyAFile = True
-    Exit Function
-zxc:
-    CopyAFile = False
-End Function
-
-Public Sub DeleteFiles(ByVal s As String, ByVal ConsoleID As Integer)
-    
-    If Trim(s) = ".." Then DownADir ConsoleID: Exit Sub
-    If InStr(s, "..") > 0 Then
-        GoTo errorDir
-    End If
-
-    s = fixPath(s, ConsoleID)
-    
-    If InStr(i(s), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
-        Exit Sub
-    End If
-    
-    
-    DelFiles App.Path & "\user" & s, ConsoleID
-    
-    Exit Sub
-    
-errorDir:
-    'say ConsoleID, "Directory Not Found: " & s & " {orange}", False
-End Sub
-
 Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
-    s = fixPath(s, ConsoleID)
     If s = "" Then
         Exit Sub
     End If
@@ -1294,11 +1193,13 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
     EditorFile_Short = GetShortName(s)
     EditorFile_Long = s
 
-    If FileExists(App.Path & "\user" & s) Then
-    Else
+    Dim sPath As String
+    sPath = SafePath(s)
+
+    If Not FileExists(sPath) Then
         SayRaw ConsoleID, "{green}File Not Found, Creating: " & s
     End If
-    
+
     frmEditor.Show vbModal
     
     If Trim(EditorRunFile) <> "" Then
@@ -1315,8 +1216,6 @@ End Sub
 
 Public Sub ShowMail(ByVal s As String, ByVal ConsoleID As Integer)
     
-    s = Trim(fixPath(s, ConsoleID))
-    
     frmDSOMail.Show vbModal
      
     
@@ -1326,106 +1225,6 @@ errorDir:
     'say ConsoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Sub AppendAFile(ByVal s As String, ByVal ConsoleID As Integer)
-    s = Trim(s)
-    If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters: APPEND " & s, ConsoleID
-        Exit Sub
-    End If
-    
-    Dim sFile As String
-    Dim sData As String
-    Dim sFileData As String
-    Dim AppendToStartOfFile As Boolean
-    
-    sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), ConsoleID))
-    s = Trim(Mid(s, InStr(s, " "), Len(s)))
-    
-    If Mid(i(s), 1, 6) = "start " Then
-        AppendToStartOfFile = True
-        s = Trim(Mid(s, 7, Len(s)))
-    ElseIf Mid(i(s), 1, 4) = "end " Then
-        AppendToStartOfFile = False
-        s = Trim(Mid(s, 5, Len(s)))
-    Else
-        AppendToStartOfFile = False
-    End If
-    
-    If FileExists(App.Path & "\user" & sFile) = False Then
-        'it will be created.
-        sFileData = ""
-    Else
-        sFileData = GetFile(App.Path & "\user" & sFile)
-    End If
-    
-    'add it to the data
-    If AppendToStartOfFile = True Then
-        sFileData = s & vbCrLf & sFileData
-    Else
-        sFileData = sFileData & vbCrLf & s
-    End If
-    
-    
-        
-    If InStr(i(sFile), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
-        Exit Sub
-    End If
-    
-    
-    're write it!
-    WriteFile App.Path & "\user" & sFile, sFileData
-    
-    
-       
-    
-End Sub
-
-Public Sub WriteAFile(ByVal s As String, ByVal ConsoleID As Integer, ByVal ScriptFrom As String)
-    s = Trim(s)
-    If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters: WRITE " & s, ConsoleID
-        Exit Sub
-    End If
-    
-    Dim sFile As String
-    Dim sData As String
-    Dim sFileData As String
-
-    
-    sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), ConsoleID))
-    'If ScriptFrom <> "CONSOLE" Or ScriptFrom <> "BOOT" Then
-            
-    '    If DirExists(App.Path & "\user\temp") = False Then
-    '        MsgBox "A"
-    '        MakeADir App.Path & "\user\temp"
-    '    End If
-        
-        
-    
-    
-    
-    '    sFile = "\temp\" & ScriptFrom & sFile
-    'End If
-   ' MsgBox sFile
-    
-    s = Trim(Mid(s, InStr(s, " "), Len(s)))
-    
-    If InStr(i(sFile), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
-        Exit Sub
-    End If
-    
-    
-
-    're write it!
-    WriteFile App.Path & "\user" & sFile, s
-    
-    
-       
-    
-End Sub
-
 Public Sub DisplayFile(ByVal s As String, ByVal ConsoleID As Integer)
     
     Dim sFile As String
@@ -1433,44 +1232,6 @@ Public Sub DisplayFile(ByVal s As String, ByVal ConsoleID As Integer)
     Dim MaxLines As Integer
     
     s = Trim(s)
-    
-    
-    If InStr(s, " ") Then
-        'file start and end lines are specified
-        sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), ConsoleID))
-        
-        s = Trim(Mid(s, InStr(s, " "), Len(s)))
-        
-        If InStr(s, " ") Then
-            'both the start and amount of lines are specific
-            startLine = Val(Mid(s, 1, InStr(s, " ")))
-            MaxLines = Val(Trim(Mid(s, InStr(s, " "), Len(s))))
-            
-            If MaxLines < 1 Then
-                SayError "Invalid Parameter Value: " & Trim(Str(MaxLines)), ConsoleID
-                Exit Sub
-            End If
-            If startLine < 1 Then
-                SayError "Invalid Parameter Value: " & Trim(Str(MaxLines)), ConsoleID
-                Exit Sub
-            End If
-        Else
-            'only the start line is specified
-            startLine = Val(s)
-            MaxLines = 29999
-        End If
-    Else
-        'its just the filename
-        sFile = Trim(fixPath(s, ConsoleID))
-        startLine = 1
-        MaxLines = 29999
-    End If
-    
-
-    If FileExists(App.Path & "\user" & sFile) = False Then
-        SayError "File Not Found: " & sFile, ConsoleID
-        Exit Sub
-    End If
     
     
     Dim FF As Long, tmpS As String, CLine As Integer, CLinePrinted As Integer
@@ -1510,140 +1271,8 @@ Public Function GetShortName(ByVal s As String) As String
     GetShortName = Trim(ReverseString(s))
 End Function
 
-Public Sub WaitNow(ByVal s As String, ByVal ConsoleID As Integer)
-   s = Trim(s)
-
-    
-    's is ms
-    Dim iMS As Long
-    iMS = Val(s)
-    If iMS < 1 Then iMS = 1
-    If iMS > 60000 Then iMS = 60000
-    
-    'now set the wait timer with the ims interval
-    
-    frmConsole.tmrWait(ConsoleID).Enabled = False
-    frmConsole.tmrWait(ConsoleID).Interval = iMS
-    frmConsole.tmrWait(ConsoleID).Enabled = True
-    
-    Exit Sub
-    
-errorDir:
-    'say ConsoleID, "Directory Not Found: " & s & " {orange}", False
-End Sub
-
-Public Sub DelFiles(sFiles As String, ByVal ConsoleID As Integer)
-    On Error Resume Next
-    Kill sFiles
-End Sub
-
-Public Sub RemoveDir(ByVal s As String, ByVal ConsoleID As Integer)
-    
-    If Trim(s) = ".." Then DownADir ConsoleID: Exit Sub
-    If InStr(s, "..") > 0 Then
-        GoTo errorDir
-    End If
-
-    s = fixPath(s, ConsoleID)
-    
-    If DirExists(App.Path & "\user" & s) = True Then
-        'don't create it if it already exists
-        If RemoveADir(App.Path & "\user" & s, ConsoleID) = False Then
-            SayError "Directory Not Empty: " & s, ConsoleID
-            Exit Sub
-        End If
-    Else
-        'nothing to delete
-    End If
-    
-    Exit Sub
-    
-errorDir:
-    'say ConsoleID, "Directory Not Found: " & s & " {orange}", False
-End Sub
-
 Public Function SayError(s As String, ByVal ConsoleID As Integer)
     SayRaw ConsoleID, "Error - " & s & " {orange}"
-End Function
-
-Public Function RemoveADir(s As String, cosoleID As Integer) As Boolean
-    On Error GoTo zxc
-    RmDir s
-    RemoveADir = True
-    Exit Function
-zxc:
-    RemoveADir = False
-End Function
-
-Public Sub MakeADir(s As String)
-    On Error Resume Next
-    MkDir s
-End Sub
-
-Public Sub ChangeDir(ByVal s As String, ByVal ConsoleID As Integer)
-    If InvalidChars(s) = True Then
-        SayError "Invalid Directory Name: " & s, ConsoleID
-        Exit Sub
-    End If
-
-    If s = ".." Then DownADir ConsoleID: Exit Sub
-    If InStr(s, "..") > 0 Then
-        GoTo errorDir
-    End If
-    s = Replace(s, "/", "\")
-    If s = "." Then Exit Sub
-    If InStr(s, ".\") > 0 Then Exit Sub
-    If InStr(s, "\.") > 0 Then Exit Sub
-
-    s = fixPath(s, ConsoleID)
-    
-    If DirExists(App.Path & "\user" & s) = True Then
-        
-        s = Replace(s, "\\", "\")
-        s = s & "\"
-        s = Replace(s, "\\", "\")
-        
-        cPath(ConsoleID) = s
-    Else
-        GoTo errorDir
-    End If
-    
-    Exit Sub
-errorDir:
-    SayError "Directory Not Found: " & s, ConsoleID
-End Sub
-
-Public Function fixPath(ByVal s As String, ByVal ConsoleID As Integer) As String
-    'file.s will come out as -> /file.s
-    '/file.s will come out as -> /file.s
-    'system/file.s will come out as -> /system/file.s
-    'etc
-    
-    s = Trim(s)
-    
-    If Mid(s, 1, 1) = "/" Then s = "\" & Mid(s, 2, Len(s))
-    
-    If Mid(s, 1, 1) = "\" Then
-        fixPath = s
-    Else
-        
-        cPath(ConsoleID) = Replace(cPath(ConsoleID), "/", "\")
-        
-        If Right(cPath(ConsoleID), 1) = "\" Then
-            fixPath = Mid(cPath(ConsoleID), 1, Len(cPath(ConsoleID)) - 1)
-        End If
-    End If
-    
-    fixPath = fixPath & "\" & s
-    
-    fixPath = Replace(fixPath, "../", "")
-    fixPath = Replace(fixPath, "//", "/")
-    fixPath = Replace(fixPath, "\\", "\")
-    fixPath = Replace(fixPath, "..\", "")
-    fixPath = Replace(fixPath, "/..", "")
-    fixPath = Replace(fixPath, "\..", "")
-    
-    
 End Function
 
 Public Sub ListDirectoryContents(ByVal ConsoleID As Integer, Optional ByVal sFilter As String)

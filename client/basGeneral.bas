@@ -86,7 +86,7 @@ Function GetFileClean(ByVal filename As String) As String
     filename = SafePath(filename)
     
     ' ensure that the file exists
-    If Len(dir$(filename)) = 0 Then
+    If Len(Dir$(filename)) = 0 Then
         Err.Raise 53   ' File not found
     End If
     
@@ -184,54 +184,6 @@ zxc:
     FileExists = False
 End Function
 
-Public Function CountInstr(s As String, ByVal sToCount As String) As Integer
-    sToCount = LCase(sToCount)
-    CountInstr = 0
-    Dim n As Long
-    For n = 1 To Len(s)
-        If LCase(Mid(s, n, Len(sToCount))) = sToCount Then
-            CountInstr = CountInstr + 1
-        End If
-    Next n
-End Function
-
-Public Function MoveADirectory(sSource As String, sDest As String) As Boolean
-        
-    'home and system dirs cannot be moved
-    If InStr(i(sSource) & "\", "\system\") > 0 Or InStr(i(sSource) & "\", "\home\") > 0 Then
-        MoveADirectory = False
-        Exit Function
-    End If
-    
-    On Error GoTo zxc
-    
-    Name sSource As sDest
-    
-    MoveADirectory = True
-    
-    Exit Function
-zxc:
-    MoveADirectory = False
-End Function
-
-Public Function CopyAFile(sSource As String, sDest As String, ConsoleID As Integer) As Boolean
-    On Error GoTo zxc
-    
-    
-    If InStr(i(sDest), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
-        Exit Function
-    End If
-    
-    
-    FileCopy sSource, sDest
-    CopyAFile = True
-    
-    Exit Function
-zxc:
-    CopyAFile = False
-End Function
-
 Public Function FileTitleOnly(ByVal s As String) As String
     Dim n As Integer
     
@@ -262,22 +214,6 @@ Public Function WriteFile(fn As String, s As String) As Boolean
 zxc:
     Close #FF
     WriteFile = False
-End Function
-
-Public Function WriteClean(fn As String, s As String) As Boolean
-    
-    On Error GoTo zxc
-    Dim FF As Long
-    FF = FreeFile
-    Open fn For Output As #FF
-        Print #FF, s
-        
-    Close #FF
-    WriteClean = True
-    Exit Function
-zxc:
-    Close #FF
-    WriteClean = False
 End Function
 
 

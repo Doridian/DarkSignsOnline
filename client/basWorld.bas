@@ -396,9 +396,11 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             Dim ffname As String
             If InStr(s, ":") > 0 Then
                 ffname = Trim(Mid(s, 1, InStr(s, ":") - 1))
-                ffname = Replace(ffname, "\\", "\")
+                While InStr(ffname, "//") > 0
+                    ffname = Replace(ffname, "//", "/")
+                Wend
                 s = Mid(s, InStr(s, ":") + 1, Len(s))
-                WriteFile App.Path & "\user" & ffname, s
+                WriteFile App.Path & "/user" & ffname, s
                 SayCOMM "Download Complete: " & ffname
             Else
                 SayCommMultiLines s, ConsoleID

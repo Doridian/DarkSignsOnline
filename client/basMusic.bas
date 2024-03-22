@@ -60,7 +60,6 @@ Public Sub CheckMusic()
     
     On Error Resume Next
     With frmConsole
-        MakeADir App.Path & "\user\home\mp3\"
         .FileMusic.Path = App.Path & "\user\home\mp3\"
         .FileMusic.Refresh
         
@@ -73,7 +72,7 @@ Public Sub CheckMusic()
             Dim tmpFileName As String
             tmpFileName = .FileMusic.List(MusicFileIndex)
             tmpFile = .FileMusic.Path & "\" & tmpFileName
-            SayComm "Next track: " & tmpFileName
+            SayCOMM "Next track: " & tmpFileName
     
             StopMusic
             mciSendString "open """ & tmpFile & """ type mpegvideo alias dsomusic", vbNullString, 0, 0

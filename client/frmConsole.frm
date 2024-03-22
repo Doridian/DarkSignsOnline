@@ -802,22 +802,22 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
   tmpS = Trim(Mid(tmpS, iTmp + 1))
  End If
  tmpS2 = App.Path & "\user" & cPath(ConsoleID)
- tmpS = Replace(tmpS, "/", "\")
- iTmp = InStrRev(tmpS, "\")
+ tmpS = Replace(tmpS, "\", "/")
+ iTmp = InStrRev(tmpS, "/")
  If iTmp > 0 Then
   tmpSP = Mid(tmpS, 1, iTmp)
  Else
   tmpSP = ""
  End If
  On Error GoTo acSubEnd1
- tmpS3 = dir(tmpS2 & tmpS & "*", vbDirectory)
+ tmpS3 = Dir(tmpS2 & tmpS & "*", vbDirectory)
  If tmpS3 = "" Then GoTo acSubEnd1
  While tmpS3 = "." Or tmpS3 = ".." Or globalITMP < autoILast(ConsoleID)
   If tmpS3 <> "." And tmpS3 <> ".." Then
     globalITMP = globalITMP + 1
   End If
   tmpS3 = ""
-  tmpS3 = dir()
+  tmpS3 = Dir()
   If tmpS3 = "" Then GoTo acSubEnd1
  Wend
  On Error GoTo 0
@@ -834,12 +834,12 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
  End If
 acSubEnd1:
  If firstParam = False Then GoTo acSubEnd3
- tmpS3 = dir(App.Path & "\user\system\commands\" & tmpS & "*")
+ tmpS3 = Dir(App.Path & "\user\system\commands\" & tmpS & "*")
  On Error GoTo acSubEnd2
  While globalITMP < autoILast(ConsoleID)
   tmpS3 = ""
   globalITMP = globalITMP + 1
-  tmpS3 = dir()
+  tmpS3 = Dir()
   If tmpS3 = "" Then GoTo acSubEnd2
  Wend
  On Error GoTo 0
@@ -858,12 +858,12 @@ acSubEnd2:
      sPath = Replace(frmConsole.Dir1.List(n), App.Path & "\user", "")
      iTmp = InStrRev(sPath, "\")
      On Error GoTo acSubEnd3
-     tmpS3 = dir(App.Path & "\user" & sPath & "\" & tmpS & "*")
+     tmpS3 = Dir(App.Path & "\user" & sPath & "\" & tmpS & "*")
      globalITMP = globalITMP + 1
      While globalITMP < autoILast(ConsoleID)
         tmpS3 = ""
         globalITMP = globalITMP + 1
-        tmpS3 = dir()
+        tmpS3 = Dir()
         If tmpS3 = "" Then GoTo acSubEnd3
      Wend
      On Error GoTo 0

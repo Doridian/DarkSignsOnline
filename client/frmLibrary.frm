@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "MSCOMCTL.OCX"
 Begin VB.Form frmLibrary 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "File Library"
@@ -691,17 +691,8 @@ Sub DownloadOne()
         MsgBox "No item is selected!", vbCritical, "Error"
         Exit Sub
     End If
-
-    MakeADir App.Path & "\user\downloads\"
     lStatus.Caption = "Downloading to \downloads\" & Trim(KillBadDirChars(LV.SelectedItem.ListSubItems(4).Text)) & "..."
-    
-    
     RunPage "file_database.php?returnwith=4304&getfile=" & EncodeURLParameter(sID), 5, False, "", False
-        
-    
-    
-    
-    
 End Sub
 
 
@@ -714,7 +705,7 @@ Sub UploadIt()
     Dim PostData As String
     Dim sShortFileName As String
     
-    sFile = fixPath(Trim(txtFile.Text), 5)
+    sFile = SafePath(Trim(txtFile.Text))
     sDescription = Trim(txtDescription.Text)
     sCategory = Trim(uplist.Text)
     sTitle = Trim(txtTitle)
