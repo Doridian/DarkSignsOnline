@@ -24,9 +24,9 @@ Public Sub InitBasCommands()
     Next
 End Sub
 
-Public Function ResolveCommand(ConsoleID As Integer, Command As String) As String
+Public Function ResolveCommand(consoleID As Integer, Command As String) As String
     If InStr(Command, "/") > 0 Or InStr(Command, "\") > 0 Or InStr(Command, ".") > 0 Then
-        ResolveCommand = cPath(ConsoleID) & "/" & Command
+        ResolveCommand = cPath(consoleID) & "/" & Command
         Exit Function
     End If
     ResolveCommand = "system/commands/" & Command & ".ds"
@@ -38,12 +38,12 @@ Public Function VBEscapeSimple(Str As String) As String
 End Function
 
 
-Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Optional ScriptFrom As String, Optional FromScript As Boolean = True)
-    If ConsoleID < 1 Then
-        ConsoleID = 1
+Public Function Run_Command(CLine As ConsoleLine, ByVal consoleID As Integer, Optional ScriptFrom As String, Optional FromScript As Boolean = True)
+    If consoleID < 1 Then
+        consoleID = 1
     End If
-    If ConsoleID > 4 Then
-        ConsoleID = 4
+    If consoleID > 4 Then
+        consoleID = 4
     End If
     Dim tmpS As String
     tmpS = CLine.Caption
@@ -55,14 +55,14 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     tmpS = Trim(tmpS)
 
     If tmpS = "" Then
-        New_Console_Line ConsoleID
+        New_Console_Line consoleID
         Exit Function
     End If
 
-    CancelScript(ConsoleID) = False
-    New_Console_Line_InProgress ConsoleID
+    CancelScript(consoleID) = False
+    New_Console_Line_InProgress consoleID
 
-    scrConsoleContext(ConsoleID).Aborted = False
+    scrConsoleContext(consoleID).Aborted = False
 
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
@@ -126,10 +126,10 @@ CommandForNext:
     
     ' First, check if there is a command for it in /system/commands
     Dim ResolvedCommand As String
-    ResolvedCommand = ResolveCommand(ConsoleID, Command)
+    ResolvedCommand = ResolveCommand(consoleID, Command)
     If FileExists(App.Path & "/user/" & ResolvedCommand) Then
         On Error GoTo EvalError
-        Run_Script ResolvedCommand, ConsoleID, CLIArgs, "CLI", "", False, False, False
+        Run_Script ResolvedCommand, consoleID, CLIArgs, "CLI", "", False, False, False
         On Error GoTo 0
         GoTo ScriptEnd
     End If
@@ -140,7 +140,7 @@ CommandForNext:
 
     ' Try running procedure with given name
     Dim RunStr As String
-    RunStr = Command & "("
+    RunStr = "Option Explicit : " & Command & "("
     For X = 1 To UBound(CLIArgs)
         If X > 1 Then
             RunStr = ", " & RunStr
@@ -153,14 +153,14 @@ CommandForNext:
     Next X
     RunStr = RunStr & ")"
     On Error GoTo EvalError
-    scrConsole(ConsoleID).ExecuteStatement RunStr
+    scrConsole(consoleID).ExecuteStatement RunStr
     On Error GoTo 0
 
     GoTo ScriptEnd
 
 NotASimpleCommand:
     On Error GoTo EvalError
-    scrConsole(ConsoleID).AddCode tmpS
+    scrConsole(consoleID).AddCode tmpS
     On Error GoTo 0
     GoTo ScriptEnd
 
@@ -176,34 +176,34 @@ EvalError:
     If Err.Number = 13 Then
         ErrHelp = "This error might mean the command you tried to use does not exist"
     End If
-    SayRaw ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") " & ErrHelp & " {red}"
+    SayRaw consoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") " & ErrHelp & " {red}"
     GoTo ScriptEnd
 
 ScriptCancelled:
-    SayRaw ConsoleID, "Script Stopped by User (CTRL + C){orange}"
+    SayRaw consoleID, "Script Stopped by User (CTRL + C){orange}"
 ScriptEnd:
-    scrConsoleContext(ConsoleID).CleanupScriptTasks
-    New_Console_Line ConsoleID
+    scrConsoleContext(consoleID).CleanupScriptTasks
+    New_Console_Line consoleID
 End Function
 
 ' -y r g b mode
 '  SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE
-Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String, ByVal ConsoleID As Integer)
+Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String, ByVal consoleID As Integer)
     Dim sColor As String
     Dim sMode As String
      
     Dim yIndex As Integer, n As Integer
     yIndex = (YPos * -1) + 1
 
-    Console(ConsoleID, yIndex).DrawMode = Mode
+    Console(consoleID, yIndex).DrawMode = Mode
     
     Select Case Mode
     Case "fadecenter":
     
-        Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(consoleID, yIndex).DrawEnabled = True
+        Console(consoleID, yIndex).DrawR = R
+        Console(consoleID, yIndex).DrawG = G
+        Console(consoleID, yIndex).DrawB = b
         
         For n = ((DrawDividerWidth / 2) + 1) To DrawDividerWidth
             R = R - (DrawDividerWidth / 2)
@@ -213,12 +213,12 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If G < 1 Then G = 0
             If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
-        R = Console(ConsoleID, yIndex).DrawR
-        G = Console(ConsoleID, yIndex).DrawG
-        b = Console(ConsoleID, yIndex).DrawB
+        R = Console(consoleID, yIndex).DrawR
+        G = Console(consoleID, yIndex).DrawG
+        b = Console(consoleID, yIndex).DrawB
         
         For n = (DrawDividerWidth / 2) To 1 Step -1
             R = R - (DrawDividerWidth / 2)
@@ -228,15 +228,15 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If G < 1 Then G = 0
             If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
     Case "fadeinverse":
     
-        Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(consoleID, yIndex).DrawEnabled = True
+        Console(consoleID, yIndex).DrawR = R
+        Console(consoleID, yIndex).DrawG = G
+        Console(consoleID, yIndex).DrawB = b
         
         For n = DrawDividerWidth To ((DrawDividerWidth / 2) + 1) Step -1
             R = R - (DrawDividerWidth / 2)
@@ -246,12 +246,12 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If G < 1 Then G = 0
             If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
-        R = Console(ConsoleID, yIndex).DrawR
-        G = Console(ConsoleID, yIndex).DrawG
-        b = Console(ConsoleID, yIndex).DrawB
+        R = Console(consoleID, yIndex).DrawR
+        G = Console(consoleID, yIndex).DrawG
+        b = Console(consoleID, yIndex).DrawB
         
         For n = 1 To (DrawDividerWidth / 2)
             R = R - (DrawDividerWidth / 2)
@@ -261,16 +261,16 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If G < 1 Then G = 0
             If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
     
     
     Case "fadein":
     
-        Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(consoleID, yIndex).DrawEnabled = True
+        Console(consoleID, yIndex).DrawR = R
+        Console(consoleID, yIndex).DrawG = G
+        Console(consoleID, yIndex).DrawB = b
         
         For n = 1 To DrawDividerWidth
             R = R - 4
@@ -280,17 +280,17 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If G < 1 Then G = 0
             If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
 
 
     Case "fadeout":
     
     
-        Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(consoleID, yIndex).DrawEnabled = True
+        Console(consoleID, yIndex).DrawR = R
+        Console(consoleID, yIndex).DrawG = G
+        Console(consoleID, yIndex).DrawB = b
         
         For n = DrawDividerWidth To 1 Step -1
             R = R - 4
@@ -300,17 +300,17 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If G < 1 Then G = 0
             If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
 
 
     Case "flow":
     
     
-        Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(consoleID, yIndex).DrawEnabled = True
+        Console(consoleID, yIndex).DrawR = R
+        Console(consoleID, yIndex).DrawG = G
+        Console(consoleID, yIndex).DrawB = b
         
         For n = 1 To ((DrawDividerWidth / 4) * 1)
             R = R - 5
@@ -319,7 +319,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If R < 1 Then R = 0
             If G < 1 Then G = 0
             If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
                 
@@ -330,7 +330,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If R < 1 Then R = 0
             If G < 1 Then G = 0
             If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
                 
@@ -342,7 +342,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If R < 1 Then R = 0
             If G < 1 Then G = 0
             If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
                         
@@ -354,7 +354,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If R < 1 Then R = 0
             If G < 1 Then G = 0
             If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
         
@@ -362,33 +362,33 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
 
     
     Case "solid":
-        Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(consoleID, yIndex).DrawEnabled = True
+        Console(consoleID, yIndex).DrawR = R
+        Console(consoleID, yIndex).DrawG = G
+        Console(consoleID, yIndex).DrawB = b
         
         
         For n = 1 To DrawDividerWidth
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(consoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
     End Select
     
 End Sub
 
 
-Public Sub ListMyDomains(ByVal ConsoleID As Integer)
+Public Sub ListMyDomains(ByVal consoleID As Integer)
     SayCOMM "Downloading domain list..."
-    RunPage "my_domains.php?type=domain", ConsoleID, False, "", 0
+    RunPage "my_domains.php?type=domain", consoleID, False, "", 0
 End Sub
 
-Public Sub ListMySubDomains(ByVal Domain As String, ByVal ConsoleID As Integer)
+Public Sub ListMySubDomains(ByVal Domain As String, ByVal consoleID As Integer)
     SayCOMM "Downloading subdomain list..."
-    RunPage "my_domains.php?domain=" & EncodeURLParameter(Domain) & "&type=subdomain", ConsoleID, False, "", 0
+    RunPage "my_domains.php?domain=" & EncodeURLParameter(Domain) & "&type=subdomain", consoleID, False, "", 0
 End Sub
 
-Public Sub ListMyIPs(ByVal ConsoleID As Integer)
+Public Sub ListMyIPs(ByVal consoleID As Integer)
     SayCOMM "Downloading IP list..."
-    RunPage "my_domains.php?type=ip", ConsoleID, False, "", 0
+    RunPage "my_domains.php?type=ip", consoleID, False, "", 0
 End Sub
 
 
@@ -443,9 +443,9 @@ zxc:
 End Sub
 
 
-Public Sub UploadToDomain(ByVal sDomain As String, ByVal sPort As Integer, ByVal sFilename As String, ByVal ConsoleID As Integer)
+Public Sub UploadToDomain(ByVal sDomain As String, ByVal sPort As Integer, ByVal sFilename As String, ByVal consoleID As Integer)
     Dim sFileData As String
-    sFilename = fixPath(sFilename, ConsoleID)
+    sFilename = fixPath(sFilename, consoleID)
 
     If FileExists(App.Path & "\user" & sFilename) = True Then
         Dim tempStrA As String
@@ -453,20 +453,20 @@ Public Sub UploadToDomain(ByVal sDomain As String, ByVal sPort As Integer, ByVal
         sFileData = GetFileClean(App.Path & "\user" & sFilename)
         tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
 
-        RunPage "domain_upload.php", ConsoleID, True, _
+        RunPage "domain_upload.php", consoleID, True, _
         "port=" & EncodeURLParameter(Trim(sPort)) & _
         "&d=" & EncodeURLParameter(sDomain) & _
         "&filedata=" & EncodeURLParameter(tempStrA)
         
-        SayCOMM "Attempting to upload: " & UCase(sDomain) & ":" & i(sPort), ConsoleID
+        SayCOMM "Attempting to upload: " & UCase(sDomain) & ":" & i(sPort), consoleID
         
     Else
-        SayError "File Not Found:" & sFilename, ConsoleID
+        SayError "File Not Found:" & sFilename, consoleID
         Exit Sub
     End If
 End Sub
 
-Public Sub CloseDomainPort(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub CloseDomainPort(ByVal s As String, ByVal consoleID As Integer)
     Dim sDomain As String
     Dim sPort As String
     
@@ -480,21 +480,21 @@ Public Sub CloseDomainPort(ByVal s As String, ByVal ConsoleID As Integer)
     
     sPort = s
   
-    RunPage "domain_close.php", ConsoleID, True, _
+    RunPage "domain_close.php", consoleID, True, _
     "port=" & EncodeURLParameter(Trim(sPort)) & _
     "&d=" & EncodeURLParameter(sDomain)
         
-    SayCOMM "Attempting to close port : " & UCase(sDomain) & ":" & i(sPort), ConsoleID
+    SayCOMM "Attempting to close port : " & UCase(sDomain) & ":" & i(sPort), consoleID
         
     Exit Sub
 zxc:
-    SayError "Invalid Parameters", ConsoleID
-    ShowHelp "closeport", ConsoleID
+    SayError "Invalid Parameters", consoleID
+    ShowHelp "closeport", consoleID
     
 End Sub
 
 
-Public Sub DownloadFromDomain(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub DownloadFromDomain(ByVal s As String, ByVal consoleID As Integer)
     Dim sDomain As String
     Dim sPort As String
     Dim sFilename As String
@@ -511,37 +511,37 @@ Public Sub DownloadFromDomain(ByVal s As String, ByVal ConsoleID As Integer)
     
     sPort = i(Mid(s, 1, InStr(s, " ")))
     sFilename = Trim(Mid(s, InStr(s, " "), Len(s)))
-    sFilename = fixPath(sFilename, ConsoleID)
+    sFilename = fixPath(sFilename, consoleID)
     
 
 
-        RunPage "domain_download.php", ConsoleID, True, _
+        RunPage "domain_download.php", consoleID, True, _
         "returnwith=4400" & _
         "&port=" & EncodeURLParameter(Trim(sPort)) & _
         "&d=" & EncodeURLParameter(sDomain) & _
         "&filename=" & EncodeURLParameter(sFilename)
         
-        SayCOMM "Attempting to download: " & UCase(sDomain) & ":" & i(sPort), ConsoleID
+        SayCOMM "Attempting to download: " & UCase(sDomain) & ":" & i(sPort), consoleID
         
     
 
     
     Exit Sub
 zxc:
-    SayError "Invalid Parameters", ConsoleID
-    ShowHelp "download", ConsoleID
+    SayError "Invalid Parameters", consoleID
+    ShowHelp "download", consoleID
     
 End Sub
 
 
-Public Sub SubOwners(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub SubOwners(ByVal s As String, ByVal consoleID As Integer)
     s = i(s)
 
     Dim sDomain As String, sUsername As String
     
     If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters.", ConsoleID
-        ShowHelp "subowners", ConsoleID
+        SayError "Invalid Parameters.", consoleID
+        ShowHelp "subowners", consoleID
         Exit Sub
     End If
     
@@ -551,24 +551,24 @@ Public Sub SubOwners(ByVal s As String, ByVal ConsoleID As Integer)
     If i(Mid(s, 1, 4)) = "list" Then
         'list the domain names
            
-            RunPage "domain_privileges.php", ConsoleID, True, _
+            RunPage "domain_privileges.php", consoleID, True, _
             "returnwith=2001&list=" & EncodeURLParameter(Trim(sDomain))
 
     ElseIf Mid(i(s), 1, 4) = "add " Then
         sUsername = Trim(Mid(s, 5, Len(s)))
             
-            RunPage "domain_privileges.php", ConsoleID, True, _
+            RunPage "domain_privileges.php", consoleID, True, _
             "returnwith=2001&add=" & EncodeURLParameter(Trim(sDomain)) & "&username=" & EncodeURLParameter(sUsername)
 
     ElseIf Mid(i(s), 1, 7) = "remove " Then
         sUsername = Trim(Mid(s, 8, Len(s)))
         
-             RunPage "domain_privileges.php", ConsoleID, True, _
+             RunPage "domain_privileges.php", consoleID, True, _
             "returnwith=2001&remove=" & EncodeURLParameter(Trim(sDomain)) & "&username=" & EncodeURLParameter(sUsername)
 
     Else
-        SayError "Invalid Parameters.", ConsoleID
-        ShowHelp "subowners", ConsoleID
+        SayError "Invalid Parameters.", consoleID
+        ShowHelp "subowners", consoleID
         Exit Sub
     End If
     
@@ -577,39 +577,39 @@ Public Sub SubOwners(ByVal s As String, ByVal ConsoleID As Integer)
     
 End Sub
 
-Public Sub RegisterDomain(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub RegisterDomain(ByVal s As String, ByVal consoleID As Integer)
     s = i(s)
     s = Trim(s)
     
     If s = "" Then
-        SayError "The REGISTER command requires a parameter.", ConsoleID
-        ShowHelp "register", ConsoleID
+        SayError "The REGISTER command requires a parameter.", consoleID
+        ShowHelp "register", consoleID
         Exit Sub
     End If
     
     If CountCharInString(s, ".") < 1 Or CountCharInString(s, ".") > 3 Or HasBadDomainChar(s) = True Or Len(s) < 5 Or Left(s, 1) = "." Or Right(s, 1) = "." Then
-        SayError "The domain name you specified is invalid or contains bad characters.{orange}", ConsoleID
-        SayRaw ConsoleID, "A domain name should be in the following form: MYDOMAIN.COM{lorange}"
-        SayRaw ConsoleID, "Subdomains should be in the form: BLOG.MYDOMAIN.COM{lorange}"
-        SayRaw ConsoleID, "Valid domain name characters are:"
-        SayRaw ConsoleID, "A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -{grey 8}"
+        SayError "The domain name you specified is invalid or contains bad characters.{orange}", consoleID
+        SayRaw consoleID, "A domain name should be in the following form: MYDOMAIN.COM{lorange}"
+        SayRaw consoleID, "Subdomains should be in the form: BLOG.MYDOMAIN.COM{lorange}"
+        SayRaw consoleID, "Valid domain name characters are:"
+        SayRaw consoleID, "A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -{grey 8}"
         Exit Sub
     End If
     
-    SayRaw ConsoleID, "{green 10}A registration request has been sent for " & s & "."
-    SayRaw ConsoleID, "{lgreen 10}The result will be posted to the COMM."
+    SayRaw consoleID, "{green 10}A registration request has been sent for " & s & "."
+    SayRaw consoleID, "{lgreen 10}The result will be posted to the COMM."
     
     
     'RunPage "domain_register.php?returnwith=2000&d=" & Trim(s), consoleID
-    RunPage "domain_register.php", ConsoleID, True, "d=" & EncodeURLParameter(s)
+    RunPage "domain_register.php", consoleID, True, "d=" & EncodeURLParameter(s)
     
 End Sub
 
-Public Sub UnRegisterDomain(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub UnRegisterDomain(ByVal s As String, ByVal consoleID As Integer)
     s = Trim(s)
     If s = "" Then
-        SayError "The UNREGISTER command requires parameters.", ConsoleID
-        ShowHelp "unregister", ConsoleID
+        SayError "The UNREGISTER command requires parameters.", consoleID
+        ShowHelp "unregister", consoleID
         Exit Sub
     End If
     
@@ -621,20 +621,20 @@ Public Sub UnRegisterDomain(ByVal s As String, ByVal ConsoleID As Integer)
         sDomain = LCase(Trim(Mid(s, 1, InStr(s, " "))))
         sPass = Trim(Mid(s, InStr(s, " "), Len(s)))
     Else
-        SayError "Your password is required as a final parameter.", ConsoleID
-        ShowHelp "unregister", ConsoleID
+        SayError "Your password is required as a final parameter.", consoleID
+        ShowHelp "unregister", consoleID
         Exit Sub
     End If
     
-    SayRaw ConsoleID, "{green 10}A unregistration request has been sent for " & sDomain & "."
-    SayRaw ConsoleID, "{lgreen 10}The result will be posted to the COMM."
+    SayRaw consoleID, "{green 10}A unregistration request has been sent for " & sDomain & "."
+    SayRaw consoleID, "{lgreen 10}The result will be posted to the COMM."
 
     
-    RunPage "domain_unregister.php", ConsoleID, True, _
+    RunPage "domain_unregister.php", consoleID, True, _
     "returnwith=2000&d=" & EncodeURLParameter(Trim(sDomain)) & "&pw=" & EncodeURLParameter(sPass)
 End Sub
 
-Public Sub ServerCommands(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub ServerCommands(ByVal s As String, ByVal consoleID As Integer)
     Dim sCommand As String
     Dim sDomain As String
     Dim sKey As String
@@ -676,13 +676,13 @@ Public Sub ServerCommands(ByVal s As String, ByVal ConsoleID As Integer)
 
     Select Case i(sC)
     Case "append"
-        ServerCommand_Append sP, sKey, sDomain, ConsoleID
+        ServerCommand_Append sP, sKey, sDomain, consoleID
     Case "write"
-        ServerCommand_Write sP, sKey, sDomain, ConsoleID
+        ServerCommand_Write sP, sKey, sDomain, consoleID
     End Select
 End Sub
 
-Public Sub ServerCommand_Append(s As String, sKey As String, sDomain As String, ByVal ConsoleID As Integer)
+Public Sub ServerCommand_Append(s As String, sKey As String, sDomain As String, ByVal consoleID As Integer)
 
     Dim sPostData As String
     Dim sFilename As String
@@ -698,12 +698,12 @@ Public Sub ServerCommand_Append(s As String, sKey As String, sDomain As String, 
         "&d=" & EncodeURLParameter(sDomain) & _
         "&filedata=" & EncodeURLParameter(sFileData)
     
-    RunPage "domain_filesystem.php", ConsoleID, True, sPostData, 0
+    RunPage "domain_filesystem.php", consoleID, True, sPostData, 0
 
 End Sub
 
 
-Public Sub ServerCommand_Write(s As String, sKey As String, sDomain As String, ByVal ConsoleID As Integer)
+Public Sub ServerCommand_Write(s As String, sKey As String, sDomain As String, ByVal consoleID As Integer)
 
     Dim sPostData As String
     Dim sFilename As String
@@ -719,28 +719,28 @@ Public Sub ServerCommand_Write(s As String, sKey As String, sDomain As String, B
         "&d=" & EncodeURLParameter(sDomain) & _
         "&filedata=" & EncodeURLParameter(sFileData)
         
-    RunPage "domain_filesystem.php", ConsoleID, True, sPostData, 0
+    RunPage "domain_filesystem.php", consoleID, True, sPostData, 0
 
 End Sub
 
 
-Public Sub TransferMoney(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub TransferMoney(ByVal s As String, ByVal consoleID As Integer)
     Dim sTo As String
     Dim sAmount As String
     Dim sDescription As String
 
     s = Trim(s)
     If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters.", ConsoleID
-        ShowHelp "transfer", ConsoleID
+        SayError "Invalid Parameters.", consoleID
+        ShowHelp "transfer", consoleID
         Exit Sub
     End If
     
     sTo = Trim(Mid(s, 1, InStr(s, " ")))
     s = Trim(Mid(s, InStr(s, " "), Len(s)))
     If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters.", ConsoleID
-        ShowHelp "transfer", ConsoleID
+        SayError "Invalid Parameters.", consoleID
+        ShowHelp "transfer", consoleID
         Exit Sub
     End If
     
@@ -761,14 +761,14 @@ Public Sub TransferMoney(ByVal s As String, ByVal ConsoleID As Integer)
     
     
             If Val(sAmount) < 1 Then
-                SayError "Invalid Amount: $" & Trim(sAmount) & ".", ConsoleID
+                SayError "Invalid Amount: $" & Trim(sAmount) & ".", consoleID
                 Exit Sub
             End If
 
     
-        SayCOMM "Processing Payment...", ConsoleID
+        SayCOMM "Processing Payment...", consoleID
     
-        RunPage "transfer.php", ConsoleID, True, _
+        RunPage "transfer.php", consoleID, True, _
         "returnwith=2000" & _
         "&to=" & EncodeURLParameter(Trim(sTo)) & _
         "&amount=" & EncodeURLParameter(Trim(sAmount)) & _
@@ -782,17 +782,17 @@ Public Sub TransferMoney(ByVal s As String, ByVal ConsoleID As Integer)
     
 End Sub
 
-Public Sub Lookup(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub Lookup(ByVal s As String, ByVal consoleID As Integer)
     s = i(s)
     s = Trim(s)
     If s = "" Then
-        SayError "The LOOKUP command requires a parameter.", ConsoleID
-        ShowHelp "lookup", ConsoleID
+        SayError "The LOOKUP command requires a parameter.", consoleID
+        ShowHelp "lookup", consoleID
         Exit Sub
     End If
     
     
-    RunPage "lookup.php?returnwith=2000&d=" & EncodeURLParameter(Trim(s)), ConsoleID
+    RunPage "lookup.php?returnwith=2000&d=" & EncodeURLParameter(Trim(s)), consoleID
     
 End Sub
 
@@ -833,9 +833,9 @@ Public Function HasBadDomainChar(ByVal s As String) As Boolean
     
 End Function
 
-Public Sub ShowStats(ByVal ConsoleID As Integer)
+Public Sub ShowStats(ByVal consoleID As Integer)
     SayCOMM "Downloading stats..."
-    RunPage "get_user_stats.php?returnwith=2000", ConsoleID
+    RunPage "get_user_stats.php?returnwith=2000", consoleID
 End Sub
 
 
@@ -881,25 +881,25 @@ Public Sub MusicCommand(ByVal sX As String)
 End Sub
 
 
-Public Sub ListKeys(ByVal ConsoleID As Integer)
+Public Sub ListKeys(ByVal consoleID As Integer)
     Dim ss As String
     ss = "{gold}"
     
-    SayRaw ConsoleID, "Dark Signs Keyboard Actions{gold 14}"
+    SayRaw consoleID, "Dark Signs Keyboard Actions{gold 14}"
     
-    SayRaw ConsoleID, "Page Up: Scroll the console up." & ss
-    SayRaw ConsoleID, "Page Down: Scroll the console down." & ss
+    SayRaw consoleID, "Page Up: Scroll the console up." & ss
+    SayRaw consoleID, "Page Down: Scroll the console down." & ss
     
-    SayRaw ConsoleID, "Shift + Page Up: Decrease size of the COMM." & ss
-    SayRaw ConsoleID, "Shift + Page Down: Incease size of the COMM." & ss
+    SayRaw consoleID, "Shift + Page Up: Decrease size of the COMM." & ss
+    SayRaw consoleID, "Shift + Page Down: Incease size of the COMM." & ss
     
-    SayRaw ConsoleID, "F11: Toggle maximum console display." & ss
+    SayRaw consoleID, "F11: Toggle maximum console display." & ss
 End Sub
 
 
-Public Sub SetUsername(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub SetUsername(ByVal s As String, ByVal consoleID As Integer)
     If Authorized = True Then
-        SayError "You are already logged in.", ConsoleID
+        SayError "You are already logged in.", consoleID
         Exit Sub
     End If
 
@@ -911,14 +911,14 @@ Public Sub SetUsername(ByVal s As String, ByVal ConsoleID As Integer)
     Else
         Password = "[hidden]"
     End If
-    SayRaw ConsoleID, "Your new details are shown below." & "{orange}"
-    SayRaw ConsoleID, "Username: " & myUsername() & "{orange 16}"
-    SayRaw ConsoleID, "Password: " & Password & "{orange 16}"
+    SayRaw consoleID, "Your new details are shown below." & "{orange}"
+    SayRaw consoleID, "Username: " & myUsername() & "{orange 16}"
+    SayRaw consoleID, "Password: " & Password & "{orange 16}"
 End Sub
 
-Public Sub SetPassword(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub SetPassword(ByVal s As String, ByVal consoleID As Integer)
     If Authorized = True Then
-        SayError "You are already logged in.", ConsoleID
+        SayError "You are already logged in.", consoleID
         Exit Sub
     End If
 
@@ -930,23 +930,23 @@ Public Sub SetPassword(ByVal s As String, ByVal ConsoleID As Integer)
     Else
         Password = "[hidden]"
     End If
-    SayRaw ConsoleID, "Your new details are shown below." & "{orange}"
-    SayRaw ConsoleID, "Username: " & myUsername() & "{orange 16}"
-    SayRaw ConsoleID, "Password: " & Password & "{orange 16}"
+    SayRaw consoleID, "Your new details are shown below." & "{orange}"
+    SayRaw consoleID, "Username: " & myUsername() & "{orange 16}"
+    SayRaw consoleID, "Password: " & Password & "{orange 16}"
 End Sub
 
-Public Sub ClearConsole(ByVal ConsoleID As Integer)
+Public Sub ClearConsole(ByVal consoleID As Integer)
     
-    Console(ConsoleID, 1).Caption = "-"
+    Console(consoleID, 1).Caption = "-"
     
     
     Dim n As Integer
     
     For n = 1 To 29
     
-        Shift_Console_Lines ConsoleID
-        Console(ConsoleID, 2).Caption = "-"
-        Console(ConsoleID, 2).FontSize = 48
+        Shift_Console_Lines consoleID
+        Console(consoleID, 2).Caption = "-"
+        Console(consoleID, 2).FontSize = 48
     
     Next n
     
@@ -954,35 +954,35 @@ Public Sub ClearConsole(ByVal ConsoleID As Integer)
 End Sub
 
 
-Public Sub DownADir(ByVal ConsoleID As Integer)
+Public Sub DownADir(ByVal consoleID As Integer)
     On Error GoTo zxc
     
-    If Len(cPath(ConsoleID)) < 2 Then Exit Sub
+    If Len(cPath(consoleID)) < 2 Then Exit Sub
     
     Dim s As String
-    s = Mid(cPath(ConsoleID), 1, Len(cPath(ConsoleID)) - 1)
+    s = Mid(cPath(consoleID), 1, Len(cPath(consoleID)) - 1)
     s = ReverseString(s)
     s = Mid(s, InStr(s, "\"), Len(s))
     s = ReverseString(s)
     
     
-    cPath(ConsoleID) = s
+    cPath(consoleID) = s
 zxc:
 End Sub
 
-Public Sub MakeDir(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub MakeDir(ByVal s As String, ByVal consoleID As Integer)
     
     If InvalidChars(s) = True Then
-        SayError "Invalid Directory Name: " & s, ConsoleID
+        SayError "Invalid Directory Name: " & s, consoleID
         Exit Sub
     End If
     
-    If Trim(s) = ".." Then DownADir ConsoleID: Exit Sub
+    If Trim(s) = ".." Then DownADir consoleID: Exit Sub
     If InStr(s, "..") > 0 Then
         GoTo errorDir
     End If
 
-    s = fixPath(s, ConsoleID)
+    s = fixPath(s, consoleID)
     
     If DirExists(App.Path & "\user" & s) = True Then
         'don't create it if it already exists
@@ -998,7 +998,7 @@ errorDir:
 End Sub
 
 
-Public Sub MoveRename(ByVal s As String, ByVal ConsoleID As Integer, Optional sTag As String)
+Public Sub MoveRename(ByVal s As String, ByVal consoleID As Integer, Optional sTag As String)
 
     Dim s1 As String, s2 As String
     s = Trim(s)
@@ -1008,28 +1008,28 @@ Public Sub MoveRename(ByVal s As String, ByVal ConsoleID As Integer, Optional sT
     s1 = Trim(Mid(s, 1, InStr(s, " ")))
     s2 = Trim(Mid(s, InStr(s, " "), Len(s)))
 
-    s1 = fixPath(s1, ConsoleID)
-    s2 = fixPath(s2, ConsoleID)
+    s1 = fixPath(s1, consoleID)
+    s2 = fixPath(s2, consoleID)
     
     If InStr(i(s1), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
+        SayError "Files in the main SYSTEM directory are protected.", consoleID
         Exit Sub
     End If
     
     If FileExists(App.Path & "\user" & s1) = False Then
-        SayError "File Not Found: " & s1, ConsoleID
+        SayError "File Not Found: " & s1, consoleID
         Exit Sub
     End If
     
     'now move it or copy it
     If i(sTag) = "copyonly" Then
-        If CopyAFile(App.Path & "\user" & s1, App.Path & "\user" & s2, ConsoleID) = False Then
-            SayError "Invalid Destination File: " & s2, ConsoleID
+        If CopyAFile(App.Path & "\user" & s1, App.Path & "\user" & s2, consoleID) = False Then
+            SayError "Invalid Destination File: " & s2, consoleID
             Exit Sub
         End If
     Else
-        If MoveAFile(App.Path & "\user" & s1, App.Path & "\user" & s2, ConsoleID) = False Then
-            SayError "Invalid Destination File: " & s2, ConsoleID
+        If MoveAFile(App.Path & "\user" & s1, App.Path & "\user" & s2, consoleID) = False Then
+            SayError "Invalid Destination File: " & s2, consoleID
             Exit Sub
         End If
     End If
@@ -1041,12 +1041,12 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Function MoveAFile(Source As String, dest As String, ConsoleID As Integer) As Boolean
+Public Function MoveAFile(Source As String, dest As String, consoleID As Integer) As Boolean
     On Error GoTo zxc
 
     
     If InStr(i(dest), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
+        SayError "Files in the main SYSTEM directory are protected.", consoleID
         Exit Function
     End If
     
@@ -1060,11 +1060,11 @@ zxc:
     MoveAFile = False
 End Function
 
-Public Function CopyAFile(Source As String, dest As String, ConsoleID As Integer) As Boolean
+Public Function CopyAFile(Source As String, dest As String, consoleID As Integer) As Boolean
     On Error GoTo zxc
     
     If InStr(i(dest), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
+        SayError "Files in the main SYSTEM directory are protected.", consoleID
         Exit Function
     End If
     
@@ -1077,22 +1077,22 @@ zxc:
     CopyAFile = False
 End Function
 
-Public Sub DeleteFiles(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub DeleteFiles(ByVal s As String, ByVal consoleID As Integer)
     
-    If Trim(s) = ".." Then DownADir ConsoleID: Exit Sub
+    If Trim(s) = ".." Then DownADir consoleID: Exit Sub
     If InStr(s, "..") > 0 Then
         GoTo errorDir
     End If
 
-    s = fixPath(s, ConsoleID)
+    s = fixPath(s, consoleID)
     
     If InStr(i(s), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
+        SayError "Files in the main SYSTEM directory are protected.", consoleID
         Exit Sub
     End If
     
     
-    DelFiles App.Path & "\user" & s, ConsoleID
+    DelFiles App.Path & "\user" & s, consoleID
     
     Exit Sub
     
@@ -1100,8 +1100,8 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
-    s = fixPath(s, ConsoleID)
+Public Sub EditFile(ByVal s As String, ByVal consoleID As Integer)
+    s = fixPath(s, consoleID)
     If s = "" Then
         Exit Sub
     End If
@@ -1111,15 +1111,15 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
 
     If FileExists(App.Path & "\user" & s) Then
     Else
-        SayRaw ConsoleID, "{green}File Not Found, Creating: " & s
+        SayRaw consoleID, "{green}File Not Found, Creating: " & s
     End If
     
     frmEditor.Show vbModal
     
     If Trim(EditorRunFile) <> "" Then
-        Shift_Console_Lines ConsoleID
+        Shift_Console_Lines consoleID
         Dim EmptyArguments(0 To 0) As String
-        Run_Script EditorRunFile, ConsoleID, EmptyArguments, "CONSOLE", "", True, False, False
+        Run_Script EditorRunFile, consoleID, EmptyArguments, "CONSOLE", "", True, False, False
     End If
     
     
@@ -1128,9 +1128,9 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Sub ShowMail(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub ShowMail(ByVal s As String, ByVal consoleID As Integer)
     
-    s = Trim(fixPath(s, ConsoleID))
+    s = Trim(fixPath(s, consoleID))
     
     frmDSOMail.Show vbModal
      
@@ -1141,10 +1141,10 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Sub AppendAFile(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub AppendAFile(ByVal s As String, ByVal consoleID As Integer)
     s = Trim(s)
     If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters: APPEND " & s, ConsoleID
+        SayError "Invalid Parameters: APPEND " & s, consoleID
         Exit Sub
     End If
     
@@ -1153,7 +1153,7 @@ Public Sub AppendAFile(ByVal s As String, ByVal ConsoleID As Integer)
     Dim sFileData As String
     Dim AppendToStartOfFile As Boolean
     
-    sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), ConsoleID))
+    sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), consoleID))
     s = Trim(Mid(s, InStr(s, " "), Len(s)))
     
     If Mid(i(s), 1, 6) = "start " Then
@@ -1183,7 +1183,7 @@ Public Sub AppendAFile(ByVal s As String, ByVal ConsoleID As Integer)
     
         
     If InStr(i(sFile), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
+        SayError "Files in the main SYSTEM directory are protected.", consoleID
         Exit Sub
     End If
     
@@ -1196,10 +1196,10 @@ Public Sub AppendAFile(ByVal s As String, ByVal ConsoleID As Integer)
     
 End Sub
 
-Public Sub WriteAFile(ByVal s As String, ByVal ConsoleID As Integer, ByVal ScriptFrom As String)
+Public Sub WriteAFile(ByVal s As String, ByVal consoleID As Integer, ByVal ScriptFrom As String)
     s = Trim(s)
     If InStr(s, " ") = 0 Then
-        SayError "Invalid Parameters: WRITE " & s, ConsoleID
+        SayError "Invalid Parameters: WRITE " & s, consoleID
         Exit Sub
     End If
     
@@ -1208,7 +1208,7 @@ Public Sub WriteAFile(ByVal s As String, ByVal ConsoleID As Integer, ByVal Scrip
     Dim sFileData As String
 
     
-    sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), ConsoleID))
+    sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), consoleID))
     'If ScriptFrom <> "CONSOLE" Or ScriptFrom <> "BOOT" Then
             
     '    If DirExists(App.Path & "\user\temp") = False Then
@@ -1227,7 +1227,7 @@ Public Sub WriteAFile(ByVal s As String, ByVal ConsoleID As Integer, ByVal Scrip
     s = Trim(Mid(s, InStr(s, " "), Len(s)))
     
     If InStr(i(sFile), "\system\") > 0 Then
-        SayError "Files in the main SYSTEM directory are protected.", ConsoleID
+        SayError "Files in the main SYSTEM directory are protected.", consoleID
         Exit Sub
     End If
     
@@ -1241,7 +1241,7 @@ Public Sub WriteAFile(ByVal s As String, ByVal ConsoleID As Integer, ByVal Scrip
     
 End Sub
 
-Public Sub DisplayFile(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub DisplayFile(ByVal s As String, ByVal consoleID As Integer)
     
     Dim sFile As String
     Dim startLine As Integer
@@ -1252,7 +1252,7 @@ Public Sub DisplayFile(ByVal s As String, ByVal ConsoleID As Integer)
     
     If InStr(s, " ") Then
         'file start and end lines are specified
-        sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), ConsoleID))
+        sFile = Trim(fixPath(Mid(s, 1, InStr(s, " ")), consoleID))
         
         s = Trim(Mid(s, InStr(s, " "), Len(s)))
         
@@ -1262,11 +1262,11 @@ Public Sub DisplayFile(ByVal s As String, ByVal ConsoleID As Integer)
             MaxLines = Val(Trim(Mid(s, InStr(s, " "), Len(s))))
             
             If MaxLines < 1 Then
-                SayError "Invalid Parameter Value: " & Trim(Str(MaxLines)), ConsoleID
+                SayError "Invalid Parameter Value: " & Trim(Str(MaxLines)), consoleID
                 Exit Sub
             End If
             If startLine < 1 Then
-                SayError "Invalid Parameter Value: " & Trim(Str(MaxLines)), ConsoleID
+                SayError "Invalid Parameter Value: " & Trim(Str(MaxLines)), consoleID
                 Exit Sub
             End If
         Else
@@ -1276,14 +1276,14 @@ Public Sub DisplayFile(ByVal s As String, ByVal ConsoleID As Integer)
         End If
     Else
         'its just the filename
-        sFile = Trim(fixPath(s, ConsoleID))
+        sFile = Trim(fixPath(s, consoleID))
         startLine = 1
         MaxLines = 29999
     End If
     
 
     If FileExists(App.Path & "\user" & sFile) = False Then
-        SayError "File Not Found: " & sFile, ConsoleID
+        SayError "File Not Found: " & sFile, consoleID
         Exit Sub
     End If
     
@@ -1299,7 +1299,7 @@ Public Sub DisplayFile(ByVal s As String, ByVal ConsoleID As Integer)
             If CLine >= startLine Then
                 If CLinePrinted < MaxLines Then
                     If Trim(tmpS) <> "" Then
-                        SayRaw ConsoleID, Chr(34) & "   " & tmpS & Chr(34), , 1
+                        SayRaw consoleID, Chr(34) & "   " & tmpS & Chr(34), , 1
                         CLinePrinted = CLinePrinted + 1
                     End If
                 End If
@@ -1325,7 +1325,7 @@ Public Function GetShortName(ByVal s As String) As String
     GetShortName = Trim(ReverseString(s))
 End Function
 
-Public Sub WaitNow(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub WaitNow(ByVal s As String, ByVal consoleID As Integer)
    s = Trim(s)
 
     
@@ -1337,9 +1337,9 @@ Public Sub WaitNow(ByVal s As String, ByVal ConsoleID As Integer)
     
     'now set the wait timer with the ims interval
     
-    frmConsole.tmrWait(ConsoleID).Enabled = False
-    frmConsole.tmrWait(ConsoleID).Interval = iMS
-    frmConsole.tmrWait(ConsoleID).Enabled = True
+    frmConsole.tmrWait(consoleID).Enabled = False
+    frmConsole.tmrWait(consoleID).Interval = iMS
+    frmConsole.tmrWait(consoleID).Enabled = True
     
     Exit Sub
     
@@ -1347,24 +1347,24 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Sub DelFiles(sFiles As String, ByVal ConsoleID As Integer)
+Public Sub DelFiles(sFiles As String, ByVal consoleID As Integer)
     On Error Resume Next
     Kill sFiles
 End Sub
 
-Public Sub RemoveDir(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub RemoveDir(ByVal s As String, ByVal consoleID As Integer)
     
-    If Trim(s) = ".." Then DownADir ConsoleID: Exit Sub
+    If Trim(s) = ".." Then DownADir consoleID: Exit Sub
     If InStr(s, "..") > 0 Then
         GoTo errorDir
     End If
 
-    s = fixPath(s, ConsoleID)
+    s = fixPath(s, consoleID)
     
     If DirExists(App.Path & "\user" & s) = True Then
         'don't create it if it already exists
-        If RemoveADir(App.Path & "\user" & s, ConsoleID) = False Then
-            SayError "Directory Not Empty: " & s, ConsoleID
+        If RemoveADir(App.Path & "\user" & s, consoleID) = False Then
+            SayError "Directory Not Empty: " & s, consoleID
             Exit Sub
         End If
     Else
@@ -1377,8 +1377,8 @@ errorDir:
     'say consoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Function SayError(s As String, ByVal ConsoleID As Integer)
-    SayRaw ConsoleID, "Error - " & s & " {orange}"
+Public Function SayError(s As String, ByVal consoleID As Integer)
+    SayRaw consoleID, "Error - " & s & " {orange}"
 End Function
 
 Public Function RemoveADir(s As String, cosoleID As Integer) As Boolean
@@ -1395,13 +1395,13 @@ Public Sub MakeADir(s As String)
     MkDir s
 End Sub
 
-Public Sub ChangeDir(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub ChangeDir(ByVal s As String, ByVal consoleID As Integer)
     If InvalidChars(s) = True Then
-        SayError "Invalid Directory Name: " & s, ConsoleID
+        SayError "Invalid Directory Name: " & s, consoleID
         Exit Sub
     End If
 
-    If s = ".." Then DownADir ConsoleID: Exit Sub
+    If s = ".." Then DownADir consoleID: Exit Sub
     If InStr(s, "..") > 0 Then
         GoTo errorDir
     End If
@@ -1410,7 +1410,7 @@ Public Sub ChangeDir(ByVal s As String, ByVal ConsoleID As Integer)
     If InStr(s, ".\") > 0 Then Exit Sub
     If InStr(s, "\.") > 0 Then Exit Sub
 
-    s = fixPath(s, ConsoleID)
+    s = fixPath(s, consoleID)
     
     If DirExists(App.Path & "\user" & s) = True Then
         
@@ -1418,17 +1418,17 @@ Public Sub ChangeDir(ByVal s As String, ByVal ConsoleID As Integer)
         s = s & "\"
         s = Replace(s, "\\", "\")
         
-        cPath(ConsoleID) = s
+        cPath(consoleID) = s
     Else
         GoTo errorDir
     End If
     
     Exit Sub
 errorDir:
-    SayError "Directory Not Found: " & s, ConsoleID
+    SayError "Directory Not Found: " & s, consoleID
 End Sub
 
-Public Function fixPath(ByVal s As String, ByVal ConsoleID As Integer) As String
+Public Function fixPath(ByVal s As String, ByVal consoleID As Integer) As String
     'file.s will come out as -> /file.s
     '/file.s will come out as -> /file.s
     'system/file.s will come out as -> /system/file.s
@@ -1442,10 +1442,10 @@ Public Function fixPath(ByVal s As String, ByVal ConsoleID As Integer) As String
         fixPath = s
     Else
         
-        cPath(ConsoleID) = Replace(cPath(ConsoleID), "/", "\")
+        cPath(consoleID) = Replace(cPath(consoleID), "/", "\")
         
-        If Right(cPath(ConsoleID), 1) = "\" Then
-            fixPath = Mid(cPath(ConsoleID), 1, Len(cPath(ConsoleID)) - 1)
+        If Right(cPath(consoleID), 1) = "\" Then
+            fixPath = Mid(cPath(consoleID), 1, Len(cPath(consoleID)) - 1)
         End If
     End If
     
@@ -1461,7 +1461,7 @@ Public Function fixPath(ByVal s As String, ByVal ConsoleID As Integer) As String
     
 End Function
 
-Public Sub ListDirectoryContents(ByVal ConsoleID As Integer, Optional ByVal sFilter As String)
+Public Sub ListDirectoryContents(ByVal consoleID As Integer, Optional ByVal sFilter As String)
     On Error GoTo zxc
 
     sFilter = Trim(Replace(sFilter, "*", ""))
@@ -1473,7 +1473,7 @@ Public Sub ListDirectoryContents(ByVal ConsoleID As Integer, Optional ByVal sFil
     dirMsg = "Directory List {yellow 10}"
     fileMsg = "File List {yellow 10}"
     
-    sPath = App.Path & "\user" & cPath(ConsoleID)
+    sPath = App.Path & "\user" & cPath(consoleID)
     
     
     
@@ -1493,13 +1493,13 @@ Public Sub ListDirectoryContents(ByVal ConsoleID As Integer, Optional ByVal sFil
             frmConsole.lfont.Caption = sAll
             
             If frmConsole.lfont.Width > (frmConsole.Width - 4200) Then
-                SayRaw ConsoleID, sAll & "{lyellow}"
+                SayRaw consoleID, sAll & "{lyellow}"
                 sAll = ""
             End If
         End If
     Next n
     If sAll <> "" Then
-        SayRaw ConsoleID, sAll & "{lyellow}"
+        SayRaw consoleID, sAll & "{lyellow}"
     End If
     
     sAll = ""
@@ -1522,27 +1522,27 @@ Public Sub ListDirectoryContents(ByVal ConsoleID As Integer, Optional ByVal sFil
             frmConsole.lfont.Caption = sAll
             
             If frmConsole.lfont.Width > (frmConsole.Width - 4700) Then
-                SayRaw ConsoleID, sAll & "{}"
+                SayRaw consoleID, sAll & "{}"
                 sAll = ""
             End If
         End If
     Next n
     If sAll <> "" Then
         
-        SayRaw ConsoleID, sAll & "{}"
+        SayRaw consoleID, sAll & "{}"
     End If
 NoFilesFound:
     sAll = ""
     
-    SayRaw ConsoleID, Trim(Str(fCount)) & " file(s) and " & Trim(Str(dCount)) & " dir(s) found in " & cPath(ConsoleID) & " {green 10}"
+    SayRaw consoleID, Trim(Str(fCount)) & " file(s) and " & Trim(Str(dCount)) & " dir(s) found in " & cPath(consoleID) & " {green 10}"
     
     Exit Sub
 zxc:
-    SayError "Path Not Found: " & cPath(ConsoleID), ConsoleID
+    SayError "Path Not Found: " & cPath(consoleID), consoleID
 End Sub
 
-Public Sub PauseConsole(s As String, ByVal ConsoleID As Integer)
-    ConsolePaused(ConsoleID) = True
+Public Sub PauseConsole(s As String, ByVal consoleID As Integer)
+    ConsolePaused(consoleID) = True
 
     Dim propSpace As String
 
@@ -1558,225 +1558,225 @@ Public Sub PauseConsole(s As String, ByVal ConsoleID As Integer)
     End If
 
     If Has_Property_Space(s) = True Then
-        SayRaw ConsoleID, s
+        SayRaw consoleID, s
     Else
-        SayRaw ConsoleID, s & "{lblue 10}"
+        SayRaw consoleID, s & "{lblue 10}"
     End If
 
     Do
         DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-    Loop Until ConsolePaused(ConsoleID) = False
+    Loop Until ConsolePaused(consoleID) = False
 End Sub
 
-Public Sub ListColors(ByVal ConsoleID As Integer)
+Public Sub ListColors(ByVal consoleID As Integer)
     
-    ShowCol "lred", ConsoleID
-    ShowCol "red", ConsoleID
-    ShowCol "dred", ConsoleID
+    ShowCol "lred", consoleID
+    ShowCol "red", consoleID
+    ShowCol "dred", consoleID
     
-    ShowCol "purple", ConsoleID
-    ShowCol "pink", ConsoleID
-    ShowCol "lorange", ConsoleID
-    ShowCol "orange", ConsoleID
+    ShowCol "purple", consoleID
+    ShowCol "pink", consoleID
+    ShowCol "lorange", consoleID
+    ShowCol "orange", consoleID
     
-    ShowCol "lblue", ConsoleID
-    ShowCol "blue", ConsoleID
-    ShowCol "dblue", ConsoleID
+    ShowCol "lblue", consoleID
+    ShowCol "blue", consoleID
+    ShowCol "dblue", consoleID
     
-    ShowCol "lgreen", ConsoleID
-    ShowCol "green", ConsoleID
-    ShowCol "dgreen", ConsoleID
+    ShowCol "lgreen", consoleID
+    ShowCol "green", consoleID
+    ShowCol "dgreen", consoleID
     
-    ShowCol "lbrown", ConsoleID
-    ShowCol "brown", ConsoleID
-    ShowCol "dbrown", ConsoleID
-    ShowCol "maroon", ConsoleID
+    ShowCol "lbrown", consoleID
+    ShowCol "brown", consoleID
+    ShowCol "dbrown", consoleID
+    ShowCol "maroon", consoleID
     
-    ShowCol "white", ConsoleID
-    ShowCol "lgrey", ConsoleID
-    ShowCol "grey", ConsoleID
-    ShowCol "dgrey", ConsoleID
+    ShowCol "white", consoleID
+    ShowCol "lgrey", consoleID
+    ShowCol "grey", consoleID
+    ShowCol "dgrey", consoleID
     
-    ShowCol "gold", ConsoleID
+    ShowCol "gold", consoleID
     
-    ShowCol "lyellow", ConsoleID
-    ShowCol "yellow", ConsoleID
-    ShowCol "dyellow", ConsoleID
+    ShowCol "lyellow", consoleID
+    ShowCol "yellow", consoleID
+    ShowCol "dyellow", consoleID
     
     
 End Sub
 
-Sub ShowCol(ByVal s As String, ByVal ConsoleID As Integer)
-    SayRaw ConsoleID, s & " (**" & s & "**) {" & s & " 8}"
+Sub ShowCol(ByVal s As String, ByVal consoleID As Integer)
+    SayRaw consoleID, s & " (**" & s & "**) {" & s & " 8}"
 End Sub
 
-Public Sub ShowHelp(sP, ByVal ConsoleID As Integer)
+Public Sub ShowHelp(sP, ByVal consoleID As Integer)
     Dim props As String, propsforexamples As String
     props = "{green 12 underline}"
     propsforexamples = "{lgreen 12}"
 
     Select Case sP
     Case "help"
-        SayRaw ConsoleID, props & "Command: HELP"
-        SayRaw ConsoleID, "{lgrey}Display the available console commands."
+        SayRaw consoleID, props & "Command: HELP"
+        SayRaw consoleID, "{lgrey}Display the available console commands."
     Case "restart"
-        SayRaw ConsoleID, props & "Command: RESTART"
-        SayRaw ConsoleID, "{lgrey}Restart the console immediately."
+        SayRaw consoleID, props & "Command: RESTART"
+        SayRaw consoleID, "{lgrey}Restart the console immediately."
     Case "listcolors"
-        SayRaw ConsoleID, props & "Command: LISTCOLORS"
-        SayRaw ConsoleID, "{lgrey}Display the available colors and color codes in the console."
+        SayRaw consoleID, props & "Command: LISTCOLORS"
+        SayRaw consoleID, "{lgrey}Display the available colors and color codes in the console."
     Case "listkeys"
-        SayRaw ConsoleID, props & "Command: LISTKEYS"
-        SayRaw ConsoleID, "{lgrey}Display the available shortcut keys and their actions in the console."
+        SayRaw consoleID, props & "Command: LISTKEYS"
+        SayRaw consoleID, "{lgrey}Display the available shortcut keys and their actions in the console."
     
     Case "time"
-        SayRaw ConsoleID, props & "Command: TIME"
-        SayRaw ConsoleID, "{lgrey}Display the current system time."
+        SayRaw consoleID, props & "Command: TIME"
+        SayRaw consoleID, "{lgrey}Display the current system time."
     Case "date"
-        SayRaw ConsoleID, props & "Command: DATE"
-        SayRaw ConsoleID, "{lgrey}Display the current system date."
+        SayRaw consoleID, props & "Command: DATE"
+        SayRaw consoleID, "{lgrey}Display the current system date."
     Case "now"
-        SayRaw ConsoleID, props & "Command: NOW"
-        SayRaw ConsoleID, "{lgrey}Display the current system date and time."
+        SayRaw consoleID, props & "Command: NOW"
+        SayRaw consoleID, "{lgrey}Display the current system date and time."
     Case "clear"
-        SayRaw ConsoleID, props & "Command: CLEAR"
-        SayRaw ConsoleID, "{lgrey}Clear the console screen."
+        SayRaw consoleID, props & "Command: CLEAR"
+        SayRaw consoleID, "{lgrey}Clear the console screen."
     Case "stats"
-        SayRaw ConsoleID, props & "Command: STATS"
-        SayRaw ConsoleID, "{lgrey}Display active information about the Dark Signs Network."
-        SayRaw ConsoleID, "{lorange}This information will be shown in the COMM window."
+        SayRaw consoleID, props & "Command: STATS"
+        SayRaw consoleID, "{lgrey}Display active information about the Dark Signs Network."
+        SayRaw consoleID, "{lorange}This information will be shown in the COMM window."
     
     Case "dir"
         
-        SayRaw ConsoleID, props & "Command: DIR optional-filter"
-        SayRaw ConsoleID, "{lgrey}Display files and folders in the active directory."
-        SayRaw ConsoleID, "{lgrey}A filter can be appended to show only elements containing the filter keyword in their name."
+        SayRaw consoleID, props & "Command: DIR optional-filter"
+        SayRaw consoleID, "{lgrey}Display files and folders in the active directory."
+        SayRaw consoleID, "{lgrey}A filter can be appended to show only elements containing the filter keyword in their name."
         
     Case "pause"
-        SayRaw ConsoleID, props & "Command: PAUSE optional-msg"
-        SayRaw ConsoleID, propsforexamples & "Example #1: PAUSE Press a key!"
-        SayRaw ConsoleID, "{lgrey}Pause the console interface until the user presses a key."
+        SayRaw consoleID, props & "Command: PAUSE optional-msg"
+        SayRaw consoleID, propsforexamples & "Example #1: PAUSE Press a key!"
+        SayRaw consoleID, "{lgrey}Pause the console interface until the user presses a key."
     Case "cd"
-        SayRaw ConsoleID, props & "Command: CD directory-name"
-        SayRaw ConsoleID, propsforexamples & "Example #1: CD myfiles"
-        SayRaw ConsoleID, "{lgrey}Change the active path to the specified directory."
+        SayRaw consoleID, props & "Command: CD directory-name"
+        SayRaw consoleID, propsforexamples & "Example #1: CD myfiles"
+        SayRaw consoleID, "{lgrey}Change the active path to the specified directory."
     Case "rd"
-        SayRaw ConsoleID, props & "Command: RD directory-name"
-        SayRaw ConsoleID, propsforexamples & "Example #1: RD myfiles"
-        SayRaw ConsoleID, "{lgrey}Delete the directory with the specified name."
-        SayRaw ConsoleID, "{lorange}The directory must be empty, or it will not be deleted."
+        SayRaw consoleID, props & "Command: RD directory-name"
+        SayRaw consoleID, propsforexamples & "Example #1: RD myfiles"
+        SayRaw consoleID, "{lgrey}Delete the directory with the specified name."
+        SayRaw consoleID, "{lorange}The directory must be empty, or it will not be deleted."
     Case "del"
-        SayRaw ConsoleID, props & "Command: DEL filename"
-        SayRaw ConsoleID, propsforexamples & "Example #1: DEL file.ds"
-        SayRaw ConsoleID, "{lgrey}Delete the specified file or files."
-        SayRaw ConsoleID, "{lgrey}The wildcard symbol, *, can be used to delete multiple files at once."
-        SayRaw ConsoleID, "{lorange}Files in the system directory cannot be deleted."
-        SayRaw ConsoleID, "{orange}Be careful not to delete all of your files!"
+        SayRaw consoleID, props & "Command: DEL filename"
+        SayRaw consoleID, propsforexamples & "Example #1: DEL file.ds"
+        SayRaw consoleID, "{lgrey}Delete the specified file or files."
+        SayRaw consoleID, "{lgrey}The wildcard symbol, *, can be used to delete multiple files at once."
+        SayRaw consoleID, "{lorange}Files in the system directory cannot be deleted."
+        SayRaw consoleID, "{orange}Be careful not to delete all of your files!"
         
     Case "md"
-        SayRaw ConsoleID, props & "Command: MD directory-name"
-        SayRaw ConsoleID, propsforexamples & "Example #1: MD myfiles"
-        SayRaw ConsoleID, "{lgrey}Create a new empty directory with the specified name."
-        SayRaw ConsoleID, "{lorange}The name of the directory should not contain space characters."
+        SayRaw consoleID, props & "Command: MD directory-name"
+        SayRaw consoleID, propsforexamples & "Example #1: MD myfiles"
+        SayRaw consoleID, "{lgrey}Create a new empty directory with the specified name."
+        SayRaw consoleID, "{lorange}The name of the directory should not contain space characters."
             
     Case "lookup"
-        SayRaw ConsoleID, props & "Command: LOOKUP domain-or-username"
-        SayRaw ConsoleID, propsforexamples & "Example #1: LOOKUP website.com"
-        SayRaw ConsoleID, propsforexamples & "Example #2: LOOKUP jsmith"
-        SayRaw ConsoleID, "{lgrey}View information about the specified domain name or user account."
-        SayRaw ConsoleID, "{lgrey}This command can be used on both domain names and user accounts."
-        SayRaw ConsoleID, "{lorange}Data will be returned in the COMM window."
+        SayRaw consoleID, props & "Command: LOOKUP domain-or-username"
+        SayRaw consoleID, propsforexamples & "Example #1: LOOKUP website.com"
+        SayRaw consoleID, propsforexamples & "Example #2: LOOKUP jsmith"
+        SayRaw consoleID, "{lgrey}View information about the specified domain name or user account."
+        SayRaw consoleID, "{lgrey}This command can be used on both domain names and user accounts."
+        SayRaw consoleID, "{lorange}Data will be returned in the COMM window."
                    
     Case "username"
-        SayRaw ConsoleID, props & "Command: USERNAME your-username"
-        SayRaw ConsoleID, propsforexamples & "Example #1: USERNAME jsmith"
-        SayRaw ConsoleID, "{lgrey}Set or change your Dark Signs username."
-        SayRaw ConsoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled."
-        SayRaw ConsoleID, "{lorange}If you do not have an account, visit the website to create one."
+        SayRaw consoleID, props & "Command: USERNAME your-username"
+        SayRaw consoleID, propsforexamples & "Example #1: USERNAME jsmith"
+        SayRaw consoleID, "{lgrey}Set or change your Dark Signs username."
+        SayRaw consoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled."
+        SayRaw consoleID, "{lorange}If you do not have an account, visit the website to create one."
     Case "password"
-        SayRaw ConsoleID, props & "Command: PASSWORD your-password"
-        SayRaw ConsoleID, propsforexamples & "Example #1: PASSWORD secret123"
-        SayRaw ConsoleID, "{lgrey}Set or change your Dark Signs password."
-        SayRaw ConsoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled."
-        SayRaw ConsoleID, "{lorange}If you do not have an account, visit the website to create one."
+        SayRaw consoleID, props & "Command: PASSWORD your-password"
+        SayRaw consoleID, propsforexamples & "Example #1: PASSWORD secret123"
+        SayRaw consoleID, "{lgrey}Set or change your Dark Signs password."
+        SayRaw consoleID, "{lorange}If your username and password are invalid or not set, the majority of features will be disabled."
+        SayRaw consoleID, "{lorange}If you do not have an account, visit the website to create one."
     
     Case "ping"
-        SayRaw ConsoleID, props & "Command: PING domain-or-ip-server"
-        SayRaw ConsoleID, propsforexamples & "Example #1: PING birds.com"
-        SayRaw ConsoleID, "{lgrey}Check if the specified server exist on the network."
-        SayRaw ConsoleID, "{lorange}You can modify this command in the file \system\commands\ping.ds"
+        SayRaw consoleID, props & "Command: PING domain-or-ip-server"
+        SayRaw consoleID, propsforexamples & "Example #1: PING birds.com"
+        SayRaw consoleID, "{lgrey}Check if the specified server exist on the network."
+        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\ping.ds"
     
     Case "me"
-        SayRaw ConsoleID, props & "Command: ME"
-        SayRaw ConsoleID, propsforexamples & "Example #1: ME"
-        SayRaw ConsoleID, "{lgrey}Do nothing at all!"
-        SayRaw ConsoleID, "{lorange}This is a useless secret command."
+        SayRaw consoleID, props & "Command: ME"
+        SayRaw consoleID, propsforexamples & "Example #1: ME"
+        SayRaw consoleID, "{lgrey}Do nothing at all!"
+        SayRaw consoleID, "{lorange}This is a useless secret command."
     
     Case "pingport"
-        SayRaw ConsoleID, props & "Command: PINGPORT domain-or-ip-server 80"
-        SayRaw ConsoleID, propsforexamples & "Example #1: PINGPORT birds.com 80"
-        SayRaw ConsoleID, "{lgrey}Check if a script is runnning on the server at the specified port number."
-        SayRaw ConsoleID, "{lorange}You can modify this command in the file \system\commands\pingport.ds"
+        SayRaw consoleID, props & "Command: PINGPORT domain-or-ip-server 80"
+        SayRaw consoleID, propsforexamples & "Example #1: PINGPORT birds.com 80"
+        SayRaw consoleID, "{lgrey}Check if a script is runnning on the server at the specified port number."
+        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\pingport.ds"
             
     Case "getip"
-        SayRaw ConsoleID, props & "Command: GETIP domain-or-ip-server"
-        SayRaw ConsoleID, propsforexamples & "Example #1: GETIP birds.com"
-        SayRaw ConsoleID, "{lgrey}Get the IP address of the specified server."
-        SayRaw ConsoleID, "{lorange}You can modify this command in the file \system\commands\getip.ds"
+        SayRaw consoleID, props & "Command: GETIP domain-or-ip-server"
+        SayRaw consoleID, propsforexamples & "Example #1: GETIP birds.com"
+        SayRaw consoleID, "{lgrey}Get the IP address of the specified server."
+        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\getip.ds"
             
     Case "getdomain"
-        SayRaw ConsoleID, props & "Command: GETDOMAIN domain-or-ip-server"
-        SayRaw ConsoleID, propsforexamples & "Example #1: GETDOMAIN 12.55.192.111"
-        SayRaw ConsoleID, "{lgrey}Get the domain name of the specified server."
-        SayRaw ConsoleID, "{lorange}You can modify this command in the file \system\commands\getdomain.ds"
+        SayRaw consoleID, props & "Command: GETDOMAIN domain-or-ip-server"
+        SayRaw consoleID, propsforexamples & "Example #1: GETDOMAIN 12.55.192.111"
+        SayRaw consoleID, "{lgrey}Get the domain name of the specified server."
+        SayRaw consoleID, "{lorange}You can modify this command in the file \system\commands\getdomain.ds"
                             
     Case "connect"
-        SayRaw ConsoleID, props & "Command: CONNECT server port-number [optional-parameters]"
-        SayRaw ConsoleID, propsforexamples & "Example #1: CONNECT home.com 80"
-        SayRaw ConsoleID, "{lgrey}Connect to a server domain name or IP address on the specified port."
-        SayRaw ConsoleID, "{lgrey}If no port number is specified, the default port number is 80."
-        SayRaw ConsoleID, "{lorange}You must specify the port number if you are including optional parameters."
+        SayRaw consoleID, props & "Command: CONNECT server port-number [optional-parameters]"
+        SayRaw consoleID, propsforexamples & "Example #1: CONNECT home.com 80"
+        SayRaw consoleID, "{lgrey}Connect to a server domain name or IP address on the specified port."
+        SayRaw consoleID, "{lgrey}If no port number is specified, the default port number is 80."
+        SayRaw consoleID, "{lorange}You must specify the port number if you are including optional parameters."
  
         
             
     Case "move"
-        SayRaw ConsoleID, props & "Command: MOVE source-file destination-file"
-        SayRaw ConsoleID, propsforexamples & "Example #1: MOVE myoldfile.ds mynewfile.ds"
-        SayRaw ConsoleID, propsforexamples & "Example #2: MOVE /home/myoldfile.ds  /home/dir2/mynewfile.ds"
-        SayRaw ConsoleID, "{lgrey}Rename the specified file."
-        SayRaw ConsoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2."
-        SayRaw ConsoleID, "{lorange}File names should not contain space characters."
+        SayRaw consoleID, props & "Command: MOVE source-file destination-file"
+        SayRaw consoleID, propsforexamples & "Example #1: MOVE myoldfile.ds mynewfile.ds"
+        SayRaw consoleID, propsforexamples & "Example #2: MOVE /home/myoldfile.ds  /home/dir2/mynewfile.ds"
+        SayRaw consoleID, "{lgrey}Rename the specified file."
+        SayRaw consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2."
+        SayRaw consoleID, "{lorange}File names should not contain space characters."
     Case "rename"
-        SayRaw ConsoleID, props & "Command: RENAME source-file destination-file"
-        SayRaw ConsoleID, propsforexamples & "Example #1: MD myoldfile.ds mynewfile.ds"
-        SayRaw ConsoleID, propsforexamples & "Example #2: MD /home/myoldfile.ds  /home/dir2/mynewfile.ds"
-        SayRaw ConsoleID, "{lgrey}Rename the specified file."
-        SayRaw ConsoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2."
-        SayRaw ConsoleID, "{lorange}File names should not contain space characters."
+        SayRaw consoleID, props & "Command: RENAME source-file destination-file"
+        SayRaw consoleID, propsforexamples & "Example #1: MD myoldfile.ds mynewfile.ds"
+        SayRaw consoleID, propsforexamples & "Example #2: MD /home/myoldfile.ds  /home/dir2/mynewfile.ds"
+        SayRaw consoleID, "{lgrey}Rename the specified file."
+        SayRaw consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2."
+        SayRaw consoleID, "{lorange}File names should not contain space characters."
     Case "copy"
-        SayRaw ConsoleID, props & "Command: COPY source-file destination-file"
-        SayRaw ConsoleID, propsforexamples & "Example #1: COPY myoldfile.ds mynewfile.ds"
-        SayRaw ConsoleID, propsforexamples & "Example #2: COPY /home/myoldfile.ds  /home/dir2/mynewfile.ds"
-        SayRaw ConsoleID, "{lgrey}Create a copy of the specified file."
-        SayRaw ConsoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2."
-        SayRaw ConsoleID, "{lorange}File names should not contain space characters."
+        SayRaw consoleID, props & "Command: COPY source-file destination-file"
+        SayRaw consoleID, propsforexamples & "Example #1: COPY myoldfile.ds mynewfile.ds"
+        SayRaw consoleID, propsforexamples & "Example #2: COPY /home/myoldfile.ds  /home/dir2/mynewfile.ds"
+        SayRaw consoleID, "{lgrey}Create a copy of the specified file."
+        SayRaw consoleID, "{lgrey}You can also move the file to a new directory, as shown in example #2."
+        SayRaw consoleID, "{lorange}File names should not contain space characters."
     
     Case "saycomm"
-        SayRaw ConsoleID, props & "Command: SAYCOMM text"
-        SayRaw ConsoleID, propsforexamples & "Example #1: SAYCOMM Connected to server"
-        SayRaw ConsoleID, "{lgrey}Display the specified text in the COMM window."
+        SayRaw consoleID, props & "Command: SAYCOMM text"
+        SayRaw consoleID, propsforexamples & "Example #1: SAYCOMM Connected to server"
+        SayRaw consoleID, "{lgrey}Display the specified text in the COMM window."
         
     Case "run"
-        SayRaw ConsoleID, props & "Command: RUN file"
-        SayRaw ConsoleID, propsforexamples & "Example #1: RUN myscript.ds"
-        SayRaw ConsoleID, "{lgrey}Run the specified file as script in the console."
-        SayRaw ConsoleID, "{lgrey}Files not designed to be run as scripts may cause random errors to be displayed."
+        SayRaw consoleID, props & "Command: RUN file"
+        SayRaw consoleID, propsforexamples & "Example #1: RUN myscript.ds"
+        SayRaw consoleID, "{lgrey}Run the specified file as script in the console."
+        SayRaw consoleID, "{lgrey}Files not designed to be run as scripts may cause random errors to be displayed."
             
     Case "edit"
-        SayRaw ConsoleID, props & "Command: EDIT file"
-        SayRaw ConsoleID, propsforexamples & "Example #1: EDIT myscript.ds"
-        SayRaw ConsoleID, "{lgrey}Edit the specified file in the editing window. The console will pause while the editor is active."
-        SayRaw ConsoleID, "{lorange}Files in the editor are saved automatically."
+        SayRaw consoleID, props & "Command: EDIT file"
+        SayRaw consoleID, propsforexamples & "Example #1: EDIT myscript.ds"
+        SayRaw consoleID, "{lgrey}Edit the specified file in the editing window. The console will pause while the editor is active."
+        SayRaw consoleID, "{lorange}Files in the editor are saved automatically."
                 
 '    Case "wait"
 '        SayRaw consoleID, props & "Command: WAIT milliseconds"
@@ -1786,183 +1786,183 @@ Public Sub ShowHelp(sP, ByVal ConsoleID As Integer)
 '        SayRaw consoleID, "{orange}This command is only enabled in scripts."
                     
     Case "upload"
-        SayRaw ConsoleID, props & "Command: UPLOAD server port-number file"
-        SayRaw ConsoleID, propsforexamples & "Example #1: UPLOAD mywebsite.com 80 newscript.ds"
-        SayRaw ConsoleID, "{lgrey}Upload a file to your domain name on the specified port."
-        SayRaw ConsoleID, "{lgrey}This script will then become connectable to all players."
-        SayRaw ConsoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own."
+        SayRaw consoleID, props & "Command: UPLOAD server port-number file"
+        SayRaw consoleID, propsforexamples & "Example #1: UPLOAD mywebsite.com 80 newscript.ds"
+        SayRaw consoleID, "{lgrey}Upload a file to your domain name on the specified port."
+        SayRaw consoleID, "{lgrey}This script will then become connectable to all players."
+        SayRaw consoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own."
     
     Case "closeport"
-        SayRaw ConsoleID, props & "Command: CLOSEPORT server port-number"
-        SayRaw ConsoleID, propsforexamples & "Example #1: CLOSEPORT mywebsite.com 80"
-        SayRaw ConsoleID, "{lgrey}Close port on the specified domain."
-        SayRaw ConsoleID, "{lgrey}The script running on this port is deleted."
-        SayRaw ConsoleID, "{lorange}You can only close ports on domain names (servers) which you own."
+        SayRaw consoleID, props & "Command: CLOSEPORT server port-number"
+        SayRaw consoleID, propsforexamples & "Example #1: CLOSEPORT mywebsite.com 80"
+        SayRaw consoleID, "{lgrey}Close port on the specified domain."
+        SayRaw consoleID, "{lgrey}The script running on this port is deleted."
+        SayRaw consoleID, "{lorange}You can only close ports on domain names (servers) which you own."
                                       
     Case "download"
-        SayRaw ConsoleID, props & "Command: DOWNLOAD server port-number file"
-        SayRaw ConsoleID, propsforexamples & "Example #1: DOWNLOAD mywebsite.com 80 thescript.ds"
-        SayRaw ConsoleID, "{lgrey}Download a script file from a sever that you own."
-        SayRaw ConsoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own."
+        SayRaw consoleID, props & "Command: DOWNLOAD server port-number file"
+        SayRaw consoleID, propsforexamples & "Example #1: DOWNLOAD mywebsite.com 80 thescript.ds"
+        SayRaw consoleID, "{lgrey}Download a script file from a sever that you own."
+        SayRaw consoleID, "{lorange}You can only upload and download scripts to domain names (servers) which you own."
                              
     Case "transfer"
-        SayRaw ConsoleID, props & "Command: TRANSFER recipient-username amount description"
-        SayRaw ConsoleID, propsforexamples & "Example #1: TRANSFER admin 5 A payment for you"
-        SayRaw ConsoleID, "{lgrey}Transfer an amount of money (DS$) to the specified username."
-        SayRaw ConsoleID, "{lorange}Each transfer requires manual authorization from the sender."
+        SayRaw consoleID, props & "Command: TRANSFER recipient-username amount description"
+        SayRaw consoleID, propsforexamples & "Example #1: TRANSFER admin 5 A payment for you"
+        SayRaw consoleID, "{lgrey}Transfer an amount of money (DS$) to the specified username."
+        SayRaw consoleID, "{lorange}Each transfer requires manual authorization from the sender."
                                     
     Case "ydiv"
-        SayRaw ConsoleID, props & "Command: YDIV height"
-        SayRaw ConsoleID, propsforexamples & "Example #1: YDIV 240"
-        SayRaw ConsoleID, "{lgrey}Change the default space between each console line."
-        SayRaw ConsoleID, "{lorange}The default YDIV is set to 60."
+        SayRaw consoleID, props & "Command: YDIV height"
+        SayRaw consoleID, propsforexamples & "Example #1: YDIV 240"
+        SayRaw consoleID, "{lgrey}Change the default space between each console line."
+        SayRaw consoleID, "{lorange}The default YDIV is set to 60."
                                            
     Case "display"
-        SayRaw ConsoleID, props & "Command: DISPLAY file optional-start-line optional-max-lines"
-        SayRaw ConsoleID, propsforexamples & "Example #1: DISPLAY myfile.txt 1 5"
-        SayRaw ConsoleID, "{lgrey}Output the specified file to the console, without running as a script."
-        SayRaw ConsoleID, "{lorange}In the example, the first five lines of myfile.txt will be displayed."
+        SayRaw consoleID, props & "Command: DISPLAY file optional-start-line optional-max-lines"
+        SayRaw consoleID, propsforexamples & "Example #1: DISPLAY myfile.txt 1 5"
+        SayRaw consoleID, "{lgrey}Output the specified file to the console, without running as a script."
+        SayRaw consoleID, "{lorange}In the example, the first five lines of myfile.txt will be displayed."
                                                    
     Case "append"
-        SayRaw ConsoleID, props & "Command: APPEND file optional-START-or-END text"
-        SayRaw ConsoleID, propsforexamples & "Example #1: APPEND myfile.txt new data"
-        SayRaw ConsoleID, propsforexamples & "Example #2: APPEND myfile.txt START new data"
-        SayRaw ConsoleID, "{lgrey}Append (add) text or data to the specified file."
-        SayRaw ConsoleID, "{lgrey}Data will be added to the beginning of the file if the START keyword is used."
-        SayRaw ConsoleID, "{lgrey}Data will be added to the end of the file if the END keyword is used."
-        SayRaw ConsoleID, "{lorange}If the specified file doesn't exist, it will be created."
+        SayRaw consoleID, props & "Command: APPEND file optional-START-or-END text"
+        SayRaw consoleID, propsforexamples & "Example #1: APPEND myfile.txt new data"
+        SayRaw consoleID, propsforexamples & "Example #2: APPEND myfile.txt START new data"
+        SayRaw consoleID, "{lgrey}Append (add) text or data to the specified file."
+        SayRaw consoleID, "{lgrey}Data will be added to the beginning of the file if the START keyword is used."
+        SayRaw consoleID, "{lgrey}Data will be added to the end of the file if the END keyword is used."
+        SayRaw consoleID, "{lorange}If the specified file doesn't exist, it will be created."
                                                            
     Case "write"
-        SayRaw ConsoleID, props & "Command: WRITE file text"
-        SayRaw ConsoleID, propsforexamples & "Example #1: WRITE myfile.txt new data"
-        SayRaw ConsoleID, "{lgrey}Write text or data to the specified file."
-        SayRaw ConsoleID, "{lorange}If the specified file already exists, it will be overwritten."
-        SayRaw ConsoleID, "{lorange}Use APPEND to add data to an existing file."
+        SayRaw consoleID, props & "Command: WRITE file text"
+        SayRaw consoleID, propsforexamples & "Example #1: WRITE myfile.txt new data"
+        SayRaw consoleID, "{lgrey}Write text or data to the specified file."
+        SayRaw consoleID, "{lorange}If the specified file already exists, it will be overwritten."
+        SayRaw consoleID, "{lorange}Use APPEND to add data to an existing file."
         
 
     Case "register"
-        SayRaw ConsoleID, props & "Command: REGISTER domain-name"
-        SayRaw ConsoleID, propsforexamples & "Example #1: REGISTER mynewwebsite.com"
-        SayRaw ConsoleID, "{lgrey}Register a domain name on the Dark Signs Network."
-        SayRaw ConsoleID, "{lgrey}This command requires that you have the required amount of money (DS$) in your account."
-        SayRaw ConsoleID, "-"
-        SayRaw ConsoleID, "{center orange nobold 14}- Check the latest prices in the COMM window. -"
-        RunPage "domain_register.php?returnwith=2000&prices=1", ConsoleID
+        SayRaw consoleID, props & "Command: REGISTER domain-name"
+        SayRaw consoleID, propsforexamples & "Example #1: REGISTER mynewwebsite.com"
+        SayRaw consoleID, "{lgrey}Register a domain name on the Dark Signs Network."
+        SayRaw consoleID, "{lgrey}This command requires that you have the required amount of money (DS$) in your account."
+        SayRaw consoleID, "-"
+        SayRaw consoleID, "{center orange nobold 14}- Check the latest prices in the COMM window. -"
+        RunPage "domain_register.php?returnwith=2000&prices=1", consoleID
         
          
     Case "unregister"
-        SayRaw ConsoleID, props & "Command: UNREGISTER domain-name account-password"
-        SayRaw ConsoleID, propsforexamples & "Example #1: UNREGISTER myoldwebsite.com secret123"
-        SayRaw ConsoleID, "{lgrey}Unregister a domain name that you own on the Dark Signs Network."
-        SayRaw ConsoleID, "{lorange}This command requires that you include your password for security."
+        SayRaw consoleID, props & "Command: UNREGISTER domain-name account-password"
+        SayRaw consoleID, propsforexamples & "Example #1: UNREGISTER myoldwebsite.com secret123"
+        SayRaw consoleID, "{lgrey}Unregister a domain name that you own on the Dark Signs Network."
+        SayRaw consoleID, "{lorange}This command requires that you include your password for security."
         
             
     Case "login"
-        SayRaw ConsoleID, props & "Command: LOGIN"
-        SayRaw ConsoleID, "{lgrey}Attempt to log in to Dark Signs with your account username and password."
-        SayRaw ConsoleID, "{lgrey}This is only necessary if your status is 'not logged in'."
-        SayRaw ConsoleID, "{lorange}Use the USERNAME and PASSWORD commands to set or change your username or password."
+        SayRaw consoleID, props & "Command: LOGIN"
+        SayRaw consoleID, "{lgrey}Attempt to log in to Dark Signs with your account username and password."
+        SayRaw consoleID, "{lgrey}This is only necessary if your status is 'not logged in'."
+        SayRaw consoleID, "{lorange}Use the USERNAME and PASSWORD commands to set or change your username or password."
         
     Case "logout"
-        SayRaw ConsoleID, props & "Command: LOGOUT"
-        SayRaw ConsoleID, "{lgrey}Log out of Dark Signs."
-        SayRaw ConsoleID, "{lgrey}This can be helpful if you want to log in as another user, or if a rare error occurs."
+        SayRaw consoleID, props & "Command: LOGOUT"
+        SayRaw consoleID, "{lgrey}Log out of Dark Signs."
+        SayRaw consoleID, "{lgrey}This can be helpful if you want to log in as another user, or if a rare error occurs."
             
     Case "mydomains"
-        SayRaw ConsoleID, props & "Command: MYDOMAINS"
-        SayRaw ConsoleID, "{lgrey}List the domain names currently registered to you."
+        SayRaw consoleID, props & "Command: MYDOMAINS"
+        SayRaw consoleID, "{lgrey}List the domain names currently registered to you."
    
     Case "mysubdomains"
-        SayRaw ConsoleID, props & "Command: MYSUBDOMAINS"
-        SayRaw ConsoleID, propsforexamples & "Example #1: MYSUBDOMAINS mySite.com"
-        SayRaw ConsoleID, "{lgrey}List subdomains to a domain that is registed to you."
+        SayRaw consoleID, props & "Command: MYSUBDOMAINS"
+        SayRaw consoleID, propsforexamples & "Example #1: MYSUBDOMAINS mySite.com"
+        SayRaw consoleID, "{lgrey}List subdomains to a domain that is registed to you."
     
     Case "myips"
-        SayRaw ConsoleID, props & "Command: MYIPS"
-        SayRaw ConsoleID, "{lgrey}List all IP addresses registed to you."
+        SayRaw consoleID, props & "Command: MYIPS"
+        SayRaw consoleID, "{lgrey}List all IP addresses registed to you."
      
     Case "music"
-        SayRaw ConsoleID, props & "Command: MUSIC [parameter]"
-        SayRaw ConsoleID, propsforexamples & "Example #1: MUSIC NEXT"
-        SayRaw ConsoleID, "{lgrey}Music parameters are START, STOP, NEXT, and PREV."
+        SayRaw consoleID, props & "Command: MUSIC [parameter]"
+        SayRaw consoleID, propsforexamples & "Example #1: MUSIC NEXT"
+        SayRaw consoleID, "{lgrey}Music parameters are START, STOP, NEXT, and PREV."
         
     Case "say"
-        SayRaw ConsoleID, props & "Command: SAY text (**optional-properties**)"
-        SayRaw ConsoleID, propsforexamples & "Example #1: SAY consoleID, hello, this is green (**green**)"
-        SayRaw ConsoleID, propsforexamples & "Example #2: SAY consoleID, this is bold and very large (**bold, 36**)"
-        SayRaw ConsoleID, "{lgrey}Display the specified text in the console."
-        SayRaw ConsoleID, "{lgrey}Text properties can be modified by adding any number of the following keywords in bewtween (** **), in any order."
-        SayRaw ConsoleID, "{lgreen}Colors: Type SHOWCOLORS the display a list of colors."
-        SayRaw ConsoleID, "{lgreen}Fonts: Arial, Arial Black, Comic Sans MS, Courier New, Georgia, Impact,"
-        SayRaw ConsoleID, "{lgreen}Fonts: Lucida Console, Tahoma, Times New Roman, Trebuchet MS, Verdana, Wingdings."
-        SayRaw ConsoleID, "{lgreen}Attributes: Bold, NoBold, Italic, NoItalic, Underline, NoUnderline, Strikethru, NoStrikethru."
-        SayRaw ConsoleID, "{lgreen}Extras: Flash, Flashfast, FlashSlow."
-        SayRaw ConsoleID, "{orange}Note: You cannot use SAY to display multiple lines of text."
-        SayRaw ConsoleID, "{orange}For multiple lines, use SAYALL instead."
+        SayRaw consoleID, props & "Command: SAY text (**optional-properties**)"
+        SayRaw consoleID, propsforexamples & "Example #1: SAY consoleID, hello, this is green (**green**)"
+        SayRaw consoleID, propsforexamples & "Example #2: SAY consoleID, this is bold and very large (**bold, 36**)"
+        SayRaw consoleID, "{lgrey}Display the specified text in the console."
+        SayRaw consoleID, "{lgrey}Text properties can be modified by adding any number of the following keywords in bewtween (** **), in any order."
+        SayRaw consoleID, "{lgreen}Colors: Type SHOWCOLORS the display a list of colors."
+        SayRaw consoleID, "{lgreen}Fonts: Arial, Arial Black, Comic Sans MS, Courier New, Georgia, Impact,"
+        SayRaw consoleID, "{lgreen}Fonts: Lucida Console, Tahoma, Times New Roman, Trebuchet MS, Verdana, Wingdings."
+        SayRaw consoleID, "{lgreen}Attributes: Bold, NoBold, Italic, NoItalic, Underline, NoUnderline, Strikethru, NoStrikethru."
+        SayRaw consoleID, "{lgreen}Extras: Flash, Flashfast, FlashSlow."
+        SayRaw consoleID, "{orange}Note: You cannot use SAY to display multiple lines of text."
+        SayRaw consoleID, "{orange}For multiple lines, use SAYALL instead."
     
     Case "sayall"
-        SayRaw ConsoleID, props & "Command: SAYALL text (**optional-properties**)"
-        SayRaw ConsoleID, propsforexamples & "Example #1: SAYALL hello"
-        SayRaw ConsoleID, "{lgrey}Same as the SAY command, except will display multiple lines."
-        SayRaw ConsoleID, "{lorange}Type HELP SAY for more information."
+        SayRaw consoleID, props & "Command: SAYALL text (**optional-properties**)"
+        SayRaw consoleID, propsforexamples & "Example #1: SAYALL hello"
+        SayRaw consoleID, "{lgrey}Same as the SAY command, except will display multiple lines."
+        SayRaw consoleID, "{lorange}Type HELP SAY for more information."
              
     Case "sayline"
-        SayRaw ConsoleID, props & "Command: SAYLINE text (**optional-properties**)"
-        SayRaw ConsoleID, propsforexamples & "Example #1: SAYLINE hello"
-        SayRaw ConsoleID, "{lgrey}Same as the SAY command, except text will be printed on the same line, without moving down."
-        SayRaw ConsoleID, "{lorange}Type HELP SAY for more information."
+        SayRaw consoleID, props & "Command: SAYLINE text (**optional-properties**)"
+        SayRaw consoleID, propsforexamples & "Example #1: SAYLINE hello"
+        SayRaw consoleID, "{lgrey}Same as the SAY command, except text will be printed on the same line, without moving down."
+        SayRaw consoleID, "{lorange}Type HELP SAY for more information."
            
     Case "remotedelete"
-        SayRaw ConsoleID, props & "Command: REMOTEDELETE domain filename"
-        SayRaw ConsoleID, propsforexamples & "Example #1: REMOTEDELETE matrix.com myfile.ds"
-        SayRaw ConsoleID, "{lgrey}Delete the specified file from the remote server."
-        SayRaw ConsoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
+        SayRaw consoleID, props & "Command: REMOTEDELETE domain filename"
+        SayRaw consoleID, propsforexamples & "Example #1: REMOTEDELETE matrix.com myfile.ds"
+        SayRaw consoleID, "{lgrey}Delete the specified file from the remote server."
+        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
     
     Case "remoteupload"
-        SayRaw ConsoleID, props & "Command: REMOTEUPLOAD domain filename"
-        SayRaw ConsoleID, propsforexamples & "Example #1: REMOTEUPLOAD matrix.com localfile.ds"
-        SayRaw ConsoleID, "{lgrey}Upload a file from your local file system to your domain name file system."
-        SayRaw ConsoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
+        SayRaw consoleID, props & "Command: REMOTEUPLOAD domain filename"
+        SayRaw consoleID, propsforexamples & "Example #1: REMOTEUPLOAD matrix.com localfile.ds"
+        SayRaw consoleID, "{lgrey}Upload a file from your local file system to your domain name file system."
+        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
            
     Case "remotedir"
-        SayRaw ConsoleID, props & "Command: REMOTEDIR domain"
-        SayRaw ConsoleID, propsforexamples & "Example #1: REMOTEDIR matrix.com"
-        SayRaw ConsoleID, "{lgrey}View files on the remote server."
-        SayRaw ConsoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
+        SayRaw consoleID, props & "Command: REMOTEDIR domain"
+        SayRaw consoleID, propsforexamples & "Example #1: REMOTEDIR matrix.com"
+        SayRaw consoleID, "{lgrey}View files on the remote server."
+        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
                
     Case "remoteview"
-        SayRaw ConsoleID, props & "Command: REMOTEVIEW domain filename"
-        SayRaw ConsoleID, propsforexamples & "Example #1: REMOTEVIEW google.com userlist.log"
-        SayRaw ConsoleID, "{lgrey}Display the specified remote file in the console."
-        SayRaw ConsoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
+        SayRaw consoleID, props & "Command: REMOTEVIEW domain filename"
+        SayRaw consoleID, propsforexamples & "Example #1: REMOTEVIEW google.com userlist.log"
+        SayRaw consoleID, "{lgrey}Display the specified remote file in the console."
+        SayRaw consoleID, "{lorange}You must own the domain, or have subowner privileges on the domain."
     
     Case "draw"
-        SayRaw ConsoleID, props & "Command: DRAW -y Red(0-255) Green(0-255) Blue(0-255) mode"
-        SayRaw ConsoleID, propsforexamples & "Example #1: DRAW -1 142 200 11 fadeout"
-        SayRaw ConsoleID, "{lgrey}Print a background color stream to the console."
-        SayRaw ConsoleID, "{lgrey}The first parameter, -y, defines the console line."
-        SayRaw ConsoleID, "{lgrey}For example, -2 will draw to the second line up from the active line."
-        SayRaw ConsoleID, "{lgrey}The Red, Green, and Blue must be values between 0 and 255."
-        SayRaw ConsoleID, "{lorange}Available mode keywords: SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE."
-        SayRaw ConsoleID, "{orange}To use custom colors, use the DRAWCUSTOM command."
+        SayRaw consoleID, props & "Command: DRAW -y Red(0-255) Green(0-255) Blue(0-255) mode"
+        SayRaw consoleID, propsforexamples & "Example #1: DRAW -1 142 200 11 fadeout"
+        SayRaw consoleID, "{lgrey}Print a background color stream to the console."
+        SayRaw consoleID, "{lgrey}The first parameter, -y, defines the console line."
+        SayRaw consoleID, "{lgrey}For example, -2 will draw to the second line up from the active line."
+        SayRaw consoleID, "{lgrey}The Red, Green, and Blue must be values between 0 and 255."
+        SayRaw consoleID, "{lorange}Available mode keywords: SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE."
+        SayRaw consoleID, "{orange}To use custom colors, use the DRAWCUSTOM command."
     
         
     
     Case "subowners"
-        SayRaw ConsoleID, props & "Command: SUBOWNERS domain-name KEYWORD [optional-username]"
-        SayRaw ConsoleID, propsforexamples & "Example #1: SUBOWNERS site.com LIST"
-        SayRaw ConsoleID, propsforexamples & "Example #2: SUBOWNERS site.com ADD friendusername"
-        SayRaw ConsoleID, propsforexamples & "Example #3: SUBOWNERS site.com REMOVE friendusername"
-        SayRaw ConsoleID, "{lgrey}Add or remove other user privileges regarding your specified domain name."
-        SayRaw ConsoleID, "{lgrey}You can add users to this list as subowners of your domain name."
-        SayRaw ConsoleID, "{lorange}Subowners have permission to interact, upload, and download files from the domain."
-        SayRaw ConsoleID, "{lorange}Subowners have no ability to unregister or modify the domain name  privileges."
+        SayRaw consoleID, props & "Command: SUBOWNERS domain-name KEYWORD [optional-username]"
+        SayRaw consoleID, propsforexamples & "Example #1: SUBOWNERS site.com LIST"
+        SayRaw consoleID, propsforexamples & "Example #2: SUBOWNERS site.com ADD friendusername"
+        SayRaw consoleID, propsforexamples & "Example #3: SUBOWNERS site.com REMOVE friendusername"
+        SayRaw consoleID, "{lgrey}Add or remove other user privileges regarding your specified domain name."
+        SayRaw consoleID, "{lgrey}You can add users to this list as subowners of your domain name."
+        SayRaw consoleID, "{lorange}Subowners have permission to interact, upload, and download files from the domain."
+        SayRaw consoleID, "{lorange}Subowners have no ability to unregister or modify the domain name  privileges."
         
         
         
     Case "lineup"
-        SayRaw ConsoleID, props & "Command: LINEUP"
-        SayRaw ConsoleID, "{lgrey}Move up an extra console line. Useful for some scripts."
+        SayRaw consoleID, props & "Command: LINEUP"
+        SayRaw consoleID, "{lgrey}Move up an extra console line. Useful for some scripts."
         
      'Case "chatsend"
      '   SayRaw consoleID, props & "Command: CHATSEND Message to be sent to the chat."
@@ -1971,19 +1971,19 @@ Public Sub ShowHelp(sP, ByVal ConsoleID As Integer)
        
     
     Case "chatview"
-        SayRaw ConsoleID, props & "Command: CHATVIEW [parameter]"
-        SayRaw ConsoleID, "{lgrey}If set to on, will display chat in the status window."
-        SayRaw ConsoleID, "{lgrey}CHATVIEW parameters are ON and OFF"
+        SayRaw consoleID, props & "Command: CHATVIEW [parameter]"
+        SayRaw consoleID, "{lgrey}If set to on, will display chat in the status window."
+        SayRaw consoleID, "{lgrey}CHATVIEW parameters are ON and OFF"
 
     
     Case Else
-        SayRaw ConsoleID, props & "Available Commands"
-        SayRaw ConsoleID, "{lgrey 8}APPEND, CD, CLEAR, CLOSEPORT, CONNECT, COPY, DATE, DEL, DIR, DISPLAY, DOWNLOAD, DRAW, EDIT"
-        SayRaw ConsoleID, "{lgrey 8}GETIP, GETDOMAIN, LINEUP, LISTCOLORS, LISTKEYS, LOGIN, LOGOUT, LOOKUP, MD, MOVE, MUSIC"
-        SayRaw ConsoleID, "{lgrey 8}MYDOMAINS, MYIPS, MYSUBDOMAINS, NOW, PASSWORD, PAUSE, PING, PINGPORT, RD, RENAME, REGISTER"
-        SayRaw ConsoleID, "{lgrey 8}REMOTEDELETE, REMOTEDIR, REMOTEUPLOAD, REMOTEVIEW, RESTART, RUN, SAY, SAYALL, SAYCOMM, STATS"
-        SayRaw ConsoleID, "{lgrey 8}SUBOWNERS, TIME, TRANSFER, UNREGISTER, UPLOAD, USERNAME, WRITE, YDIV"
-        SayRaw ConsoleID, "{grey}For more specific help on a command, type: HELP [command]"
+        SayRaw consoleID, props & "Available Commands"
+        SayRaw consoleID, "{lgrey 8}APPEND, CD, CLEAR, CLOSEPORT, CONNECT, COPY, DATE, DEL, DIR, DISPLAY, DOWNLOAD, DRAW, EDIT"
+        SayRaw consoleID, "{lgrey 8}GETIP, GETDOMAIN, LINEUP, LISTCOLORS, LISTKEYS, LOGIN, LOGOUT, LOOKUP, MD, MOVE, MUSIC"
+        SayRaw consoleID, "{lgrey 8}MYDOMAINS, MYIPS, MYSUBDOMAINS, NOW, PASSWORD, PAUSE, PING, PINGPORT, RD, RENAME, REGISTER"
+        SayRaw consoleID, "{lgrey 8}REMOTEDELETE, REMOTEDIR, REMOTEUPLOAD, REMOTEVIEW, RESTART, RUN, SAY, SAYALL, SAYCOMM, STATS"
+        SayRaw consoleID, "{lgrey 8}SUBOWNERS, TIME, TRANSFER, UNREGISTER, UPLOAD, USERNAME, WRITE, YDIV"
+        SayRaw consoleID, "{grey}For more specific help on a command, type: HELP [command]"
     End Select
 End Sub
 
