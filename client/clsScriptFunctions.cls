@@ -332,6 +332,20 @@ Public Sub SayAll(ParamArray Params() As Variant)
     Next
 End Sub
 
+Public Sub CLIParse(Src As String, Dest As String)
+    Dim SrcStr As String
+    SrcStr = GetFileClean(ResolvePath(PrivConsoleID, Src))
+
+    Dim DestStr As String
+    DestStr = ParseCommandLine(SrcStr)
+
+    Dim FF As Long
+    FF = FreeFile
+    Open SafePath(ResolvePath(PrivConsoleID, Dest)) For Binary As #FF
+    Put #FF, , DestStr
+    Close #FF
+End Sub
+
 Public Function ResolveCommand(Command As String) As String
     ResolveCommand = basCommands.ResolveCommand(PrivConsoleID, Command)
 End Function

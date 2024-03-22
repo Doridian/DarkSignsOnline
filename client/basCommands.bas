@@ -24,6 +24,22 @@ Public Sub InitBasCommands()
     Next
 End Sub
 
+Public Function SafePath(Path As String) As String
+    If InStr(Path, "..") > 0 Then
+        Err.Raise vbObjectError + 9666, "DSO", "Invalid character in path"
+        Exit Function
+    End If
+    SafePath = App.Path & "/user/" & Path
+End Function
+
+Public Function ResolvePath(ConsoleID As Integer, Path As String) As String
+    If Left(Path, 1) = "/" Or Left(Path, 1) = "\" Then
+        ResolvePath = Path
+        Exit Function
+    End If
+    ResolvePath = cPath(ConsoleID) & "/" & Path
+End Function
+
 Public Function ResolveCommand(ConsoleID As Integer, Command As String) As String
     If InStr(Command, "/") > 0 Or InStr(Command, "\") > 0 Or InStr(Command, ".") > 0 Then
         If Left(Command, 1) = "/" Or Left(Command, 1) = "\" Or ConsoleID = 0 Then
@@ -111,7 +127,7 @@ Public Function ParseCommandLine(tmpS As String) As String
     End If
 End Function
 
-Public Function ParseCommandLineInt(tmpS As String, ByRef OptionExplicit As Boolean) As String
+Private Function ParseCommandLineInt(tmpS As String, ByRef OptionExplicit As Boolean) As String
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
     ReDim CLIArgs(0 To 0)
@@ -543,7 +559,7 @@ Public Sub UploadToDomain(ByVal sDomain As String, ByVal sPort As Integer, ByVal
     If FileExists(App.Path & "\user" & sFilename) = True Then
         Dim tempStrA As String
 
-        sFileData = GetFileClean(App.Path & "\user" & sFilename)
+        sFileData = GetFileClean(sFilename)
         tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
 
         RunPage "domain_upload.php", ConsoleID, True, _
@@ -1129,17 +1145,17 @@ errorDir:
     'say ConsoleID, "Directory Not Found: " & s & " {orange}", False
 End Sub
 
-Public Function MoveAFile(Source As String, dest As String, ConsoleID As Integer) As Boolean
+Public Function MoveAFile(Source As String, Dest As String, ConsoleID As Integer) As Boolean
     On Error GoTo zxc
 
     
-    If InStr(i(dest), "\system\") > 0 Then
+    If InStr(i(Dest), "\system\") > 0 Then
         SayError "Files in the main SYSTEM directory are protected.", ConsoleID
         Exit Function
     End If
     
     
-    FileCopy Source, dest
+    FileCopy Source, Dest
     Kill Source
 
     MoveAFile = True
@@ -1148,15 +1164,15 @@ zxc:
     MoveAFile = False
 End Function
 
-Public Function CopyAFile(Source As String, dest As String, ConsoleID As Integer) As Boolean
+Public Function CopyAFile(Source As String, Dest As String, ConsoleID As Integer) As Boolean
     On Error GoTo zxc
     
-    If InStr(i(dest), "\system\") > 0 Then
+    If InStr(i(Dest), "\system\") > 0 Then
         SayError "Files in the main SYSTEM directory are protected.", ConsoleID
         Exit Function
     End If
     
-    FileCopy Source, dest
+    FileCopy Source, Dest
     'Kill Source 'don't kill it, this is for copy
 
     CopyAFile = True

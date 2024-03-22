@@ -72,11 +72,7 @@ Public Function GetFile(ByVal fn As String) As String
             fullS = fullS & tmpS & vbCrLf
         Loop
     Close #aFF
-    
-    If Mid(fullS, Len(fullS) - 1, 2) = vbCrLf Then
-        fullS = Mid(fullS, 1, Len(fullS) - 2)
-    End If
-    
+
     GetFile = fullS
     
 zxc:
@@ -86,6 +82,8 @@ End Function
 
 Function GetFileClean(ByVal filename As String) As String
     Dim Handle As Integer
+
+    filename = SafePath(filename)
     
     ' ensure that the file exists
     If Len(dir$(filename)) = 0 Then
@@ -99,12 +97,6 @@ Function GetFileClean(ByVal filename As String) As String
     GetFileClean = Space$(LOF(Handle))
     Get #Handle, , GetFileClean
     Close #Handle
-    
-    If Mid(GetFileClean, Len(GetFileClean) - 1, 2) = vbCrLf Then
-        GetFileClean = Mid(GetFileClean, 1, Len(GetFileClean) - 2)
-    End If
-    
-    
 End Function
 
 
