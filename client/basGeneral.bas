@@ -55,13 +55,6 @@ Public Function VersionStr() As String
 End Function
 
 Public Function GetFile(ByVal fn As String) As String
-    
-    'fn = Replace(fn, "/", "\")
-    'fn = Replace(fn, "\\", "\")
-    'fn = Replace(fn, "\\", "\")
-    
-    
-    'get the contents of a file
     On Error GoTo zxc
     
     Dim aFF As Long, tmpS As String, fullS As String
@@ -74,8 +67,9 @@ Public Function GetFile(ByVal fn As String) As String
     Close #aFF
 
     GetFile = fullS
-    
+
 zxc:
+    Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
     Close #aFF
 End Function
 
@@ -201,7 +195,6 @@ zz:
 End Function
 
 Public Function WriteFile(fn As String, s As String) As Boolean
-    'write to a file (don't append)
     On Error GoTo zxc
     Dim FF As Long
     FF = FreeFile
@@ -215,18 +208,6 @@ zxc:
     Close #FF
     WriteFile = False
 End Function
-
-
-Public Sub AppendFile(fn As String, s As String)
-    'write to a file (append)
-    On Error GoTo zxc
-    Dim FF As Long
-    FF = FreeFile
-    Open fn For Append As #FF
-        Print #FF, s
-zxc:
-    Close #FF
-End Sub
 
 Public Sub RegSave(sCat As String, sVal As String)
     SaveSetting App.Title, "Settings", i(sCat), sVal
@@ -281,16 +262,10 @@ End Function
 
 'this is like split but often easier
 Public Function GetPart(ByVal s As String, ByVal part As Integer, ByVal theDivider As String) As String
-    On Error GoTo zxc
-    
     Dim sArray() As String
     part = part - 1
     sArray = Split(s, theDivider)
     GetPart = sArray(part)
-    
-    Exit Function
-zxc:
-    GetPart = ""
 End Function
 
 Public Function KillBadDirChars(s As String) As String
@@ -329,9 +304,9 @@ End Function
 
 Public Function DirExists(ByVal sDirName As String) As Boolean
     Dim s As String
-    s = Trim(Replace(sDirName, "/", "\"))
+    s = Trim(Replace(sDirName, "\", "/"))
     
-    If Right(s, 1) <> "\" Then s = s & "\"
+    If Right(s, 1) <> "/" Then s = s & "/"
     
     If WriteFile(s & "testbqva.txt", "data here") = True Then
         Kill s & "testbqva.txt"

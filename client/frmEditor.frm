@@ -340,9 +340,9 @@ Private Sub Form_Load()
   
     EditorRunFile = ""
     
-    HScroll1.value = tR
-    HScroll2.value = tG
-    HScroll3.value = tB
+    HScroll1.Value = tR
+    HScroll2.Value = tG
+    HScroll3.Value = tB
     
     
     SetColorBox
@@ -509,17 +509,17 @@ End Sub
 
 Private Sub HScroll1_Change()
     On Error Resume Next
-    tR.Text = HScroll1.value
+    tR.Text = HScroll1.Value
 End Sub
 
 Private Sub HScroll2_Change()
     On Error Resume Next
-    tG.Text = HScroll2.value
+    tG.Text = HScroll2.Value
 End Sub
 
 Private Sub HScroll3_Change()
     On Error Resume Next
-    tB.Text = HScroll3.value
+    tB.Text = HScroll3.Value
 End Sub
 
 Private Sub List1_Click()

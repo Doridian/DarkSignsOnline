@@ -619,43 +619,7 @@ Public Sub ListMyIPs(ByVal ConsoleID As Integer)
     RunPage "my_domains.php?type=ip", ConsoleID, False, "", 0
 End Sub
 
-
-Public Function IsInCommandsSubdirectory(ByVal sFile As String) As String
-    
-    IsInCommandsSubdirectory = ""
-    
-    frmConsole.Dir1.Path = App.Path & "\user\system\commands\"
-    frmConsole.Dir1.Refresh
-    
-    sFile = Trim(sFile)
-    If sFile = "" Then Exit Function
-    
-    Dim sPath As String
-    Dim n As Integer
-    
-    For n = 0 To frmConsole.Dir1.ListCount - 1
-        sPath = Replace(frmConsole.Dir1.List(n), App.Path & "\user", "")
-        If sPath <> "" Then
-        
-        
-            If FileExists(App.Path & "\user" & sPath & "\" & sFile) = True Then
-                IsInCommandsSubdirectory = sPath & "\" & sFile
-                Exit Function
-            End If
-            If FileExists(App.Path & "\user" & sPath & "\" & sFile & ".ds") = True Then
-                IsInCommandsSubdirectory = sPath & "\" & sFile & ".ds"
-                Exit Function
-            End If
-            
-        
-        End If
-        
-    Next n
-End Function
-
 Public Sub SetYDiv(s As String)
-    On Error GoTo zxc
-    
     s = Trim(Replace(s, "=", ""))
     If s = "" Then Exit Sub
     
@@ -666,8 +630,6 @@ Public Sub SetYDiv(s As String)
     If n > 720 Then n = 720
     
     yDiv = n
-    
-zxc:
 End Sub
 
 
@@ -1081,7 +1043,7 @@ Public Sub MusicCommand(ByVal sX As String)
     Case "set":
         If frmConsole.FileMusic.ListCount < 1 Then Exit Sub
         Dim tmpS As String, iTmp As Long
-        tmpS = i(frmConsole.FileMusic.Path & "\" & Mid(sX, 5))
+        tmpS = i(frmConsole.FileMusic.Path & "/" & Mid(sX, 5))
         If FileExists(tmpS) = True Then
             For iTmp = 0 To (frmConsole.FileMusic.ListCount - 1)
                 If frmConsole.FileMusic.List(iTmp) = i(Mid(sX, 5)) Then
@@ -1169,22 +1131,6 @@ Public Sub ClearConsole(ByVal ConsoleID As Integer)
 End Sub
 
 
-Public Sub DownADir(ByVal ConsoleID As Integer)
-    On Error GoTo zxc
-    
-    If Len(cPath(ConsoleID)) < 2 Then Exit Sub
-    
-    Dim s As String
-    s = Mid(cPath(ConsoleID), 1, Len(cPath(ConsoleID)) - 1)
-    s = ReverseString(s)
-    s = Mid(s, InStr(s, "\"), Len(s))
-    s = ReverseString(s)
-    
-    
-    cPath(ConsoleID) = s
-zxc:
-End Sub
-
 Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
     If s = "" Then
         Exit Sub
@@ -1260,11 +1206,11 @@ End Sub
 
 Public Function GetShortName(ByVal s As String) As String
     s = ReverseString(s)
-    s = Replace(s, "/", "\")
+    s = Replace(s, "\", "/")
     
-    If InStr(s, "\") > 0 Then
+    If InStr(s, "/") > 0 Then
     
-        s = Mid(s, 1, InStr(s, "\") - 1)
+        s = Mid(s, 1, InStr(s, "/") - 1)
         
     End If
     
@@ -1276,8 +1222,6 @@ Public Function SayError(s As String, ByVal ConsoleID As Integer)
 End Function
 
 Public Sub ListDirectoryContents(ByVal ConsoleID As Integer, Optional ByVal sFilter As String)
-    On Error GoTo zxc
-
     sFilter = Trim(Replace(sFilter, "*", ""))
     
     Dim sPath As String, n As Integer, tmpS As String, sAll As String
@@ -1330,7 +1274,7 @@ Public Sub ListDirectoryContents(ByVal ConsoleID As Integer, Optional ByVal sFil
         
         If InStr(tmpS, UCase(sFilter)) > 0 Then
             fCount = fCount + 1
-            sAll = sAll & tmpS & " (" & FormatKB(FileLen(sPath & "\" & tmpS)) & ")    "
+            sAll = sAll & tmpS & " (" & FormatKB(FileLen(sPath & "/" & tmpS)) & ")    "
             frmConsole.lfont.FontSize = RegLoad("Default_FontSize", "8")
             frmConsole.lfont.FontName = RegLoad("Default_FontName", "Verdana")
             frmConsole.lfont.Caption = sAll

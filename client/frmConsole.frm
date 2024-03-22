@@ -823,7 +823,7 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
  On Error GoTo 0
  If tmpS3 <> "" Then
   If (GetAttr(tmpS2 & tmpSP & tmpS3) And vbDirectory) = vbDirectory Then
-   tmpS3 = tmpS3 & "\"
+   tmpS3 = tmpS3 & "/"
   Else
    tmpS3 = tmpS3 & " "
   End If
@@ -851,14 +851,14 @@ acSubEnd1:
   Exit Sub
  End If
 acSubEnd2:
- frmConsole.Dir1.Path = App.Path & "\user\system\commands\"
+ frmConsole.Dir1.Path = App.Path & "/user/system/commands/"
  frmConsole.Dir1.Refresh
  Dim sPath As String
  For iTmp = 0 To frmConsole.Dir1.ListCount - 1
-     sPath = Replace(frmConsole.Dir1.List(n), App.Path & "\user", "")
-     iTmp = InStrRev(sPath, "\")
+     sPath = Replace(frmConsole.Dir1.List(n), App.Path & "/user", "")
+     iTmp = InStrRev(sPath, "/")
      On Error GoTo acSubEnd3
-     tmpS3 = Dir(App.Path & "\user" & sPath & "\" & tmpS & "*")
+     tmpS3 = Dir(App.Path & "/user" & sPath & "/" & tmpS & "*")
      globalITMP = globalITMP + 1
      While globalITMP < autoILast(ConsoleID)
         tmpS3 = ""
@@ -931,7 +931,7 @@ Private Sub Form_Load()
     Me.Move 0, 0, Screen.Width, Screen.Height
     LoadLimitedCommands
     
-    cPath(1) = "\": cPath(2) = "\": cPath(3) = "\": cPath(4) = "\": cPath(5) = "\"
+    cPath(1) = "/": cPath(2) = "/": cPath(3) = "/": cPath(4) = "/": cPath(5) = "/"
     Start_Comm
     
     Stats.Move 0, 0, Me.Width + 120

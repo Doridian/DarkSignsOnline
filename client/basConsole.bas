@@ -210,7 +210,6 @@ SkipAddingIt:
 End Sub
 
 Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
-    On Error GoTo zxc
     Dim part1 As String, part2 As String, s As String
     
     s = Console(ConsoleID, 1).Caption
@@ -226,11 +225,9 @@ Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
     'If InStr(s, "_") < Len(Console_Prompt(True)) Then Exit Sub
     
     Console(ConsoleID, 1).Caption = s
-zxc:
 End Sub
 
 Public Sub MoveUnderscoreToHome(ByVal ConsoleID As Integer)
-    On Error GoTo zxc
     Dim s As String
     s = Console(ConsoleID, 1).Caption
     If InStr(s, "_") = 0 Then Exit Sub
@@ -240,22 +237,18 @@ Public Sub MoveUnderscoreToHome(ByVal ConsoleID As Integer)
 
     
     Console(ConsoleID, 1).Caption = s
-zxc:
 End Sub
 
 Public Sub MoveUnderscoreToEnd(ByVal ConsoleID As Integer)
-    On Error GoTo zxc
     Dim s As String
     s = Console(ConsoleID, 1).Caption
     
     s = Replace(s, "_", "") & "_"
 
     Console(ConsoleID, 1).Caption = s
-zxc:
 End Sub
 
 Public Sub MoveUnderscoreLeft(ByVal ConsoleID As Integer)
-    On Error GoTo zxc
     Dim part1 As String, part2 As String, s As String
     
     s = Console(ConsoleID, 1).Caption
@@ -268,7 +261,6 @@ Public Sub MoveUnderscoreLeft(ByVal ConsoleID As Integer)
     If InStr(s, "_") < Len(Console_Prompt(True, ConsoleID)) Then Exit Sub
     
     Console(ConsoleID, 1).Caption = s
-zxc:
 End Sub
 
 Public Sub Insert_Char(ByVal sChar As String, ByVal ConsoleID As Integer)
@@ -327,8 +319,6 @@ Public Sub Shift_Console_Lines_Reverse(ByVal ConsoleID As Integer)
 End Sub
 
 Public Sub RemLastKey(ByVal ConsoleID As Integer)
-    On Error GoTo zxc
-    
     'backspace
     Dim tmpS As String
     tmpS = Console(ConsoleID, 1).Caption
@@ -349,12 +339,9 @@ Public Sub RemLastKey(ByVal ConsoleID As Integer)
     
     
     Console(ConsoleID, 1).Caption = tmpS
-zxc:
 End Sub
 
 Public Sub RemNextKey(ByVal ConsoleID As Integer)
-    On Error GoTo zxc
-    
     'backspace
     Dim tmpS As String
     tmpS = Console(ConsoleID, 1).Caption
@@ -369,13 +356,12 @@ Public Sub RemNextKey(ByVal ConsoleID As Integer)
     tmpS = part1 & "_" & part2
     
     
-        'it's regular input, don't allow it to backspace beyond the input string
-        If Len(part1) < Len(Console_Prompt(False, ConsoleID)) Then Exit Sub
+    'it's regular input, don't allow it to backspace beyond the input string
+    If Len(part1) < Len(Console_Prompt(False, ConsoleID)) Then Exit Sub
 
     
     
     Console(ConsoleID, 1).Caption = tmpS
-zxc:
 End Sub
 
 Public Sub Reset_Console(ByVal ConsoleID As Integer)

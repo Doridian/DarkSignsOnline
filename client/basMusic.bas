@@ -71,7 +71,7 @@ Public Sub CheckMusic()
             Dim tmpFile As String
             Dim tmpFileName As String
             tmpFileName = .FileMusic.List(MusicFileIndex)
-            tmpFile = .FileMusic.Path & "\" & tmpFileName
+            tmpFile = .FileMusic.Path & "/" & tmpFileName
             SayCOMM "Next track: " & tmpFileName
     
             StopMusic

@@ -728,8 +728,8 @@ Sub UploadIt()
         Exit Sub
     End If
 
-    sShortFileName = ReverseString(Replace(sFile, "/", "\"))
-    sShortFileName = Replace(sShortFileName, InStr(sShortFileName, "\") - 1, Len(sShortFileName))
+    sShortFileName = ReverseString(Replace(sFile, "\", "/"))
+    sShortFileName = Replace(sShortFileName, InStr(sShortFileName, "/") - 1, Len(sShortFileName))
     sShortFileName = Trim(ReverseString(sShortFileName))
     sShortFileName = GetShortName(sShortFileName)
 

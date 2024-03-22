@@ -427,7 +427,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                 For n = 0 To UBound(emails) - 1 Step 1
                     emails(n) = "1" & Chr(7) & Trim(emails(n))
                 Next n
-                AppendFile App.Path & "\mail.dat", Join(emails, vbNewLine)
+                'AppendFile App.Path & "\mail.dat", Join(emails, vbNewLine)
                 frmDSOMail.reloadInbox
             End If
             
