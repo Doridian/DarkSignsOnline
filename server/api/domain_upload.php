@@ -11,11 +11,10 @@ if ($ver < 1) {
 echo '2003';
 
 $port = (int)$_POST['port'];
-if ($port < 1 || $port > 65536)
+if ($port < 1 || $port > 65535)
 {
-	die("Error: Port number must be between 1 and 65536.");
+	die('Error: Port number must be between 1 and 65535.');
 }
-
 
 $d = $_POST['d'];
 $dInfo = getDomainInfo($d);

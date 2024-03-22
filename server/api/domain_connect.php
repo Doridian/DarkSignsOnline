@@ -10,9 +10,10 @@ if ($ver < 1) {
 
 $port = (int)$_REQUEST['port'];
 
-if ($port < 1 || $port > 65536) {
+if ($port < 1 || $port > 65535) {
 	die ('not found');
 }
+
 $d = $_REQUEST['d'];
 $d = strtolower($d);
 $dInfo = getDomainInfo($d);
