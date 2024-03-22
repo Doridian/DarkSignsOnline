@@ -1,9 +1,0 @@
-$dir for current directory.
-
-Remote function TIME()
-
-Added support for <= and >=
-
-IRC chat.
-
-rgb:R:G:B property spaces.
