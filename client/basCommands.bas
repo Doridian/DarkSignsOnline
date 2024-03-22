@@ -1167,7 +1167,7 @@ Public Sub DisplayFile(ByVal s As String, ByVal ConsoleID As Integer)
     Dim FF As Long, tmpS As String, CLine As Integer, CLinePrinted As Integer
 
     FF = FreeFile
-    Open App.Path & "\user" & sFile For Input As #FF
+    Open App.Path & "/user" & sFile For Input As #FF
         Do Until EOF(FF)
             Line Input #FF, tmpS
             CLine = CLine + 1
@@ -1215,7 +1215,7 @@ Public Sub ListDirectoryContents(ByVal ConsoleID As Integer, Optional ByVal sFil
     dirMsg = "Directory List {yellow 10}"
     fileMsg = "File List {yellow 10}"
     
-    sPath = App.Path & "\user" & cPath(ConsoleID)
+    sPath = App.Path & "/user" & cPath(ConsoleID)
     
     
     
