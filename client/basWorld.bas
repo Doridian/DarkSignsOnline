@@ -379,7 +379,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             If InStr(s, ":") > 0 Then
                 sF1 = Trim(Mid(s, 1, InStr(s, ":") - 1))
                 sF2 = Trim(Mid(s, InStr(s, ":") + 1, Len(s)))
-                WriteFile App.Path & "/user/downloads/" & sF1, sF2
+                WriteFile SafePath("downloads/" & sF1), sF2
                 frmLibrary.lStatus = "File downloaded ok: /downloads/" & sF1
             Else
                 frmLibrary.lStatus = "File download error! (8234)"
@@ -400,7 +400,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                     ffname = Replace(ffname, "//", "/")
                 Wend
                 s = Mid(s, InStr(s, ":") + 1, Len(s))
-                WriteFile App.Path & "/user" & ffname, s
+                WriteFile SafePath(ffname), s
                 SayCOMM "Download Complete: " & ffname
             Else
                 SayCommMultiLines s, ConsoleID

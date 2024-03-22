@@ -801,7 +801,7 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
   tmpInputString = tmpInputString & Mid(tmpS, 1, iTmp)
   tmpS = Trim(Mid(tmpS, iTmp + 1))
  End If
- tmpS2 = App.Path & "/user" & cPath(ConsoleID)
+ tmpS2 = SafePath(cPath(ConsoleID))
  tmpS = Replace(tmpS, "\", "/")
  iTmp = InStrRev(tmpS, "/")
  If iTmp > 0 Then
@@ -834,7 +834,7 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
  End If
 acSubEnd1:
  If firstParam = False Then GoTo acSubEnd3
- tmpS3 = Dir(App.Path & "/user/system/commands/" & tmpS & "*")
+ tmpS3 = Dir(SafePath("/system/commands/" & tmpS & "*"))
  On Error GoTo acSubEnd2
  While globalITMP < autoILast(ConsoleID)
   tmpS3 = ""
@@ -855,7 +855,8 @@ acSubEnd2:
  frmConsole.Dir1.Refresh
  Dim sPath As String
  For iTmp = 0 To frmConsole.Dir1.ListCount - 1
-     sPath = Replace(frmConsole.Dir1.List(n), App.Path & "/user", "")
+    sPath = Replace(frmConsole.Dir1.List(n), "\", "/")
+     sPath = Replace(sPath, App.Path & "/user", "")
      iTmp = InStrRev(sPath, "/")
      On Error GoTo acSubEnd3
      tmpS3 = Dir(App.Path & "/user" & sPath & "/" & tmpS & "*")

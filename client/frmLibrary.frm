@@ -710,7 +710,7 @@ Sub UploadIt()
     sCategory = Trim(uplist.Text)
     sTitle = Trim(txtTitle)
     
-    If FileExists(App.Path & "/user" & sFile) = False Then
+    If FileExists(sFile) = False Then
         MsgBox "The file does not exist! Check the file name." & vbCrLf & vbCrLf & sFile, vbCritical, "Error"
         Exit Sub
     End If
@@ -733,8 +733,7 @@ Sub UploadIt()
     sShortFileName = Trim(ReverseString(sShortFileName))
     sShortFileName = GetShortName(sShortFileName)
 
-    sFileData = GetFile(App.Path & "/user" & sFile)
-    
+    sFileData = GetFile(sFile)
     
     PostData = _
     "returnwith=4300" & _

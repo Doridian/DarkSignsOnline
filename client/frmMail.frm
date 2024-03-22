@@ -95,7 +95,7 @@ Public Sub reloadInbox()
     inbox.ListItems.Clear
     
     Dim tmpFile As String
-    tmpFile = GetFile(App.Path & "\mail.dat")
+    tmpFile = GetFile(App.Path & "/mail.dat")
     
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
@@ -148,7 +148,7 @@ Private Sub btnRefresh_Click()
     Dim last As String
     
     Dim tmpFile As String
-    tmpFile = GetFile(App.Path & "\mail.dat")
+    tmpFile = GetFile(App.Path & "/mail.dat")
     
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
@@ -229,7 +229,7 @@ Private Sub inbox_DblClick()
             
     
     Dim tmpFile As String
-    tmpFile = GetFile(App.Path & "\mail.dat")
+    tmpFile = GetFile(App.Path & "/mail.dat")
     
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
@@ -261,7 +261,7 @@ End Sub
 
 Private Sub markAsRead(k As String)
     Dim tmpFile As String
-    tmpFile = GetFile(App.Path & "\mail.dat")
+    tmpFile = GetFile(App.Path & "/mail.dat")
     
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
@@ -279,7 +279,7 @@ Private Sub markAsRead(k As String)
         End If
     Next n
     
-    WriteFile App.Path & "\mail.dat", Join(AllResults, vbNewLine)
+    WriteFile App.Path & "/mail.dat", Join(AllResults, vbNewLine)
 End Sub
 
 Private Sub inbox_ColumnClick(ByVal ColumnHeader As MSComctlLib.ColumnHeader)
