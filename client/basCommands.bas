@@ -24,9 +24,9 @@ Public Sub InitBasCommands()
     Next
 End Sub
 
-Public Function ResolveCommand(ConsoleID As Integer, Command As String, Optional AddCPath As Boolean = True) As String
+Public Function ResolveCommand(ConsoleID As Integer, Command As String) As String
     If InStr(Command, "/") > 0 Or InStr(Command, "\") > 0 Or InStr(Command, ".") > 0 Then
-        If Left(Command, 1) = "/" Or Left(Command, 1) = "\" Or Not AddCPath Then
+        If Left(Command, 1) = "/" Or Left(Command, 1) = "\" Or ConsoleID = 0 Then
             ResolveCommand = Command
             Exit Function
         End If
@@ -72,7 +72,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     scrConsoleContext(ConsoleID).Aborted = False
 
     Dim RunStr As String
-    RunStr = ParseCommandLine(ConsoleID, tmpS)
+    RunStr = ParseCommandLine(tmpS)
     'SayCOMM "SHEXEC: " & RunStr, ConsoleID
 
     On Error GoTo EvalError
@@ -102,16 +102,16 @@ ScriptEnd:
     New_Console_Line ConsoleID
 End Function
 
-Public Function ParseCommandLine(ConsoleID As Integer, tmpS As String) As String
+Public Function ParseCommandLine(tmpS As String) As String
     Dim OptionExplicit As Boolean
     OptionExplicit = True
-    ParseCommandLine = ParseCommandLineInt(ConsoleID, tmpS, OptionExplicit)
+    ParseCommandLine = ParseCommandLineInt(tmpS, OptionExplicit)
     If OptionExplicit Then
         ParseCommandLine = "Option Explicit : " & ParseCommandLine
     End If
 End Function
 
-Public Function ParseCommandLineInt(ConsoleID As Integer, tmpS As String, ByRef OptionExplicit As Boolean) As String
+Public Function ParseCommandLineInt(tmpS As String, ByRef OptionExplicit As Boolean) As String
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
     ReDim CLIArgs(0 To 0)
@@ -221,7 +221,7 @@ CommandForNext:
             Exit Function
         End If
 
-        ParseCommandLineInt = ParseCommandLineInt(ConsoleID, Mid(tmpS, RestStart), OptionExplicit)
+        ParseCommandLineInt = ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit)
         Exit Function
     End If
 
@@ -240,7 +240,7 @@ CommandForNext:
     ' First, check if there is a command for it in /system/commands
     Dim ResolvedCommand As String
     Dim CommandNeedFirstComma As Boolean
-    ResolvedCommand = ResolveCommand(ConsoleID, Command, False)
+    ResolvedCommand = ResolveCommand(0, Command)
 
     If ResolvedCommand <> "" Then
         ParseCommandLineInt = "RUN(""" & ResolvedCommand & """"
@@ -276,7 +276,7 @@ RunSplitCommand:
         Exit Function
     End If
 
-    ParseCommandLineInt = ParseCommandLineInt & RestSplit & ParseCommandLineInt(ConsoleID, Mid(tmpS, RestStart), OptionExplicit)
+    ParseCommandLineInt = ParseCommandLineInt & RestSplit & ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit)
 End Function
 
 ' -y r g b mode
