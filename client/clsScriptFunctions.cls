@@ -402,11 +402,12 @@ Public Function Connect(ParamArray XArr() As Variant) As String
         ' 0 = domain
         ' 1 = port
         ' 2 = filekey
-        ' 3 = code
-        ' 4+ = params
+        ' 3 = preamble
+        ' 4 = code
+        ' 5+ = params
     
         Dim DomainConnectParams() As String
-        ReDim DomainConnectParams(0 To UBound(DomainSplit) - 3)
+        ReDim DomainConnectParams(0 To UBound(DomainSplit) - 4)
 
         Dim strDomain As String
         strDomain = DomainSplit(0)
@@ -415,10 +416,13 @@ Public Function Connect(ParamArray XArr() As Variant) As String
         Dim strFileKey As String
         strFileKey = DomainSplit(2)
 
+        Dim b64decoded() As Byte
+        b64decoded = basConsole.DecodeBase64(DomainSplit(3))
+        Dim strPreamble As String
+        strPreamble = StrConv(b64decoded, vbUnicode)
+
         For X = 0 To UBound(DomainConnectParams)
-            Dim b64decoded() As Byte
-            b64decoded = basConsole.DecodeBase64(DomainSplit(X + 3))
-            Dim newS As String
+            b64decoded = basConsole.DecodeBase64(DomainSplit(X + 4))
             DomainConnectParams(X) = StrConv(b64decoded, vbUnicode)
         Next
 
@@ -426,7 +430,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
         strCode = DomainConnectParams(0)
         DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
 
-        Connect = Run_Script_Code(strCode, consoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, True, Not PrivIsRoot)
+        Connect = Run_Script_Code(strCode, consoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, True, Not PrivIsRoot, strPreamble)
     End If
 
     Yield

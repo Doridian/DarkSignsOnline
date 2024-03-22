@@ -14,17 +14,17 @@ Public WaitingForInputReturn(1 To 4) As String
 Public CancelScript(1 To 4) As Boolean
 
 
-Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
-    If ConsoleID < 1 Then
-        ConsoleID = 1
+Public Function Run_Script_Code(tmpAll As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean, Optional Preamble As String) As String
+    If consoleID < 1 Then
+        consoleID = 1
     End If
-    If ConsoleID > 4 Then
-        ConsoleID = 4
+    If consoleID > 4 Then
+        consoleID = 4
     End If
     Dim OldPath As String
-    OldPath = cPath(ConsoleID)
+    OldPath = cPath(consoleID)
 
-    CancelScript(ConsoleID) = False
+    CancelScript(consoleID) = False
 
     Dim s As New ScriptControl
     s.AllowUI = False
@@ -34,11 +34,14 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, RedirectOutput, DisableOutput, IsRoot
+    G.Configure consoleID, ScriptFrom, False, s, ScriptParameters, FileKey, RedirectOutput, DisableOutput, IsRoot
     s.AddObject "DSO", G, True
 
-    New_Console_Line_InProgress ConsoleID
+    New_Console_Line_InProgress consoleID
     On Error GoTo EvalError
+    If Preamble <> "" Then
+        s.AddCode Preamble
+    End If
     s.AddCode tmpAll
     On Error GoTo 0
 
@@ -61,19 +64,19 @@ EvalError:
     If Err.Number = 13 Then
         ErrHelp = "This error might mean a function you tried to use does not exist"
     End If
-    SayRaw ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") " & ErrHelp & " {red}"
+    SayRaw consoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") " & ErrHelp & " {red}"
     GoTo ScriptEnd
 
 ScriptCancelled:
-    SayRaw ConsoleID, "Script Stopped by User (CTRL + C){orange}"
+    SayRaw consoleID, "Script Stopped by User (CTRL + C){orange}"
 ScriptEnd:
     Run_Script_Code = G.ScriptGetOutput()
     G.CleanupScriptTasks
-    New_Console_Line ConsoleID
-    cPath(ConsoleID) = OldPath
+    New_Console_Line consoleID
+    cPath(consoleID) = OldPath
 End Function
 
-Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
+Public Function Run_Script(filename As String, ByVal consoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
     If ScriptParameters(0) = "" Then
         ScriptParameters(0) = filename
     End If
@@ -109,7 +112,7 @@ Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, Scrip
         Loop
     Close #FF
 
-    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, FileKey, IsRoot, RedirectOutput, DisableOutput)
+    Run_Script = Run_Script_Code(tmpAll, consoleID, ScriptParameters, ScriptFrom, FileKey, IsRoot, RedirectOutput, DisableOutput)
 End Function
 
 
