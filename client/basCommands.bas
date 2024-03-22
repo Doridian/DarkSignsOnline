@@ -145,17 +145,42 @@ Public Function ParseCommandLineInt(ConsoleID As Integer, tmpS As String, ByRef 
             Case """", "'":
                 InQuotes = curC
                 GoTo NextArg
-            Case ",", ";", "(", ")", "|", "=": ' These mean the user likely intended VBScript and not CLI
+            Case ",", ";", "(", ")", "|", "=", "&", "<", ">": ' These mean the user likely intended VBScript and not CLI
                 IsSimpleCommand = False
                 '   GoTo AddToArg
-            Case vbCr:
-                ' Just ignore it
-                GoTo CommandForNext
-            Case ":", vbLf:
-                RestSplit = curC
-                If RestSplit = vbLf Then
-                    RestSplit = vbCrLf
+            Case "_":
+                If curArg = "" And X < Len(tmpS) Then
+                    Dim NextC As String
+                    NextC = Mid(tmpS, X + 1, 1)
+                    If NextC = vbLf Then
+                        X = X + 1
+                        GoTo CommandForNext
+                    ElseIf NextC = vbCr Then
+                        X = X + 1
+                        If X < Len(tmpS) - 1 Then
+                            NextC = Mid(tmpS, X + 2, 1)
+                            If NextC = vbLf Then
+                                X = X + 1
+                            End If
+                        End If
+                        GoTo CommandForNext
+                    End If
                 End If
+            Case vbCr:
+                If X = Len(tmpS) Then
+                    GoTo CommandForNext
+                End If
+                If Mid(tmpS, X + 1, 1) = vbLf Then
+                    X = X + 1
+                End If
+                RestSplit = vbCrLf
+                GoTo RestStartSet
+            Case vbLf:
+                RestSplit = vbCrLf
+                GoTo RestStartSet
+            Case ":":
+                RestSplit = ":"
+RestStartSet:
                 RestStart = X + 1
                 X = Len(tmpS) + 1
                 GoTo NextArg
