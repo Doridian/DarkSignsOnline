@@ -136,17 +136,24 @@ Public Function ParseCommandLineOptional(ByVal tmpS As String, Optional ByVal Al
     End If
 End Function
 
-Public Function ParseCommandLineInt2(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByRef OpenDScriptEverUsed As Boolean, ByVal AllowCommands As Boolean) As String
+Private Function ParseCommandLineInt2(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByRef OpenDScriptEverUsed As Boolean, ByVal AllowCommands As Boolean) As String
     Dim OptionExplicit As Boolean
     OptionExplicit = True
     OpenDScriptEverUsed = Not Not OptionDScript
-    ParseCommandLineInt2 = ParseCommandLineInt(tmpS, OptionExplicit, OptionDScript, OpenDScriptEverUsed, AllowCommands)
+    Dim RestStart As Long
+    RestStart = 1
+    ParseCommandLineInt2 = ""
+    While RestStart > 0
+        tmpS = Mid(tmpS, RestStart)
+        ParseCommandLineInt2 = ParseCommandLineInt2 & ParseCommandLineInt(tmpS, RestStart, OptionExplicit, OptionDScript, OpenDScriptEverUsed, AllowCommands)
+    Wend
+
     If OptionExplicit Then
         ParseCommandLineInt2 = "Option Explicit : " & ParseCommandLineInt2
     End If
 End Function
 
-Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef OptionExplicit As Boolean, ByRef OptionDScript As Boolean, ByRef OpenDScriptEverUsed As Boolean, ByVal AllowCommands As Boolean) As String
+Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Long, ByRef OptionExplicit As Boolean, ByRef OptionDScript As Boolean, ByRef OpenDScriptEverUsed As Boolean, ByVal AllowCommands As Boolean) As String
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
     ReDim CLIArgs(0 To 0)
@@ -155,7 +162,6 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef OptionExplicit 
     Dim curC As String
     Dim InQuotes As String
     Dim X As Long
-    Dim RestStart As Long
     Dim IsSimpleCommand As Boolean
     IsSimpleCommand = True
     RestStart = -1
@@ -274,7 +280,7 @@ CommandForNext:
             Exit Function
         End If
 
-        ParseCommandLineInt = ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit, OptionDScript, OpenDScriptEverUsed, AllowCommands)
+        ParseCommandLineInt = ""
         Exit Function
     End If
 
@@ -367,7 +373,7 @@ RunSplitCommand:
         Exit Function
     End If
 
-    ParseCommandLineInt = ParseCommandLineInt & RestSplit & ParseCommandLineInt(Mid(tmpS, RestStart), OptionExplicit, OptionDScript, OpenDScriptEverUsed, AllowCommands)
+    ParseCommandLineInt = ParseCommandLineInt & RestSplit
 End Function
 
 ' -y r g b mode
