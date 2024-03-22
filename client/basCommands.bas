@@ -282,6 +282,9 @@ CommandForNext:
     Dim Command As String
     Command = Trim(LCase(CLIArgs(0)))
     
+    Dim ArgStart As Long
+    ArgStart = 1
+    
     Select Case Command
         Case "for", "next", "while", "wend", "do", "loop", "until", _
                 "if", "else", "elseif", "end", _
@@ -307,6 +310,11 @@ CommandForNext:
             GoTo NotASimpleCommand
         Case "rem", "'":
             GoTo NotASimpleCommandButWithOE
+        Case "wait":
+            If UBound(CLIArgs) >= 1 And Trim(LCase(CLIArgs(1))) = "for" Then
+                Command = "waitfor"
+                ArgStart = 2
+            End If
     End Select
     
     ' We don't want to actually parse anything if we're not opted in
@@ -333,8 +341,8 @@ CommandForNext:
         CommandNeedFirstComma = False
     End If
 
-    For X = 1 To UBound(CLIArgs)
-        If X > 1 Or CommandNeedFirstComma Then
+    For X = ArgStart To UBound(CLIArgs)
+        If X > ArgStart Or CommandNeedFirstComma Then
             ParseCommandLineInt = ParseCommandLineInt & ", "
         End If
         If Left(CLIArgs(X), 1) = "$" And Not CLIArgsQuoted(X) Then
