@@ -17,13 +17,6 @@ echo $returnwith;
 
 $uid = $user['id'];
 $port = (int) $_REQUEST['port'];
-if ($port < 1 || $port > 65536) {
-	die ("Error: Port number must be between 1 and 65536.");
-}
-
-//----------------------------------------------------------------------------------------------------------
-//NOTE - when modifying this script, consider that you may need to modify domain_download.php as well!!!
-//----------------------------------------------------------------------------------------------------------
 
 $originaldomain = trim($d);
 $dInfo = getDomainInfo($d);

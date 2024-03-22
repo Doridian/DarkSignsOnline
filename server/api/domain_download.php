@@ -21,16 +21,13 @@ if (trim($returnwith) == "") {
 echo $returnwith;
 
 $port = (int) $_REQUEST['port'];
-if ($port < 1 || $port > 65536) {
-	die ("Error: Port number must be between 1 and 65536.");
-}
 
 $dInfo = getDomainInfo($d);
 if ($dInfo[0] <= 0) {
-	die ("Domain does not exist.");
+	die ('Domain does not exist.');
 }
 
-$stmt = $db->prepare("SELECT code FROM domain_scripts WHERE domain=? AND port=? AND owner=? AND ver = ?");
+$stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain=? AND port=? AND owner=? AND ver = ?');
 $stmt->bind_param('iiii', $dInfo[0], $port, $uid, $ver);
 $stmt->execute();
 $res = $stmt->get_result();
