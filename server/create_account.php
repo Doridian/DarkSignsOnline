@@ -156,7 +156,7 @@ if (isset($_POST['username'])) {
 	$res;
 	$stmt = $db->prepare('SELECT * FROM iptable WHERE ip=?');
 	do {
-		$randomip = rand(1, 255) . '.' . rand(1, 255) . '.' . rand(1, 255) . '.' . rand(1, 255);
+		$randomip = rand(1, 254) . "." . rand(0, 255) . "." . rand(0, 255) . "." . rand(0, 255);
 		$stmt->bind_param('s', $randomip);
 		$stmt->execute();
 		$res = $stmt->get_result();

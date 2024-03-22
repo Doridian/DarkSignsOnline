@@ -51,7 +51,7 @@ if (sizeof($domain) == 2) {
 				$res;
 				$stmt = $db->prepare("SELECT * FROM iptable WHERE ip=?");
 				do {
-					$randomip = rand(1, 255) . "." . rand(1, 255) . "." . rand(1, 255) . "." . rand(1, 255);
+					$randomip = rand(1, 254) . "." . rand(0, 255) . "." . rand(0, 255) . "." . rand(0, 255);
 					$stmt->bind_param('s', $randomip);
 					$stmt->execute();
 					$res = $stmt->get_result();
@@ -92,7 +92,7 @@ if (sizeof($domain) == 2) {
 				$res;
 				$stmt = $db->prepare("SELECT * FROM iptable WHERE ip=?");
 				do {
-					$randomip = rand(1, 255) . "." . rand(1, 255) . "." . rand(1, 255) . "." . rand(1, 255);
+					$randomip = rand(1, 254) . "." . rand(0, 255) . "." . rand(0, 255) . "." . rand(0, 255);
 					$stmt->bind_param('s', $randomip);
 					$stmt->execute();
 					$res = $stmt->get_result();
@@ -123,7 +123,7 @@ if (sizeof($domain) == 2) {
 	$domain[2] = intval($domain[2]);
 	$domain[3] = intval($domain[3]);
 
-	if ($domain[0] >= 0 && $domain[0] < 256 && $domain[1] >= 0 && $domain[1] < 256 && $domain[2] >= 0 && $domain[2] < 256 && $domain[3] >= 0 && $domain[3] < 256) {
+	if ($domain[0] >= 1 && $domain[0] < 255 && $domain[1] >= 0 && $domain[1] < 256 && $domain[2] >= 0 && $domain[2] < 256 && $domain[3] >= 0 && $domain[3] < 256) {
 		// IP is valid.
 		$ipdom = $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3];
 		$stmt = $db->prepare('SELECT id FROM iptable WHERE ip=?');
