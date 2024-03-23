@@ -368,10 +368,6 @@ Public Sub LoadUserList(ByVal s As String, ByVal ConsoleID As Integer)
     s = Replace(s, "::", ":")
     s = Replace(s, vbCr, ""): s = Replace(s, vbLf, "")
     
-    
-    
-    
-    
     frmConsole.ListOfUsers.Clear
     
     Dim tmpS As String, n As Integer

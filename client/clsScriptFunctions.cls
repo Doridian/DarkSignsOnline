@@ -467,17 +467,20 @@ Public Function DOWNLOAD(ByVal Url As String) As Integer
      DOWNLOAD = DoDownload(Url, True, "", True)
 End Function
 
-Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal B As Long, ByVal Mode As String)
+Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String)
     If PrivDisableOutput Then
         Yield
         Exit Function
     End If
-    DrawItUp YPos, R, G, B, Mode, PrivConsoleID
+    DrawItUp YPos, R, G, b, Mode, PrivConsoleID
     Yield
 End Function
 
 ' Params is an array
 Public Function ConnectEX(ByVal Foreground As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
+    If Foreground Then
+        AssertLocalOnly
+    End If
     Yield
 
     If Port < 1 Or Port > 65535 Then
