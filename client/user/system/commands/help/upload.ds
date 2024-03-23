@@ -1,0 +1,10 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: UPLOAD server port-number file"
+Say propsforexamples & "Example #1: UPLOAD mywebsite.com 80 newscript.ds"
+Say "{lgrey}Upload a file to your domain name on the specified port."
+Say "{lgrey}This script will then become connectable to all players."
+Say "{lorange}You can only upload and download scripts to domain names (servers) which you own."

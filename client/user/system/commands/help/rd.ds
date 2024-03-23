@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: RD directory-name"
+Say propsforexamples & "Example #1: RD myfiles"
+Say "{lgrey}Delete the directory with the specified name."
+Say "{lorange}The directory must be empty, or it will not be deleted."

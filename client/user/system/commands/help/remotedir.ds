@@ -1,0 +1,10 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: REMOTEDIR domain"
+Say propsforexamples & "Example #1: REMOTEDIR matrix.com"
+Say "{lgrey}View files on the remote server."
+Say "{lorange}You must own the domain, or have subowner privileges on the domain."
+

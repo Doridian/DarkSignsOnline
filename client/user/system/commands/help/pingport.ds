@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: PINGPORT domain-or-ip-server 80"
+Say propsforexamples & "Example #1: PINGPORT birds.com 80"
+Say "{lgrey}Check if a script is runnning on the server at the specified port number."
+Say "{lorange}You can modify this command in the file /system/commands/pingport.ds"

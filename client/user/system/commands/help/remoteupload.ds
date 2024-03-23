@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: REMOTEUPLOAD domain filename"
+Say propsforexamples & "Example #1: REMOTEUPLOAD matrix.com localfile.ds"
+Say "{lgrey}Upload a file from your local file system to your domain name file system."
+Say "{lorange}You must own the domain, or have subowner privileges on the domain."

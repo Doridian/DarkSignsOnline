@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: YDIV height"
+Say propsforexamples & "Example #1: YDIV 240"
+Say "{lgrey}Change the default space between each console line."
+Say "{lorange}The default YDIV is set to 60."

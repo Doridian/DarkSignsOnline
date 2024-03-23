@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: MD directory-name"
+Say propsforexamples & "Example #1: MD myfiles"
+Say "{lgrey}Create a new empty directory with the specified name."
+Say "{lorange}The name of the directory should not contain space characters."

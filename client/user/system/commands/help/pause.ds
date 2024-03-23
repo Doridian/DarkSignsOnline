@@ -1,0 +1,8 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: PAUSE optional-msg"
+Say propsforexamples & "Example #1: PAUSE Press a key!"
+Say "{lgrey}Pause the console interface until the user presses a key."

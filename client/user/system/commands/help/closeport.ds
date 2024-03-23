@@ -1,0 +1,10 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: CLOSEPORT server port-number"
+Say propsforexamples & "Example #1: CLOSEPORT mywebsite.com 80"
+Say "{lgrey}Close port on the specified domain."
+Say "{lgrey}The script running on this port is deleted."
+Say "{lorange}You can only close ports on domain names (servers) which you own."

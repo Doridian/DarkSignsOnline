@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: EDIT file"
+Say propsforexamples & "Example #1: EDIT myscript.ds"
+Say "{lgrey}Edit the specified file in the editing window. The console will pause while the editor is active."
+Say "{lorange}Files in the editor are saved automatically."

@@ -1,0 +1,12 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: APPEND file optional-START-or-END text"
+Say propsforexamples & "Example #1: APPEND myfile.txt new data"
+Say propsforexamples & "Example #2: APPEND myfile.txt START new data"
+Say "{lgrey}Append (add) text or data to the specified file."
+Say "{lgrey}Data will be added to the beginning of the file if the START keyword is used."
+Say "{lgrey}Data will be added to the end of the file if the END keyword is used."
+Say "{lorange}If the specified file doesn't exist, it will be created."

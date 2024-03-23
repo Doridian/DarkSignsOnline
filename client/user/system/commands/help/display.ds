@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: DISPLAY file optional-start-line optional-max-lines"
+Say propsforexamples & "Example #1: DISPLAY myfile.txt 1 5"
+Say "{lgrey}Output the specified file to the console, without running as a script."
+Say "{lorange}In the example, the first five lines of myfile.txt will be displayed."

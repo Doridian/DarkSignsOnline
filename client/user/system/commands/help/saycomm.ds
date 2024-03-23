@@ -1,0 +1,8 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: SAYCOMM text"
+Say propsforexamples & "Example #1: SAYCOMM Connected to server"
+Say "{lgrey}Display the specified text in the COMM window."

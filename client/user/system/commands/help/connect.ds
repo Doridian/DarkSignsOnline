@@ -1,0 +1,10 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: CONNECT server port-number [optional-parameters]"
+Say propsforexamples & "Example #1: CONNECT home.com 80"
+Say "{lgrey}Connect to a server domain name or IP address on the specified port."
+Say "{lgrey}If no port number is specified, the default port number is 80."
+Say "{lorange}You must specify the port number if you are including optional parameters."

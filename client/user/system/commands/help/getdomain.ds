@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: GETDOMAIN domain-or-ip-server"
+Say propsforexamples & "Example #1: GETDOMAIN 12.55.192.111"
+Say "{lgrey}Get the domain name of the specified server."
+Say "{lorange}You can modify this command in the file /system/commands/getdomain.ds"

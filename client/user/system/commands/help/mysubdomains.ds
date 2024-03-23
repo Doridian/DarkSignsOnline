@@ -1,0 +1,8 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: MYSUBDOMAINS"
+Say propsforexamples & "Example #1: MYSUBDOMAINS mySite.com"
+Say "{lgrey}List subdomains to a domain that is registed to you."

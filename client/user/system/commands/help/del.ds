@@ -1,0 +1,11 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: DEL filename"
+Say propsforexamples & "Example #1: DEL file.ds"
+Say "{lgrey}Delete the specified file or files."
+Say "{lgrey}The wildcard symbol, *, can be used to delete multiple files at once."
+Say "{lorange}Files in the system directory cannot be deleted."
+Say "{orange}Be careful not to delete all of your files!"

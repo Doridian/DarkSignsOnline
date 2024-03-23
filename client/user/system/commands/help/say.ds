@@ -1,0 +1,17 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: SAY text (**optional-properties**)"
+Say propsforexamples & "Example #1: SAY ConsoleID, hello, this is green (**green**)"
+Say propsforexamples & "Example #2: SAY ConsoleID, this is bold and very large (**bold, 36**)"
+Say "{lgrey}Display the specified text in the console."
+Say "{lgrey}Text properties can be modified by adding any number of the following keywords in bewtween (** **), in any order."
+Say "{lgreen}Colors: Type SHOWCOLORS the display a list of colors."
+Say "{lgreen}Fonts: Arial, Arial Black, Comic Sans MS, Courier New, Georgia, Impact,"
+Say "{lgreen}Fonts: Lucida Console, Tahoma, Times New Roman, Trebuchet MS, Verdana, Wingdings."
+Say "{lgreen}Attributes: Bold, NoBold, Italic, NoItalic, Underline, NoUnderline, Strikethru, NoStrikethru."
+Say "{lgreen}Extras: Flash, Flashfast, FlashSlow."
+Say "{orange}Note: You cannot use SAY to display multiple lines of text."
+Say "{orange}For multiple lines, use SAYALL instead."

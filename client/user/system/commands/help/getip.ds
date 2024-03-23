@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: GETIP domain-or-ip-server"
+Say propsforexamples & "Example #1: GETIP birds.com"
+Say "{lgrey}Get the IP address of the specified server."
+Say "{lorange}You can modify this command in the file /system/commands/getip.ds"

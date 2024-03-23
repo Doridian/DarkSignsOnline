@@ -1,0 +1,11 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: MOVE source-file destination-file"
+Say propsforexamples & "Example #1: MOVE myoldfile.ds mynewfile.ds"
+Say propsforexamples & "Example #2: MOVE /home/myoldfile.ds  /home/dir2/mynewfile.ds"
+Say "{lgrey}Rename the specified file."
+Say "{lgrey}You can also move the file to a new directory, as shown in example #2."
+Say "{lorange}File names should not contain space characters."

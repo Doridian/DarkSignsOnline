@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: DOWNLOAD server port-number file"
+Say propsforexamples & "Example #1: DOWNLOAD mywebsite.com 80 thescript.ds"
+Say "{lgrey}Download a script file from a sever that you own."
+Say "{lorange}You can only upload and download scripts to domain names (servers) which you own."

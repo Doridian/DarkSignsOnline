@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: SAYALL text (**optional-properties**)"
+Say propsforexamples & "Example #1: SAYALL hello"
+Say "{lgrey}Same as the SAY command, except will display multiple lines."
+Say "{lorange}Type HELP SAY for more information."

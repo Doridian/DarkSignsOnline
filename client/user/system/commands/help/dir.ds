@@ -1,0 +1,8 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: DIR optional-filter"
+Say "{lgrey}Display files and folders in the active directory."
+Say "{lgrey}A filter can be appended to show only elements containing the filter keyword in their name."

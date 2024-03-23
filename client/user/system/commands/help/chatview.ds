@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: CHATVIEW [parameter]"
+Say "{lgrey}If set to on, will display chat in the status window."
+Say "{lgrey}CHATVIEW parameters are ON and OFF"
+

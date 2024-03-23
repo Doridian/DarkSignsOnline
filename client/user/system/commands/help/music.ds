@@ -1,0 +1,8 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: MUSIC [parameter]"
+Say propsforexamples & "Example #1: MUSIC NEXT"
+Say "{lgrey}Music parameters are START, STOP, NEXT, and PREV."
