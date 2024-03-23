@@ -87,7 +87,7 @@ Private Sub AssertCLIOnly()
 End Sub
 
 Private Sub AssertLocalOnly()
-    If PrivServerPort > 0 Then
+    If PrivServerPort <= 0 Then
         Exit Sub
     End If
     Err.Raise vbObjectError + 9007, "DSO", "local only functionality"
