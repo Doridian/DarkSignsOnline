@@ -394,7 +394,11 @@ End Sub
 
 Public Sub SayLine(ByVal s As String)
     If PrivRedirectOutput Then
-        PrivOutput = PrivOutput & vbCr & s
+        If PrivOutput = "" Then
+            PrivOutput = s
+        Else
+            PrivOutput = PrivOutput & vbCr & s
+        End If
         Yield
     End If
     If PrivDisableOutput Then
@@ -415,6 +419,19 @@ Public Sub Say(ParamArray Params() As Variant)
         End If
         sStr = sStr & Params(X)
     Next X
+
+    If PrivRedirectOutput Then
+        If PrivOutput = "" Then
+            PrivOutput = sStr
+        Else
+            PrivOutput = PrivOutput & vbCrLf & sStr
+        End If
+        Yield
+    End If
+    If PrivDisableOutput Then
+        Yield
+        Exit Sub
+    End If
 
     Dim ScriptOutSplit() As String
     ScriptOutSplit = Split(sStr, vbCrLf)
