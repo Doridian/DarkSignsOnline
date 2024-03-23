@@ -39,8 +39,6 @@ IF ErrNo <> 0 Then
 	Quit
 END If
 
-On Error GoTo 0
-
 IF IsOutputDisabled Then
 	SAY Res
 END If
