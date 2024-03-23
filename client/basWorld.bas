@@ -200,10 +200,10 @@ Public Sub OnLoginSuccess()
     SayCOMM "Dark Signs Online - Version " & VersionStr()
     
     Dim EmptyParams(0 To 0) As String
-    Run_Script "/system/login-1.ds", 1, EmptyParams, "BOOT", "", True, False, False
-    Run_Script "/system/login-2.ds", 2, EmptyParams, "BOOT", "", True, False, False
-    Run_Script "/system/login-3.ds", 3, EmptyParams, "BOOT", "", True, False, False
-    Run_Script "/system/login-4.ds", 4, EmptyParams, "BOOT", "", True, False, False
+    Run_Script "/system/login-1.ds", 1, EmptyParams, "BOOT", True, False, False
+    Run_Script "/system/login-2.ds", 2, EmptyParams, "BOOT", True, False, False
+    Run_Script "/system/login-3.ds", 3, EmptyParams, "BOOT", True, False, False
+    Run_Script "/system/login-4.ds", 4, EmptyParams, "BOOT", True, False, False
     
     If frmConsole.getConnected Then
         frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message

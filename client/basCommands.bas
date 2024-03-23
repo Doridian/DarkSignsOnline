@@ -18,7 +18,7 @@ Public Sub InitBasCommands()
         Dim CLIArguments(0 To 0) As String
         CLIArguments(0) = "/dev/tty" & X
         Set scrConsoleContext(X) = New clsScriptFunctions
-        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", False, False, True
+        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False, True
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
     Next
@@ -1134,7 +1134,7 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
     If Trim(EditorRunFile) <> "" Then
         Shift_Console_Lines ConsoleID
         Dim EmptyArguments(0 To 0) As String
-        Run_Script EditorRunFile, ConsoleID, EmptyArguments, "CONSOLE", "", True, False, False
+        Run_Script EditorRunFile, ConsoleID, EmptyArguments, "CONSOLE", True, False, False
     End If
     
     

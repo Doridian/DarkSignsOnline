@@ -1065,8 +1065,8 @@ Private Sub Form_Unload(Cancel As Integer)
     '------------------------------------------
     'for the chat
     If connected Then
-        response = MsgBox("Are you sure you want to disconnect and exit?", vbYesNo + vbQuestion, "Dark Signs Online")  'ask the user if he really wants to quit
-        If Not (response = vbYes) Then  'if he didn't want to quit
+        Response = MsgBox("Are you sure you want to disconnect and exit?", vbYesNo + vbQuestion, "Dark Signs Online")  'ask the user if he really wants to quit
+        If Not (Response = vbYes) Then  'if he didn't want to quit
             Cancel = 1  'cancel the unload
             Exit Sub    'exit the sub
         End If
@@ -1275,9 +1275,9 @@ Public Sub Start_Console(ByVal ConsoleID As Integer)
     Dim EmptyParams(0 To 0) As String
     If ConsoleID = 1 Then
         'run the primary startup script
-        Run_Script "/system/startup.ds", ConsoleID, EmptyParams, "BOOT", "", True, False, False
+        Run_Script "/system/startup.ds", ConsoleID, EmptyParams, "BOOT", True, False, False
     Else
-        Run_Script "/system/newconsole.ds", ConsoleID, EmptyParams, "BOOT", "", True, False, False
+        Run_Script "/system/newconsole.ds", ConsoleID, EmptyParams, "BOOT", True, False, False
     End If
 End Sub
 

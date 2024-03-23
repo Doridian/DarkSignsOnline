@@ -15,7 +15,7 @@ Public WaitingForInputReturn(1 To 4) As String
 Public CancelScript(1 To 4) As Boolean
 
 
-Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean, Optional Preamble As String) As String
+Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, ServerDomain As String, ServerPort As Integer, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
     If ConsoleID < 1 Then
         ConsoleID = 1
     End If
@@ -35,16 +35,13 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, RedirectOutput, DisableOutput, IsRoot
+    G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, IsRoot
     s.AddObject "DSO", G, True
-    
-    tmpAll = ParseCommandLineOptional(tmpAll, FileKey = "")
+
+    tmpAll = ParseCommandLineOptional(tmpAll, ServerPort <= 0)
 
     New_Console_Line_InProgress ConsoleID
     On Error GoTo EvalError
-    If Preamble <> "" Then
-        s.AddCode Preamble
-    End If
     s.AddCode tmpAll
     On Error GoTo 0
 
@@ -79,7 +76,7 @@ ScriptEnd:
     cPath(ConsoleID) = OldPath
 End Function
 
-Public Function Run_Script(Filename As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
+Public Function Run_Script(Filename As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
     If ScriptParameters(0) = "" Then
         ScriptParameters(0) = Filename
     End If
@@ -92,7 +89,7 @@ Public Function Run_Script(Filename As String, ByVal ConsoleID As Integer, Scrip
 
     Dim tmpAll As String
     tmpAll = GetFile(Filename)
-    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, FileKey, IsRoot, RedirectOutput, DisableOutput)
+    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, IsRoot, RedirectOutput, DisableOutput)
 End Function
 
 

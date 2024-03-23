@@ -26,6 +26,8 @@ Private PrivDisableOutput As Boolean
 Private PrivRedirectOutput As Boolean
 Private PrivOutput As String
 Private PrivIsRoot As Boolean
+Private PrivServerDomain As String
+Private PrivServerPort As Integer
 
 Private PendingCustomDownloads() As Integer
 
@@ -85,7 +87,7 @@ Private Sub AssertCLIOnly()
 End Sub
 
 Private Sub AssertLocalOnly()
-    If FileKey = "" Then
+    If PrivServerPort > 0 Then
         Exit Sub
     End If
     Err.Raise vbObjectError + 9007, "DSO", "local only functionality"
@@ -166,7 +168,7 @@ Public Function GetASCII() As Integer
     GetASCII = GetAsciiWaiting(ConsoleID)
 End Function
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewRedirect As Boolean, NewDisableOutput As Boolean, NewIsRoot As Boolean)
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewServerDomain As String, NewServerPort As Integer, NewRedirect As Boolean, NewDisableOutput As Boolean, NewIsRoot As Boolean)
     If IsConfigured Then
         Exit Sub
     End If
@@ -180,6 +182,8 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     PrivDisableOutput = NewDisableOutput
     PrivRedirectOutput = NewRedirect
     PrivIsRoot = NewIsRoot
+    PrivServerDomain = NewServerDomain
+    PrivServerPort = NewServerPort
 End Sub
 
 Private Sub AddCustomDownload(ByVal ResIndex As Integer)
@@ -425,7 +429,7 @@ Public Sub RUN(ParamArray XArr() As Variant)
     Next
 
     Yield
-    Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", "", False, False, False
+    Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, False, False
     Yield
 End Sub
 
@@ -443,7 +447,7 @@ Public Function CallScript(ParamArray XArr() As Variant) As String
     Next
 
     Yield
-    CallScript = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "CALL", "", False, True, Not PrivIsRoot)
+    CallScript = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "CALL", False, True, Not PrivIsRoot)
     Yield
 End Function
 
@@ -478,21 +482,9 @@ Public Function Connect(ParamArray XArr() As Variant) As String
         basConsole.SayRaw ConsoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
     End If
 
-    Dim PostData As String
-    PostData = ""
-    If UBound(XArr) >= 2 Then
-        Dim X As Integer
-        For X = 2 To UBound(XArr)
-            If X > 2 Then
-                PostData = PostData & "&"
-            End If
-            PostData = PostData & "params[]=" & EncodeURLParameter(XArr(X))
-        Next
-    End If
-    
     Dim DomainRequestIdx As Integer
     DomainRequestIdx = DoDownloadAPI("domain_connect.php?d=" & EncodeURLParameter(Domain) & _
-            "&port=" & EncodeURLParameter(Port), True, PostData)
+            "&port=" & EncodeURLParameter(Port), True, "")
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
@@ -502,38 +494,32 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     ' 0 = domain
     ' 1 = port
     ' 2 = filekey
-    ' 3 = preamble
-    ' 4 = code
-    ' 5+ = params
-
-    Dim DomainConnectParams() As String
-    ReDim DomainConnectParams(0 To UBound(DomainSplit) - 4)
+    ' 3 = code
 
     Dim strDomain As String
     strDomain = DomainSplit(0)
-    Dim strPort As String
-    strPort = DomainSplit(1)
+    Dim strPort As Integer
+    strPort = Val(DomainSplit(1))
+    If strPort <= 0 Then
+        strPort = 99999
+    End If
     Dim strFileKey As String
     strFileKey = DomainSplit(2)
 
     Dim b64decoded() As Byte
+    Dim strCode As String
     b64decoded = basConsole.DecodeBase64(DomainSplit(3))
-    Dim strPreamble As String
-    strPreamble = StrConv(b64decoded, vbUnicode)
+    strCode = StrConv(b64decoded, vbUnicode)
 
-    For X = 0 To UBound(DomainConnectParams)
-        b64decoded = basConsole.DecodeBase64(DomainSplit(X + 4))
-        DomainConnectParams(X) = StrConv(b64decoded, vbUnicode)
+    Dim X As Long
+    Dim DomainConnectParams() As String
+    ReDim DomainConnectParams(0 To UBound(XArr) - 1)
+    DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
+    For X = 2 To UBound(XArr)
+        DomainConnectParams(X - 1) = XArr(X)
     Next
 
-    Dim strCode As String
-    strCode = DomainConnectParams(0)
-    DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
-    
-    If strFileKey = "" Then
-        strFileKey = "EMPTY"
-    End If
-    Connect = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, True, Not PrivIsRoot, strPreamble)
+    Connect = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, strDomain, strPort, False, True, Not PrivIsRoot)
 
     Yield
 End Function

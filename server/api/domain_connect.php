@@ -39,17 +39,7 @@ switch ($ver) {
 		echo $d . '_' . $port . '::' . dso_b64_encode($preamble . implode("\r\n", $lines));
 		break;
 	case 2:
-		$params = $_REQUEST['params'];
-		$preamble = 'Public Const ServerDomain = "' . $d . '"
-Public Const ServerIP = "' . $dInfo[3] . '"
-Public Const ServerPort = ' . $port . '
-';
-		echo $d . ':-:' . $port . ':-:' . $dInfo[2] . ':-:' . dso_b64_encode($preamble) . ':-:' . dso_b64_encode($code_a[0]);
-		if (!empty($params)) {
-			foreach ($params as $v) {
-				echo ':-:' . dso_b64_encode($v);
-			}
-		}
+		echo $d . ':-:' . $port . ':-:' . $dInfo[2] . ':-:' . dso_b64_encode($code_a[0]);
 		break;
 	default:
 		die_error('not found', 400);
