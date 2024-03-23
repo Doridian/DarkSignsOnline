@@ -353,28 +353,6 @@ Public Sub EDIT(file As Variant)
     EditFile ResolvePath(file), PrivConsoleID
 End Sub
 
-Public Sub SAY(ParamArray params() As Variant)
-    Dim X As Integer
-    Dim sStr As String
-    For X = LBound(params) To UBound(params)
-        If sStr <> "" Then
-            sStr = sStr & " "
-        End If
-        sStr = sStr & params(X)
-    Next X
-
-    If PrivRedirectOutput Then
-        PrivOutput = PrivOutput & sStr & vbCrLf
-        Yield
-    End If
-    If PrivDisableOutput Then
-        Yield
-        Exit Sub
-    End If
-    basConsole.SayRaw PrivConsoleID, sStr
-    Yield
-End Sub
-
 Public Sub SayLine(s As Variant)
     If PrivRedirectOutput Then
         PrivOutput = PrivOutput & vbCr & s & vbCrLf
@@ -387,7 +365,7 @@ Public Sub SayLine(s As Variant)
     basConsole.SayRaw PrivConsoleID, "" & s, False
 End Sub
 
-Public Sub SayAll(ParamArray params() As Variant)
+Public Sub Say(ParamArray params() As Variant)
     Dim X As Integer
     Dim sStr As String
     For X = LBound(params) To UBound(params)
@@ -508,7 +486,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     DomainRequest = WAITFOR(DomainRequestIdx)
 
     If DomainRequest = "not found" Then
-        SAY "Connection Failed.{orange}"
+        Say "Connection Failed.{orange}"
     Else
         Dim DomainSplit() As String
         DomainSplit = Split(DomainRequest, ":-:")
