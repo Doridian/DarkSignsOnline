@@ -30,7 +30,6 @@ HelpFile=""
 NoControlUpgrade=1
 Title="Dark Signs Online"
 ExeName32="dso.exe"
-Path32="dist"
 Command32=""
 Name="DSO"
 HelpContextID="0"
