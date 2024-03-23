@@ -91,11 +91,17 @@ Public Property Get ConsoleID() As String
     ConsoleID = PrivConsoleID
 End Property
 
+Private Sub CrashIfReached()
+    Aborted = True
+    While True: Wend
+End Sub
+
 Private Sub AssertCLIOnly()
     If IsCLIInput Then
         Exit Sub
     End If
     Err.Raise vbObjectError + 9006, "DSO", "CLI only functionality"
+    CrashIfReached
 End Sub
 
 Private Sub AssertLocalOnly()
@@ -103,6 +109,7 @@ Private Sub AssertLocalOnly()
         Exit Sub
     End If
     Err.Raise vbObjectError + 9007, "DSO", "local only functionality"
+    CrashIfReached
 End Sub
 
 Private Sub Class_Initialize()
