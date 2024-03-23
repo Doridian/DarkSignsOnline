@@ -236,6 +236,10 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Integer)
     Next
 End Sub
 
+Private Function DoDownloadAPI(Url As String, UsePost As Boolean, PostData As String) As Integer
+    DoDownloadAPI = DoDownload(API_Server & API_Path & Url, UsePost, PostData, False)
+End Function
+
 Private Function DoDownload(Url As String, UsePost As Boolean, PostData As String, NoAuth As Boolean) As Integer
     Dim ResIndex As Integer
     DoDownload = 0
@@ -487,8 +491,8 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     End If
     
     Dim DomainRequestIdx As Integer
-    DomainRequestIdx = DoDownload(API_Server & API_Path & "domain_connect.php?d=" & EncodeURLParameter(Domain) & _
-            "&port=" & EncodeURLParameter(Port), True, PostData, False)
+    DomainRequestIdx = DoDownloadAPI("domain_connect.php?d=" & EncodeURLParameter(Domain) & _
+            "&port=" & EncodeURLParameter(Port), True, PostData)
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
@@ -568,7 +572,7 @@ Public Sub LOGIN()
     SayCOMM "Logging in..."
 
     Dim ResIndex As Integer
-    ResIndex = DoDownload(API_Server & API_Path & "auth.php", True, "", False)
+    ResIndex = DoDownloadAPI("auth.php", True, "")
     Dim ResObj As clsHttpResponse
     Set ResObj = WAITFOR(ResIndex)
     
@@ -623,7 +627,7 @@ Public Sub UPLOAD(Domain As Variant, Port As Variant, Filename As Variant)
     SayCOMM "Attempting to upload: " & UCase(Domain) & ":" & Port
 
     Dim DomainRequestIdx As Integer
-    DomainRequestIdx = DoDownload(API_Server & API_Path & "domain_upload.php", True, PostData, False)
+    DomainRequestIdx = DoDownloadAPI("domain_upload.php", True, PostData)
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
