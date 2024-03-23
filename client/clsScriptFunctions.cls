@@ -390,6 +390,7 @@ Public Sub EDIT(ByVal file As String)
 
     Yield
     EditFile ResolvePath(file), PrivConsoleID
+    Yield
 End Sub
 
 Public Sub SayLine(ByVal s As String)
