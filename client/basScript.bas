@@ -88,37 +88,9 @@ Public Function Run_Script(Filename As String, ByVal ConsoleID As Integer, Scrip
     Dim ShortFileName As String
     'file name should be from local dir, i.e: /system/startup.ds
     ShortFileName = Filename
-    'make sure it is not a directory
-    If DirExists(Filename) = True Then
-        If IsRoot Then
-            SayRaw ConsoleID, "Cannot run directory as script: " & ShortFileName & " {red}"
-            Exit Function
-        End If
-        Err.Raise vbObjectError + 9666, "DSO", "Cannot run directory as script: " & ShortFileName
-        Exit Function
-    End If
-    If FileExists(Filename) = False Then
-        If IsRoot Then
-            SayRaw ConsoleID, "Script does not exist: " & ShortFileName & " {red}"
-            Exit Function
-        End If
-        Err.Raise vbObjectError + 9666, "DSO", "Script does not exist: " & ShortFileName
-        Exit Function
-    End If
-    
-    Dim FF As Long
-    Dim tmpS As String
-    Dim tmpAll As String
-    tmpAll = ""
-    FF = FreeFile
-    Open SafePath(Filename) For Input As #FF
-        Do Until EOF(FF)
-            tmpS = ""
-            Line Input #FF, tmpS
-            tmpAll = tmpAll & Trim(tmpS) & vbCrLf
-        Loop
-    Close #FF
 
+    Dim tmpAll As String
+    tmpAll = GetFile(Filename)
     Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, FileKey, IsRoot, RedirectOutput, DisableOutput)
 End Function
 

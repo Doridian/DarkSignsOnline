@@ -1126,10 +1126,7 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
 
     If Not FileExists(s) Then
         SayRaw ConsoleID, "{green}File Not Found, Creating: " & s
-        Dim FF As Long
-        FF = FreeFile
-        Open SafePath(s) For Output As #FF
-        Close #FF
+        WriteFile s, ""
     End If
 
     frmEditor.Show vbModal
@@ -1151,39 +1148,6 @@ Public Sub ShowMail(ByVal s As String, ByVal ConsoleID As Integer)
     frmDSOMail.Show vbModal
      
     
-    Exit Sub
-    
-errorDir:
-    'say ConsoleID, "Directory Not Found: " & s & " {orange}", False
-End Sub
-
-Public Sub DisplayFile(ByVal s As String, ByVal ConsoleID As Integer)
-    
-    Dim sFile As String
-    Dim startLine As Integer
-    Dim MaxLines As Integer
-    
-    s = Trim(s)
-    
-    
-    Dim FF As Long, tmpS As String, CLine As Integer, CLinePrinted As Integer
-
-    FF = FreeFile
-    Open SafePath(sFile) For Input As #FF
-        Do Until EOF(FF)
-            Line Input #FF, tmpS
-            CLine = CLine + 1
-            
-            If CLine >= startLine Then
-                If CLinePrinted < MaxLines Then
-                    If Trim(tmpS) <> "" Then
-                        SayRaw ConsoleID, Chr(34) & "   " & tmpS & Chr(34), , 1
-                        CLinePrinted = CLinePrinted + 1
-                    End If
-                End If
-            End If
-        Loop
-    Close #FF
     Exit Sub
     
 errorDir:

@@ -414,17 +414,7 @@ Public Sub CLIParse(Src As Variant, Dest As Variant)
     Dim DestStr As String
     DestStr = ParseCommandLineOptional(SrcStr)
 
-    Dest = SafePath(ResolvePath(Dest))
-
-    On Error Resume Next
-    Kill Dest
-    On Error GoTo 0
-
-    Dim FF As Long
-    FF = FreeFile
-    Open Dest For Binary As #FF
-    Put #FF, , DestStr
-    Close #FF
+    WriteFile ResolvePath(Dest), DestStr
 End Sub
 
 Public Function ResolveCommand(ByVal Command As Variant) As String
