@@ -393,7 +393,7 @@ End Sub
 
 Public Sub SayLine(ByVal s As String)
     If PrivRedirectOutput Then
-        PrivOutput = PrivOutput & vbCr & s & vbCrLf
+        PrivOutput = PrivOutput & vbCr & s
         Yield
     End If
     If PrivDisableOutput Then
