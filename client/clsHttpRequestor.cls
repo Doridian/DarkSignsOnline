@@ -87,6 +87,7 @@ Public Sub Send()
     End If
 
     HttpRequest.SetRequestHeader "User-Agent", "Mozilla/4.0 (compatible; Win32; VbAsyncSocket; DarkSignsOnline/" & VersionStr() & ")"
+    HttpRequest.SetRequestHeader "DSO-Protocol-Version", "2"
 
     If Method = "POST" Then
         HttpRequest.SetRequestHeader "Content-Type", "application/x-www-form-urlencoded"

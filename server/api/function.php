@@ -36,7 +36,7 @@ if (!$user || !password_verify($_SERVER['PHP_AUTH_PW'], $user['password'])) {
 
 unset($user['password']);
 
-$ver = (int)$_REQUEST['ver'];
+$ver = (int)$_SERVER['HTTP_DSO_PROTOCOL_VERSION'];
 if ($ver < 1) {
 	$ver = 1;
 }
