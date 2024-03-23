@@ -54,7 +54,7 @@ Public Function VersionStr() As String
     End If
 End Function
 
-Public Function GetFile(ByVal fn As String) As String
+Public Function GetFileUnsafe(ByVal fn As String) As String
     Dim aFF As Long, tmpS As String, fullS As String
     aFF = FreeFile
     Open fn For Input As #aFF
@@ -64,7 +64,7 @@ Public Function GetFile(ByVal fn As String) As String
         Loop
     Close #aFF
 
-    GetFile = fullS
+    GetFileUnsafe = fullS
 End Function
 
 Function WriteFileClean(ByVal Filename As String, ByVal Contents As String)
@@ -199,7 +199,7 @@ zz:
     FileTitleOnly = Trim(FileTitleOnly)
 End Function
 
-Public Function WriteFile(fn As String, s As String) As Boolean
+Public Function WriteFileUnsafe(fn As String, s As String) As Boolean
     On Error GoTo zxc
     Dim FF As Long
     FF = FreeFile
@@ -209,12 +209,12 @@ Public Function WriteFile(fn As String, s As String) As Boolean
     Open fn For Output As #FF
         Print #FF, s
     Close #FF
-    WriteFile = True
+    WriteFileUnsafe = True
     Exit Function
 zxc:
     SayCOMM "Error writing file: " & fn
     Close #FF
-    WriteFile = False
+    WriteFileUnsafe = False
 End Function
 
 Public Sub RegSave(sCat As String, sVal As String)
