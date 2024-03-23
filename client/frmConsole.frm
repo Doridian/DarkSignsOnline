@@ -1742,41 +1742,29 @@ CheckForLine:
             End If
         Next n2
         End If
-        
-        
-        
         If tmpY < 0 Then GoTo AllDone
     Next n
 AllDone:
-    
-    
-    
     End If
 End Sub
 
-
-Public Sub ChatSend(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub ChatSend(ByVal s As String)
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
     s = Trim(s)
     If Len(s) > 0 Then
         Send "PRIVMSG " + channel$ + " :" + s
         displaychat "<" + MyIRCName + ">  " + s
-    Else
-        ShowHelp "chatview", ConsoleID
     End If
 End Sub
 
-Public Sub ChatView(ByVal s As String, ByVal ConsoleID As Integer)
-    s = Trim(LCase(s))
-    If s = "on" Then
+Public Sub ChatView(ByVal Enable As Boolean)
+    If Enable Then
         chatToStatus = True
         RegSave "CHATVIEW", "True"
         SayCOMM "Chatview is now enabled."
-    ElseIf s = "off" Then
+    Else
         chatToStatus = False
         RegSave "CHATVIEW", False
         SayCOMM "Chatview is now disabled."
-    Else
-       ShowHelp "chatview", ConsoleID
     End If
 End Sub
