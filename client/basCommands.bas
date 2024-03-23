@@ -5,6 +5,7 @@ Public AuthorizePayment As Boolean
 
 Private scrConsole(1 To 4) As ScriptControl
 Private scrConsoleContext(1 To 4) As clsScriptFunctions
+Private scrConsoleDScript(1 To 4) As Boolean
 
 Public Sub InitBasCommands()
     Dim X As Integer
@@ -21,6 +22,8 @@ Public Sub InitBasCommands()
         scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False, True
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
+
+        scrConsoleDScript(X) = True
     Next
 End Sub
 
@@ -143,7 +146,10 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     scrConsoleContext(ConsoleID).Aborted = False
 
     Dim RunStr As String
-    RunStr = ParseCommandLine(tmpS)
+    Dim OptionDScript As Boolean
+    OptionDScript = scrConsoleDScript(ConsoleID)
+    RunStr = ParseCommandLine(tmpS, OptionDScript)
+    scrConsoleDScript(ConsoleID) = OptionDScript
     'SayCOMM "SHEXEC: " & RunStr, ConsoleID
 
     On Error GoTo EvalError
@@ -173,22 +179,16 @@ ScriptEnd:
     New_Console_Line ConsoleID
 End Function
 
-Public Function ParseCommandLine(ByVal tmpS As String, Optional ByVal AllowCommands As Boolean = True) As String
-    Dim OptionDScript As Boolean
-    Dim OptionDScriptEverUsed As Boolean
-    OptionDScript = True
-    ParseCommandLine = ParseCommandLineInt2(tmpS, OptionDScript, OptionDScriptEverUsed, AllowCommands)
-End Function
-
 Public Function ParseCommandLineOptional(ByVal tmpS As String, Optional ByVal AllowCommands As Boolean = True) As String
     Dim OptionDScript As Boolean
-    Dim OptionDScriptEverUsed As Boolean
     OptionDScript = False
-    ParseCommandLineOptional = ParseCommandLineInt2(tmpS, OptionDScript, OptionDScriptEverUsed, AllowCommands)
+    ParseCommandLineOptional = ParseCommandLine(tmpS, OptionDScript, AllowCommands)
+End Function
 
-    If Not OptionDScriptEverUsed Then
-        ParseCommandLineOptional = tmpS
-    End If
+Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Boolean, Optional ByVal AllowCommands As Boolean = True) As String
+    Dim OptionDScriptEverUsed As Boolean
+    OptionDScriptEverUsed = OptionDScript
+    ParseCommandLine = ParseCommandLineInt2(tmpS, OptionDScript, OptionDScriptEverUsed, AllowCommands)
 End Function
 
 Private Function ParseCommandLineInt2(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByRef OpenDScriptEverUsed As Boolean, ByVal AllowCommands As Boolean) As String

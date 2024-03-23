@@ -13,6 +13,12 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
+' Notices for declaring things for DScript to use
+' 1) If DScript should be able to use it, it must be Public
+' 2) Always use ByVal for arguments where possible
+' 3) For Arguments that can't use ByVal (arrays etc), you must be Variant (Variant() does NOT work) and handle the types yourself
+' 4) To return arrays, you must use Variant(), anything else can be returned as-is
+
 Private PrivConsoleID As Integer
 Private PrivParameters() As Variant
 Private ScriptFrom As String
