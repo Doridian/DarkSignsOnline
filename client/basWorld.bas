@@ -199,10 +199,14 @@ Public Sub OnLoginSuccess()
     SayCOMM "Welcome to the Dark Signs Network!"
     SayCOMM "Dark Signs Online - Version " & VersionStr()
     
-    Dim EmptyParams(0 To 0) As String
+    Dim EmptyParams(0 To 0) As Variant
+    EmptyParams(0) = ""
     Run_Script "/system/login-1.ds", 1, EmptyParams, "BOOT", True, False, False
+    EmptyParams(0) = ""
     Run_Script "/system/login-2.ds", 2, EmptyParams, "BOOT", True, False, False
+    EmptyParams(0) = ""
     Run_Script "/system/login-3.ds", 3, EmptyParams, "BOOT", True, False, False
+    EmptyParams(0) = ""
     Run_Script "/system/login-4.ds", 4, EmptyParams, "BOOT", True, False, False
     
     If frmConsole.getConnected Then

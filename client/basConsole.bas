@@ -643,7 +643,7 @@ Public Function Font_Height(theFontName As String, theFontSize As String) As Int
     Font_Height = frmConsole.lfont.Height + yDiv
 End Function
 
-Public Function SayRaw(ByVal ConsoleID As Integer, s As String, Optional withNewLineAfter As Boolean = True, Optional SkipPropertySpace As Integer)
+Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional withNewLineAfter As Boolean = True, Optional SkipPropertySpace As Integer)
     If ConsoleID > 4 Then Exit Function
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
     

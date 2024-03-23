@@ -15,7 +15,7 @@ Public WaitingForInputReturn(1 To 4) As String
 Public CancelScript(1 To 4) As Boolean
 
 
-Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, ServerDomain As String, ServerPort As Long, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
+Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ScriptFrom As String, FileKey As String, ServerDomain As String, ServerPort As Long, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
     If ConsoleID < 1 Then
         ConsoleID = 1
     End If
@@ -76,7 +76,7 @@ ScriptEnd:
     cPath(ConsoleID) = OldPath
 End Function
 
-Public Function Run_Script(Filename As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
+Public Function Run_Script(ByVal Filename As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal IsRoot As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean) As String
     If ScriptParameters(0) = "" Then
         ScriptParameters(0) = Filename
     End If

@@ -1272,7 +1272,8 @@ Public Sub Start_Console(ByVal ConsoleID As Integer)
     Reset_Console ConsoleID
 
     
-    Dim EmptyParams(0 To 0) As String
+    Dim EmptyParams(0 To 0) As Variant
+    EmptyParams(0) = ""
     If ConsoleID = 1 Then
         'run the primary startup script
         Run_Script "/system/startup.ds", ConsoleID, EmptyParams, "BOOT", True, False, False
@@ -1365,10 +1366,10 @@ Sub processCommand()
     ' the next line will reply to the PING message of the server
     ' preventing us from going idle and being kicked
     If InStr(Data$, "PING") > 0 Then
-        Dim params$    ' parameters that will be filtered from the pong message
-        params$ = Right$(Data$, Len(Data$) - (InStr(Data$, "PING") + 4))
+        Dim Params$    ' parameters that will be filtered from the pong message
+        Params$ = Right$(Data$, Len(Data$) - (InStr(Data$, "PING") + 4))
             'take the paramaters from the right of the message starting from the first character after the PING message
-        Send "PONG " + params$   ' send the pong message to the server, together with the parameters
+        Send "PONG " + Params$   ' send the pong message to the server, together with the parameters
         display "PING? PONG!"
     End If
     
@@ -1377,7 +1378,7 @@ Sub processCommand()
         Dim Pos%, pos2%    '2 position variables we need to extract the nickname of whoever that issued the command
         Dim from$, rest$    'these will hold the sender of the command and the rest of the message
         Dim Command$        'this will hold the type of the command (eg.: PRIVMSG)
-        params$ = ""        'and the parameters
+        Params$ = ""        'and the parameters
         Pos% = InStr(Data$, " ")    'get the position of the first space character
         If Pos% > 0 Then    'if a space is found
             pos2% = InStr(Data$, "!")   'search for an exclamation mark
@@ -1390,28 +1391,28 @@ Sub processCommand()
             Pos% = InStr(rest$, " ")   'get the position of the first space in rest$
             If Pos% > 0 Then    'if we found a space
                 Command$ = Left$(rest$, Pos% - 1)   'the part before this space is the type of command
-                params$ = Right$(rest$, Len(rest$) - Pos%)   'the rest are parameters
+                Params$ = Right$(rest$, Len(rest$) - Pos%)   'the rest are parameters
                 Select Case Command$    'base your actions on the type of command
                     Case "NOTICE"   'if it's a notice
-                        displaychat ">> " + from$ + "  " + params$ 'display it
+                        displaychat ">> " + from$ + "  " + Params$ 'display it
                     Case "PRIVMSG"  'if it's a private message
                         
-                        If processParam(params$) = channel$ Then
-                            tempStr = processParam(processRest(params$))
+                        If processParam(Params$) = channel$ Then
+                            tempStr = processParam(processRest(Params$))
                             If (Mid(tempStr, 2, 6) = "ACTION") Then
                                 displaychat "* " + from$ + " " + Right(tempStr, Len(tempStr) - 8)   'display the message
                             Else
-                                displaychat "<" + from$ + ">  " + processParam(processRest(params$))     'display the message
+                                displaychat "<" + from$ + ">  " + processParam(processRest(Params$))     'display the message
                             End If
                                 'if you want autoreplies, autoevents, ... , just add them here
-                        ElseIf processParam(params$) = nick$ Then
-                            displaychat ">>" + from$ + "<<  " + processParam(processRest(params$)) 'display the message
+                        ElseIf processParam(Params$) = nick$ Then
+                            displaychat ">>" + from$ + "<<  " + processParam(processRest(Params$)) 'display the message
                                 'if you want autoreplies, autoevents, ... , just add them here
                         Else
-                            displaychat "(!!!) <" + from$ + "> " + params$    'display it
+                            displaychat "(!!!) <" + from$ + "> " + Params$    'display it
                         End If
                     Case "JOIN" 'if someone joined
-                        displaychat "** " + from$ + " has joined " + processParam(params$) + " **"     'display it
+                        displaychat "** " + from$ + " has joined " + processParam(Params$) + " **"     'display it
                         'check if the user is already in the list
                         X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
@@ -1425,7 +1426,7 @@ Sub processCommand()
                         If X% = -1 Then lstUsers.AddItem (from$)    'add this user to the user list
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "QUIT" 'if someone disconnected
-                        displaychat "** " + from$ + " has quit IRC (" + processParam(params$) + ") **"    'display it
+                        displaychat "** " + from$ + " has quit IRC (" + processParam(Params$) + ") **"    'display it
                         'check if the user is already in the list
                         X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
@@ -1439,10 +1440,10 @@ Sub processCommand()
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "NICK" 'if someone changed his nickname
                         If from$ = nick$ Then
-                            nick$ = processParam(params$)
+                            nick$ = processParam(Params$)
                             RegSave "ircName", nick$
                         End If
-                        displaychat "** " + from$ + " changed his nickname to " + processParam(params$) + " **"    'display it
+                        displaychat "** " + from$ + " changed his nickname to " + processParam(Params$) + " **"    'display it
                         'check if the user is already in the list
                         X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
@@ -1454,11 +1455,11 @@ Sub processCommand()
                         Loop Until lstUsers.List(X%) = from$    'loop until we find the user
                         If X% > -1 Then
                             lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
-                            lstUsers.AddItem (processParam(params$))    'and add the new nick
+                            lstUsers.AddItem (processParam(Params$))    'and add the new nick
                         End If
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "PART" ' if someone left the channel
-                        displaychat "** " + from$ + " has left " + params$ + " **"    'display it
+                        displaychat "** " + from$ + " has left " + Params$ + " **"    'display it
                         'check if the user is allready in the list
                         X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
@@ -1471,17 +1472,17 @@ Sub processCommand()
                         If X% > -1 Then lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "MODE"     'if someone sets the mode on someone
-                        displaychat "** " + from$ + " sets mode " + processParam(processRest(params$)) + " on " + processParam(params$) + " **" 'display the mode change
+                        displaychat "** " + from$ + " sets mode " + processParam(processRest(Params$)) + " on " + processParam(Params$) + " **" 'display the mode change
                     Case "TOPIC"    'if the topic message is received
                         displaychat "TOPIC MESSAGE:"
-                        displaychat processParam(params$)             'Display the channel topic
+                        displaychat processParam(Params$)             'Display the channel topic
                     Case "331"  'if you recieve a message saying "no topic set"
-                        displaychat "No topic set in " + processParam(processRest(params$)) 'display it
+                        displaychat "No topic set in " + processParam(processRest(Params$)) 'display it
                             'by displaying the second parameter
                     Case "353"  'if we received the channel user list
                         display "<" + from$ + "> " + rest$ 'display the unprocessed message
                         Dim nick2$, othernicks$    'take one nick at a time
-                        othernicks$ = processParam(processRest(processRest(processRest(params$))))   'cut of the channel parameter, the nick parameter and the "="
+                        othernicks$ = processParam(processRest(processRest(processRest(Params$))))   'cut of the channel parameter, the nick parameter and the "="
                         Do
                             nick2$ = processParam(othernicks$)   'take one nick
                             othernicks$ = processRest(othernicks$)   'and take it out of the remaining nicks

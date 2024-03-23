@@ -14,7 +14,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private PrivConsoleID As Integer
-Private PrivParameters() As String
+Private PrivParameters() As Variant
 Private ScriptFrom As String
 Private IsCLIInput As Boolean
 Private IsConfigured As Boolean
@@ -31,25 +31,25 @@ Private PrivServerPort As Long
 
 Private PendingCustomDownloads() As Integer
 
-Public Property Get UserName() As Variant
+Public Property Get UserName() As String
     UserName = myUsername
 End Property
 
-Public Property Get ServerDomain() As Variant
+Public Property Get ServerDomain() As String
     ServerDomain = PrivServerDomain
 End Property
 
-Public Property Get ServerPort() As Variant
+Public Property Get ServerPort() As Long
     ServerPort = PrivServerPort
 End Property
 
-Public Property Let UserName(ByVal NewValue As Variant)
+Public Property Let UserName(ByVal NewValue As String)
     AssertCLIOnly
 
     SetUsername NewValue, ConsoleID
 End Property
 
-Public Property Get Password() As Variant
+Public Property Get Password() As String
     If myPassword = "" Then
         Password = ""
     Else
@@ -69,19 +69,19 @@ Public Property Get IsOutputRedirected() As Boolean
     IsOutputRedirected = PrivRedirectOutput
 End Property
 
-Public Property Let Password(ByVal NewValue As Variant)
+Public Property Let Password(ByVal NewValue As String)
     AssertCLIOnly
 
     SetPassword NewValue, ConsoleID
 End Property
 
-Public Property Get CWD() As Variant
+Public Property Get CWD() As String
     AssertLocalOnly
 
     CWD = cPath(PrivConsoleID)
 End Property
 
-Public Property Let CWD(ByVal NewValue As Variant)
+Public Property Let CWD(ByVal NewValue As String)
     AssertLocalOnly
 
     cPath(PrivConsoleID) = ResolvePath(CWD)
@@ -89,14 +89,6 @@ End Property
 
 Public Property Get ConsoleID() As String
     ConsoleID = PrivConsoleID
-End Property
-
-Public Property Get TimeStr() As String
-    TimeStr = DateTime.Time$
-End Property
-
-Public Property Get DateStr() As String
-    DateStr = DateTime.Date$
 End Property
 
 Private Sub AssertCLIOnly()
@@ -144,7 +136,7 @@ Public Function ScriptGetOutput() As String
     ScriptGetOutput = PrivOutput
 End Function
 
-Public Function ReadLine(Prompt As Variant) As String
+Public Function ReadLine(ByVal Prompt As String) As String
     If PrivDisableOutput Then
         Yield
         Exit Function
@@ -162,7 +154,7 @@ Public Function ReadLine(Prompt As Variant) As String
     ReadLine = WaitingForInputReturn(ConsoleID)
 End Function
 
-Public Function GetKey() As Integer
+Public Function GetKey() As Long
     If PrivDisableOutput Then
         Yield
         Exit Function
@@ -175,7 +167,7 @@ Public Function GetKey() As Integer
     GetKey = GetKeyWaiting(ConsoleID)
 End Function
 
-Public Function GetASCII() As Integer
+Public Function GetASCII() As Long
     If PrivDisableOutput Then
         Yield
         Exit Function
@@ -188,7 +180,7 @@ Public Function GetASCII() As Integer
     GetASCII = GetAsciiWaiting(ConsoleID)
 End Function
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewIsRoot As Boolean)
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewIsRoot As Boolean)
     If IsConfigured Then
         Exit Sub
     End If
@@ -260,11 +252,11 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Integer)
     Next
 End Sub
 
-Private Function DoDownloadAPI(Url As String, UsePost As Boolean, PostData As String) As Integer
+Private Function DoDownloadAPI(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String) As Integer
     DoDownloadAPI = DoDownload(API_Server & API_Path & Url, UsePost, PostData, False)
 End Function
 
-Private Function DoDownload(Url As String, UsePost As Boolean, PostData As String, NoAuth As Boolean) As Integer
+Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean) As Integer
     Dim ResIndex As Integer
     DoDownload = 0
     For ResIndex = 1 To 99
@@ -287,7 +279,7 @@ Private Function DoDownload(Url As String, UsePost As Boolean, PostData As Strin
     Yield
 End Function
 
-Public Function WAITFOR(ResIndex As Variant) As clsHttpResponse
+Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
     While Not DownloadDone(ResIndex)
         Yield
         If Not HasPendingCustomDownload(ResIndex) Then
@@ -321,14 +313,14 @@ Public Sub SayCOMM(ParamArray Params() As Variant)
     Yield
 End Sub
 
-Public Sub CD(DIR As Variant)
+Public Sub CD(ByVal DIR As String)
     AssertLocalOnly
 
     cPath(PrivConsoleID) = ResolvePath(DIR)
     Yield
 End Sub
 
-Public Function ReadDir(RawPath As Variant) As Variant()
+Public Function ReadDir(ByVal RawPath As String) As Variant()
     AssertLocalOnly
     
     Dim Res() As Variant
@@ -379,14 +371,14 @@ Public Function ReadDir(RawPath As Variant) As Variant()
     Yield
 End Function
 
-Public Sub EDIT(file As Variant)
+Public Sub EDIT(ByVal file As String)
     AssertCLIOnly
 
     Yield
     EditFile ResolvePath(file), PrivConsoleID
 End Sub
 
-Public Sub SayLine(s As Variant)
+Public Sub SayLine(ByVal s As String)
     If PrivRedirectOutput Then
         PrivOutput = PrivOutput & vbCr & s & vbCrLf
         Yield
@@ -395,7 +387,7 @@ Public Sub SayLine(s As Variant)
         Yield
         Exit Sub
     End If
-    basConsole.SayRaw PrivConsoleID, "" & s, False
+    basConsole.SayRaw PrivConsoleID, s, False
 End Sub
 
 Public Sub Say(ParamArray Params() As Variant)
@@ -416,7 +408,7 @@ Public Sub Say(ParamArray Params() As Variant)
     Next
 End Sub
 
-Public Sub CLIParse(Src As Variant, Dest As Variant)
+Public Sub CLIParse(ByVal Src As String, ByVal Dest As String)
     AssertLocalOnly
 
     Dim SrcStr As String
@@ -428,11 +420,11 @@ Public Sub CLIParse(Src As Variant, Dest As Variant)
     WriteFile ResolvePath(Dest), DestStr
 End Sub
 
-Public Function ResolveCommand(ByVal Command As Variant) As String
+Public Function ResolveCommand(ByVal Command As String) As String
     ResolveCommand = basCommands.ResolveCommand(PrivConsoleID, Command)
 End Function
 
-Public Function ResolvePath(ByVal Path As Variant) As String
+Public Function ResolvePath(ByVal Path As String) As String
     ResolvePath = basCommands.ResolvePath(PrivConsoleID, Path)
 End Function
 
@@ -442,10 +434,10 @@ Public Sub RUN(ParamArray XArr() As Variant)
     Dim Script As String
     Script = XArr(0)
     Dim X As Integer
-    Dim SParamArr() As String
+    Dim SParamArr() As Variant
     ReDim SParamArr(0 To UBound(XArr))
     For X = 0 To UBound(XArr)
-        SParamArr(X) = "" & XArr(X)
+        SParamArr(X) = XArr(X)
     Next
 
     Yield
@@ -460,10 +452,10 @@ Public Function CallScript(ParamArray XArr() As Variant) As String
     Dim Script As String
     Script = XArr(0)
 
-    Dim SParamArr() As String
+    Dim SParamArr() As Variant
     ReDim SParamArr(0 To UBound(XArr))
     For X = 0 To UBound(XArr)
-        SParamArr(X) = "" & XArr(X)
+        SParamArr(X) = XArr(X)
     Next
 
     Yield
@@ -471,25 +463,21 @@ Public Function CallScript(ParamArray XArr() As Variant) As String
     Yield
 End Function
 
-Public Function DOWNLOAD(Url As Variant) As Integer
-     DOWNLOAD = DoDownload("" & Url, True, "", True)
+Public Function DOWNLOAD(ByVal Url As String) As Integer
+     DOWNLOAD = DoDownload(Url, True, "", True)
 End Function
 
-Public Function DRAW(YPos As Variant, R As Variant, G As Variant, b As Variant, Mode As Variant)
+Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal B As Long, ByVal Mode As String)
     If PrivDisableOutput Then
         Yield
         Exit Function
     End If
-    DrawItUp YPos, R, G, b, Mode, PrivConsoleID
+    DrawItUp YPos, R, G, B, Mode, PrivConsoleID
     Yield
 End Function
 
 ' Params is an array
-Public Function ConnectEX(Foreground As Variant, Domain As Variant, sPort As Variant, Optional Params As Variant) As String
-    Domain = "" & Domain
-    Dim Port As Long
-    Port = Val(sPort)
-
+Public Function ConnectEX(ByVal Foreground As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
     Yield
 
     If Port < 1 Or Port > 65535 Then
@@ -498,11 +486,11 @@ Public Function ConnectEX(Foreground As Variant, Domain As Variant, sPort As Var
     End If
 
     Dim X As Long
-    Dim DomainConnectParams() As String
+    Dim DomainConnectParams() As Variant
     If (VarType(Params) And vbArray) = vbArray Then
         ReDim DomainConnectParams(0 To UBound(Params) + 1)
         For X = 1 To UBound(DomainConnectParams)
-            DomainConnectParams(X) = "" & Params(X - 1)
+            DomainConnectParams(X) = Params(X - 1)
         Next
     Else
         ReDim DomainConnectParams(0 To 0)
@@ -543,18 +531,20 @@ Public Function ConnectEX(Foreground As Variant, Domain As Variant, sPort As Var
         DisableOutput = False
     End If
 
-    DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
-    ConnectEX = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, strDomain, strPort, False, True, DisableOutput)
+    Dim DomScript As String
+    DomScript = "dso://" & strDomain & ":" & strPort
+    DomainConnectParams(0) = DomScript
+    ConnectEX = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, True, DisableOutput)
 
     Yield
 End Function
 
 ' Params is an array
-Public Function Connect(Domain As Variant, sPort As Variant, Optional Params As Variant) As String
-    Connect = ConnectEX(False, Domain, sPort, Params)
+Public Function Connect(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
+    Connect = ConnectEX(False, Domain, Port, Params)
 End Function
 
-Private Sub RaiseMiscError(Desc As String)
+Private Sub RaiseMiscError(ByVal Desc As String)
     Err.Raise vbObjectError + 9666, "DSO", Desc
 End Sub
 
@@ -623,7 +613,7 @@ Public Sub LOGOUT()
     Yield
 End Sub
 
-Public Sub UPLOAD(Domain As Variant, Port As Variant, Filename As Variant)
+Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As String)
     AssertCLIOnly
     
     Yield
@@ -636,7 +626,7 @@ Public Sub UPLOAD(Domain As Variant, Port As Variant, Filename As Variant)
     tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
 
     Dim PostData As String
-    PostData = "port=" & EncodeURLParameter("" & Port) & _
+    PostData = "port=" & EncodeURLParameter(Port) & _
     "&d=" & EncodeURLParameter(Domain) & _
     "&filedata=" & EncodeURLParameter(tempStrA)
 
@@ -655,7 +645,7 @@ Public Function ArgC() As Integer
     ArgC = UBound(PrivParameters)
 End Function
 
-Public Function ArgV(Number As Variant) As String
+Public Function ArgV(ByVal Number As Long) As Variant
     Yield
     If Number < LBound(PrivParameters) Or Number > UBound(PrivParameters) Then
         ArgV = ""

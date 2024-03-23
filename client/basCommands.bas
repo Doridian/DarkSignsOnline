@@ -15,7 +15,7 @@ Public Sub InitBasCommands()
         scrConsole(X).UseSafeSubset = True
         scrConsole(X).Language = "VBScript"
 
-        Dim CLIArguments(0 To 0) As String
+        Dim CLIArguments(0 To 0) As Variant
         CLIArguments(0) = "/dev/tty" & X
         Set scrConsoleContext(X) = New clsScriptFunctions
         scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False, True
@@ -742,7 +742,8 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
     
     If Trim(EditorRunFile) <> "" Then
         Shift_Console_Lines ConsoleID
-        Dim EmptyArguments(0 To 0) As String
+        Dim EmptyArguments(0 To 0) As Variant
+        EmptyArguments(0) = ""
         Run_Script EditorRunFile, ConsoleID, EmptyArguments, "CONSOLE", True, False, False
     End If
     
