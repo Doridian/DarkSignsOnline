@@ -14,7 +14,7 @@ $d = strtolower($d);
 $dInfo = getDomainInfo($d);
 
 if ($dInfo[0] <= 0) {
-	die_error('not found', 400);
+	die_error('not found', 404);
 }
 
 $stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain_id = ? AND port = ? AND ver = ?;');
@@ -23,7 +23,7 @@ $stmt->execute();
 $exists = $stmt->get_result();
 $code_a = $exists->fetch_row();
 if (empty($code_a)) {
-	die_error('not found', 400);
+	die_error('not found', 404);
 }
 
 switch ($ver) {

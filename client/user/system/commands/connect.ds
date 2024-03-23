@@ -1,0 +1,46 @@
+Option Explicit
+
+Dim Domain
+Dim Port
+Domain = ArgV(1)
+Port = ArgV(2)
+
+IF Port <= 0 Or Port > 65535 Then
+	SAY "{red}Invalid port: " & ArgV(2)
+	Quit
+END If
+
+SAY "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
+
+Dim Res
+Dim ConnectParams()
+Dim ConnectResponse
+
+On Error Resume Next
+IF ArgC() > 2 Then
+	ReDim ConnectParams(ArgC - 3)
+	Dim X
+	FOR X = 0 To ArgC - 3
+		ConnectParams(X) = ArgV(X + 3)
+	NEXT
+	Res = CONNECTEX(Not IsOutputDisabled, Domain, Port, ConnectParams)
+ELSE
+	Res = CONNECTEX(Not IsOutputDisabled, Domain, Port)
+END If
+
+Dim ErrNo, ErrDesc, ErrSrc
+ErrNo = Err.Number
+ErrSrc = Err.Source
+ErrDesc = Err.Description
+On Error GoTo 0
+
+IF ErrNo <> 0 Then
+	Err.Raise vbObjectError + 9666, "DSO", "Error connecting to " & UCase(Domain) & ":" & Port & "!"
+	Quit
+END If
+
+On Error GoTo 0
+
+IF IsOutputDisabled Then
+	SAY Res
+END If

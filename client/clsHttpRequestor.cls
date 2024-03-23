@@ -125,7 +125,7 @@ Private Sub HttpRequest_OnResponseFinished()
     End If
     Done = True
 
-    If HttpRequest.Status < 200 Or HttpRequest.Status > 299 Then
+    If IsHTTPCodeRetry(HttpRequest.Status) Then
         ManageSockError "HTTP Status " & Str(HttpRequest.Status)
         Exit Sub
     End If

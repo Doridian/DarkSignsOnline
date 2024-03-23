@@ -15,7 +15,7 @@ Public WaitingForInputReturn(1 To 4) As String
 Public CancelScript(1 To 4) As Boolean
 
 
-Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, ServerDomain As String, ServerPort As Integer, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
+Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, ServerDomain As String, ServerPort As Long, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
     If ConsoleID < 1 Then
         ConsoleID = 1
     End If

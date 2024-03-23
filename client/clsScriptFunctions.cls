@@ -27,7 +27,7 @@ Private PrivRedirectOutput As Boolean
 Private PrivOutput As String
 Private PrivIsRoot As Boolean
 Private PrivServerDomain As String
-Private PrivServerPort As Integer
+Private PrivServerPort As Long
 
 Private PendingCustomDownloads() As Integer
 
@@ -55,6 +55,18 @@ Public Property Get Password() As Variant
     Else
         Password = "[hidden]"
     End If
+End Property
+
+Public Property Get IsRoot() As Boolean
+    IsRoot = PrivIsRoot
+End Property
+
+Public Property Get IsOutputDisabled() As Boolean
+    IsOutputDisabled = PrivDisableOutput
+End Property
+
+Public Property Get IsOutputRedirected() As Boolean
+    IsOutputRedirected = PrivRedirectOutput
 End Property
 
 Public Property Let Password(ByVal NewValue As Variant)
@@ -176,7 +188,7 @@ Public Function GetASCII() As Integer
     GetASCII = GetAsciiWaiting(ConsoleID)
 End Function
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewServerDomain As String, NewServerPort As Integer, NewRedirect As Boolean, NewDisableOutput As Boolean, NewIsRoot As Boolean)
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As String, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewIsRoot As Boolean)
     If IsConfigured Then
         Exit Sub
     End If
@@ -295,14 +307,14 @@ Public Function WAITFOR(ResIndex As Variant) As clsHttpResponse
     Yield
 End Function
 
-Public Sub SayCOMM(ParamArray params() As Variant)
+Public Sub SayCOMM(ParamArray Params() As Variant)
     Dim X As Integer
     Dim sStr As String
-    For X = LBound(params) To UBound(params)
+    For X = LBound(Params) To UBound(Params)
         If sStr <> "" Then
             sStr = sStr & " "
         End If
-        sStr = sStr & params(X)
+        sStr = sStr & Params(X)
     Next X
 
     basWorld.SayCOMM sStr, ConsoleID
@@ -386,14 +398,14 @@ Public Sub SayLine(s As Variant)
     basConsole.SayRaw PrivConsoleID, "" & s, False
 End Sub
 
-Public Sub Say(ParamArray params() As Variant)
+Public Sub Say(ParamArray Params() As Variant)
     Dim X As Integer
     Dim sStr As String
-    For X = LBound(params) To UBound(params)
+    For X = LBound(Params) To UBound(Params)
         If sStr <> "" Then
             sStr = sStr & " "
         End If
-        sStr = sStr & params(X)
+        sStr = sStr & Params(X)
     Next X
 
     Dim ScriptOutSplit() As String
@@ -472,17 +484,28 @@ Public Function DRAW(YPos As Variant, R As Variant, G As Variant, b As Variant, 
     Yield
 End Function
 
-Public Function Connect(ParamArray XArr() As Variant) As String
-    Dim Domain As String
-    Domain = XArr(0)
-    Dim Port As Integer
-    Port = XArr(1)
+' Params is an array
+Public Function ConnectEX(Foreground As Variant, Domain As Variant, sPort As Variant, Optional Params As Variant) As String
+    Domain = "" & Domain
+    Dim Port As Long
+    Port = Val(sPort)
 
     Yield
 
     If Port < 1 Or Port > 65535 Then
         Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
         Exit Function
+    End If
+
+    Dim X As Long
+    Dim DomainConnectParams() As String
+    If (VarType(Params) And vbArray) = vbArray Then
+        ReDim DomainConnectParams(0 To UBound(Params) + 1)
+        For X = 1 To UBound(DomainConnectParams)
+            DomainConnectParams(X) = "" & Params(X - 1)
+        Next
+    Else
+        ReDim DomainConnectParams(0 To 0)
     End If
 
     Dim DomainRequestIdx As Integer
@@ -501,7 +524,7 @@ Public Function Connect(ParamArray XArr() As Variant) As String
 
     Dim strDomain As String
     strDomain = DomainSplit(0)
-    Dim strPort As Integer
+    Dim strPort As Long
     strPort = Val(DomainSplit(1))
     If strPort <= 0 Then
         strPort = 99999
@@ -513,18 +536,22 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     Dim strCode As String
     b64decoded = basConsole.DecodeBase64(DomainSplit(3))
     strCode = StrConv(b64decoded, vbUnicode)
+    
+    Dim DisableOutput As Boolean
+    DisableOutput = Not PrivIsRoot
+    If Foreground = True Then
+        DisableOutput = False
+    End If
 
-    Dim X As Long
-    Dim DomainConnectParams() As String
-    ReDim DomainConnectParams(0 To UBound(XArr) - 1)
     DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
-    For X = 2 To UBound(XArr)
-        DomainConnectParams(X - 1) = XArr(X)
-    Next
-
-    Connect = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, strDomain, strPort, False, True, Not PrivIsRoot)
+    ConnectEX = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, strDomain, strPort, False, True, DisableOutput)
 
     Yield
+End Function
+
+' Params is an array
+Public Function Connect(Domain As Variant, sPort As Variant, Optional Params As Variant) As String
+    Connect = ConnectEX(False, Domain, sPort, Params)
 End Function
 
 Private Sub RaiseMiscError(Desc As String)
@@ -564,7 +591,7 @@ Public Sub LOGIN()
     ResIndex = DoDownloadAPI("auth.php", True, "")
     Dim ResObj As clsHttpResponse
     Set ResObj = WAITFOR(ResIndex)
-    
+
     If ResObj.IsSuccess() Then
         OnLoginSuccess
     Else
@@ -612,8 +639,6 @@ Public Sub UPLOAD(Domain As Variant, Port As Variant, Filename As Variant)
     PostData = "port=" & EncodeURLParameter("" & Port) & _
     "&d=" & EncodeURLParameter(Domain) & _
     "&filedata=" & EncodeURLParameter(tempStrA)
-    
-    SayCOMM "Attempting to upload: " & UCase(Domain) & ":" & Port
 
     Dim DomainRequestIdx As Integer
     DomainRequestIdx = DoDownloadAPI("domain_upload.php", True, PostData)
@@ -622,8 +647,6 @@ Public Sub UPLOAD(Domain As Variant, Port As Variant, Filename As Variant)
     DomainRequest.RaiseForStatus
 
     Yield
-
-    SayCOMM "Upload OK: " & UCase(Domain) & ":" & Port
 End Sub
 
 
