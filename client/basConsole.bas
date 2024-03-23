@@ -647,6 +647,19 @@ Public Function SayRaw(ByVal ConsoleID As Integer, s As String, Optional withNew
     If ConsoleID > 4 Then Exit Function
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
     
+    Dim CrPos As Long, LfPos As Long
+    CrPos = InStr(s, vbCr)
+    LfPos = InStr(s, vbLf)
+
+    If CrPos > 0 Then
+        If LfPos > 0 And LfPos < CrPos Then
+            s = Mid(s, 1, LfPos - 1)
+        Else
+            s = Mid(s, 1, CrPos - 1)
+        End If
+    ElseIf LfPos > 0 Then
+        s = Mid(s, 1, LfPos - 1)
+    End If
 
     Dim tmpLine As ConsoleLine, propertySpace As String
     
