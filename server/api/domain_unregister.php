@@ -1,34 +1,26 @@
 <?php
 
 $rewrite_done = true;
-require_once("function.php");
+require_once('function.php');
 
-$returnwith = (string)(int)$_REQUEST['returnwith'];
-if ($returnwith === '0') {
-    $returnwith = '2000';
-}
-echo $returnwith;
-
-if ($_POST['pw'] !== $_SERVER['PHP_AUTH_PW']) {
-    die('Invalid password');
-}
+print_returnwith();
 
 $d = strtolower(trim($_POST['d']));
 $dInfo = getDomainInfo($d);
 
 if ($dInfo[0] < 0) {
-    die('Domain not found');
+    die_error('Domain not found', 404);
 }
 
 if ($dInfo[1] !== $user['id']) {
-    die('Domain not owned by user');
+    die_error('Domain not owned by user', 403);
 }
 
-$stmt = $db->prepare("DELETE FROM domain WHERE id=?");
+$stmt = $db->prepare('DELETE FROM domain WHERE id=?');
 $stmt->bind_param('i', $dInfo[0]);
 $stmt->execute();
 
-$stmt = $db->prepare("DELETE FROM iptable WHERE id=?");
+$stmt = $db->prepare('DELETE FROM iptable WHERE id=?');
 $stmt->bind_param('i', $dInfo[0]);
 $stmt->execute();
 

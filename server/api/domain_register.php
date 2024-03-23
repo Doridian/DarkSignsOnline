@@ -15,10 +15,7 @@ $price['dsn'] = 12999;
 
 $uid = $user['id'];
 
-if ($ver < 2) {
-	// Return code for domain register.
-	echo '2000';
-}
+print_returnwith();
 
 if (isset ($_REQUEST['prices'])) {
 	$outprices = [];

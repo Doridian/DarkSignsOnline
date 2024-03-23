@@ -1,12 +1,12 @@
 <?php
 
 $rewrite_done = true;
-require_once("function.php");
+require_once('function.php');
 
 $port = (int)$_REQUEST['port'];
 
 if ($port < 1 || $port > 65535) {
-	die ('not found');
+	die_error('not found', 400);
 }
 
 $d = $_REQUEST['d'];
@@ -14,16 +14,16 @@ $d = strtolower($d);
 $dInfo = getDomainInfo($d);
 
 if ($dInfo[0] <= 0) {
-	die ('not found');
+	die_error('not found', 400);
 }
 
-$stmt = $db->prepare("SELECT code FROM domain_scripts WHERE domain_id = ? AND port = ? AND ver = ?;");
+$stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain_id = ? AND port = ? AND ver = ?;');
 $stmt->bind_param('iii', $dInfo[0], $port, $ver);
 $stmt->execute();
 $exists = $stmt->get_result();
 $code_a = $exists->fetch_row();
 if (empty($code_a)) {
-	die('not found');
+	die_error('not found', 400);
 }
 
 switch ($ver) {
@@ -52,6 +52,5 @@ Public Const ServerPort = ' . $port . '
 		}
 		break;
 	default:
-		die('not found');
+		die_error('not found', 400);
 }
-

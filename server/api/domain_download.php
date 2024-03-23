@@ -5,17 +5,12 @@ require_once("function.php");
 
 
 $uid = $user['id'];
-$returnwith = trim($returnwith);
 $d = trim($_REQUEST['d']);
+$port = (int)$_REQUEST['port'];
 
 $filename = $_REQUEST['filename'];
 
-if (trim($returnwith) == "") {
-	$returnwith = "2000";
-}
-echo $returnwith;
-
-$port = (int) $_REQUEST['port'];
+print_returnwith();
 
 $dInfo = getDomainInfo($d);
 if ($dInfo[0] <= 0) {

@@ -11,13 +11,7 @@ global $db;
 $d = trim($_REQUEST['d']);
 $dInfo = getDomainInfo($d);
 
-if ($ver < 2) {
-	$returnwith = $_REQUEST['returnwith'];
-	if (trim($returnwith) == "") {
-		$returnwith = '2000';
-	}
-	echo $returnwith;
-}
+print_returnwith();
 
 function verify_keycode($filename) {
 	global $db, $d, $dInfo, $user;

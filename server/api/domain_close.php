@@ -1,17 +1,13 @@
 <?php
 
 $rewrite_done = true;
-require_once("function.php");
+require_once('function.php');
 
-$returnwith = (string) (int) $_GET['returnwith'];
+print_returnwith();
+
 $d = trim($_REQUEST['d']);
-if (trim($returnwith) == "0") {
-	$returnwith = "2000";
-}
-echo $returnwith;
-
 $uid = $user['id'];
-$port = (int) $_REQUEST['port'];
+$port = (int)$_REQUEST['port'];
 
 $originaldomain = trim($d);
 $dInfo = getDomainInfo($d);

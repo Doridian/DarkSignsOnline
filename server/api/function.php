@@ -36,19 +36,6 @@ if (!$user || !password_verify($_SERVER['PHP_AUTH_PW'], $user['password'])) {
 
 unset($user['password']);
 
-$ver = (int)$_SERVER['HTTP_DSO_PROTOCOL_VERSION'];
-if ($ver < 1) {
-	$ver = 1;
-}
-
-function die_error($str, $code = 400) {
-	global $ver;
-	if ($ver > 1) {
-		header("HTTP/1.0 $code");
-	}
-	die($str);
-}
-
 function validIP($ip)
 {
 	global $db;

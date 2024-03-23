@@ -259,7 +259,7 @@ Private Function DoDownload(Url As String, UsePost As Boolean, PostData As Strin
     Yield
 End Function
 
-Public Function WAITFOR(ResIndex As Variant, Optional ByRef Status As Integer) As clsHttpResponse
+Public Function WAITFOR(ResIndex As Variant) As clsHttpResponse
     While Not DownloadDone(ResIndex)
         Yield
         If Not HasPendingCustomDownload(ResIndex) Then
@@ -534,17 +534,72 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     Yield
 End Function
 
+Private Sub RaiseMiscError(Desc As String)
+    Err.Raise vbObjectError + 9666, "DSO", Desc
+End Sub
+
 Public Sub LOGIN()
     AssertLocalOnly
     
-    LoginNow PrivConsoleID
+    Dim isBad As Boolean
+    isBad = False
+
+    If basWorld.Authorized = True Then
+        SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
+        Exit Sub
+    End If
+
+    If myUsername = "" Then
+        SayRaw ConsoleID, "{14, orange,  center}Your username is not set - type: USERNAME [username] to set it."
+        isBad = True
+    End If
+    If myPassword = "" Then
+        SayRaw ConsoleID, "{14, orange, center}Your password is not set - type: PASSWORD [password] to set it."
+        isBad = True
+    End If
+
+    If isBad = True Then
+        SayRaw ConsoleID, "Warning - You are not logged in!{16 center underline}"
+        SayRaw ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
+        RaiseMiscError "Username and/or password not set"
+        Exit Sub
+    End If
+
+    SayCOMM "Logging in..."
+
+    Dim ResIndex As Integer
+    ResIndex = DoDownload(API_Server & API_Path & "auth.php", True, "", False)
+    Dim ResObj As clsHttpResponse
+    Set ResObj = WAITFOR(ResIndex)
+    
+    If ResObj.IsSuccess() Then
+        OnLoginSuccess
+    Else
+        OnLoginFailure
+        RaiseMiscError "Login failed"
+    End If
+
+    ResObj.RaiseForStatus
+
     Yield
 End Sub
 
 Public Sub LOGOUT()
     AssertLocalOnly
+
+    basWorld.Authorized = False
+    frmConsole.Shape1.BackColor = vbRed
+    frmConsole.lblUsername.Caption = "You have been logged out."
+    SayCOMM "You have been logged out."
     
-    LogoutNow PrivConsoleID
+    If frmConsole.getConnected Then
+        frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
+        frmConsole.lstUsers.Clear  'clear the list entries
+        frmConsole.display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
+        frmConsole.sockIRC.Close_   'close the connection
+        frmConsole.setConnected False
+    End If
+
     Yield
 End Sub
 

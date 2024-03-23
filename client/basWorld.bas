@@ -7,9 +7,6 @@ Public Const API_Path = "/api/" 'e.g. "/api/"
 Public Const IRC_Server = "irc.libera.chat"
 Public Const IRC_Port = "6697"
 
-Public userIP As String
-Public referals(0 To 3) As String
-
 Public UsersOnline As String 'in the format of :user1::user2::user3:
 
 Public Const MaxSockRetries = 3
@@ -72,51 +69,6 @@ Public Sub CleanHttpRequests()
     For X = 1 To UBound(HttpRequests)
         Set HttpRequests(X) = NewHttpRequests(X)
     Next
-End Sub
-
-Public Sub LoginNow(ByVal ConsoleID As Integer)
-    Dim isBad As Boolean
-    isBad = False
-
-    If Authorized = True Then
-        SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
-        Exit Sub
-    Else
-        If myUsername = "" Then
-            SayRaw ConsoleID, "{14, orange,  center}Your username is not right - type: USERNAME [username] to set it."
-            isBad = True
-        End If
-        If myPassword = "" Then
-            SayRaw ConsoleID, "{14, orange, center}Your password is not right - type: PASSWORD [password] to set it."
-            isBad = True
-        End If
-        
-        If isBad = True Then
-            SayRaw ConsoleID, "Warning - You are not logged in!{16 center underline}"
-            SayRaw ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
-            Exit Sub
-        End If
-    
-        
-        SayCOMM "Logging in..."
-
-        RunPage "auth.php", ConsoleID, True, ""
-    End If
-End Sub
-
-Public Sub LogoutNow(ByVal ConsoleID As Integer)
-    Authorized = False
-    frmConsole.Shape1.BackColor = vbRed
-    frmConsole.lblUsername.Caption = "You have been logged out."
-    SayCOMM "You have been logged out."
-    
-    If frmConsole.getConnected Then
-        frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
-        frmConsole.lstUsers.Clear  'clear the list entries
-        frmConsole.display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
-        frmConsole.sockIRC.Close_   'close the connection
-        frmConsole.setConnected False
-    End If
 End Sub
 
 
@@ -239,6 +191,40 @@ Public Sub Process(ByVal s As String, ByVal Code As Integer, sSource As String, 
     frmConsole.tmrProcessQueue(X).Enabled = True
 End Sub
 
+Public Sub OnLoginSuccess()
+    Authorized = True
+    frmConsole.lblUsername.Caption = "You are online as " & myUsername & "."
+    frmConsole.Shape1.BackColor = iGreen: DoEvents
+    SayCOMM "You have been authorized as " & myUsername & "."
+    SayCOMM "Welcome to the Dark Signs Network!"
+    SayCOMM "Dark Signs Online - Version " & VersionStr()
+    
+    Dim EmptyParams(0 To 0) As String
+    Run_Script "/system/login-1.ds", 1, EmptyParams, "BOOT", "", True, False, False
+    Run_Script "/system/login-2.ds", 2, EmptyParams, "BOOT", "", True, False, False
+    Run_Script "/system/login-3.ds", 3, EmptyParams, "BOOT", "", True, False, False
+    Run_Script "/system/login-4.ds", 4, EmptyParams, "BOOT", "", True, False, False
+    
+    If frmConsole.getConnected Then
+        frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
+        frmConsole.lstUsers.Clear  'clear the list entries
+        frmConsole.display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
+        frmConsole.sockIRC.Close_   'close the connection
+    End If
+
+    frmConsole.ConnectIRC
+End Sub
+
+Public Sub OnLoginFailure()
+    Authorized = False
+    frmConsole.lblUsername.Caption = "Unable to log in."
+    frmConsole.Shape1.BackColor = iOrange: DoEvents
+    SayCOMM "Unable to log in. Please check your username and password."
+        
+    MsgBox "Your username and password was denied by the server." & vbCrLf & vbCrLf & "Username: " & myUsername & vbCrLf & "Password: [hidden]" & vbCrLf & vbCrLf & "If the information above is not correct, use the USERNAME command to change your username, or the PASSWORD command to change your password. Then type LOGIN again. Contact us if you continue to experience problems." & vbCrLf & vbCrLf & "https://darksignsonline.com", vbCritical, "Account Information"
+End Sub
+
+
 Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
     Dim s As String
     Dim sSource As String
@@ -283,97 +269,12 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
         Case "0001" 'it's the user list
             LoadUserList s, ConsoleID
         
-        Case "1001" 'login ok
-            userIP = s
-            referals(0) = s
-            referals(1) = s
-            referals(2) = s
-            referals(3) = s
-            
-            
-            Authorized = True
-            frmConsole.lblUsername.Caption = "You are online as " & myUsername & "."
-            frmConsole.Shape1.BackColor = iGreen: DoEvents
-            SayCOMM "You have been authorized as " & myUsername & "."
-            SayCOMM "Welcome to the Dark Signs Network!"
-            SayCOMM "Dark Signs Online - Version " & VersionStr()
-            If Command <> "" Then
-                Dim CLine As ConsoleLine
-                CLine = Console_Line_Defaults
-                CLine.Caption = Command
-                New_Console_Line ConsoleID
-            End If
-            
-            Dim EmptyParams(0 To 0) As String
-            Run_Script "/system/login-1.ds", 1, EmptyParams, "BOOT", "", True, False, False
-            Run_Script "/system/login-2.ds", 2, EmptyParams, "BOOT", "", True, False, False
-            Run_Script "/system/login-3.ds", 3, EmptyParams, "BOOT", "", True, False, False
-            Run_Script "/system/login-4.ds", 4, EmptyParams, "BOOT", "", True, False, False
-            
-            If frmConsole.getConnected Then
-                frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
-                frmConsole.lstUsers.Clear  'clear the list entries
-                frmConsole.display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
-                frmConsole.sockIRC.Close_   'close the connection
-            End If
-            
-            
-            frmConsole.ConnectIRC
-            'get stats
-            'RunPage "get_user_stats.php?returnwith=2000&fromlogin", ConsoleID
-            'get recent chat data
-            'RunPage "chat.php?get=1", ActiveConsole
-            'mark as online
-            'frmConsole.KeepOnline
-            
-            
-        Case "1002" 'bad username or password
-            
-            Authorized = False
-            frmConsole.lblUsername.Caption = "Unable to log in."
-            frmConsole.Shape1.BackColor = iOrange: DoEvents
-            SayCOMM "Unable to log in. Please check your username and password."
-                
-            MsgBox "Your username and password was denied by the server." & vbCrLf & vbCrLf & "Username: " & myUsername & vbCrLf & "Password: [hidden]" & vbCrLf & vbCrLf & "If the information above is not correct, use the USERNAME command to change your username, or the PASSWORD command to change your password. Then type LOGIN again. Contact us if you continue to experience problems." & vbCrLf & vbCrLf & "https://darksignsonline.com", vbCritical, "Account Information"
-                
-        
-        Case "1003" 'account disabled
-            
-            Authorized = False
-            frmConsole.lblUsername.Caption = "Access Denied."
-            frmConsole.Shape1.BackColor = iOrange: DoEvents
-            SayCOMM "Sorry, your account (" & myUsername & ") is disabled."
-            MsgBox "Sorry, your account (" & myUsername & ") is disabled." & vbCrLf & vbCrLf & "This probably means that your account has expired." & vbCrLf & vbCrLf & "Please visit the website to renew your account, or contact us if you believe this is an error." & vbCrLf & vbCrLf & "https://darksignsonline.com", vbCritical, "Account Information"
-        
-        
         '2000 is just a general show in the comm, all purpose
         Case "2000":
             SayCommMultiLines s, ConsoleID
-            
         Case "2001":
             SayRawMultiLines s, ConsoleID
-        
-        Case "2003":
-            If (s = "success") Then
-                SayCOMM "Upload Successful.", ConsoleID
-            Else
-                MsgBox s
-                SayCOMM "Upload Failed.", ConsoleID
-            End If
-            
-            
-        Case "2004": ' Domain querys.
-            SayRawMultiLines s, ConsoleID
-        
-        Case "3001": 'update chat
-            
-            
-'            Dim sMessages As String, sTimes As String
-'            sTimes = GetPart(s, 1, "*!*!*!*!*")
-'            sMessages = GetPart(s, 2, "*!*!*!*!*")
-'
-'            UpdateChat sTimes, sMessages
-            
+
         Case "4300" 'file library upload complete
             frmLibrary.lStatus.Caption = s
             frmLibrary.UploadBox.Visible = False
@@ -393,27 +294,6 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
                 frmLibrary.lStatus = "File downloaded ok: /downloads/" & sF1
             Else
                 frmLibrary.lStatus = "File download error! (8234)"
-            End If
-        
-        Case "4400" 'file to write from the DOWNLOAD function
-        
-        
-            If Mid(i(s), 1, 5) = "error" Then
-                SayCommMultiLines s, ConsoleID
-                Exit Sub
-            End If
-        
-            Dim ffname As String
-            If InStr(s, ":") > 0 Then
-                ffname = Trim(Mid(s, 1, InStr(s, ":") - 1))
-                While InStr(ffname, "//") > 0
-                    ffname = Replace(ffname, "//", "/")
-                Wend
-                s = Mid(s, InStr(s, ":") + 1, Len(s))
-                WriteFile ffname, s
-                SayCOMM "Download Complete: " & ffname
-            Else
-                SayCommMultiLines s, ConsoleID
             End If
         
         Case "4500"

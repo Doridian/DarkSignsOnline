@@ -1,7 +1,24 @@
 <?php
 
-function make_keycode($length = 16)
-{
+$ver = (int)$_SERVER['HTTP_DSO_PROTOCOL_VERSION'];
+if ($ver < 1) {
+	$ver = 1;
+}
+
+function print_returnwith($def = '2000', $max_version = 1) {
+	global $ver;
+	if ($ver > $max_version) {
+		return;
+	}
+
+	$returnwith = (string)(int)$_GET['returnwith'];
+	if (trim($returnwith) == '0') {
+		$returnwith = $def;
+	}
+	echo $returnwith;
+}
+
+function make_keycode($length = 16) {
 	$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 	$charactersLength = strlen($characters);
 	$keycode = '';
@@ -11,6 +28,14 @@ function make_keycode($length = 16)
 	return $keycode;
 }
 
+function die_error($str, $code = 400) {
+	global $ver;
+	if ($ver > 1) {
+		header("HTTP/1.0 $code");
+	}
+	die($str);
+}
+
 define('BANK_USER_ID', 42);
 
 require_once('config.php');
@@ -18,7 +43,7 @@ require_once('config.php');
 global $db;
 $db = new mysqli($DB_HOST, $DB_USERNAME, $DB_PASSWORD, $DB_DATABASE);
 if (!$db) {
-    die('9999');
+    die_error('Database error', 500);
 }
 
 if (empty($need_db_credentials)) {

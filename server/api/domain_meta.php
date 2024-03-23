@@ -1,7 +1,7 @@
 <?php
 
 $rewrite_done = true;
-require_once("function.php");
+require_once('function.php');
 
 $getip = $_REQUEST['getip'];
 if (!empty($getip)) {
