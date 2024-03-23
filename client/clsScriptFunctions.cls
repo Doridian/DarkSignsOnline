@@ -677,6 +677,9 @@ Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As 
     Yield
 End Sub
 
+Public Sub Clear()
+    ClearConsole PrivConsoleID
+End Sub
 
 Public Function ArgC() As Long
     Yield

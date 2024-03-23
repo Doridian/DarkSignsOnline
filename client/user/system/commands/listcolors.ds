@@ -1,0 +1,38 @@
+Option Explicit
+
+Sub ShowCol(ByVal Color)
+    Say Color & " (**" & Color & "**) {" & Color & " 8}"
+End Sub
+
+ShowCol "lred"
+ShowCol "red"
+ShowCol "dred"
+
+ShowCol "purple"
+ShowCol "pink"
+ShowCol "lorange"
+ShowCol "orange"
+
+ShowCol "lblue"
+ShowCol "blue"
+ShowCol "dblue"
+
+ShowCol "lgreen"
+ShowCol "green"
+ShowCol "dgreen"
+
+ShowCol "lbrown"
+ShowCol "brown"
+ShowCol "dbrown"
+ShowCol "maroon"
+
+ShowCol "white"
+ShowCol "lgrey"
+ShowCol "grey"
+ShowCol "dgrey"
+
+ShowCol "gold"
+
+ShowCol "lyellow"
+ShowCol "yellow"
+ShowCol "dyellow"

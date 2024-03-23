@@ -620,28 +620,16 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
     
 End Sub
 
-Public Sub SetYDiv(s As String)
-    s = Trim(Replace(s, "=", ""))
-    If s = "" Then Exit Sub
-    
-    Dim n As Integer
-    n = Val(s)
-    
+Public Sub SetYDiv(ByVal n As Integer)
     If n < 0 Then n = 0
     If n > 720 Then n = 720
     
     yDiv = n
 End Sub
 
-Public Sub MusicCommand(ByVal sX As String)
-    Dim s As String
-    If InStr(sX, " ") > 0 Then
-        s = Mid(sX, 1, InStr(sX, " "))
-    Else
-        s = sX
-    End If
+Public Sub MusicCommand(ByVal s As String)
     Select Case i(s)
-    
+
     Case "start": RegSave "music", "on"
     Case "on": RegSave "music", "on"
         
