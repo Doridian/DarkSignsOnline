@@ -86,11 +86,8 @@ Function GetFileClean(ByVal Filename As String) As String
     Dim Handle As Integer
 
     Filename = SafePath(Filename)
-    
-    ' ensure that the file exists
-    If Len(DIR$(Filename)) = 0 Then
-        Err.Raise 53   ' File not found
-    End If
+
+    GetAttr Filename
     
     ' open in binary mode
     Handle = FreeFile
@@ -179,7 +176,7 @@ End Function
 Public Function FileExists(s As String) As Boolean
     On Error GoTo zxc
     Dim n As Long
-    n = FileLen(s)
+    n = FileLen(SafePath(s))
     FileExists = True
     Exit Function
 zxc:
@@ -314,17 +311,20 @@ End Function
 
 
 Public Function DirExists(ByVal sDirName As String) As Boolean
-    Dim s As String
-    s = Trim(Replace(sDirName, "\", "/"))
+    sDirName = SafePath(sDirName)
+
+    Dim Attrs As Long
+    On Error GoTo NotADir
+    Attrs = GetAttr(sDirName)
+    On Error GoTo 0
     
-    If Right(s, 1) <> "/" Then s = s & "/"
-    
-    If WriteFile(s & "testbqva.txt", "data here") = True Then
-        Kill s & "testbqva.txt"
+    If (Attrs And vbDirectory) = vbDirectory Then
         DirExists = True
-    Else
-        DirExists = False
+        Exit Function
     End If
+
+NotADir:
+    DirExists = False
 End Function
 
 

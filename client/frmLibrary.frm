@@ -705,7 +705,7 @@ Sub UploadIt()
     Dim PostData As String
     Dim sShortFileName As String
     
-    sFile = SafePath(Trim(txtFile.Text))
+    sFile = Trim(txtFile.Text)
     sDescription = Trim(txtDescription.Text)
     sCategory = Trim(uplist.Text)
     sTitle = Trim(txtTitle)
@@ -733,7 +733,7 @@ Sub UploadIt()
     sShortFileName = Trim(ReverseString(sShortFileName))
     sShortFileName = GetShortName(sShortFileName)
 
-    sFileData = GetFile(sFile)
+    sFileData = GetFileClean(sFile)
     
     PostData = _
     "returnwith=4300" & _

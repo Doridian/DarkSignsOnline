@@ -88,7 +88,6 @@ Public Function Run_Script(Filename As String, ByVal ConsoleID As Integer, Scrip
     Dim ShortFileName As String
     'file name should be from local dir, i.e: /system/startup.ds
     ShortFileName = Filename
-    Filename = SafePath(Filename)
     'make sure it is not a directory
     If DirExists(Filename) = True Then
         If IsRoot Then
@@ -112,7 +111,7 @@ Public Function Run_Script(Filename As String, ByVal ConsoleID As Integer, Scrip
     Dim tmpAll As String
     tmpAll = ""
     FF = FreeFile
-    Open Filename For Input As #FF
+    Open SafePath(Filename) For Input As #FF
         Do Until EOF(FF)
             tmpS = ""
             Line Input #FF, tmpS

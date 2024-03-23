@@ -105,7 +105,7 @@ Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As Stri
     End If
 
     ResolveCommand = "/system/commands/" & Command & ".ds"
-    If Not FileExists(SafePath(ResolveCommand)) Then
+    If Not FileExists(ResolveCommand) Then
         ResolveCommand = ""
     End If
 End Function
@@ -1039,22 +1039,7 @@ Public Sub MusicCommand(ByVal sX As String)
         basMusic.PrevMusicIndex
         basMusic.PrevMusicIndex
         basMusic.StopMusic
-        
-    Case "set":
-        If frmConsole.FileMusic.ListCount < 1 Then Exit Sub
-        Dim tmpS As String, iTmp As Long
-        tmpS = i(frmConsole.FileMusic.Path & "/" & Mid(sX, 5))
-        If FileExists(tmpS) = True Then
-            For iTmp = 0 To (frmConsole.FileMusic.ListCount - 1)
-                If frmConsole.FileMusic.List(iTmp) = i(Mid(sX, 5)) Then
-                    MusicFileIndex = iTmp
-                    basMusic.PrevMusicIndex
-                    basMusic.StopMusic
-                End If
-            Next iTmp
-        End If
     End Select
-    
 End Sub
 
 
@@ -1139,14 +1124,11 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
     EditorFile_Short = GetShortName(s)
     EditorFile_Long = s
 
-    Dim sPath As String
-    sPath = SafePath(s)
-
-    If Not FileExists(sPath) Then
+    If Not FileExists(s) Then
         SayRaw ConsoleID, "{green}File Not Found, Creating: " & s
         Dim FF As Long
         FF = FreeFile
-        Open sPath For Output As #FF
+        Open SafePath(s) For Output As #FF
         Close #FF
     End If
 
