@@ -29,7 +29,7 @@ Private PrivIsRoot As Boolean
 Private PrivServerDomain As String
 Private PrivServerPort As Long
 
-Private PendingCustomDownloads() As Integer
+Private PendingCustomDownloads() As Long
 
 Public Property Get UserName() As String
     UserName = myUsername
@@ -114,7 +114,7 @@ End Sub
 
 Public Sub CleanupScriptTasks()
     If UBound(PendingCustomDownloads) > 0 Then
-        Dim X As Integer
+        Dim X As Long
         For X = 1 To UBound(PendingCustomDownloads)
             DownloadAborted(X) = True
         Next
@@ -198,18 +198,18 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     PrivServerPort = NewServerPort
 End Sub
 
-Private Sub AddCustomDownload(ByVal ResIndex As Integer)
+Private Sub AddCustomDownload(ByVal ResIndex As Long)
     ReDim Preserve PendingCustomDownloads(0 To UBound(PendingCustomDownloads) + 1)
     PendingCustomDownloads(UBound(PendingCustomDownloads)) = ResIndex
 End Sub
 
-Private Function HasPendingCustomDownload(ByVal ResIndex As Integer) As Boolean
+Private Function HasPendingCustomDownload(ByVal ResIndex As Long) As Boolean
     HasPendingCustomDownload = False
     If UBound(PendingCustomDownloads) < 1 Then
         Exit Function
     End If
 
-    Dim X As Integer
+    Dim X As Long
     
     For X = 1 To UBound(PendingCustomDownloads)
         If PendingCustomDownloads(X) = ResIndex Then
@@ -219,16 +219,16 @@ Private Function HasPendingCustomDownload(ByVal ResIndex As Integer) As Boolean
     Next
 End Function
 
-Private Sub RemoveCustomDownload(ByVal ResIndex As Integer)
+Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
     If UBound(PendingCustomDownloads) < 1 Then
         Exit Sub
     End If
 
-    Dim NewPendingCustomDownloads() As Integer
+    Dim NewPendingCustomDownloads() As Long
     ReDim NewPendingCustomDownloads(1 To UBound(PendingCustomDownloads))
     
-    Dim X As Integer
-    Dim Y As Integer
+    Dim X As Long
+    Dim Y As Long
     Y = 0
 
     Dim MadeChanges As Boolean
@@ -252,12 +252,12 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Integer)
     Next
 End Sub
 
-Private Function DoDownloadAPI(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String) As Integer
+Private Function DoDownloadAPI(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String) As Long
     DoDownloadAPI = DoDownload(API_Server & API_Path & Url, UsePost, PostData, False)
 End Function
 
-Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean) As Integer
-    Dim ResIndex As Integer
+Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean) As Long
+    Dim ResIndex As Long
     DoDownload = 0
     For ResIndex = 1 To 99
         If Not DownloadInUse(ResIndex) Then
@@ -300,7 +300,7 @@ Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
 End Function
 
 Public Sub SayCOMM(ParamArray Params() As Variant)
-    Dim X As Integer
+    Dim X As Long
     Dim sStr As String
     For X = LBound(Params) To UBound(Params)
         If sStr <> "" Then
@@ -391,7 +391,7 @@ Public Sub SayLine(ByVal s As String)
 End Sub
 
 Public Sub Say(ParamArray Params() As Variant)
-    Dim X As Integer
+    Dim X As Long
     Dim sStr As String
     For X = LBound(Params) To UBound(Params)
         If sStr <> "" Then
@@ -433,7 +433,7 @@ Public Sub RUN(ParamArray XArr() As Variant)
 
     Dim Script As String
     Script = XArr(0)
-    Dim X As Integer
+    Dim X As Long
     Dim SParamArr() As Variant
     ReDim SParamArr(0 To UBound(XArr))
     For X = 0 To UBound(XArr)
@@ -448,7 +448,7 @@ End Sub
 Public Function CallScript(ParamArray XArr() As Variant) As String
     AssertLocalOnly
 
-    Dim X As Integer
+    Dim X As Long
     Dim Script As String
     Script = XArr(0)
 
@@ -496,7 +496,7 @@ Public Function ConnectEX(ByVal Foreground As Boolean, ByVal Domain As String, B
         ReDim DomainConnectParams(0 To 0)
     End If
 
-    Dim DomainRequestIdx As Integer
+    Dim DomainRequestIdx As Long
     DomainRequestIdx = DoDownloadAPI("domain_connect.php?d=" & EncodeURLParameter(Domain) & _
             "&port=" & EncodeURLParameter(Port), True, "")
     Dim DomainRequest As clsHttpResponse
@@ -577,7 +577,7 @@ Public Sub LOGIN()
 
     SayCOMM "Logging in..."
 
-    Dim ResIndex As Integer
+    Dim ResIndex As Long
     ResIndex = DoDownloadAPI("auth.php", True, "")
     Dim ResObj As clsHttpResponse
     Set ResObj = WAITFOR(ResIndex)
@@ -630,7 +630,7 @@ Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As 
     "&d=" & EncodeURLParameter(Domain) & _
     "&filedata=" & EncodeURLParameter(tempStrA)
 
-    Dim DomainRequestIdx As Integer
+    Dim DomainRequestIdx As Long
     DomainRequestIdx = DoDownloadAPI("domain_upload.php", True, PostData)
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
@@ -640,7 +640,7 @@ Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As 
 End Sub
 
 
-Public Function ArgC() As Integer
+Public Function ArgC() As Long
     Yield
     ArgC = UBound(PrivParameters)
 End Function

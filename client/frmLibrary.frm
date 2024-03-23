@@ -844,7 +844,7 @@ Public Sub AddListItems(ByVal s As String)
     
     LV.ListItems.Clear
     
-    Dim n As Integer
+    Dim n As Long
     For n = UBound(AllResults) To 0 Step -1
     If Len(AllResults(n)) > 5 Then
         
@@ -903,7 +903,7 @@ Private Sub Form_Load()
     
     LoadScriptsToRemove
 
-    Dim n As Integer
+    Dim n As Long
     For n = 1 To 999
         List3.AddItem "Channel " & Format(n, "000")
     
@@ -915,7 +915,7 @@ Sub LoadCategoryList()
 
     On Error GoTo zxc
 
-    Dim n As Integer
+    Dim n As Long
     
     List1.Clear
     For n = 1 To UBound(ScriptCategories)
@@ -1014,7 +1014,7 @@ Public Sub AddtoRemoveList(ByVal s As String)
     Dim sA() As String
     sA = Split(s, ":--:")
     
-    Dim n As Integer
+    Dim n As Long
     For n = UBound(sA) To 0 Step -1
     
         If Trim(sA(n)) <> "" Then
@@ -1063,7 +1063,7 @@ End Sub
 
 Private Sub LV_ColumnClick(ByVal ColumnHeader As MSComctlLib.ColumnHeader)
     With LV '// change to the name of the list view
-        Static iLast As Integer, iCur As Integer
+        Static iLast As Long, iCur As Long
         .Sorted = True
         iCur = ColumnHeader.Index - 1
         If iCur = iLast Then .SortOrder = IIf(.SortOrder = 1, 0, 1)

@@ -125,7 +125,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     End If
     Dim tmpS As String
     tmpS = CLine.Caption
-    Dim promptEndIdx As Integer
+    Dim promptEndIdx As Long
     promptEndIdx = InStr(tmpS, ">")
     If promptEndIdx > 0 Then
         tmpS = Mid(tmpS, promptEndIdx + 1)

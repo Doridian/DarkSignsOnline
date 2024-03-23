@@ -18,12 +18,12 @@ Public Method As String
 Public UserName As String
 Public Password As String
 Public ConsoleID As Integer
-Public IsCustomDownload As Integer
+Public IsCustomDownload As Long
 Public PostData As String
 
 Private Done As Boolean
 Private DoneForever As Boolean
-Private Retries As Integer
+Private Retries As Long
 Private WithEvents HttpRequest As cHttpRequest
 Attribute HttpRequest.VB_VarHelpID = -1
 Private ResponseSent As Boolean

@@ -79,7 +79,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Function keyExists(k As String) As Boolean
-    Dim n As Integer
+    Dim n As Long
     For n = 0 To inbox.ListItems.Count Step 1
         If n > 0 Then
             If inbox.ListItems(n).key = k Then
@@ -105,7 +105,7 @@ Public Sub reloadInbox()
     
     
     'MsgBox UBound(AllResults)
-    Dim n As Integer
+    Dim n As Long
     Dim key As String
     
     For n = 0 To UBound(AllResults) Step 1
@@ -202,7 +202,7 @@ End Sub
 
 Private Sub Form_Load()
     
-    Dim inboxWidth As Integer
+    Dim inboxWidth As Long
     inboxWidth = (Me.Width - 1650) / 100
     
     inbox.ColumnHeaders.Add 1, "kFrom", "From", inboxWidth * 30
@@ -235,7 +235,7 @@ Private Sub inbox_DblClick()
     AllResults = Split(tmpFile, vbNewLine)
     
     Dim SubResults() As String
-    Dim n As Integer
+    Dim n As Long
     Dim key As String
     key = inbox.ListItems(inbox.SelectedItem.Index).key
     
@@ -284,7 +284,7 @@ End Sub
 
 Private Sub inbox_ColumnClick(ByVal ColumnHeader As MSComctlLib.ColumnHeader)
     With inbox '// change to the name of the list view
-        Static iLast As Integer, iCur As Integer
+        Static iLast As Long, iCur As Long
         .Sorted = True
         iCur = ColumnHeader.Index - 1
         If iCur = iLast Then .SortOrder = IIf(.SortOrder = 1, 0, 1)

@@ -20,7 +20,7 @@ Dim Playing As Boolean
 Dim lastHWND As Long
 Dim procOld As Long
 
-Public MusicFileIndex As Integer
+Public MusicFileIndex As Long
 
 
 Sub RegisterWindow(hWnd As Long)

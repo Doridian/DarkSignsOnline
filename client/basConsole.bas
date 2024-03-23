@@ -962,11 +962,13 @@ Public Function propertySpace_Color(ByVal s As String) As Long
         sTmp = Mid(s, InStr(s, "rgb:"), Len(s))
         sTmp = Replace(sTmp, ":", " :") & " "
         
-        R = Trim(GetPart(sTmp, 2, ":"))
-        G = Trim(GetPart(sTmp, 3, ":"))
-        b = Replace(Trim(GetPart(sTmp, 4, " ")), ":", "")
-
+        Dim sSplit() As String
+        sSplit = Split(sTmp, ":")
         
+        R = Trim(sSplit(1))
+        G = Trim(sSplit(2))
+        b = Trim(sSplit(3))
+
         If IsNumeric(R) And IsNumeric(G) And IsNumeric(b) Then
             R = CInt(R)
             G = CInt(G)

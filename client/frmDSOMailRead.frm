@@ -78,7 +78,7 @@ Private Sub btnReply_Click()
    Dim AllResults() As String
    AllResults = Split(Me.msgBody, vbNewLine)
    
-   Dim n As Integer
+   Dim n As Long
    For n = 0 To UBound(AllResults) Step 1
         frmDSOMailSend.msgBody = frmDSOMailSend.msgBody & vbNewLine & "#" & AllResults(n)
    Next n

@@ -1682,7 +1682,7 @@ Sub PrintAll()
     tmpY = IRC.Height - 240
     
     Dim maxChatTextSize As Long
-    Dim n As Long, n2 As Integer, tmpS As String, s As String
+    Dim n As Long, n2 As Long, tmpS As String, s As String
     
     maxChatTextSize = IRC.Width - 840
     

@@ -7,8 +7,8 @@ Public DownloadDone(1 To 99) As Boolean
 Public DownloadResults(1 To 99) As String
 Public DownloadCodes(1 To 99) As Integer
 
-Public GetKeyWaiting(1 To 4) As Integer
-Public GetAsciiWaiting(1 To 4) As Integer
+Public GetKeyWaiting(1 To 4) As Long
+Public GetAsciiWaiting(1 To 4) As Long
 Public WaitingForInput(1 To 4) As Boolean
 Public WaitingForInputReturn(1 To 4) As String
 

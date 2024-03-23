@@ -27,7 +27,7 @@ Private Type ProcessQueueEntry
     Data As String
     DataSource As String
     ConsoleID As Integer
-    IsCustomDownload As Integer
+    IsCustomDownload As Long
     Code As Integer
 End Type
 
@@ -40,8 +40,8 @@ End Sub
 
 
 Public Sub CleanHttpRequests()
-    Dim X As Integer
-    Dim Y As Integer
+    Dim X As Long
+    Dim Y As Long
     Dim MadeChanges As Boolean
     Dim NewHttpRequests() As clsHttpRequestor
 
@@ -72,7 +72,7 @@ Public Sub CleanHttpRequests()
 End Sub
 
 
-Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Integer, Optional NoAuth As Boolean)
+Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Long, Optional NoAuth As Boolean)
     If Not NoAuth And InStr(i(sUrl), "auth.php") = 0 And Not Authorized Then
         SayRaw ConsoleID, "You must be logged in to do that!{36 center orange impact nobold}"
         SayRaw ConsoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}"
@@ -140,13 +140,12 @@ Public Sub SayCOMM(s As String, Optional ByVal ConsoleID As Integer)
     
     End If
     
-    Dim tmpY As Integer
+    Dim tmpY As Long
     frmConsole.Comm.Cls
     tmpY = frmConsole.Comm.Height - 240
     
     
     For n = 1 To UBound(Comms)
-        
         tmpY = tmpY - 210
         
         frmConsole.lComm(n).Top = tmpY
@@ -154,10 +153,7 @@ Public Sub SayCOMM(s As String, Optional ByVal ConsoleID As Integer)
         
         frmConsole.lComm(1).Caption = Comms(1)
         frmConsole.lCommTime(1).Caption = Format(Time, "h:mm AMPM")
-        
-        
-        
-           
+
         If tmpY < 0 Then
             frmConsole.lCommTime(n).Visible = False
             frmConsole.lComm(n).Visible = False
@@ -172,7 +168,7 @@ AllDone:
     frmConsole.CommLowerBorder.Move 0, frmConsole.Comm.Height - frmConsole.CommLowerBorder.Height, frmConsole.Comm.Width
 End Sub
 
-Public Sub Process(ByVal s As String, ByVal Code As Integer, sSource As String, ByVal ConsoleID As Integer, ByVal IsCustomDownload As Integer)
+Public Sub Process(ByVal s As String, ByVal Code As Integer, sSource As String, ByVal ConsoleID As Integer, ByVal IsCustomDownload As Long)
     Dim NewEntry As ProcessQueueEntry
     NewEntry.Data = s
     NewEntry.Code = Code
@@ -233,7 +229,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
     Dim s As String
     Dim sSource As String
     Dim ConsoleID As Integer
-    Dim IsCustomDownload As Integer
+    Dim IsCustomDownload As Long
     Dim Code As Integer
 
     s = ProcessQueue(Index).Data
@@ -300,13 +296,13 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
             frmDSOMail.EnableAll
             Dim emails() As String
             emails = Split(s, vbNewLine)
-            Dim numEmails As Integer
+            Dim numEmails As Long
             numEmails = UBound(emails)
             
             If numEmails < 0 Then
                 numEmails = 0
             Else
-                Dim n As Integer
+                Dim n As Long
                 For n = 0 To UBound(emails) - 1 Step 1
                     emails(n) = "1" & Chr(7) & Trim(emails(n))
                 Next n
@@ -348,7 +344,7 @@ Public Sub SayCommMultiLines(ByVal s As String, ConsoleID As Integer)
     Dim sA() As String
     sA = Split(s, vbCrLf)
 
-    Dim n As Integer
+    Dim n As Long
     For n = 0 To UBound(sA)
         SayCOMM sA(n), ConsoleID
     Next n
@@ -359,7 +355,7 @@ Public Sub SayRawMultiLines(ByVal s As String, ConsoleID As Integer)
     Dim sA() As String
     sA = Split(s, vbCrLf)
 
-    Dim n As Integer
+    Dim n As Long
     For n = 0 To UBound(sA)
         SayRaw ConsoleID, sA(n)
     Next n
@@ -380,8 +376,13 @@ Public Sub LoadUserList(ByVal s As String, ByVal ConsoleID As Integer)
     
     Dim tmpS As String, n As Integer
     
-    For n = 1 To 200
-        tmpS = Trim(GetPart(s, n, ":"))
+    Dim sSplit() As String
+    sSplit = Split(s, ":")
+    For n = 0 To 199
+        If n > UBound(sSplit) Then
+            Exit For
+        End If
+        tmpS = Trim(sSplit(n))
         If Len(tmpS) > 2 Then
             frmConsole.ListOfUsers.AddItem tmpS
         End If
@@ -394,41 +395,28 @@ Public Sub LoadUserList(ByVal s As String, ByVal ConsoleID As Integer)
     
     For n = 0 To frmConsole.ListOfUsers.ListCount - 1
         tmpS = frmConsole.ListOfUsers.List(n)
-    
         If Trim(UsersOnline) <> "" Then
-        If InStr(i(UsersOnline), ":" & i(tmpS)) = 0 Then
-            '----------------------------------------
-            'this user just signed in!
-            '----------------------------------------
-            If i(tmpS) <> "admin" Then
+            If InStr(i(UsersOnline), ":" & i(tmpS)) = 0 Then
                 SayCOMM "User " & Trim(tmpS) & " has signed in.", ConsoleID
             End If
         End If
-        End If
-    
-
     Next n
 
     
-    For n = 1 To 200
-        tmpS = Trim(GetPart(UsersOnline, n, ":"))
+    sSplit = Split(UsersOnline, ":")
+    For n = 0 To 199
+        If n > UBound(sSplit) Then
+            Exit For
+        End If
+        tmpS = Trim(sSplit(n))
         If Len(tmpS) > 2 Then
             If InStr(i(s), ":" & i(tmpS) & ":") = 0 Then
-                '----------------------------------------
-                'this user has been signed out!
-                '----------------------------------------
-                If i(tmpS) <> "admin" Then
-                    SayCOMM "User " & Trim(tmpS) & " has signed out.", ConsoleID
-                End If
+                SayCOMM "User " & Trim(tmpS) & " has signed out.", ConsoleID
             End If
         End If
     Next n
-    
-    
-    
+
     UsersOnline = s
-    
-    
 End Sub
 
 

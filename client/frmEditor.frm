@@ -462,12 +462,12 @@ End Sub
 Sub FormatText()
     On Error Resume Next
     
-    Dim s As String, AselStart As Integer
+    Dim s As String, AselStart As Long
     
     AselStart = RT.SelStart
     s = vbCrLf & RT.Text
     
-    Dim n As Integer, tmpCommandl As String, tmpCommandu As String, tmpCommandl2 As String, tmpCommandl3 As String
+    Dim n As Long, tmpCommandl As String, tmpCommandu As String, tmpCommandl2 As String, tmpCommandl3 As String
     For n = 0 To List1.ListCount - 1
         tmpCommandl = i(Mid(List1.List(n), 1, InStr(List1.List(n), " ")))
         tmpCommandu = Trim(UCase(Mid(List1.List(n), 1, InStr(List1.List(n), " "))))
@@ -541,7 +541,7 @@ End Sub
 Sub CheckLastTyped()
     On Error GoTo zxc
 
-    Dim n As Integer
+    Dim n As Long
     Dim tmpCommand As String
     
     For n = 0 To List1.ListCount

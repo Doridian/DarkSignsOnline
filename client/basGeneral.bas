@@ -55,24 +55,22 @@ Public Function VersionStr() As String
 End Function
 
 Public Function GetFileUnsafe(ByVal Filename As String) As String
-    Dim Handle As Integer
     GetAttr Filename
-    ' open in binary mode
+
+    Dim Handle As Long
     Handle = FreeFile
     Open Filename$ For Binary As #Handle
-    ' read the string and close the file
     GetFileUnsafe = Space$(LOF(Handle))
     Get #Handle, , GetFileUnsafe
     Close #Handle
 End Function
 
 Public Function WriteFileUnsafe(ByVal Filename As String, ByVal Contents As String)
-    Dim Handle As Integer
-
     On Error Resume Next
     Kill Filename$
     On Error GoTo 0
 
+    Dim Handle As Long
     Handle = FreeFile
     Open Filename$ For Binary As #Handle
     Put #Handle, , Contents
@@ -102,7 +100,7 @@ Public Function GetFunctionPart(ByVal tmpS As String) As String
     GetFunctionPart = tmpS
 End Function
 
-Public Function CountCharInString(s As String, ByVal sToCount As String) As Integer
+Public Function CountCharInString(s As String, ByVal sToCount As String) As Long
     sToCount = Trim(LCase(sToCount))
     CountCharInString = 0
     Dim n As Long
@@ -112,47 +110,6 @@ Public Function CountCharInString(s As String, ByVal sToCount As String) As Inte
         End If
     Next n
 End Function
-
-
-Public Function FlipCommas(ByVal s As String, ChangeSpacesToChars As Boolean)
-    Dim n As Integer, isIn As Boolean
-    isIn = False
-    
-    's = Replace(s, Chr(34) & " ,", Chr(34) & ", ")
-    's = Replace(s, Chr(34) & ",", Chr(34) & ", ")
-    
-    
-    If ChangeSpacesToChars = False Then
-        FlipCommas = Trim(Replace(s, "-(c)-", ","))
-            
-            If Mid(FlipCommas, 1, 1) = Chr(34) Then
-                FlipCommas = Mid(FlipCommas, 2, Len(FlipCommas)) & "mgkg"
-                
-                FlipCommas = Trim(Replace(FlipCommas, Chr(34) & " ," & "mgkg", ""))
-                FlipCommas = Trim(Replace(FlipCommas, Chr(34) & "," & "mgkg", ""))
-                FlipCommas = Trim(Replace(FlipCommas, "mgkg", ""))
-
-            End If
-            
-        Exit Function
-    End If
-    
-    For n = 1 To Len(s)
-        If Mid(s, n, 1) = Chr(34) Then
-            isIn = Not (isIn)
-        End If
-        
-        If isIn = True Then
-            If ChangeSpacesToChars = True Then
-                FlipCommas = FlipCommas & Replace(Mid(s, n, 1), ",", "-(c)-")
-            End If
-        Else
-            FlipCommas = FlipCommas & Mid(s, n, 1)
-        End If
-    Next n
-
-End Function
-
 
 Public Function i(ByVal s As String) As String
     i = Trim(LCase(s))
@@ -237,14 +194,6 @@ Public Function FormatKB(ByVal Amount As Long) _
         FormatKB = Left$(Result, InStr(Result, _
             vbNullChar) - 1)
     End If
-End Function
-
-'this is like split but often easier
-Public Function GetPart(ByVal s As String, ByVal part As Integer, ByVal theDivider As String) As String
-    Dim sArray() As String
-    part = part - 1
-    sArray = Split(s, theDivider)
-    GetPart = sArray(part)
 End Function
 
 Public Function KillBadDirChars(s As String) As String
