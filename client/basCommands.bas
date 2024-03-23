@@ -24,17 +24,33 @@ Public Sub InitBasCommands()
     Next
 End Sub
 
-Public Function SafePath(Path As String) As String
+Public Function SafePath(ByVal Path As String) As String
     Path = Replace(Path, "\", "/")
     If Path = ".." Or Left(Path, 3) = "../" Or Right(Path, 3) = "/.." Or InStr(Path, "/../") > 0 Then
         SafePath = App.Path & "/user/f/a/i/l/s/a/f/e.txt"
         Err.Raise vbObjectError + 9666, "DSO", "Invalid character in path"
         Exit Function
     End If
+
     SafePath = App.Path & "/user/" & Path
+    While InStr(SafePath, "//") > 0
+        SafePath = Replace(SafePath, "//", "/")
+    Wend
+    If Right(SafePath, 1) = "/" Then
+        SafePath = Mid(SafePath, 1, Len(SafePath) - 1)
+    End If
 End Function
 
-Public Function ResolvePath(ConsoleID As Integer, Path As String) As String
+Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As String
+    If Path = "" Then
+        If ConsoleID = 0 Then
+            ResolvePath = ""
+            Exit Function
+        End If
+        ResolvePath = cPath(ConsoleID)
+        Exit Function
+    End If
+
     If Left(Path, 1) = "/" Or Left(Path, 1) = "\" Or ConsoleID = 0 Then
         ResolvePath = Path
     Else
@@ -45,7 +61,7 @@ Public Function ResolvePath(ConsoleID As Integer, Path As String) As String
     While InStr(ResolvePath, "//") > 0
         ResolvePath = Replace(ResolvePath, "//", "/")
     Wend
-    
+
     If Left(ResolvePath, 1) = "/" Then
         ResolvePath = Mid(ResolvePath, 2)
     End If
@@ -82,20 +98,20 @@ Public Function ResolvePath(ConsoleID As Integer, Path As String) As String
     ResolvePath = Join(ResolvePathSplitCut, "/")
 End Function
 
-Public Function ResolveCommand(ConsoleID As Integer, Command As String) As String
+Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As String) As String
     If InStr(Command, "/") > 0 Or InStr(Command, "\") > 0 Then
         ResolveCommand = ResolvePath(ConsoleID, Command)
         Exit Function
     End If
 
-    ResolveCommand = "system/commands/" & Command & ".ds"
+    ResolveCommand = "/system/commands/" & Command & ".ds"
     If Not FileExists(SafePath(ResolveCommand)) Then
         ResolveCommand = ""
     End If
 End Function
 
 
-Public Function VBEscapeSimple(Str As String) As String
+Public Function VBEscapeSimple(ByVal Str As String) As String
     VBEscapeSimple = Replace(Str, """", """""")
 End Function
 
@@ -378,7 +394,7 @@ CommandForNext:
     End If
 
     If ResolvedCommand <> "" Then
-        ParseCommandLineInt = "RUN(""" & ResolvedCommand & """"
+        ParseCommandLineInt = "Call RUN(""" & ResolvedCommand & """"
         CommandNeedFirstComma = True
     Else
         ' Try running procedure with given name
@@ -1128,6 +1144,10 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
 
     If Not FileExists(sPath) Then
         SayRaw ConsoleID, "{green}File Not Found, Creating: " & s
+        Dim FF As Long
+        FF = FreeFile
+        Open sPath For Output As #FF
+        Close #FF
     End If
 
     frmEditor.Show vbModal

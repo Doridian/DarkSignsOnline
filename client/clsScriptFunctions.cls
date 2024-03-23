@@ -29,17 +29,17 @@ Private PrivIsRoot As Boolean
 
 Private PendingCustomDownloads() As Integer
 
-Public Property Get UserName() As String
+Public Property Get UserName() As Variant
     UserName = myUsername
 End Property
 
-Public Property Let UserName(ByVal NewValue As String)
+Public Property Let UserName(ByVal NewValue As Variant)
     AssertCLIOnly
 
     SetUsername NewValue, ConsoleID
 End Property
 
-Public Property Get Password() As String
+Public Property Get Password() As Variant
     If myPassword = "" Then
         Password = ""
     Else
@@ -47,22 +47,22 @@ Public Property Get Password() As String
     End If
 End Property
 
-Public Property Let Password(ByVal NewValue As String)
+Public Property Let Password(ByVal NewValue As Variant)
     AssertCLIOnly
 
     SetPassword NewValue, ConsoleID
 End Property
 
-Public Property Get Dir() As String
+Public Property Get CWD() As Variant
     AssertLocalOnly
 
-    Dir = cPath(PrivConsoleID)
+    CWD = cPath(PrivConsoleID)
 End Property
 
-Public Property Let Dir(ByVal NewValue As String)
+Public Property Let CWD(ByVal NewValue As Variant)
     AssertLocalOnly
 
-    cPath(PrivConsoleID) = ResolvePath(Dir)
+    cPath(PrivConsoleID) = ResolvePath(CWD)
 End Property
 
 Public Property Get ConsoleID() As String
@@ -122,7 +122,7 @@ Public Function ScriptGetOutput() As String
     ScriptGetOutput = PrivOutput
 End Function
 
-Public Function ReadLine(Prompt As String) As String
+Public Function ReadLine(Prompt As Variant) As String
     If PrivDisableOutput Then
         Yield
         Exit Function
@@ -288,14 +288,65 @@ Public Sub SayCOMM(ParamArray params() As Variant)
     Yield
 End Sub
 
-Public Sub CD(Dir As String)
+Public Sub CD(DIR As Variant)
     AssertLocalOnly
 
-    cPath(PrivConsoleID) = ResolvePath(Dir)
+    cPath(PrivConsoleID) = ResolvePath(DIR)
     Yield
 End Sub
 
-Public Sub EDIT(file As String)
+Public Function ReadDir(RawPath As Variant) As Variant()
+    AssertLocalOnly
+    
+    Dim Res() As Variant
+
+    Dim Attr As Long
+    Dim Filename As String
+    Dim IsFirst As Boolean
+    IsFirst = True
+
+    Dim Path As String
+    Path = ResolvePath(RawPath)
+    Path = SafePath(Path)
+    
+    Attr = GetAttr(Path)
+    If (Attr And vbDirectory) <> vbDirectory Then
+        Err.Raise 9301, "DSO", "Can only list directories"
+        Exit Function
+    End If
+    
+    Path = Path & "/"
+    
+    Filename = FileSystem.DIR(Path, vbNormal + vbDirectory)
+    While Filename <> ""
+        If IsFirst Then
+            ReDim Res(0 To 0)
+            IsFirst = False
+        Else
+            ReDim Preserve Res(0 To UBound(Res) + 1)
+        End If
+
+        Attr = GetAttr(Path & Filename)
+        If (Attr And vbDirectory) = vbDirectory Then
+            Filename = Filename & "/"
+        End If
+        
+        Res(UBound(Res)) = Filename
+        Filename = FileSystem.DIR()
+    Wend
+
+    If IsFirst Then
+        ReDim Res(-1 To -1)
+        ReadDir = Res
+        Yield
+        Exit Function
+    End If
+
+    ReadDir = Res
+    Yield
+End Function
+
+Public Sub EDIT(file As Variant)
     AssertCLIOnly
 
     Yield
@@ -324,7 +375,7 @@ Public Sub SAY(ParamArray params() As Variant)
     Yield
 End Sub
 
-Public Sub SayLine(s As String)
+Public Sub SayLine(s As Variant)
     If PrivRedirectOutput Then
         PrivOutput = PrivOutput & vbCr & s & vbCrLf
         Yield
@@ -333,7 +384,7 @@ Public Sub SayLine(s As String)
         Yield
         Exit Sub
     End If
-    basConsole.SayRaw PrivConsoleID, s, False
+    basConsole.SayRaw PrivConsoleID, "" & s, False
 End Sub
 
 Public Sub SayAll(ParamArray params() As Variant)
@@ -354,7 +405,7 @@ Public Sub SayAll(ParamArray params() As Variant)
     Next
 End Sub
 
-Public Sub CLIParse(Src As String, Dest As String)
+Public Sub CLIParse(Src As Variant, Dest As Variant)
     AssertLocalOnly
 
     Dim SrcStr As String
@@ -376,11 +427,11 @@ Public Sub CLIParse(Src As String, Dest As String)
     Close #FF
 End Sub
 
-Public Function ResolveCommand(Command As String) As String
+Public Function ResolveCommand(ByVal Command As Variant) As String
     ResolveCommand = basCommands.ResolveCommand(PrivConsoleID, Command)
 End Function
 
-Public Function ResolvePath(Path As String) As String
+Public Function ResolvePath(ByVal Path As Variant) As String
     ResolvePath = basCommands.ResolvePath(PrivConsoleID, Path)
 End Function
 
@@ -420,11 +471,11 @@ Public Function CallScript(ParamArray XArr() As Variant) As String
     Yield
 End Function
 
-Public Function DOWNLOAD(Url As String) As Integer
-     DOWNLOAD = DoDownload(Url, True, "", True)
+Public Function DOWNLOAD(Url As Variant) As Integer
+     DOWNLOAD = DoDownload("" & Url, True, "", True)
 End Function
 
-Public Function DRAW(YPos As Variant, R As Variant, G As Variant, b As Variant, Mode As String)
+Public Function DRAW(YPos As Variant, R As Variant, G As Variant, b As Variant, Mode As Variant)
     If PrivDisableOutput Then
         Yield
         Exit Function
@@ -525,13 +576,13 @@ Public Sub LOGOUT()
     Yield
 End Sub
 
-Public Sub UPLOAD(Domain As String, Port As Variant, filename As String)
+Public Sub UPLOAD(Domain As Variant, Port As Variant, Filename As Variant)
     AssertCLIOnly
     
     Yield
 
     Dim sFileData As String
-    sFileData = GetFileClean(ResolvePath(filename))
+    sFileData = GetFileClean(ResolvePath(Filename))
 
     Dim tempStrA As String
 

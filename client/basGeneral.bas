@@ -55,8 +55,6 @@ Public Function VersionStr() As String
 End Function
 
 Public Function GetFile(ByVal fn As String) As String
-    On Error GoTo zxc
-    
     Dim aFF As Long, tmpS As String, fullS As String
     aFF = FreeFile
     Open fn For Input As #aFF
@@ -67,26 +65,36 @@ Public Function GetFile(ByVal fn As String) As String
     Close #aFF
 
     GetFile = fullS
-
-zxc:
-    Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
-    Close #aFF
 End Function
 
-
-Function GetFileClean(ByVal filename As String) As String
+Function WriteFileClean(ByVal Filename As String, ByVal Contents As String)
     Dim Handle As Integer
 
-    filename = SafePath(filename)
+    Filename = SafePath(Filename)
+
+    On Error Resume Next
+    Kill Filename$
+    On Error GoTo 0
+
+    Handle = FreeFile
+    Open Filename$ For Binary As #Handle
+    Put #Handle, , Contents
+    Close #Handle
+End Function
+
+Function GetFileClean(ByVal Filename As String) As String
+    Dim Handle As Integer
+
+    Filename = SafePath(Filename)
     
     ' ensure that the file exists
-    If Len(Dir$(filename)) = 0 Then
+    If Len(DIR$(Filename)) = 0 Then
         Err.Raise 53   ' File not found
     End If
     
     ' open in binary mode
     Handle = FreeFile
-    Open filename$ For Binary As #Handle
+    Open Filename$ For Binary As #Handle
     ' read the string and close the file
     GetFileClean = Space$(LOF(Handle))
     Get #Handle, , GetFileClean
@@ -198,13 +206,16 @@ Public Function WriteFile(fn As String, s As String) As Boolean
     On Error GoTo zxc
     Dim FF As Long
     FF = FreeFile
+    On Error Resume Next
+    Kill fn
+    On Error GoTo zxc
     Open fn For Output As #FF
         Print #FF, s
-        
     Close #FF
     WriteFile = True
     Exit Function
 zxc:
+    SayCOMM "Error writing file: " & fn
     Close #FF
     WriteFile = False
 End Function

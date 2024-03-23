@@ -78,19 +78,19 @@ ScriptEnd:
     cPath(ConsoleID) = OldPath
 End Function
 
-Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
+Public Function Run_Script(Filename As String, ByVal ConsoleID As Integer, ScriptParameters() As String, ScriptFrom As String, FileKey As String, IsRoot As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
     If ScriptParameters(0) = "" Then
-        ScriptParameters(0) = filename
+        ScriptParameters(0) = Filename
     End If
     
     DoEvents
 
     Dim ShortFileName As String
     'file name should be from local dir, i.e: /system/startup.ds
-    ShortFileName = filename
-    filename = SafePath(filename)
+    ShortFileName = Filename
+    Filename = SafePath(Filename)
     'make sure it is not a directory
-    If DirExists(filename) = True Then
+    If DirExists(Filename) = True Then
         If IsRoot Then
             SayRaw ConsoleID, "Cannot run directory as script: " & ShortFileName & " {red}"
             Exit Function
@@ -98,7 +98,7 @@ Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, Scrip
         Err.Raise vbObjectError + 9666, "DSO", "Cannot run directory as script: " & ShortFileName
         Exit Function
     End If
-    If FileExists(filename) = False Then
+    If FileExists(Filename) = False Then
         If IsRoot Then
             SayRaw ConsoleID, "Script does not exist: " & ShortFileName & " {red}"
             Exit Function
@@ -112,7 +112,7 @@ Public Function Run_Script(filename As String, ByVal ConsoleID As Integer, Scrip
     Dim tmpAll As String
     tmpAll = ""
     FF = FreeFile
-    Open filename For Input As #FF
+    Open Filename For Input As #FF
         Do Until EOF(FF)
             tmpS = ""
             Line Input #FF, tmpS

@@ -445,8 +445,8 @@ Private Sub Form_Load()
     DontAutoSave = True
   
     Me.Caption = "Editing " & EditorFile_Long
-    RT.Text = GetFile(SafePath(EditorFile_Long))
-    
+    RT.Text = GetFileClean(EditorFile_Long)
+
     lTitle.Caption = EditorFile_Long
     
     DoEvents
@@ -456,9 +456,7 @@ End Sub
 
 Sub AutoSave()
     If DontAutoSave = True Then Exit Sub
-    
-    WriteFile SafePath(EditorFile_Long), RT.Text
-    
+    WriteFileClean EditorFile_Long, RT.Text
 End Sub
 
 Sub FormatText()
