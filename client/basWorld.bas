@@ -268,12 +268,6 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
         
         Case "0001" 'it's the user list
             LoadUserList s, ConsoleID
-        
-        '2000 is just a general show in the comm, all purpose
-        Case "2000":
-            SayCommMultiLines s, ConsoleID
-        Case "2001":
-            SayRawMultiLines s, ConsoleID
 
         Case "4300" 'file library upload complete
             frmLibrary.lStatus.Caption = s

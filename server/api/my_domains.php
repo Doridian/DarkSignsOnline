@@ -3,7 +3,7 @@
 $rewrite_done = true;
 require_once('function.php');
 
-echo '2001';
+print_returnwith('2001');
 
 $type = $_GET['type'];
 if ($type == 'domain')

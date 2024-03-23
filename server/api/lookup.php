@@ -3,11 +3,7 @@
 $rewrite_done = true;
 require_once('function.php');
 
-$returnwith = (string)(int)$_GET['returnwith'];
-if ($returnwith === '0') {
-	$returnwith = '2000';
-}
-echo $returnwith;
+print_returnwith();
 
 $d = trim($_REQUEST['d']);
 $dInfo = getDomainInfo($d);
