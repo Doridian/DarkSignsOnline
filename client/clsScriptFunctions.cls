@@ -434,7 +434,6 @@ Public Function CallScript(ParamArray XArr() As Variant) As String
     Next
 
     Yield
-    ' TODO: Add PATH resolution in /system/commands
     CallScript = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "CALL", "", False, True, Not PrivIsRoot)
     Yield
 End Function
