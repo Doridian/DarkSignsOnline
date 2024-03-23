@@ -664,7 +664,7 @@ Public Sub CloseDomainPort(ByVal s As String, ByVal ConsoleID As Integer)
     sPort = s
   
     RunPage "domain_close.php", ConsoleID, True, _
-    "ver=2&port=" & EncodeURLParameter(Trim(sPort)) & _
+    "port=" & EncodeURLParameter(Trim(sPort)) & _
     "&d=" & EncodeURLParameter(sDomain)
         
     SayCOMM "Attempting to close port : " & UCase(sDomain) & ":" & i(sPort), ConsoleID
@@ -697,7 +697,7 @@ Public Sub DownloadFromDomain(ByVal s As String, ByVal ConsoleID As Integer)
 
     RunPage "domain_download.php", ConsoleID, True, _
     "returnwith=4400" & _
-    "&ver=2&port=" & EncodeURLParameter(Trim(sPort)) & _
+    "&port=" & EncodeURLParameter(Trim(sPort)) & _
     "&d=" & EncodeURLParameter(sDomain) & _
     "&filename=" & EncodeURLParameter(sFilename)
     

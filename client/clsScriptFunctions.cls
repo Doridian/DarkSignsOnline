@@ -475,11 +475,14 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     End If
 
     Dim PostData As String
-    PostData = "ver=2"
+    PostData = ""
     If UBound(XArr) >= 2 Then
         Dim X As Integer
         For X = 2 To UBound(XArr)
-            PostData = PostData & "&params[]=" & EncodeURLParameter(XArr(X))
+            If X > 2 Then
+                PostData = PostData & "&"
+            End If
+            PostData = PostData & "params[]=" & EncodeURLParameter(XArr(X))
         Next
     End If
     
@@ -558,7 +561,7 @@ Public Sub UPLOAD(Domain As Variant, Port As Variant, Filename As Variant)
     tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
 
     Dim PostData As String
-    PostData = "ver=2&port=" & EncodeURLParameter("" & Port) & _
+    PostData = "port=" & EncodeURLParameter("" & Port) & _
     "&d=" & EncodeURLParameter(Domain) & _
     "&filedata=" & EncodeURLParameter(tempStrA)
     
