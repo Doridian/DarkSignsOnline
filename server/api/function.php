@@ -26,10 +26,7 @@ $user = $res->fetch_assoc();
 if (!$user || !password_verify($_SERVER['PHP_AUTH_PW'], $user['password'])) {
 	// bad username or password
 	login_failure('1002');
-} else if ($user['active'] === 1) {
-	// account is active
-	$auth = '1001';
-} else {
+} else if ($user['active'] <= 0) {
 	// account disabled
 	login_failure('1003');
 }
