@@ -54,23 +54,20 @@ Public Function VersionStr() As String
     End If
 End Function
 
-Public Function GetFileUnsafe(ByVal fn As String) As String
-    Dim aFF As Long, tmpS As String, fullS As String
-    aFF = FreeFile
-    Open fn For Input As #aFF
-        Do Until EOF(aFF)
-            Line Input #aFF, tmpS
-            fullS = fullS & tmpS & vbCrLf
-        Loop
-    Close #aFF
-
-    GetFileUnsafe = fullS
+Public Function GetFileUnsafe(ByVal Filename As String) As String
+    Dim Handle As Integer
+    GetAttr Filename
+    ' open in binary mode
+    Handle = FreeFile
+    Open Filename$ For Binary As #Handle
+    ' read the string and close the file
+    GetFileUnsafe = Space$(LOF(Handle))
+    Get #Handle, , GetFileUnsafe
+    Close #Handle
 End Function
 
-Function WriteFileClean(ByVal Filename As String, ByVal Contents As String)
+Public Function WriteFileUnsafe(ByVal Filename As String, ByVal Contents As String)
     Dim Handle As Integer
-
-    Filename = SafePath(Filename)
 
     On Error Resume Next
     Kill Filename$
@@ -82,20 +79,12 @@ Function WriteFileClean(ByVal Filename As String, ByVal Contents As String)
     Close #Handle
 End Function
 
+Function WriteFileClean(ByVal Filename As String, ByVal Contents As String)
+    WriteFileUnsafe SafePath(Filename), Contents
+End Function
+
 Function GetFileClean(ByVal Filename As String) As String
-    Dim Handle As Integer
-
-    Filename = SafePath(Filename)
-
-    GetAttr Filename
-    
-    ' open in binary mode
-    Handle = FreeFile
-    Open Filename$ For Binary As #Handle
-    ' read the string and close the file
-    GetFileClean = Space$(LOF(Handle))
-    Get #Handle, , GetFileClean
-    Close #Handle
+    GetFileClean = GetFileUnsafe(SafePath(Filename))
 End Function
 
 
@@ -197,24 +186,6 @@ Public Function FileTitleOnly(ByVal s As String) As String
     Next n
 zz:
     FileTitleOnly = Trim(FileTitleOnly)
-End Function
-
-Public Function WriteFileUnsafe(fn As String, s As String) As Boolean
-    On Error GoTo zxc
-    Dim FF As Long
-    FF = FreeFile
-    On Error Resume Next
-    Kill fn
-    On Error GoTo zxc
-    Open fn For Output As #FF
-        Print #FF, s
-    Close #FF
-    WriteFileUnsafe = True
-    Exit Function
-zxc:
-    SayCOMM "Error writing file: " & fn
-    Close #FF
-    WriteFileUnsafe = False
 End Function
 
 Public Sub RegSave(sCat As String, sVal As String)
