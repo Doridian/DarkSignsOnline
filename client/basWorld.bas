@@ -255,17 +255,12 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
         Exit Sub
     End If
 
-    'process incoming data that winhttp download
-    s = Trim(s)
-
     Dim cCode As String
     'MsgBox s
     cCode = Mid(s, 1, 4)
-    s = Replace(s, cCode, "")
-    
+    s = Mid(s, 5)
+
     Select Case cCode
-        Case "0000" 'do nothing with the data
-        
         Case "0001" 'it's the user list
             LoadUserList s, ConsoleID
 
