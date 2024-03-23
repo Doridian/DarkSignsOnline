@@ -1,0 +1,45 @@
+Option Explicit
+
+Dim props, propsforexamples, propsforcommands
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+propsforcommands = "{lgrey 8}"
+
+Dim X
+
+If ArgC() > 1 Then
+    Dim ArgsPass()
+    ReDim ArgsPass(ArgC() - 2)
+    For X = 2 To ArgC()
+        ArgsPass(X - 2) = ArgV(X)
+    Next
+    RunEx "/system/commands/help/" & ArgV(1) & ".ds", ArgsPass
+    Quit
+ElseIf ArgC() > 0 Then
+    Run "/system/commands/help/" & ArgV(1) & ".ds"
+    Quit
+End If
+
+Dim HelpFiles
+HelpFiles = ReadDir("/system/commands/help")
+
+Say props & "Available Commands"
+
+Dim XName
+Dim Str
+Str = ""
+For X = 0 To UBound(HelpFiles)
+    XName = HelpFiles(X)
+    If Right(Xname, 3) = ".ds" Then
+        If Str <> "" Then Str = Str & ", "
+        Str = Str & Left(Xname, Len(Xname) - 3)
+
+        If Len(Str) > 80 Then
+            Say propsforcommands & Str
+            Str = ""
+        End If
+    End If
+Next
+If Str <> "" Then Say propsforcommands & Str
+
+Say "{grey}For more specific help on a command, type: HELP [command]"

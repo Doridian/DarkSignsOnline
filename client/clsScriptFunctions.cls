@@ -463,6 +463,22 @@ Public Function ResolvePath(ByVal Path As String) As String
     ResolvePath = basCommands.ResolvePath(PrivConsoleID, Path)
 End Function
 
+Public Sub RunEx(Script As String, XArr As Variant)
+    AssertLocalOnly
+
+    Dim X As Long
+    Dim SParamArr() As Variant
+    ReDim SParamArr(0 To UBound(XArr) + 1)
+    SParamArr(0) = Script
+    For X = 0 To UBound(XArr)
+        SParamArr(X + 1) = XArr(X)
+    Next
+
+    Yield
+    Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, False, False
+    Yield
+End Sub
+
 Public Sub RUN(ParamArray XArr() As Variant)
     AssertLocalOnly
 
@@ -479,6 +495,23 @@ Public Sub RUN(ParamArray XArr() As Variant)
     Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, False, False
     Yield
 End Sub
+
+Public Function CallScriptEx(Script As String, XArr As Variant) As String
+    AssertLocalOnly
+
+    Dim X As Long
+
+    Dim SParamArr() As Variant
+    ReDim SParamArr(0 To UBound(XArr) + 1)
+    SParamArr(0) = Script
+    For X = 0 To UBound(XArr)
+        SParamArr(X + 1) = XArr(X)
+    Next
+
+    Yield
+    CallScriptEx = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "CALL", False, True, Not PrivIsRoot)
+    Yield
+End Function
 
 Public Function CallScript(ParamArray XArr() As Variant) As String
     AssertLocalOnly
