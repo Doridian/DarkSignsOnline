@@ -1,0 +1,7 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: LISTCOLORS"
+Say "{lgrey}Display the available colors and color codes in the console."

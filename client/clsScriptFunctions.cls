@@ -631,11 +631,11 @@ Public Sub LOGIN()
     End If
 
     If myUsername = "" Then
-        SayRaw ConsoleID, "{14, orange,  center}Your username is not set - type: USERNAME [username] to set it."
+        SayRaw ConsoleID, "{14, orange,  center}Your username is not set - type: USERNAME = ""[username]"" to set it."
         isBad = True
     End If
     If myPassword = "" Then
-        SayRaw ConsoleID, "{14, orange, center}Your password is not set - type: PASSWORD [password] to set it."
+        SayRaw ConsoleID, "{14, orange, center}Your password is not set - type: PASSWORD = ""[password]"" to set it."
         isBad = True
     End If
 
