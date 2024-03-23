@@ -333,11 +333,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
             If InStr(i(sSource), "z_online") > 0 Then Exit Sub
             If InStr(i(sSource), "chat") > 0 Then Exit Sub
 
-            SayCOMM s
-            MsgBox s
             SayCOMM "The function [" & sSource & "] returned some strange data."
-
-        
     End Select
     
     

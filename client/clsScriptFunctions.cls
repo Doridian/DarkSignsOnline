@@ -35,6 +35,14 @@ Public Property Get UserName() As Variant
     UserName = myUsername
 End Property
 
+Public Property Get ServerDomain() As Variant
+    ServerDomain = PrivServerDomain
+End Property
+
+Public Property Get ServerPort() As Variant
+    ServerPort = PrivServerPort
+End Property
+
 Public Property Let UserName(ByVal NewValue As Variant)
     AssertCLIOnly
 
@@ -475,11 +483,6 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     If Port < 1 Or Port > 65535 Then
         Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
         Exit Function
-    End If
-
-    basWorld.SayCOMM "Connecting to " & UCase(Domain) & ":" & Port & "..."
-    If Not PrivDisableOutput Then
-        basConsole.SayRaw ConsoleID, "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
     End If
 
     Dim DomainRequestIdx As Integer
