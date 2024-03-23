@@ -1003,7 +1003,7 @@ Public Sub LoadLimitedCommands()
     GoTo zxc
 
     On Error GoTo zxc
-    LimitedCommandString = ":" & i(GetFileClean("/system/commands-security.dat")) & ":"
+    LimitedCommandString = ":" & i(GetFile("/system/commands-security.dat")) & ":"
     Exit Sub
 zxc:
     LimitedCommandString = "::"

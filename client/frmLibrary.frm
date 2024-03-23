@@ -733,7 +733,7 @@ Sub UploadIt()
     sShortFileName = Trim(ReverseString(sShortFileName))
     sShortFileName = GetShortName(sShortFileName)
 
-    sFileData = GetFileClean(sFile)
+    sFileData = GetFile(sFile)
     
     PostData = _
     "returnwith=4300" & _

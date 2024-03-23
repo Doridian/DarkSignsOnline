@@ -409,7 +409,7 @@ Public Sub CLIParse(Src As Variant, Dest As Variant)
     AssertLocalOnly
 
     Dim SrcStr As String
-    SrcStr = GetFileClean(ResolvePath(Src))
+    SrcStr = GetFile(ResolvePath(Src))
 
     Dim DestStr As String
     DestStr = ParseCommandLineOptional(SrcStr)
@@ -582,7 +582,7 @@ Public Sub UPLOAD(Domain As Variant, Port As Variant, Filename As Variant)
     Yield
 
     Dim sFileData As String
-    sFileData = GetFileClean(ResolvePath(Filename))
+    sFileData = GetFile(ResolvePath(Filename))
 
     Dim tempStrA As String
 

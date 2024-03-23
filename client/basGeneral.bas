@@ -79,12 +79,12 @@ Public Function WriteFileUnsafe(ByVal Filename As String, ByVal Contents As Stri
     Close #Handle
 End Function
 
-Function WriteFileClean(ByVal Filename As String, ByVal Contents As String)
+Function WriteFile(ByVal Filename As String, ByVal Contents As String)
     WriteFileUnsafe SafePath(Filename), Contents
 End Function
 
-Function GetFileClean(ByVal Filename As String) As String
-    GetFileClean = GetFileUnsafe(SafePath(Filename))
+Function GetFile(ByVal Filename As String) As String
+    GetFile = GetFileUnsafe(SafePath(Filename))
 End Function
 
 
