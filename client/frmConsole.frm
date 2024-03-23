@@ -810,14 +810,14 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
   tmpSP = ""
  End If
  On Error GoTo acSubEnd1
- tmpS3 = Dir(tmpS2 & tmpS & "*", vbDirectory)
+ tmpS3 = DIR(tmpS2 & tmpS & "*", vbDirectory)
  If tmpS3 = "" Then GoTo acSubEnd1
  While tmpS3 = "." Or tmpS3 = ".." Or globalITMP < autoILast(ConsoleID)
   If tmpS3 <> "." And tmpS3 <> ".." Then
     globalITMP = globalITMP + 1
   End If
   tmpS3 = ""
-  tmpS3 = Dir()
+  tmpS3 = DIR()
   If tmpS3 = "" Then GoTo acSubEnd1
  Wend
  On Error GoTo 0
@@ -834,12 +834,12 @@ Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
  End If
 acSubEnd1:
  If firstParam = False Then GoTo acSubEnd3
- tmpS3 = Dir(SafePath("/system/commands/" & tmpS & "*"))
+ tmpS3 = DIR(SafePath("/system/commands/" & tmpS & "*"))
  On Error GoTo acSubEnd2
  While globalITMP < autoILast(ConsoleID)
   tmpS3 = ""
   globalITMP = globalITMP + 1
-  tmpS3 = Dir()
+  tmpS3 = DIR()
   If tmpS3 = "" Then GoTo acSubEnd2
  Wend
  On Error GoTo 0
@@ -859,12 +859,12 @@ acSubEnd2:
      sPath = Replace(sPath, App.Path & "/user", "")
      iTmp = InStrRev(sPath, "/")
      On Error GoTo acSubEnd3
-     tmpS3 = Dir(App.Path & "/user" & sPath & "/" & tmpS & "*")
+     tmpS3 = DIR(App.Path & "/user" & sPath & "/" & tmpS & "*")
      globalITMP = globalITMP + 1
      While globalITMP < autoILast(ConsoleID)
         tmpS3 = ""
         globalITMP = globalITMP + 1
-        tmpS3 = Dir()
+        tmpS3 = DIR()
         If tmpS3 = "" Then GoTo acSubEnd3
      Wend
      On Error GoTo 0
@@ -1255,7 +1255,7 @@ End Sub
 
 Private Sub tmrProcessQueue_Timer(Index As Integer)
     tmrProcessQueue(Index).Enabled = False
-    basWorld.ProcessQueueEntry Index
+    basWorld.ProcessQueueEntryRun Index
     tmrProcessQueue(Index).Tag = ""
 End Sub
 

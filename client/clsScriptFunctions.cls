@@ -259,7 +259,7 @@ Private Function DoDownload(Url As String, UsePost As Boolean, PostData As Strin
     Yield
 End Function
 
-Public Function WAITFOR(ResIndex As Variant) As String
+Public Function WAITFOR(ResIndex As Variant, Optional ByRef Status As Integer) As clsHttpResponse
     While Not DownloadDone(ResIndex)
         Yield
         If Not HasPendingCustomDownload(ResIndex) Then
@@ -268,7 +268,12 @@ Public Function WAITFOR(ResIndex As Variant) As String
         End If
     Wend
 
-    WAITFOR = DownloadResults(ResIndex)
+    Dim Res As clsHttpResponse
+    Set Res = New clsHttpResponse
+    Res.Code = DownloadCodes(ResIndex)
+    Res.Response = DownloadResults(ResIndex)
+    Set WAITFOR = Res
+
     DownloadInUse(ResIndex) = False
     RemoveCustomDownload ResIndex
     Yield
@@ -481,50 +486,47 @@ Public Function Connect(ParamArray XArr() As Variant) As String
     Dim DomainRequestIdx As Integer
     DomainRequestIdx = DoDownload(API_Server & API_Path & "domain_connect.php?d=" & EncodeURLParameter(Domain) & _
             "&port=" & EncodeURLParameter(Port), True, PostData, False)
-    Dim DomainRequest As String
-    DomainRequest = WAITFOR(DomainRequestIdx)
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
 
-    If DomainRequest = "not found" Then
-        Say "Connection Failed.{orange}"
-    Else
-        Dim DomainSplit() As String
-        DomainSplit = Split(DomainRequest, ":-:")
-        ' 0 = domain
-        ' 1 = port
-        ' 2 = filekey
-        ' 3 = preamble
-        ' 4 = code
-        ' 5+ = params
+    Dim DomainSplit() As String
+    DomainSplit = Split(DomainRequest.Response, ":-:")
+    ' 0 = domain
+    ' 1 = port
+    ' 2 = filekey
+    ' 3 = preamble
+    ' 4 = code
+    ' 5+ = params
+
+    Dim DomainConnectParams() As String
+    ReDim DomainConnectParams(0 To UBound(DomainSplit) - 4)
+
+    Dim strDomain As String
+    strDomain = DomainSplit(0)
+    Dim strPort As String
+    strPort = DomainSplit(1)
+    Dim strFileKey As String
+    strFileKey = DomainSplit(2)
+
+    Dim b64decoded() As Byte
+    b64decoded = basConsole.DecodeBase64(DomainSplit(3))
+    Dim strPreamble As String
+    strPreamble = StrConv(b64decoded, vbUnicode)
+
+    For X = 0 To UBound(DomainConnectParams)
+        b64decoded = basConsole.DecodeBase64(DomainSplit(X + 4))
+        DomainConnectParams(X) = StrConv(b64decoded, vbUnicode)
+    Next
+
+    Dim strCode As String
+    strCode = DomainConnectParams(0)
+    DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
     
-        Dim DomainConnectParams() As String
-        ReDim DomainConnectParams(0 To UBound(DomainSplit) - 4)
-
-        Dim strDomain As String
-        strDomain = DomainSplit(0)
-        Dim strPort As String
-        strPort = DomainSplit(1)
-        Dim strFileKey As String
-        strFileKey = DomainSplit(2)
-
-        Dim b64decoded() As Byte
-        b64decoded = basConsole.DecodeBase64(DomainSplit(3))
-        Dim strPreamble As String
-        strPreamble = StrConv(b64decoded, vbUnicode)
-
-        For X = 0 To UBound(DomainConnectParams)
-            b64decoded = basConsole.DecodeBase64(DomainSplit(X + 4))
-            DomainConnectParams(X) = StrConv(b64decoded, vbUnicode)
-        Next
-
-        Dim strCode As String
-        strCode = DomainConnectParams(0)
-        DomainConnectParams(0) = "dso://" & strDomain & ":" & strPort
-        
-        If strFileKey = "" Then
-            strFileKey = "EMPTY"
-        End If
-        Connect = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, True, Not PrivIsRoot, strPreamble)
+    If strFileKey = "" Then
+        strFileKey = "EMPTY"
     End If
+    Connect = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomainConnectParams(0), strFileKey, False, True, Not PrivIsRoot, strPreamble)
 
     Yield
 End Function
@@ -564,14 +566,11 @@ Public Sub UPLOAD(Domain As Variant, Port As Variant, Filename As Variant)
 
     Dim DomainRequestIdx As Integer
     DomainRequestIdx = DoDownload(API_Server & API_Path & "domain_upload.php", True, PostData, False)
-    Dim DomainRequest As String
-    DomainRequest = WAITFOR(DomainRequestIdx)
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
 
     Yield
-
-    If Left(DomainRequest, 1) = "!" Then
-        Err.Raise vbObjectError + 9666, "DSO", "Could not upload file to " & UCase(Domain) & ":" & Port
-    End If
 
     SayCOMM "Upload OK: " & UCase(Domain) & ":" & Port
 End Sub

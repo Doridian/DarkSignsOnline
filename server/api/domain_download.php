@@ -10,11 +10,6 @@ $d = trim($_REQUEST['d']);
 
 $filename = $_REQUEST['filename'];
 
-$ver = (int)$_REQUEST['ver'];
-if ($ver < 1) {
-	$ver = 1;
-}
-
 if (trim($returnwith) == "") {
 	$returnwith = "2000";
 }

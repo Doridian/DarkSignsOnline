@@ -11,13 +11,21 @@ global $db;
 $d = trim($_REQUEST['d']);
 $dInfo = getDomainInfo($d);
 
+if ($ver < 2) {
+	$returnwith = $_REQUEST['returnwith'];
+	if (trim($returnwith) == "") {
+		$returnwith = '2000';
+	}
+	echo $returnwith;
+}
+
 function verify_keycode($filename) {
 	global $db, $d, $dInfo, $user;
 	$is_owner = $user['id'] === $dInfo[1];
 
 	$keycode = $_REQUEST['keycode'];
 	if ($keycode !== $dInfo[2]) {
-		die("2000Error - ($filename) Invalid Server Key: " . strtoupper($d));
+		die_error("Error - ($filename) Invalid Server Key: " . strtoupper($d));
 	}
 
 	$stmt = $db->prepare("SELECT * FROM domain_files WHERE domain = ? AND filename = ?");
@@ -28,10 +36,10 @@ function verify_keycode($filename) {
 
 	if (!$is_owner) {
 		if (empty($row)) {
-			die("2000Error - ($filename) File not found: " . strtoupper($d));
+			die_error("Error - ($filename) File not found: " . strtoupper($d), 404);
 		}
 		if(strtoupper(substr($row['contents'], 0, 6)) !== 'PUBLIC') {
-			die("2000Error - ($filename) Private file: " . strtoupper($d));
+			die_error("Error - ($filename) Private file: " . strtoupper($d), 403);
 		}
 	}
 
@@ -89,12 +97,6 @@ if (!empty($fileserver)) {
 	exit;
 }
 
-$returnwith = $_REQUEST['returnwith'];
-if (trim($returnwith) == "") {
-	$returnwith = '2000';
-}
-echo $returnwith;
-
 $write = $_REQUEST['write'];
 if (!empty($write)) {
 	$file = verify_keycode($write);
@@ -116,3 +118,5 @@ if (!empty($downloadfile)) {
 	$file = verify_keycode($fileserver);
 	die($file['contents']);
 }
+
+die_error('No action selected');

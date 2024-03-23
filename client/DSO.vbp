@@ -23,6 +23,7 @@ Module=mdTlsNative; libs\VbAsyncSocket\src\mdTlsNative.bas
 Class=clsHttpRequestor; clsHttpRequestor.cls
 Class=cHttpRequest; libs\VbAsyncSocket\contrib\cHttpRequest.cls
 Class=clsScriptFunctions; clsScriptFunctions.cls
+Class=clsHttpResponse; clsHttpResponse.cls
 IconForm="frmConsole"
 Startup="frmConsole"
 HelpFile=""

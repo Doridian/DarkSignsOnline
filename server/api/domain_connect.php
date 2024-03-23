@@ -3,11 +3,6 @@
 $rewrite_done = true;
 require_once("function.php");
 
-$ver = (int)$_REQUEST['ver'];
-if ($ver < 1) {
-	$ver = 1;
-}
-
 $port = (int)$_REQUEST['port'];
 
 if ($port < 1 || $port > 65535) {

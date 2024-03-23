@@ -31,6 +31,7 @@ Private Type ProcessQueueEntry
     DataSource As String
     ConsoleID As Integer
     IsCustomDownload As Integer
+    Code As Integer
 End Type
 
 Private ProcessQueue(1 To 30) As ProcessQueueEntry
@@ -125,7 +126,7 @@ Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Option
         SayRaw ConsoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}"
 
         If IsCustomDownload > 0 Then
-            basWorld.Process "[error]not logged in", sUrl, ConsoleID, IsCustomDownload
+            basWorld.Process "Not logged in", 401, sUrl, ConsoleID, IsCustomDownload
         End If
         Exit Function
     End If
@@ -219,13 +220,14 @@ AllDone:
     frmConsole.CommLowerBorder.Move 0, frmConsole.Comm.Height - frmConsole.CommLowerBorder.Height, frmConsole.Comm.Width
 End Sub
 
-Public Sub Process(ByVal s As String, sSource As String, ByVal ConsoleID As Integer, ByVal IsCustomDownload As Integer)
+Public Sub Process(ByVal s As String, ByVal Code As Integer, sSource As String, ByVal ConsoleID As Integer, ByVal IsCustomDownload As Integer)
     Dim NewEntry As ProcessQueueEntry
     NewEntry.Data = s
+    NewEntry.Code = Code
     NewEntry.DataSource = sSource
     NewEntry.ConsoleID = ConsoleID
     NewEntry.IsCustomDownload = IsCustomDownload
-    
+
     Dim X As Integer
     For X = 1 To 30
         If frmConsole.tmrProcessQueue(X).Tag = "" Then
@@ -237,13 +239,15 @@ Public Sub Process(ByVal s As String, sSource As String, ByVal ConsoleID As Inte
     frmConsole.tmrProcessQueue(X).Enabled = True
 End Sub
 
-Public Sub ProcessQueueEntry(ByVal Index As Integer)
+Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
     Dim s As String
     Dim sSource As String
     Dim ConsoleID As Integer
     Dim IsCustomDownload As Integer
+    Dim Code As Integer
 
     s = ProcessQueue(Index).Data
+    Code = ProcessQueue(Index).Code
     sSource = ProcessQueue(Index).DataSource
     ConsoleID = ProcessQueue(Index).ConsoleID
     IsCustomDownload = ProcessQueue(Index).IsCustomDownload
@@ -253,9 +257,15 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
         'put the data into a variable!
         DownloadResults(IsCustomDownload) = s
         DownloadDone(IsCustomDownload) = True
+        DownloadCodes(IsCustomDownload) = Code
         If DownloadAborted(IsCustomDownload) Then
             DownloadInUse(IsCustomDownload) = False
         End If
+        Exit Sub
+    End If
+
+    If Code < 200 Or Code > 299 Then
+        SayCOMM "Invalid HTTP code " & Code & " in response to internal request " & sSource
         Exit Sub
     End If
 

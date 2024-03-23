@@ -7,7 +7,7 @@ $getip = $_REQUEST['getip'];
 if (!empty($getip)) {
     $dInfo = getDomainInfo($getip);
     if ($dInfo[0] <= 0) {
-        die ('not found');
+        die_error('not found', 404);
     }
     die($dInfo[3]);
 }
@@ -16,7 +16,7 @@ $getdomain = $_REQUEST['getdomain'];
 if (!empty($getdomain)) {
     $dom = getIpDomain($getdomain);
     if (empty($dom)) {
-        die ('not found');
+        die_error('not found', 404);
     }
     die($dom);
 }

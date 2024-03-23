@@ -45,7 +45,7 @@ End Function
 Private Sub SetDoneForever()
     If Not ResponseSent Then
         If IsCustomDownload > 0 Then
-            basWorld.Process "[error]", Url, ConsoleID, IsCustomDownload
+            basWorld.Process "[error]", 666, Url, ConsoleID, IsCustomDownload
         End If
         ResponseSent = True
     End If
@@ -106,6 +106,17 @@ Private Sub HttpRequest_OnError(ByVal ErrorNumber As Long, ByVal ErrorDescriptio
     ManageSockError "Socket error code " & Str(ErrorNumber) & " = " & ErrorDescription
 End Sub
 
+Private Function IsHTTPCodeRetry(Code As Long) As Boolean
+    IsHTTPCodeRetry = False
+    If Code >= 200 And Code <= 299 Then
+        Exit Function
+    End If
+    If Code >= 400 And Code <= 499 Then
+        Exit Function
+    End If
+    IsHTTPCodeRetry = True
+End Function
+
 Private Sub HttpRequest_OnResponseFinished()
     If Done Then
         SayCOMM "Request OnResponseFinished while Done: " & Url
@@ -118,7 +129,7 @@ Private Sub HttpRequest_OnResponseFinished()
         Exit Sub
     End If
 
-    basWorld.Process HttpRequest.ResponseText, Url, ConsoleID, IsCustomDownload
+    basWorld.Process HttpRequest.ResponseText, HttpRequest.Status, Url, ConsoleID, IsCustomDownload
     ResponseSent = True
     SetDoneForever
 End Sub

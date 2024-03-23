@@ -3,11 +3,6 @@
 $rewrite_done = true;
 require_once("function.php");
 
-$ver = (int)$_REQUEST['ver'];
-if ($ver < 1) {
-	$ver = 1;
-}
-
 $returnwith = (string) (int) $_GET['returnwith'];
 $d = trim($_REQUEST['d']);
 if (trim($returnwith) == "0") {

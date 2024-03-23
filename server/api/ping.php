@@ -6,11 +6,6 @@ require_once("function.php");
 $domain = $_POST['domain'];
 $port = (int)$_POST['port'];
 
-$ver = (int)$_REQUEST['ver'];
-if ($ver < 1) {
-	$ver = 1;
-}
-
 $dInfo = getDomainInfo($domain);
 if ($dInfo[0] < 0)
 {

@@ -6,12 +6,12 @@ require_once("function.php");
 
 $d = strtolower($_REQUEST['d']);
 if (empty($d)) {
-    die ('not found');
+    die_error('No domain specified');
 }
 
 $dInfo = getDomainInfo($d);
-if ($dInfo[0] <= 0) {
-	die ('not found');
+if ($dInfo[0] <= 0) {;
+	die_error('not found', 404);
 }
 
 require_once('jwt/JWTExceptionWithPayloadInterface.php');
