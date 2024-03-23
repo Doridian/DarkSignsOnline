@@ -322,6 +322,7 @@ Public Sub SayCOMM(ParamArray Params() As Variant)
         sStr = sStr & Params(X)
     Next X
 
+    Yield
     basWorld.SayCOMM sStr, ConsoleID
     Yield
 End Sub
@@ -400,7 +401,9 @@ Public Sub SayLine(ByVal s As String)
         Yield
         Exit Sub
     End If
+    Yield
     basConsole.SayRaw PrivConsoleID, s, False
+    Yield
 End Sub
 
 Public Sub Say(ParamArray Params() As Variant)
@@ -418,6 +421,7 @@ Public Sub Say(ParamArray Params() As Variant)
     For X = LBound(ScriptOutSplit) To UBound(ScriptOutSplit)
         Yield
         basConsole.SayRaw PrivConsoleID, ScriptOutSplit(X)
+        Yield
     Next
 End Sub
 
