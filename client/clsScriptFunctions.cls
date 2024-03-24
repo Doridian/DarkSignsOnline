@@ -463,23 +463,29 @@ Public Function ResolvePath(ByVal Path As String) As String
     ResolvePath = basCommands.ResolvePath(PrivConsoleID, Path)
 End Function
 
-Public Sub RunEx(Script As String, XArr As Variant)
+Public Sub Run(ByVal Script As String, Optional XArr As Variant)
     AssertLocalOnly
 
     Dim X As Long
+    
     Dim SParamArr() As Variant
-    ReDim SParamArr(0 To UBound(XArr) + 1)
-    SParamArr(0) = Script
-    For X = 0 To UBound(XArr)
-        SParamArr(X + 1) = XArr(X)
-    Next
 
+    If (VarType(XArr) And vbArray) = vbArray Then
+        ReDim SParamArr(0 To UBound(XArr) + 1)
+        For X = 0 To UBound(XArr)
+            SParamArr(X + 1) = XArr(X)
+        Next
+    Else
+        ReDim SParamArr(0 To 0)
+    End If
+
+    SParamArr(0) = Script
     Yield
     Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, False, False
     Yield
 End Sub
 
-Public Sub RUN(ParamArray XArr() As Variant)
+Public Sub RunV(ParamArray XArr() As Variant)
     AssertLocalOnly
 
     Dim Script As String
@@ -496,24 +502,28 @@ Public Sub RUN(ParamArray XArr() As Variant)
     Yield
 End Sub
 
-Public Function CallScriptEx(Script As String, XArr As Variant) As String
+Public Function CallScript(ByVal Script As String, Optional XArr As Variant) As String
     AssertLocalOnly
 
     Dim X As Long
 
     Dim SParamArr() As Variant
-    ReDim SParamArr(0 To UBound(XArr) + 1)
-    SParamArr(0) = Script
-    For X = 0 To UBound(XArr)
-        SParamArr(X + 1) = XArr(X)
-    Next
+    If (VarType(XArr) And vbArray) = vbArray Then
+        ReDim SParamArr(0 To UBound(XArr) + 1)
+        For X = 0 To UBound(XArr)
+            SParamArr(X + 1) = XArr(X)
+        Next
+    Else
+        ReDim SParamArr(0 To 0)
+    End If
 
+    SParamArr(0) = Script
     Yield
-    CallScriptEx = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "CALL", False, True, Not PrivIsRoot)
+    CallScript = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "CALL", False, True, Not PrivIsRoot)
     Yield
 End Function
 
-Public Function CallScript(ParamArray XArr() As Variant) As String
+Public Function CallScriptV(ParamArray XArr() As Variant) As String
     AssertLocalOnly
 
     Dim X As Long
@@ -527,7 +537,7 @@ Public Function CallScript(ParamArray XArr() As Variant) As String
     Next
 
     Yield
-    CallScript = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "CALL", False, True, Not PrivIsRoot)
+    CallScriptV = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "CALL", False, True, Not PrivIsRoot)
     Yield
 End Function
 
@@ -545,12 +555,8 @@ Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal
 End Function
 
 ' Params is an array
-Public Function ConnectEX(ByVal Foreground As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
-    If Foreground Then
-        AssertLocalOnly
-    End If
+Private Function ConnectEX(ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
     Yield
-
     If Port < 1 Or Port > 65535 Then
         Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
         Exit Function
@@ -595,24 +601,23 @@ Public Function ConnectEX(ByVal Foreground As Boolean, ByVal Domain As String, B
     Dim strCode As String
     b64decoded = basConsole.DecodeBase64(DomainSplit(3))
     strCode = StrConv(b64decoded, vbUnicode)
-    
-    Dim DisableOutput As Boolean
-    DisableOutput = Not PrivIsRoot
-    If Foreground = True Then
-        DisableOutput = False
-    End If
 
     Dim DomScript As String
     DomScript = "dso://" & strDomain & ":" & strPort
     DomainConnectParams(0) = DomScript
-    ConnectEX = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, True, DisableOutput)
+    ConnectEX = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput)
 
     Yield
 End Function
 
 ' Params is an array
-Public Function Connect(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
-    Connect = ConnectEX(False, Domain, Port, Params)
+Public Sub Connect(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant)
+    ConnectEX False, False, Domain, Port, Params
+End Sub
+
+' Params is an array
+Public Function Fetch(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
+    Fetch = ConnectEX(True, Not PrivIsRoot, Domain, Port, Params)
 End Function
 
 Private Sub RaiseMiscError(ByVal Desc As String)

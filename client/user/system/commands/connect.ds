@@ -23,9 +23,9 @@ IF ArgC() > 2 Then
 	FOR X = 0 To ArgC - 3
 		ConnectParams(X) = ArgV(X + 3)
 	NEXT
-	Res = CONNECTEX(Not IsOutputDisabled, Domain, Port, ConnectParams)
+	Res = CONNECT(Domain, Port, ConnectParams)
 ELSE
-	Res = CONNECTEX(Not IsOutputDisabled, Domain, Port)
+	Res = CONNECT(Domain, Port)
 END If
 
 Dim ErrNo, ErrDesc, ErrSrc

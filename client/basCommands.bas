@@ -394,7 +394,7 @@ CommandForNext:
     End If
 
     If ResolvedCommand <> "" Then
-        ParseCommandLineInt = "Call RUN(""" & ResolvedCommand & """"
+        ParseCommandLineInt = "Call RunV(""" & ResolvedCommand & """"
         CommandNeedFirstComma = True
     Else
         ' Try running procedure with given name
