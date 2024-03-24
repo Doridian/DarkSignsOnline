@@ -401,14 +401,15 @@ Public Sub Say(ParamArray Params() As Variant)
     Dim sStr As String
     Dim XV As String
     For X = LBound(Params) To UBound(Params)
-        XV = Trim(Params(X))
-        If XV = "" Then
+        XV = Params(X)
+        If XV <> "" Then
             If sStr <> "" Then
                 sStr = sStr & " "
             End If
             sStr = sStr & XV
         End If
     Next X
+    sStr = Trim(sStr)
 
     If sStr = "" Then
         Yield
@@ -442,14 +443,15 @@ Public Sub SayCOMM(ParamArray Params() As Variant)
     Dim sStr As String
     Dim XV As String
     For X = LBound(Params) To UBound(Params)
-        XV = Trim(Params(X))
-        If XV = "" Then
+        XV = Params(X)
+        If XV <> "" Then
             If sStr <> "" Then
                 sStr = sStr & " "
             End If
             sStr = sStr & XV
         End If
     Next X
+    sStr = Trim(sStr)
 
     Yield
     If sStr = "" Then
