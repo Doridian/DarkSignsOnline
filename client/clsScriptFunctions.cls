@@ -312,21 +312,6 @@ Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
     Yield
 End Function
 
-Public Sub SayCOMM(ParamArray Params() As Variant)
-    Dim X As Long
-    Dim sStr As String
-    For X = LBound(Params) To UBound(Params)
-        If sStr <> "" Then
-            sStr = sStr & " "
-        End If
-        sStr = sStr & Params(X)
-    Next X
-
-    Yield
-    basWorld.SayCOMM sStr, ConsoleID
-    Yield
-End Sub
-
 Public Sub CD(ByVal DIR As String)
     AssertLocalOnly
 
@@ -394,6 +379,11 @@ Public Sub EDIT(ByVal file As String)
 End Sub
 
 Public Sub SayLine(ByVal s As String)
+    If s = "" Then
+        Yield
+        Exit Sub
+    End If
+
     If PrivRedirectOutput Then
         If PrivOutput = "" Then
             PrivOutput = s
@@ -421,6 +411,11 @@ Public Sub Say(ParamArray Params() As Variant)
         sStr = sStr & Params(X)
     Next X
 
+    If sStr = "" Then
+        Yield
+        Exit Sub
+    End If
+
     If PrivRedirectOutput Then
         If PrivOutput = "" Then
             PrivOutput = sStr
@@ -441,6 +436,24 @@ Public Sub Say(ParamArray Params() As Variant)
         basConsole.SayRaw PrivConsoleID, ScriptOutSplit(X)
         Yield
     Next
+End Sub
+
+Public Sub SayCOMM(ParamArray Params() As Variant)
+    Dim X As Long
+    Dim sStr As String
+    For X = LBound(Params) To UBound(Params)
+        If sStr <> "" Then
+            sStr = sStr & " "
+        End If
+        sStr = sStr & Params(X)
+    Next X
+
+    Yield
+    If sStr = "" Then
+        Exit Sub
+    End If
+    basWorld.SayCOMM sStr, ConsoleID
+    Yield
 End Sub
 
 Public Sub CLIParse(ByVal Src As String, ByVal Dest As String)
