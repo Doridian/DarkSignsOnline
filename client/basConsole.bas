@@ -43,8 +43,6 @@ End Type
 Public RecentCommandsIndex(1 To 4) As Integer
 Public RecentCommands(1 To 4, 0 To 99) As String
 
-Public LimitedCommandString As String
-
 Public yDiv As Integer  'the amount of vertical space between each console line
 
 Public Const DrawDividerWidth = 24
@@ -1015,16 +1013,6 @@ Public Function propertySpace_Size(ByVal s As String) As String
     If propertySpace_Size < 8 Then propertySpace_Size = 8
     If propertySpace_Size > Max_Font_Size Then propertySpace_Size = Max_Font_Size
 End Function
-
-Public Sub LoadLimitedCommands()
-    GoTo zxc
-
-    On Error GoTo zxc
-    LimitedCommandString = ":" & i(GetFile("/system/commands-security.dat")) & ":"
-    Exit Sub
-zxc:
-    LimitedCommandString = "::"
-End Sub
 
 Public Function EncodeBase64(ByRef arrData() As Byte) As String
     If LBound(arrData) = UBound(arrData) Then

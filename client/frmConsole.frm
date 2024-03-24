@@ -927,10 +927,8 @@ Private Sub Form_Load()
     ActiveConsole = 1
     MusicFileIndex = -1
     
-    
-    
+
     Me.Move 0, 0, Screen.Width, Screen.Height
-    LoadLimitedCommands
     
     cPath(1) = "/": cPath(2) = "/": cPath(3) = "/": cPath(4) = "/": cPath(5) = "/"
     Start_Comm
@@ -1184,11 +1182,7 @@ Public Sub KeepOnline()
 End Sub
 
 Private Sub tmrMusic_Timer()
-
-    LoadLimitedCommands
-    
     basMusic.CheckMusic
-    
 End Sub
 
 Private Sub tmrPrint_Timer()
