@@ -410,6 +410,12 @@ Public Sub PrintVar(ParamArray Param() As Variant)
         Exit Sub
     End If
 
+    If LBound(Param) = UBound(Param) And VarType(Param(0)) = vbString Then
+        Say "{blue}Single value of type String. See below:"
+        Say Param
+        Exit Sub
+    End If
+
     Dim X As Long
     For X = LBound(Param) To UBound(Param)
         PrintVarInt Param(X), "", "ArgV(" & X & ") ", 0
@@ -418,6 +424,12 @@ End Sub
 
 Public Sub PrintVarSingleIfSet(Param As Variant)
     If VarType(Param) = vbEmpty Then
+        Exit Sub
+    End If
+
+    If VarType(Param) = vbString Then
+        Say "{blue}Single value of type String. See below:"
+        Say Param
         Exit Sub
     End If
 
