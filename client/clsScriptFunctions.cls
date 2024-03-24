@@ -619,6 +619,21 @@ Private Sub RaiseMiscError(ByVal Desc As String)
     Err.Raise vbObjectError + 9666, "DSO", Desc
 End Sub
 
+Public Function TextWidth(ByVal FontName As String, ByVal FontSize As String, ByVal Text As String) As Long
+    frmConsole.lfont.FontName = FontName
+    frmConsole.lfont.FontSize = FontSize
+    frmConsole.lfont.Caption = Text
+    TextWidth = frmConsole.lfont.Width
+End Function
+
+Public Function TextHeight(ByVal FontName As String, ByVal FontSize As String) As Long
+    TextHeight = Font_Height(FontName, FontSize)
+End Function
+
+Public Function ConsoleWidth() As Long
+    ConsoleWidth = frmConsole.Width - (ConsoleXSpacing * 2)
+End Function
+
 Public Sub LOGIN()
     AssertLocalOnly
     

@@ -50,6 +50,7 @@ Public yDiv As Integer  'the amount of vertical space between each console line
 Public Const DrawDividerWidth = 24
 Public Const Max_Font_Size = 144
 Public Const PreSpace = "-->" 'this will indent the text
+Public Const ConsoleXSpacing = 360
 
 
 Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal ConsoleID As Integer)
@@ -405,7 +406,7 @@ zzz:
     
     Dim addOn As Long, propertySpace As String
     addOn = ConsoleScrollInt(ActiveConsole) * 2400
-    printHeight = frmConsole.Height - 840 + addOn 'Font_Height(Console_FontName(1), Console_FontSize(1)) - 360
+    printHeight = frmConsole.Height - 840 + addOn 'Font_Height(Console_FontName(1), Console_FontSize(1)) - ConsoleXSpacing
     frmConsole.CurrentY = printHeight
     
 
@@ -500,7 +501,7 @@ DontDraw:
             If Trim(tmpS) = "-" Or Trim(tmpS) = PreSpace & "-" Then
                 frmConsole.Print "  " 'new line
             Else
-                frmConsole.CurrentX = 360
+                frmConsole.CurrentX = ConsoleXSpacing
             
                 If Console(ActiveConsole, n).Flash = True And Flash = True Then GoTo SkipPrint
                 If Console(ActiveConsole, n).FlashFast = True And FlashFast = True Then GoTo SkipPrint
@@ -518,7 +519,7 @@ DontDraw:
                 End If
                 If Console(ActiveConsole, n).Right = True Then
                     frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize: frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName: frmConsole.lfont.Caption = Replace(Console(ActiveConsole, n).Caption, PreSpace, "")
-                    frmConsole.CurrentX = (frmConsole.Width) - (frmConsole.lfont.Width) - 360
+                    frmConsole.CurrentX = (frmConsole.Width) - (frmConsole.lfont.Width) - ConsoleXSpacing
                     isAligned = True
                 End If
                 
@@ -637,9 +638,10 @@ Public Function Console_Line_Defaults() As ConsoleLine
     
 End Function
 
-Public Function Font_Height(theFontName As String, theFontSize As String) As Integer
+Public Function Font_Height(ByVal theFontName As String, ByVal theFontSize As String) As Long
     frmConsole.lfont.FontName = theFontName
     frmConsole.lfont.FontSize = theFontSize
+    frmConsole.lfont.Caption = "this is to check the height OF FONTS"
     Font_Height = frmConsole.lfont.Height + yDiv
 End Function
 
