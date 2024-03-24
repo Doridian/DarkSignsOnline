@@ -404,10 +404,15 @@ Public Sub SayLine(ByVal s As String)
     Yield
 End Sub
 
-Public Sub PrintVar(Param As Variant, Optional ByVal Prefix As String = "", Optional ByVal Index As String = "", Optional ByVal Depth As String = 0)
-    If Depth < 0 Then
-        Depth = 0
+Public Sub PrintVar(Param As Variant)
+    If VarType(Param) = vbEmpty Then
+        Exit Sub
     End If
+
+    PrintVarInt Param, "", "", 0
+End Sub
+
+Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As String, ByVal Depth As String)
     Dim TypeName As String
 
     Select Case (VarType(Param) And (Not vbArray))
@@ -462,9 +467,9 @@ Public Sub PrintVar(Param As Variant, Optional ByVal Prefix As String = "", Opti
         SubPrefix = "    " & Prefix
         For X = LBound(Param) To UBound(Param)
             Yield
-            PrintVar Param(X), SubPrefix, X
+            PrintVarInt Param(X), SubPrefix, X, Depth + 1
         Next X
-    ElseIf VarType(Param) <> vbEmpty Then
+    Else
         Dim StrParam As String
         StrParam = "" & Param
         Dim StrPos As Long
