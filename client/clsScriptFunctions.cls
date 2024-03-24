@@ -401,6 +401,19 @@ Public Sub SayLine(ByVal s As String)
     Yield
 End Sub
 
+Public Sub SayIfNotRoot(Param As Variant)
+    If PrivIsRoot Then
+        Exit Sub
+    End If
+
+    Select Case VarType(Param)
+        Case vbEmpty, vbNull:
+            Exit Sub
+    End Select
+
+    Say Param
+End Sub
+
 Public Sub Say(ParamArray Params() As Variant)
     Dim X As Long
     Dim sStr As String
@@ -476,7 +489,7 @@ Public Function ResolvePath(ByVal Path As String) As String
     ResolvePath = basCommands.ResolvePath(PrivConsoleID, Path)
 End Function
 
-Public Sub Run(ByVal Script As String, Optional XArr As Variant)
+Public Function RunA(ByVal Script As String, Optional XArr As Variant) As String
     AssertLocalOnly
 
     Dim X As Long
@@ -494,55 +507,16 @@ Public Sub Run(ByVal Script As String, Optional XArr As Variant)
 
     SParamArr(0) = Script
     Yield
-    Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, False, False
-    Yield
-End Sub
-
-Public Sub RunV(ParamArray XArr() As Variant)
-    AssertLocalOnly
-
-    Dim Script As String
-    Script = XArr(0)
-    Dim X As Long
-    Dim SParamArr() As Variant
-    ReDim SParamArr(0 To UBound(XArr))
-    For X = 0 To UBound(XArr)
-        SParamArr(X) = XArr(X)
-    Next
-
-    Yield
-    Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, False, False
-    Yield
-End Sub
-
-Public Function CallScript(ByVal Script As String, Optional XArr As Variant) As String
-    AssertLocalOnly
-
-    Dim X As Long
-
-    Dim SParamArr() As Variant
-    If (VarType(XArr) And vbArray) = vbArray Then
-        ReDim SParamArr(0 To UBound(XArr) + 1)
-        For X = 0 To UBound(XArr)
-            SParamArr(X + 1) = XArr(X)
-        Next
-    Else
-        ReDim SParamArr(0 To 0)
-    End If
-
-    SParamArr(0) = Script
-    Yield
-    CallScript = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "CALL", False, True, Not PrivIsRoot)
+    RunA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, True, Not PrivIsRoot)
     Yield
 End Function
 
-Public Function CallScriptV(ParamArray XArr() As Variant) As String
+Public Function Run(ParamArray XArr() As Variant) As String
     AssertLocalOnly
 
-    Dim X As Long
     Dim Script As String
     Script = XArr(0)
-
+    Dim X As Long
     Dim SParamArr() As Variant
     ReDim SParamArr(0 To UBound(XArr))
     For X = 0 To UBound(XArr)
@@ -550,7 +524,7 @@ Public Function CallScriptV(ParamArray XArr() As Variant) As String
     Next
 
     Yield
-    CallScriptV = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "CALL", False, True, Not PrivIsRoot)
+    Run = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, True, Not PrivIsRoot)
     Yield
 End Function
 
@@ -568,11 +542,34 @@ Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal
 End Function
 
 ' Params is an array
-Private Function ConnectEX(ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
+Public Function Connect(ParamArray Params() As Variant) As String
+    Dim Domain As String
+    Dim Port As Long
+    Domain = Params(0)
+    Port = Params(1)
+    If UBound(Params) <= 1 Then
+        Connect = ConnectA(Domain, Port)
+        Exit Function
+    End If
+
+    Dim DParams() As Variant
+    ReDim DParams(0 To UBound(Params) - 2)
+    Dim X As Long
+    For X = 0 To UBound(DParams)
+        DParams(X) = Params(X + 2)
+    Next
+    Connect = ConnectA(Domain, Port, DParams)
+End Function
+
+Public Function ConnectA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
     Yield
     If Port < 1 Or Port > 65535 Then
         Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
         Exit Function
+    End If
+    
+    If PrivIsRoot Then
+        Say "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
     End If
 
     Dim X As Long
@@ -591,7 +588,15 @@ Private Function ConnectEX(ByVal RedirectOutput As Boolean, ByVal DisableOutput 
             "&port=" & EncodeURLParameter(Port), True, "")
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
-    DomainRequest.RaiseForStatus
+    
+    Select Case DomainRequest.Code
+        Case 404:
+            RaiseMiscError "Could not connect to" & UCase(Domain) & ":" & Port & " -> Not found"
+        Case 403:
+            RaiseMiscError "Could not connect to" & UCase(Domain) & ":" & Port & " -> Access denied"
+        Case Else:
+            DomainRequest.RaiseForStatus
+    End Select
 
     Dim DomainSplit() As String
     DomainSplit = Split(DomainRequest.Response, ":-:")
@@ -618,19 +623,9 @@ Private Function ConnectEX(ByVal RedirectOutput As Boolean, ByVal DisableOutput 
     Dim DomScript As String
     DomScript = "dso://" & strDomain & ":" & strPort
     DomainConnectParams(0) = DomScript
-    ConnectEX = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput)
+    ConnectA = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, True, Not PrivIsRoot)
 
     Yield
-End Function
-
-' Params is an array
-Public Sub Connect(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant)
-    ConnectEX False, False, Domain, Port, Params
-End Sub
-
-' Params is an array
-Public Function Fetch(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
-    Fetch = ConnectEX(True, Not PrivIsRoot, Domain, Port, Params)
 End Function
 
 Private Sub RaiseMiscError(ByVal Desc As String)

@@ -29,7 +29,7 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
 
     Dim s As New ScriptControl
     s.AllowUI = False
-    s.Timeout = 100
+    s.Timeout = 1000
     s.UseSafeSubset = True
     s.Language = "VBScript"
 

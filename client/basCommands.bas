@@ -12,7 +12,7 @@ Public Sub InitBasCommands()
     For X = 1 To 4
         Set scrConsole(X) = New ScriptControl
         scrConsole(X).AllowUI = False
-        scrConsole(X).Timeout = 100
+        scrConsole(X).Timeout = 1000
         scrConsole(X).UseSafeSubset = True
         scrConsole(X).Language = "VBScript"
 
@@ -394,11 +394,16 @@ CommandForNext:
     End If
 
     If ResolvedCommand <> "" Then
-        ParseCommandLineInt = "Call RunV(""" & ResolvedCommand & """"
+        ParseCommandLineInt = "Call Run(""" & ResolvedCommand & """"
         CommandNeedFirstComma = True
     Else
         ' Try running procedure with given name
-        ParseCommandLineInt = "Say " & Command & "("
+        Select Case LCase(Command)
+            Case "connect", "connecta", "run", "runa":
+                ParseCommandLineInt = "SayIfNotRoot " & Command & "("
+            Case Else:
+                ParseCommandLineInt = "Say " & Command & "("
+        End Select
         CommandNeedFirstComma = False
     End If
 

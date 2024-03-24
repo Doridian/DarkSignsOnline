@@ -13,5 +13,3 @@ Dim X
 FOR X = LBound(Res) To UBound(Res)
 	SAY(Res(X))
 NEXT
-
-
