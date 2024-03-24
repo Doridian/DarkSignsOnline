@@ -373,6 +373,7 @@ Public Sub EDIT(ByVal file As String)
 End Sub
 
 Public Sub SayLine(ByVal s As String)
+    s = Trim(s)
     If s = "" Then
         Yield
         Exit Sub
@@ -398,11 +399,15 @@ End Sub
 Public Sub Say(ParamArray Params() As Variant)
     Dim X As Long
     Dim sStr As String
+    Dim XV As String
     For X = LBound(Params) To UBound(Params)
-        If sStr <> "" Then
-            sStr = sStr & " "
+        XV = Trim(Params(X))
+        If XV = "" Then
+            If sStr <> "" Then
+                sStr = sStr & " "
+            End If
+            sStr = sStr & XV
         End If
-        sStr = sStr & Params(X)
     Next X
 
     If sStr = "" Then
@@ -435,11 +440,15 @@ End Sub
 Public Sub SayCOMM(ParamArray Params() As Variant)
     Dim X As Long
     Dim sStr As String
+    Dim XV As String
     For X = LBound(Params) To UBound(Params)
-        If sStr <> "" Then
-            sStr = sStr & " "
+        XV = Trim(Params(X))
+        If XV = "" Then
+            If sStr <> "" Then
+                sStr = sStr & " "
+            End If
+            sStr = sStr & XV
         End If
-        sStr = sStr & Params(X)
     Next X
 
     Yield
