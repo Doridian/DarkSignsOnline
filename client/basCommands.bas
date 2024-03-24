@@ -19,7 +19,7 @@ Public Sub InitBasCommands()
         Dim CLIArguments(0 To 0) As Variant
         CLIArguments(0) = "/dev/tty" & X
         Set scrConsoleContext(X) = New clsScriptFunctions
-        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False
+        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False, True
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
 
@@ -143,7 +143,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     CancelScript(ConsoleID) = False
     New_Console_Line_InProgress ConsoleID
 
-    scrConsoleContext(ConsoleID).Aborted = False
+    scrConsoleContext(ConsoleID).UnAbort
 
     On Error GoTo EvalError
 

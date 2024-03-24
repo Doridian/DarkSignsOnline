@@ -26,7 +26,9 @@ Private IsCLIInput As Boolean
 Private IsConfigured As Boolean
 Private SControl As ScriptControl
 Private FileKey As String
-Public Aborted As Boolean
+
+Private Aborted As Boolean
+Private PrivAllowUnAbort As Boolean
 
 Private PrivDisableOutput As Boolean
 Private PrivRedirectOutput As Boolean
@@ -135,6 +137,12 @@ Public Sub CleanupScriptTasks()
     WaitingForInputReturn(ConsoleID) = ""
 End Sub
 
+Public Sub UnAbort()
+    If PrivAllowUnAbort Then
+        Aborted = False
+    End If
+End Sub
+
 Public Sub Quit()
     Aborted = True
     Err.Raise vbObjectError + 9002, "DSO", "Script exited"
@@ -188,7 +196,7 @@ Public Function GetASCII() As Long
     GetASCII = GetAsciiWaiting(ConsoleID)
 End Function
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean)
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewAllowUnAbort As Boolean)
     If IsConfigured Then
         Exit Sub
     End If
@@ -203,6 +211,7 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     PrivRedirectOutput = NewRedirect
     PrivServerDomain = NewServerDomain
     PrivServerPort = NewServerPort
+    PrivAllowUnAbort = NewAllowUnAbort
 End Sub
 
 Private Sub AddCustomDownload(ByVal ResIndex As Long)
