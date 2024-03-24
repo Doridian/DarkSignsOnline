@@ -404,7 +404,18 @@ Public Sub SayLine(ByVal s As String)
     Yield
 End Sub
 
-Public Sub PrintVar(Param As Variant)
+Public Sub PrintVar(ParamArray Param() As Variant)
+    If UBound(Param) < 0 Then
+        Exit Sub
+    End If
+    
+    Dim X As Long
+    For X = LBound(Param) To UBound(Param)
+        PrintVarInt Param(X), "", "ArgV(" & X & ") ", 0
+    Next X
+End Sub
+
+Public Sub PrintVarSingleIfSet(Param As Variant)
     If VarType(Param) = vbEmpty Then
         Exit Sub
     End If
@@ -455,7 +466,7 @@ Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As
     Dim MainPrefix As String
     MainPrefix = Prefix
     If Index <> "" Then
-        MainPrefix = MainPrefix & "(" & Index & ") "
+        MainPrefix = MainPrefix & Index
     End If
 
     Yield
@@ -467,7 +478,7 @@ Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As
         SubPrefix = "    " & Prefix
         For X = LBound(Param) To UBound(Param)
             Yield
-            PrintVarInt Param(X), SubPrefix, X, Depth + 1
+            PrintVarInt Param(X), SubPrefix, "(" & X & ") ", Depth + 1
         Next X
     Else
         Dim StrParam As String

@@ -403,7 +403,7 @@ CommandForNext:
         ParseCommandLineInt = "Call Run(""" & ResolvedCommand & """"
         CommandNeedFirstComma = True
     Else
-        ParseCommandLineInt = "PrintVar " & Command & "("
+        ParseCommandLineInt = "PrintVarSingleIfSet " & Command & "("
         CommandNeedFirstComma = False
     End If
 
