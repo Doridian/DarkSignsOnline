@@ -394,16 +394,10 @@ CommandForNext:
     End If
 
     If ResolvedCommand <> "" Then
-        ParseCommandLineInt = "SayIfNotRoot Run(""" & ResolvedCommand & """"
+        ParseCommandLineInt = "Run(""" & ResolvedCommand & """"
         CommandNeedFirstComma = True
     Else
-        ' Try running procedure with given name
-        Select Case LCase(Command)
-            Case "connect", "connecta", "run", "runa":
-                ParseCommandLineInt = "SayIfNotRoot " & Command & "("
-            Case Else:
-                ParseCommandLineInt = "Say " & Command & "("
-        End Select
+        ParseCommandLineInt = "Say " & Command & "("
         CommandNeedFirstComma = False
     End If
 

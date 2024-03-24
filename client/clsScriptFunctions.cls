@@ -489,7 +489,7 @@ Public Function ResolvePath(ByVal Path As String) As String
     ResolvePath = basCommands.ResolvePath(PrivConsoleID, Path)
 End Function
 
-Public Function RunA(ByVal Script As String, Optional XArr As Variant) As String
+Public Function CaptureA(ByVal Script As String, Optional XArr As Variant) As String
     AssertLocalOnly
 
     Dim X As Long
@@ -507,11 +507,33 @@ Public Function RunA(ByVal Script As String, Optional XArr As Variant) As String
 
     SParamArr(0) = Script
     Yield
-    RunA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, True, Not PrivIsRoot)
+    CaptureA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, True, True)
     Yield
 End Function
 
-Public Function Run(ParamArray XArr() As Variant) As String
+Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
+    AssertLocalOnly
+
+    Dim X As Long
+    
+    Dim SParamArr() As Variant
+
+    If (VarType(XArr) And vbArray) = vbArray Then
+        ReDim SParamArr(0 To UBound(XArr) + 1)
+        For X = 0 To UBound(XArr)
+            SParamArr(X + 1) = XArr(X)
+        Next
+    Else
+        ReDim SParamArr(0 To 0)
+    End If
+
+    SParamArr(0) = Script
+    Yield
+    Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, False, PrivDisableOutput
+    Yield
+End Sub
+
+Public Function Capture(ParamArray XArr() As Variant) As String
     AssertLocalOnly
 
     Dim Script As String
@@ -524,9 +546,26 @@ Public Function Run(ParamArray XArr() As Variant) As String
     Next
 
     Yield
-    Run = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, True, Not PrivIsRoot)
+    Capture = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, True, True)
     Yield
 End Function
+
+Public Sub Run(ParamArray XArr() As Variant)
+    AssertLocalOnly
+
+    Dim Script As String
+    Script = XArr(0)
+    Dim X As Long
+    Dim SParamArr() As Variant
+    ReDim SParamArr(0 To UBound(XArr))
+    For X = 0 To UBound(XArr)
+        SParamArr(X) = XArr(X)
+    Next
+
+    Yield
+    Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, False, PrivDisableOutput
+    Yield
+End Sub
 
 Public Function DOWNLOAD(ByVal Url As String) As Integer
      DOWNLOAD = DoDownload(Url, True, "", True)
@@ -542,13 +581,13 @@ Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal
 End Function
 
 ' Params is an array
-Public Function Connect(ParamArray Params() As Variant) As String
+Public Function Fetch(ParamArray Params() As Variant) As String
     Dim Domain As String
     Dim Port As Long
     Domain = Params(0)
     Port = Params(1)
     If UBound(Params) <= 1 Then
-        Connect = ConnectA(Domain, Port)
+        Fetch = ConnectRaw(False, Domain, Port)
         Exit Function
     End If
 
@@ -558,10 +597,37 @@ Public Function Connect(ParamArray Params() As Variant) As String
     For X = 0 To UBound(DParams)
         DParams(X) = Params(X + 2)
     Next
-    Connect = ConnectA(Domain, Port, DParams)
+    Fetch = ConnectRaw(False, Domain, Port, DParams)
 End Function
 
-Public Function ConnectA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
+Public Sub Connect(ParamArray Params() As Variant)
+    Dim Domain As String
+    Dim Port As Long
+    Domain = Params(0)
+    Port = Params(1)
+    If UBound(Params) <= 1 Then
+        ConnectRaw True, Domain, Port
+        Exit Sub
+    End If
+
+    Dim DParams() As Variant
+    ReDim DParams(0 To UBound(Params) - 2)
+    Dim X As Long
+    For X = 0 To UBound(DParams)
+        DParams(X) = Params(X + 2)
+    Next
+    ConnectRaw True, Domain, Port, DParams
+End Sub
+
+Public Function FetchA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
+    FetchA = ConnectRaw(False, Domain, Port, Params)
+End Function
+
+Public Sub ConnectA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant)
+    ConnectRaw True, Domain, Port, Params
+End Sub
+
+Private Function ConnectRaw(ByVal Passthru As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
     Yield
     If Port < 1 Or Port > 65535 Then
         Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
@@ -620,10 +686,19 @@ Public Function ConnectA(ByVal Domain As String, ByVal Port As Long, Optional Pa
     b64decoded = basConsole.DecodeBase64(DomainSplit(3))
     strCode = StrConv(b64decoded, vbUnicode)
 
+    Dim DisableOutput As Boolean
+    Dim RedirectOutput As Boolean
+    RedirectOutput = Not Passthru
+    If Passthru Then
+        DisableOutput = PrivDisableOutput
+    Else
+        DisableOutput = True
+    End If
+
     Dim DomScript As String
     DomScript = "dso://" & strDomain & ":" & strPort
     DomainConnectParams(0) = DomScript
-    ConnectA = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, True, Not PrivIsRoot)
+    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput)
 
     Yield
 End Function
