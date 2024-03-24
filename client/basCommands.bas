@@ -394,7 +394,7 @@ CommandForNext:
     End If
 
     If ResolvedCommand <> "" Then
-        ParseCommandLineInt = "Call Run(""" & ResolvedCommand & """"
+        ParseCommandLineInt = "SayIfNotRoot Run(""" & ResolvedCommand & """"
         CommandNeedFirstComma = True
     Else
         ' Try running procedure with given name

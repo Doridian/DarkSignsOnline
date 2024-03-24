@@ -1,4 +1,3 @@
-CD "/"
 SAY "-"
 draw -1, 0, 0, 0, "solid"
 SAY "{center courier new 32}"
@@ -21,4 +20,4 @@ SAY "You can EDIT this startup script file by typing: EDIT system\startup.ds{lgr
 SAY "-"
 SAYcomm "Welcome to Dark Signs Delta."
 LOGIN 
-run "/system/newconsole.ds"
+SayIfNotRoot Run("/system/newconsole.ds")
