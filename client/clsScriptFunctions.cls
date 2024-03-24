@@ -373,7 +373,6 @@ Public Sub EDIT(ByVal file As String)
 End Sub
 
 Public Sub SayLine(ByVal s As String)
-    s = Trim(s)
     If s = "" Then
         Yield
         Exit Sub
@@ -409,7 +408,6 @@ Public Sub Say(ParamArray Params() As Variant)
             sStr = sStr & XV
         End If
     Next X
-    sStr = Trim(sStr)
 
     If sStr = "" Then
         Yield
@@ -451,7 +449,6 @@ Public Sub SayCOMM(ParamArray Params() As Variant)
             sStr = sStr & XV
         End If
     Next X
-    sStr = Trim(sStr)
 
     Yield
     If sStr = "" Then

@@ -216,10 +216,12 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Lo
     Dim curArg As String
     Dim curC As String
     Dim InQuotes As String
+    Dim NextInQuotes As String
     Dim X As Long
     Dim IsSimpleCommand As Boolean
     IsSimpleCommand = True
     RestStart = -1
+    NextInQuotes = ""
     Dim RestSplit As String
     Dim InComment As Boolean
     For X = 1 To Len(tmpS)
@@ -245,7 +247,7 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Lo
             Case " ":
                 GoTo NextArg
             Case """":
-                InQuotes = curC
+                NextInQuotes = curC
                 GoTo NextArg
             Case "'":
                 If curArg <> "" Or CLIArgs(0) <> "" Then
@@ -320,9 +322,10 @@ NextArg:
         Else
             CLIArgsQuoted(UBound(CLIArgs)) = False
         End If
-        InQuotes = ""
         curArg = ""
     End If
+    InQuotes = NextInQuotes
+    NextInQuotes = ""
 CommandForNext:
     Next X
 
