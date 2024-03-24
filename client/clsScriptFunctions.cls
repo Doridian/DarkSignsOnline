@@ -492,28 +492,6 @@ Public Function CaptureA(ByVal Script As String, Optional XArr As Variant) As St
     Yield
 End Function
 
-Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
-    AssertLocalOnly
-
-    Dim X As Long
-    
-    Dim SParamArr() As Variant
-
-    If (VarType(XArr) And vbArray) = vbArray Then
-        ReDim SParamArr(0 To UBound(XArr) + 1)
-        For X = 0 To UBound(XArr)
-            SParamArr(X + 1) = XArr(X)
-        Next
-    Else
-        ReDim SParamArr(0 To 0)
-    End If
-
-    SParamArr(0) = Script
-    Yield
-    Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, False, PrivDisableOutput
-    Yield
-End Sub
-
 Public Function Capture(ParamArray XArr() As Variant) As String
     AssertLocalOnly
 
@@ -531,6 +509,33 @@ Public Function Capture(ParamArray XArr() As Variant) As String
     Yield
 End Function
 
+Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
+    AssertLocalOnly
+
+    Dim X As Long
+    
+    Dim SParamArr() As Variant
+
+    If (VarType(XArr) And vbArray) = vbArray Then
+        ReDim SParamArr(0 To UBound(XArr) + 1)
+        For X = 0 To UBound(XArr)
+            SParamArr(X + 1) = XArr(X)
+        Next
+    Else
+        ReDim SParamArr(0 To 0)
+    End If
+
+    Dim Output As String
+    SParamArr(0) = Script
+    Yield
+    Output = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, PrivDisableOutput And PrivRedirectOutput, PrivDisableOutput)
+    Yield
+
+    If PrivDisableOutput And PrivRedirectOutput Then
+        Say Output
+    End If
+End Sub
+
 Public Sub Run(ParamArray XArr() As Variant)
     AssertLocalOnly
 
@@ -543,9 +548,14 @@ Public Sub Run(ParamArray XArr() As Variant)
         SParamArr(X) = XArr(X)
     Next
 
+    Dim Output As String
     Yield
-    Run_Script ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, False, PrivDisableOutput
+    Output = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, PrivDisableOutput And PrivRedirectOutput, PrivDisableOutput)
     Yield
+
+    If PrivDisableOutput And PrivRedirectOutput Then
+        Say Output
+    End If
 End Sub
 
 Public Function DOWNLOAD(ByVal Url As String) As Integer
@@ -561,14 +571,13 @@ Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal
     Yield
 End Function
 
-' Params is an array
 Public Function Fetch(ParamArray Params() As Variant) As String
     Dim Domain As String
     Dim Port As Long
     Domain = Params(0)
     Port = Params(1)
     If UBound(Params) <= 1 Then
-        Fetch = ConnectRaw(False, Domain, Port)
+        Fetch = ConnectRaw(False, True, True, Domain, Port)
         Exit Function
     End If
 
@@ -578,17 +587,24 @@ Public Function Fetch(ParamArray Params() As Variant) As String
     For X = 0 To UBound(DParams)
         DParams(X) = Params(X + 2)
     Next
-    Fetch = ConnectRaw(False, Domain, Port, DParams)
+    Fetch = ConnectRaw(False, True, True, Domain, Port, DParams)
+End Function
+
+' Params is an array
+Public Function FetchA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
+    FetchA = ConnectRaw(False, True, True, Domain, Port, Params)
 End Function
 
 Public Sub Connect(ParamArray Params() As Variant)
+    Dim Res As String
+
     Dim Domain As String
     Dim Port As Long
     Domain = Params(0)
     Port = Params(1)
     If UBound(Params) <= 1 Then
-        ConnectRaw True, Domain, Port
-        Exit Sub
+        Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port)
+        GoTo HandleRes
     End If
 
     Dim DParams() As Variant
@@ -597,25 +613,31 @@ Public Sub Connect(ParamArray Params() As Variant)
     For X = 0 To UBound(DParams)
         DParams(X) = Params(X + 2)
     Next
-    ConnectRaw True, Domain, Port, DParams
+
+    Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port, DParams)
+HandleRes:
+    If PrivRedirectOutput And PrivDisableOutput Then
+        Say Res
+    End If
 End Sub
 
-Public Function FetchA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
-    FetchA = ConnectRaw(False, Domain, Port, Params)
-End Function
-
+' Params is an array
 Public Sub ConnectA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant)
-    ConnectRaw True, Domain, Port, Params
+    Dim Res As String
+    Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port, Params)
+    If PrivRedirectOutput And PrivDisableOutput Then
+        Say Res
+    End If
 End Sub
 
-Private Function ConnectRaw(ByVal Passthru As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
+Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
     Yield
     If Port < 1 Or Port > 65535 Then
         Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
         Exit Function
     End If
 
-    If Passthru Then
+    If Verbose Then
         Say "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
     End If
 
@@ -635,7 +657,7 @@ Private Function ConnectRaw(ByVal Passthru As Boolean, ByVal Domain As String, B
             "&port=" & EncodeURLParameter(Port), True, "")
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
-    
+
     Select Case DomainRequest.Code
         Case 404:
             RaiseMiscError "Could not connect to" & UCase(Domain) & ":" & Port & " -> Not found"
@@ -666,15 +688,6 @@ Private Function ConnectRaw(ByVal Passthru As Boolean, ByVal Domain As String, B
     Dim strCode As String
     b64decoded = basConsole.DecodeBase64(DomainSplit(3))
     strCode = StrConv(b64decoded, vbUnicode)
-
-    Dim DisableOutput As Boolean
-    Dim RedirectOutput As Boolean
-    RedirectOutput = Not Passthru
-    If Passthru Then
-        DisableOutput = PrivDisableOutput
-    Else
-        DisableOutput = True
-    End If
 
     Dim DomScript As String
     DomScript = "dso://" & strDomain & ":" & strPort
