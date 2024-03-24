@@ -410,9 +410,9 @@ Public Sub PrintVar(ParamArray Param() As Variant)
         Exit Sub
     End If
 
-    If LBound(Param) = UBound(Param) And VarType(Param(0)) = vbString Then
+    If LBound(Param) = UBound(Param) And VarType(Param(UBound(Param))) = vbString Then
         Say "{blue}Single value of type String. See below:"
-        Say Param
+        Say Param(UBound(Param))
         Exit Sub
     End If
 
@@ -427,13 +427,7 @@ Public Sub PrintVarSingleIfSet(Param As Variant)
         Exit Sub
     End If
 
-    If VarType(Param) = vbString Then
-        Say "{blue}Single value of type String. See below:"
-        Say Param
-        Exit Sub
-    End If
-
-    PrintVarInt Param, "", "", 0
+    PrintVar Param
 End Sub
 
 Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As String, ByVal Depth As String)
