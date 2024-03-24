@@ -398,7 +398,7 @@ CommandForNext:
         CommandNeedFirstComma = True
     Else
         ' Try running procedure with given name
-        ParseCommandLineInt = "Call " & Command & "("
+        ParseCommandLineInt = "Say " & Command & "("
         CommandNeedFirstComma = False
     End If
 

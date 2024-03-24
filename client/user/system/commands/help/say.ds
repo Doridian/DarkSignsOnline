@@ -13,5 +13,3 @@ Say "{lgreen}Fonts: Arial, Arial Black, Comic Sans MS, Courier New, Georgia, Imp
 Say "{lgreen}Fonts: Lucida Console, Tahoma, Times New Roman, Trebuchet MS, Verdana, Wingdings."
 Say "{lgreen}Attributes: Bold, NoBold, Italic, NoItalic, Underline, NoUnderline, Strikethru, NoStrikethru."
 Say "{lgreen}Extras: Flash, Flashfast, FlashSlow."
-Say "{orange}Note: You cannot use SAY to display multiple lines of text."
-Say "{orange}For multiple lines, use SAYALL instead."
