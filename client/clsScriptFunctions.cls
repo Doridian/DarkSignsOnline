@@ -404,12 +404,98 @@ Public Sub SayLine(ByVal s As String)
     Yield
 End Sub
 
+Public Sub PrintVar(Param As Variant, Optional ByVal Prefix As String = "", Optional ByVal Index As String = "", Optional ByVal Depth As String = 0)
+    If Depth < 0 Then
+        Depth = 0
+    End If
+    Dim TypeName As String
+
+    Select Case (VarType(Param) And (Not vbArray))
+        Case vbBoolean:
+            TypeName = "Boolean"
+        Case vbByte:
+            TypeName = "Byte"
+        Case vbCurrency:
+            TypeName = "Currency"
+        Case vbDataObject:
+            TypeName = "DataObject"
+        Case vbDate:
+            TypeName = "Date"
+        Case vbDecimal:
+            TypeName = "Decimal"
+        Case vbDouble:
+            TypeName = "Double"
+        Case vbEmpty:
+            TypeName = "Empty"
+        Case vbError:
+            TypeName = "Error"
+        Case vbInteger:
+            TypeName = "Integer"
+        Case vbLong:
+            TypeName = "Long"
+        Case vbNull:
+            TypeName = "Null"
+        Case vbObject:
+            TypeName = "Object"
+        Case vbSingle:
+            TypeName = "Single"
+        Case vbString:
+            TypeName = "String"
+        Case vbUserDefinedType:
+            TypeName = "UserDefinedType"
+        Case vbVariant:
+            TypeName = "Variant"
+    End Select
+    
+    Dim MainPrefix As String
+    MainPrefix = Prefix
+    If Index <> "" Then
+        MainPrefix = MainPrefix & "(" & Index & ") "
+    End If
+
+    Yield
+    If (VarType(Param) And vbArray) = vbArray Then
+        Dim X As Long
+        Dim XV As String
+        Say MainPrefix & "{yellow}Array of element type " & TypeName & " from " & LBound(Param) & " to " & UBound(Param)
+        Dim SubPrefix As String
+        SubPrefix = "    " & Prefix
+        For X = LBound(Param) To UBound(Param)
+            Yield
+            PrintVar Param(X), SubPrefix, X
+        Next X
+    ElseIf VarType(Param) <> vbEmpty Then
+        Dim StrParam As String
+        StrParam = "" & Param
+        Dim StrPos As Long
+        Dim HadCut As Boolean
+        HadCut = False
+        StrPos = InStr(StrParam, vbCr)
+        If StrPos > 0 Then
+            StrParam = Left(StrParam, StrPos - 1)
+            HadCut = True
+        End If
+        StrPos = InStr(StrParam, vbLf)
+        If StrPos > 0 Then
+            StrParam = Left(StrParam, StrPos - 1)
+            HadCut = True
+        End If
+
+        If HadCut Then
+            StrParam = StrParam & " [...]"
+        End If
+
+        Say MainPrefix & "{blue}Value of type " & TypeName & " = " & StrParam
+    End If
+    Yield
+End Sub
+
 Public Sub Say(ParamArray Params() As Variant)
     Dim X As Long
     Dim sStr As String
     Dim XV As String
     For X = LBound(Params) To UBound(Params)
-        XV = Params(X)
+        XV = "" & Params(X)
         If XV <> "" Then
             If sStr <> "" Then
                 sStr = sStr & " "

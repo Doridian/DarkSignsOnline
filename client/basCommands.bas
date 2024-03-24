@@ -400,10 +400,10 @@ CommandForNext:
     End If
 
     If ResolvedCommand <> "" Then
-        ParseCommandLineInt = "Run(""" & ResolvedCommand & """"
+        ParseCommandLineInt = "Call Run(""" & ResolvedCommand & """"
         CommandNeedFirstComma = True
     Else
-        ParseCommandLineInt = "Say " & Command & "("
+        ParseCommandLineInt = "PrintVar " & Command & "("
         CommandNeedFirstComma = False
     End If
 
