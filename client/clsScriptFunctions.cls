@@ -406,9 +406,10 @@ End Sub
 
 Public Sub PrintVar(ParamArray Param() As Variant)
     If UBound(Param) < 0 Then
+        Say "No arguments to print{orange}"
         Exit Sub
     End If
-    
+
     Dim X As Long
     For X = LBound(Param) To UBound(Param)
         PrintVarInt Param(X), "", "ArgV(" & X & ") ", 0
