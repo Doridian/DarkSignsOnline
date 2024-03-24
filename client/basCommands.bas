@@ -145,14 +145,14 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
 
     scrConsoleContext(ConsoleID).Aborted = False
 
+    On Error GoTo EvalError
+
     Dim RunStr As String
     Dim OptionDScript As Boolean
     OptionDScript = scrConsoleDScript(ConsoleID)
     RunStr = ParseCommandLine(tmpS, OptionDScript)
     scrConsoleDScript(ConsoleID) = OptionDScript
-    'SayCOMM "SHEXEC: " & RunStr, ConsoleID
 
-    On Error GoTo EvalError
     scrConsole(ConsoleID).AddCode RunStr
     On Error GoTo 0
     GoTo ScriptEnd
@@ -169,7 +169,7 @@ EvalError:
     If Err.Number = 13 Then
         ErrHelp = "This error might mean the command you tried to use does not exist"
     End If
-    SayRaw ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") " & ErrHelp & " {red}"
+    SayRaw ConsoleID, "Error processing CLI input: " & Err.Description & " (" & Str(Err.Number) & ") " & ErrHelp & " {red}"
     GoTo ScriptEnd
 
 ScriptCancelled:
@@ -305,6 +305,9 @@ AddToArg:
     curArg = curArg & curC
     If X <> Len(tmpS) Then
         GoTo CommandForNext
+    End If
+    If InQuotes <> "" Then
+        Err.Raise vbObjectError + 9302, "DSO", "Unclosed quote in command"
     End If
 NextArg:
     If curArg <> "" Or InQuotes <> "" Then

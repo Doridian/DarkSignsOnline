@@ -501,6 +501,9 @@ Public Function CaptureA(ByVal Script As String, Optional XArr As Variant) As St
 End Function
 
 Public Function Capture(ParamArray XArr() As Variant) As String
+    If UBound(XArr) < 0 Then
+        RaiseMiscError "Capture needs at least one parameter (the script)"
+    End If
     AssertLocalOnly
 
     Dim Script As String
@@ -545,6 +548,9 @@ Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
 End Sub
 
 Public Sub Run(ParamArray XArr() As Variant)
+    If UBound(XArr) < 0 Then
+        RaiseMiscError "Run needs at least one parameter (the script)"
+    End If
     AssertLocalOnly
 
     Dim Script As String
@@ -580,6 +586,10 @@ Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal
 End Function
 
 Public Function Fetch(ParamArray Params() As Variant) As String
+    If UBound(Params) < 1 Then
+        RaiseMiscError "Fetch needs at least two parameters (domain and port)"
+    End If
+
     Dim Domain As String
     Dim Port As Long
     Domain = Params(0)
@@ -604,6 +614,10 @@ Public Function FetchA(ByVal Domain As String, ByVal Port As Long, Optional Para
 End Function
 
 Public Sub Connect(ParamArray Params() As Variant)
+    If UBound(Params) < 1 Then
+        RaiseMiscError "Connect needs at least two parameters (domain and port)"
+    End If
+
     Dim Res As String
 
     Dim Domain As String
