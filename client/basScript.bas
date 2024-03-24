@@ -35,7 +35,7 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False
+    G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput
     s.AddObject "DSO", G, True
 
     tmpAll = ParseCommandLineOptional(tmpAll, ServerPort <= 0)

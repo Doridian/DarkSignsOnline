@@ -31,7 +31,6 @@ Public Aborted As Boolean
 Private PrivDisableOutput As Boolean
 Private PrivRedirectOutput As Boolean
 Private PrivOutput As String
-Private PrivIsRoot As Boolean
 Private PrivServerDomain As String
 Private PrivServerPort As Long
 
@@ -61,10 +60,6 @@ Public Property Get Password() As String
     Else
         Password = "[hidden]"
     End If
-End Property
-
-Public Property Get IsRoot() As Boolean
-    IsRoot = PrivIsRoot
 End Property
 
 Public Property Get IsOutputDisabled() As Boolean
@@ -193,7 +188,7 @@ Public Function GetASCII() As Long
     GetASCII = GetAsciiWaiting(ConsoleID)
 End Function
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewIsRoot As Boolean)
+Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean)
     If IsConfigured Then
         Exit Sub
     End If
@@ -206,7 +201,6 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     FileKey = NewFileKey
     PrivDisableOutput = NewDisableOutput
     PrivRedirectOutput = NewRedirect
-    PrivIsRoot = NewIsRoot
     PrivServerDomain = NewServerDomain
     PrivServerPort = NewServerPort
 End Sub
@@ -399,19 +393,6 @@ Public Sub SayLine(ByVal s As String)
     Yield
     basConsole.SayRaw PrivConsoleID, s, False
     Yield
-End Sub
-
-Public Sub SayIfNotRoot(Param As Variant)
-    If PrivIsRoot Then
-        Exit Sub
-    End If
-
-    Select Case VarType(Param)
-        Case vbEmpty, vbNull:
-            Exit Sub
-    End Select
-
-    Say Param
 End Sub
 
 Public Sub Say(ParamArray Params() As Variant)
@@ -633,8 +614,8 @@ Private Function ConnectRaw(ByVal Passthru As Boolean, ByVal Domain As String, B
         Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
         Exit Function
     End If
-    
-    If PrivIsRoot Then
+
+    If Passthru Then
         Say "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
     End If
 
