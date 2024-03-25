@@ -12,7 +12,7 @@ Public Sub InitBasCommands()
     For X = 1 To 4
         Set scrConsole(X) = New ScriptControl
         scrConsole(X).AllowUI = False
-        scrConsole(X).Timeout = 1000
+        scrConsole(X).Timeout = -1
         scrConsole(X).UseSafeSubset = True
         scrConsole(X).Language = "VBScript"
 
@@ -150,7 +150,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     Dim RunStr As String
     Dim OptionDScript As Boolean
     OptionDScript = scrConsoleDScript(ConsoleID)
-    RunStr = ParseCommandLine(tmpS, OptionDScript)
+    RunStr = ParseCommandLine(tmpS, OptionDScript, True)
     scrConsoleDScript(ConsoleID) = OptionDScript
 
     scrConsole(ConsoleID).AddCode RunStr
@@ -185,30 +185,23 @@ Public Function ParseCommandLineOptional(ByVal tmpS As String, Optional ByVal Al
     ParseCommandLineOptional = ParseCommandLine(tmpS, OptionDScript, AllowCommands)
 End Function
 
-Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Boolean, Optional ByVal AllowCommands As Boolean = True) As String
-    Dim OptionDScriptEverUsed As Boolean
-    OptionDScriptEverUsed = OptionDScript
-    ParseCommandLine = ParseCommandLineInt2(tmpS, OptionDScript, OptionDScriptEverUsed, AllowCommands)
-End Function
-
-Private Function ParseCommandLineInt2(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByRef OpenDScriptEverUsed As Boolean, ByVal AllowCommands As Boolean) As String
+Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByVal AllowCommands As Boolean) As String
     Dim OptionExplicit As Boolean
     OptionExplicit = True
-    OpenDScriptEverUsed = Not Not OptionDScript
     Dim RestStart As Long
     RestStart = 1
-    ParseCommandLineInt2 = ""
+    ParseCommandLine = ""
     While RestStart > 0
         tmpS = Mid(tmpS, RestStart)
-        ParseCommandLineInt2 = ParseCommandLineInt2 & ParseCommandLineInt(tmpS, RestStart, OptionExplicit, OptionDScript, OpenDScriptEverUsed, AllowCommands)
+        ParseCommandLine = ParseCommandLine & ParseCommandLineInt(tmpS, RestStart, OptionExplicit, OptionDScript, AllowCommands)
     Wend
 
     If OptionExplicit Then
-        ParseCommandLineInt2 = "Option Explicit : " & ParseCommandLineInt2
+        ParseCommandLine = "Option Explicit : " & ParseCommandLine
     End If
 End Function
 
-Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Long, ByRef OptionExplicit As Boolean, ByRef OptionDScript As Boolean, ByRef OpenDScriptEverUsed As Boolean, ByVal AllowCommands As Boolean) As String
+Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Long, ByRef OptionExplicit As Boolean, ByRef OptionDScript As Boolean, ByVal AllowCommands As Boolean) As String
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
     ReDim CLIArgs(0 To 0)
@@ -217,13 +210,17 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Lo
     Dim curC As String
     Dim InQuotes As String
     Dim NextInQuotes As String
-    Dim X As Long
+    Dim InjectYield As Boolean
     Dim IsSimpleCommand As Boolean
+    Dim RestSplit As String
+    Dim InComment As Boolean
+
     IsSimpleCommand = True
     RestStart = -1
     NextInQuotes = ""
-    Dim RestSplit As String
-    Dim InComment As Boolean
+    InjectYield = False
+
+    Dim X As Long
     For X = 1 To Len(tmpS)
         curC = Mid(tmpS, X, 1)
         If InQuotes <> "" Then
@@ -332,6 +329,12 @@ NextArg:
 CommandForNext:
     Next X
 
+    Dim Command As String
+    Command = Trim(LCase(CLIArgs(0)))
+    If Command = "for" Or Command = "while" Or Command = "do" Then
+        InjectYield = True
+    End If
+
     If CLIArgsQuoted(0) Or Not IsSimpleCommand Then
         GoTo NotASimpleCommand
     End If
@@ -344,29 +347,24 @@ CommandForNext:
         ParseCommandLineInt = ""
         Exit Function
     End If
-
-    ' If we arrive here, it means the user probably intended to run a CLI command!
-    Dim Command As String
-    Command = Trim(LCase(CLIArgs(0)))
     
     Dim ArgStart As Long
     ArgStart = 1
     
     Select Case Command
-        Case "for", "next", "while", "wend", "do", "loop", "until", _
+        Case "next", "wend", "loop", "until", _
                 "if", "else", "elseif", "end", _
                 "public", "private", "property", "dim", "sub", "function", _
                 "const", "enum", "redim", "set", "goto", "type", _
-                "throw", "catch", "try", "finally", "on":
+                "throw", "catch", "try", "finally", "on", _
+                "for", "while", "do":
             GoTo NotASimpleCommand
         Case "option":
             If UBound(CLIArgs) >= 1 Then
                 Command = Trim(LCase(CLIArgs(1)))
                 If Command = "dscript" Then
-                    OpenDScriptEverUsed = True
                     OptionDScript = True
                 ElseIf Command = "nodscript" Then
-                    OpenDScriptEverUsed = True
                     OptionDScript = False
                 Else
                     GoTo NotASimpleCommand
@@ -429,6 +427,10 @@ NotASimpleCommandButWithOE:
     End If
 
 RunSplitCommand:
+    If InjectYield Then
+        ParseCommandLineInt = ParseCommandLineInt & vbCrLf & "Yield" & vbCrLf
+    End If
+
     If RestStart < 0 Then
         Exit Function
     End If
