@@ -261,13 +261,3 @@ Public Function CountCharsInString(ByVal s As String, ByVal sFind As String) As 
     Next n
 End Function
 
-Public Function DSOEncode(ByVal s As String) As String
-    DSOEncode = s
-End Function
-
-Public Function DSODecode(ByVal s As String) As String
-    DSODecode = s
-End Function
-
-
-

@@ -694,6 +694,10 @@ Public Function HttpRequest(ByVal Url As String, Optional ByVal PostData As Stri
      HttpRequest = DoDownload(Url, PostData <> "", PostData, True)
 End Function
 
+Public Function URLEncode(ByVal Param As String) As String
+    URLEncode = basWorld.EncodeURLParameter(Param)
+End Function
+
 Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String)
     If PrivDisableOutput Then
         Yield
