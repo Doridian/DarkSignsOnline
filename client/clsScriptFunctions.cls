@@ -596,100 +596,6 @@ Public Function ResolvePath(ByVal Path As String) As String
     ResolvePath = basCommands.ResolvePath(PrivConsoleID, Path)
 End Function
 
-Public Function CaptureA(ByVal Script As String, Optional XArr As Variant) As String
-    AssertLocalOnly
-
-    Dim X As Long
-    
-    Dim SParamArr() As Variant
-
-    If (VarType(XArr) And vbArray) = vbArray Then
-        ReDim SParamArr(0 To UBound(XArr) + 1)
-        For X = 0 To UBound(XArr)
-            SParamArr(X + 1) = XArr(X)
-        Next
-    Else
-        ReDim SParamArr(0 To 0)
-    End If
-
-    SParamArr(0) = Script
-    Yield
-    CaptureA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, True, True)
-    Yield
-End Function
-
-Public Function Capture(ParamArray XArr() As Variant) As String
-    If UBound(XArr) < 0 Then
-        RaiseMiscError "Capture needs at least one parameter (the script)"
-    End If
-    AssertLocalOnly
-
-    Dim Script As String
-    Script = XArr(0)
-    Dim X As Long
-    Dim SParamArr() As Variant
-    ReDim SParamArr(0 To UBound(XArr))
-    For X = 0 To UBound(XArr)
-        SParamArr(X) = XArr(X)
-    Next
-
-    Yield
-    Capture = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, True, True)
-    Yield
-End Function
-
-Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
-    AssertLocalOnly
-
-    Dim X As Long
-    
-    Dim SParamArr() As Variant
-
-    If (VarType(XArr) And vbArray) = vbArray Then
-        ReDim SParamArr(0 To UBound(XArr) + 1)
-        For X = 0 To UBound(XArr)
-            SParamArr(X + 1) = XArr(X)
-        Next
-    Else
-        ReDim SParamArr(0 To 0)
-    End If
-
-    Dim Output As String
-    SParamArr(0) = Script
-    Yield
-    Output = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, PrivDisableOutput And PrivRedirectOutput, PrivDisableOutput)
-    Yield
-
-    If PrivDisableOutput And PrivRedirectOutput Then
-        Say Output
-    End If
-End Sub
-
-Public Sub Run(ParamArray XArr() As Variant)
-    If UBound(XArr) < 0 Then
-        RaiseMiscError "Run needs at least one parameter (the script)"
-    End If
-    AssertLocalOnly
-
-    Dim Script As String
-    Script = XArr(0)
-    Dim X As Long
-    Dim SParamArr() As Variant
-    ReDim SParamArr(0 To UBound(XArr))
-    For X = 0 To UBound(XArr)
-        SParamArr(X) = XArr(X)
-    Next
-
-    Dim Output As String
-    Yield
-    Output = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, PrivDisableOutput And PrivRedirectOutput, PrivDisableOutput)
-    Yield
-
-    If PrivDisableOutput And PrivRedirectOutput Then
-        Say Output
-    End If
-End Sub
-
 Public Function HttpRequest(ByVal Url As String, Optional ByVal PostData As String = "") As Integer
      HttpRequest = DoDownload(Url, PostData <> "", PostData, True)
 End Function
@@ -977,4 +883,159 @@ Public Sub Yield()
     End If
 
     DoEvents
+End Sub
+
+
+' RUN CODE FROM FILE
+
+Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Script As String, Optional XArr As Variant) As String
+    AssertLocalOnly
+
+    Dim X As Long
+    
+    Dim SParamArr() As Variant
+
+    If (VarType(XArr) And vbArray) = vbArray Then
+        ReDim SParamArr(0 To UBound(XArr) + 1)
+        For X = 0 To UBound(XArr)
+            SParamArr(X + 1) = XArr(X)
+        Next
+    Else
+        ReDim SParamArr(0 To 0)
+    End If
+
+    SParamArr(0) = Script
+    Yield
+    RawRunCaptureA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, RedirectOutput, DisableOutput)
+    Yield
+End Function
+
+Public Function CaptureA(ByVal Script As String, Optional XArr As Variant) As String
+    CaptureA = RawRunCaptureA(True, True, Script, XArr)
+End Function
+
+Public Function Capture(ParamArray XArr() As Variant) As String
+    If UBound(XArr) < 0 Then
+        RaiseMiscError "Capture needs at least one parameter (the script)"
+    End If
+
+    Dim Script As String
+    Script = XArr(0)
+    If UBound(XArr) = 0 Then
+        Capture = CaptureA(Script)
+        Exit Function
+    End If
+
+    Dim X As Long
+    Dim SParamArr() As Variant
+    ReDim SParamArr(0 To UBound(XArr) - 1)
+    For X = 0 To UBound(SParamArr)
+        SParamArr(X) = XArr(X + 1)
+    Next
+    Capture = CaptureA(Script, SParamArr)
+End Function
+
+Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
+    Dim Output As String
+    Output = RawRunCaptureA(True, True, Script, XArr)
+    If PrivDisableOutput And PrivRedirectOutput Then
+        Say Output
+    End If
+End Sub
+
+Public Sub Run(ParamArray XArr() As Variant)
+    If UBound(XArr) < 0 Then
+        RaiseMiscError "Run needs at least one parameter (the script)"
+    End If
+
+    Dim Script As String
+    Script = XArr(0)
+    If UBound(XArr) = 0 Then
+        RunA Script
+        Exit Sub
+    End If
+
+    Dim X As Long
+    Dim SParamArr() As Variant
+    ReDim SParamArr(0 To UBound(XArr) - 1)
+    For X = 0 To UBound(SParamArr)
+        SParamArr(X) = XArr(X + 1)
+    Next
+    RunA Script, SParamArr
+End Sub
+
+' RUN CODE FROM STRING
+
+Private Function RawRunCaptureCodeA(ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Code As String, Optional XArr As Variant) As String
+    Dim X As Long
+    
+    Dim SParamArr() As Variant
+
+    If (VarType(XArr) And vbArray) = vbArray Then
+        ReDim SParamArr(0 To UBound(XArr) + 1)
+        For X = 0 To UBound(XArr)
+            SParamArr(X + 1) = XArr(X)
+        Next
+    Else
+        ReDim SParamArr(0 To 0)
+    End If
+
+    SParamArr(0) = "inline://"
+    Yield
+    RawRunCaptureCodeA = Run_Script_Code(Code, PrivConsoleID, SParamArr, "RunCode", FileKey, PrivServerDomain, PrivServerPort, False, RedirectOutput, DisableOutput)
+    Yield
+End Function
+
+Public Function CaptureCodeA(ByVal Code As String, Optional XArr As Variant) As String
+    CaptureCodeA = RawRunCaptureCodeA(True, True, Code, XArr)
+End Function
+
+Public Function CaptureCode(ParamArray XArr() As Variant) As String
+    If UBound(XArr) < 0 Then
+        RaiseMiscError "CaptureCode needs at least one parameter (the code)"
+    End If
+
+    Dim Script As String
+    Script = XArr(0)
+    If UBound(XArr) = 0 Then
+        CaptureCode = CaptureCodeA(Script)
+        Exit Function
+    End If
+
+    Dim X As Long
+    Dim SParamArr() As Variant
+    ReDim SParamArr(0 To UBound(XArr) - 1)
+    For X = 0 To UBound(SParamArr)
+        SParamArr(X) = XArr(X + 1)
+    Next
+    CaptureCode = CaptureCodeA(Script, SParamArr)
+End Function
+
+Public Sub RunCodeA(ByVal Code As String, Optional XArr As Variant)
+    Dim Output As String
+    Output = RawRunCaptureCodeA(True, True, Code, XArr)
+    If PrivDisableOutput And PrivRedirectOutput Then
+        Say Output
+    End If
+End Sub
+
+Public Sub RunCode(ParamArray XArr() As Variant)
+    If UBound(XArr) < 0 Then
+        RaiseMiscError "RunCode needs at least one parameter (the code)"
+    End If
+
+    Dim Script As String
+    Script = XArr(0)
+    If UBound(XArr) = 0 Then
+        RunCodeA Script
+        Exit Sub
+    End If
+
+    Dim X As Long
+    Dim SParamArr() As Variant
+    ReDim SParamArr(0 To UBound(XArr) - 1)
+    For X = 0 To UBound(SParamArr)
+        SParamArr(X) = XArr(X + 1)
+    Next
+    RunCodeA Script, SParamArr
 End Sub
