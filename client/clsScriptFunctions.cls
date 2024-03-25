@@ -613,140 +613,6 @@ Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal
     Yield
 End Function
 
-Public Function Fetch(ParamArray Params() As Variant) As String
-    If UBound(Params) < 1 Then
-        RaiseMiscError "Fetch needs at least two parameters (domain and port)"
-    End If
-
-    Dim Domain As String
-    Dim Port As Long
-    Domain = Params(0)
-    Port = Params(1)
-    If UBound(Params) <= 1 Then
-        Fetch = ConnectRaw(False, True, True, Domain, Port)
-        Exit Function
-    End If
-
-    Dim DParams() As Variant
-    ReDim DParams(0 To UBound(Params) - 2)
-    Dim X As Long
-    For X = 0 To UBound(DParams)
-        DParams(X) = Params(X + 2)
-    Next
-    Fetch = ConnectRaw(False, True, True, Domain, Port, DParams)
-End Function
-
-' Params is an array
-Public Function FetchA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
-    FetchA = ConnectRaw(False, True, True, Domain, Port, Params)
-End Function
-
-Public Sub Connect(ParamArray Params() As Variant)
-    If UBound(Params) < 1 Then
-        RaiseMiscError "Connect needs at least two parameters (domain and port)"
-    End If
-
-    Dim Res As String
-
-    Dim Domain As String
-    Dim Port As Long
-    Domain = Params(0)
-    Port = Params(1)
-    If UBound(Params) <= 1 Then
-        Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port)
-        GoTo HandleRes
-    End If
-
-    Dim DParams() As Variant
-    ReDim DParams(0 To UBound(Params) - 2)
-    Dim X As Long
-    For X = 0 To UBound(DParams)
-        DParams(X) = Params(X + 2)
-    Next
-
-    Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port, DParams)
-HandleRes:
-    If PrivRedirectOutput And PrivDisableOutput Then
-        Say Res
-    End If
-End Sub
-
-' Params is an array
-Public Sub ConnectA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant)
-    Dim Res As String
-    Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port, Params)
-    If PrivRedirectOutput And PrivDisableOutput Then
-        Say Res
-    End If
-End Sub
-
-Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
-    Yield
-    If Port < 1 Or Port > 65535 Then
-        Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
-        Exit Function
-    End If
-
-    If Verbose Then
-        Say "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
-    End If
-
-    Dim X As Long
-    Dim DomainConnectParams() As Variant
-    If (VarType(Params) And vbArray) = vbArray Then
-        ReDim DomainConnectParams(0 To UBound(Params) + 1)
-        For X = 1 To UBound(DomainConnectParams)
-            DomainConnectParams(X) = Params(X - 1)
-        Next
-    Else
-        ReDim DomainConnectParams(0 To 0)
-    End If
-
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_connect.php?d=" & EncodeURLParameter(Domain) & _
-            "&port=" & EncodeURLParameter(Port), True, "")
-    Dim DomainRequest As clsHttpResponse
-    Set DomainRequest = WAITFOR(DomainRequestIdx)
-
-    Select Case DomainRequest.Code
-        Case 404:
-            RaiseMiscError "Could not connect to" & UCase(Domain) & ":" & Port & " -> Not found"
-        Case 403:
-            RaiseMiscError "Could not connect to" & UCase(Domain) & ":" & Port & " -> Access denied"
-        Case Else:
-            DomainRequest.RaiseForStatus
-    End Select
-
-    Dim DomainSplit() As String
-    DomainSplit = Split(DomainRequest.Response, ":-:")
-    ' 0 = domain
-    ' 1 = port
-    ' 2 = filekey
-    ' 3 = code
-
-    Dim strDomain As String
-    strDomain = DomainSplit(0)
-    Dim strPort As Long
-    strPort = Val(DomainSplit(1))
-    If strPort <= 0 Then
-        strPort = 99999
-    End If
-    Dim strFileKey As String
-    strFileKey = DomainSplit(2)
-
-    Dim b64decoded() As Byte
-    Dim strCode As String
-    b64decoded = basConsole.DecodeBase64(DomainSplit(3))
-    strCode = StrConv(b64decoded, vbUnicode)
-
-    Dim DomScript As String
-    DomScript = "dso://" & strDomain & ":" & strPort
-    DomainConnectParams(0) = DomScript
-    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput)
-
-    Yield
-End Function
-
 Private Sub RaiseMiscError(ByVal Desc As String)
     Err.Raise vbObjectError + 9666, "DSO", Desc
 End Sub
@@ -1039,3 +905,141 @@ Public Sub RunCode(ParamArray XArr() As Variant)
     Next
     RunCodeA Script, SParamArr
 End Sub
+
+
+' RUN CODE FROM DSO DOMAIN
+
+Public Function Fetch(ParamArray Params() As Variant) As String
+    If UBound(Params) < 1 Then
+        RaiseMiscError "Fetch needs at least two parameters (domain and port)"
+    End If
+
+    Dim Domain As String
+    Dim Port As Long
+    Domain = Params(0)
+    Port = Params(1)
+    If UBound(Params) <= 1 Then
+        Fetch = ConnectRaw(False, True, True, Domain, Port)
+        Exit Function
+    End If
+
+    Dim DParams() As Variant
+    ReDim DParams(0 To UBound(Params) - 2)
+    Dim X As Long
+    For X = 0 To UBound(DParams)
+        DParams(X) = Params(X + 2)
+    Next
+    Fetch = ConnectRaw(False, True, True, Domain, Port, DParams)
+End Function
+
+' Params is an array
+Public Function FetchA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
+    FetchA = ConnectRaw(False, True, True, Domain, Port, Params)
+End Function
+
+Public Sub Connect(ParamArray Params() As Variant)
+    If UBound(Params) < 1 Then
+        RaiseMiscError "Connect needs at least two parameters (domain and port)"
+    End If
+
+    Dim Res As String
+
+    Dim Domain As String
+    Dim Port As Long
+    Domain = Params(0)
+    Port = Params(1)
+    If UBound(Params) <= 1 Then
+        Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port)
+        GoTo HandleRes
+    End If
+
+    Dim DParams() As Variant
+    ReDim DParams(0 To UBound(Params) - 2)
+    Dim X As Long
+    For X = 0 To UBound(DParams)
+        DParams(X) = Params(X + 2)
+    Next
+
+    Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port, DParams)
+HandleRes:
+    If PrivRedirectOutput And PrivDisableOutput Then
+        Say Res
+    End If
+End Sub
+
+' Params is an array
+Public Sub ConnectA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant)
+    Dim Res As String
+    Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port, Params)
+    If PrivRedirectOutput And PrivDisableOutput Then
+        Say Res
+    End If
+End Sub
+
+Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
+    Yield
+    If Port < 1 Or Port > 65535 Then
+        Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
+        Exit Function
+    End If
+
+    If Verbose Then
+        Say "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
+    End If
+
+    Dim X As Long
+    Dim DomainConnectParams() As Variant
+    If (VarType(Params) And vbArray) = vbArray Then
+        ReDim DomainConnectParams(0 To UBound(Params) + 1)
+        For X = 1 To UBound(DomainConnectParams)
+            DomainConnectParams(X) = Params(X - 1)
+        Next
+    Else
+        ReDim DomainConnectParams(0 To 0)
+    End If
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("domain_connect.php?d=" & EncodeURLParameter(Domain) & _
+            "&port=" & EncodeURLParameter(Port), True, "")
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+
+    Select Case DomainRequest.Code
+        Case 404:
+            RaiseMiscError "Could not connect to" & UCase(Domain) & ":" & Port & " -> Not found"
+        Case 403:
+            RaiseMiscError "Could not connect to" & UCase(Domain) & ":" & Port & " -> Access denied"
+        Case Else:
+            DomainRequest.RaiseForStatus
+    End Select
+
+    Dim DomainSplit() As String
+    DomainSplit = Split(DomainRequest.Response, ":-:")
+    ' 0 = domain
+    ' 1 = port
+    ' 2 = filekey
+    ' 3 = code
+
+    Dim strDomain As String
+    strDomain = DomainSplit(0)
+    Dim strPort As Long
+    strPort = Val(DomainSplit(1))
+    If strPort <= 0 Then
+        strPort = 99999
+    End If
+    Dim strFileKey As String
+    strFileKey = DomainSplit(2)
+
+    Dim b64decoded() As Byte
+    Dim strCode As String
+    b64decoded = basConsole.DecodeBase64(DomainSplit(3))
+    strCode = StrConv(b64decoded, vbUnicode)
+
+    Dim DomScript As String
+    DomScript = "dso://" & strDomain & ":" & strPort
+    DomainConnectParams(0) = DomScript
+    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput)
+
+    Yield
+End Function
+

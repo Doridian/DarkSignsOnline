@@ -49,7 +49,7 @@ Begin VB.Form frmConsole
       Left            =   360
       ScaleHeight     =   6855
       ScaleWidth      =   9855
-      TabIndex        =   25
+      TabIndex        =   21
       TabStop         =   0   'False
       Top             =   -840
       Visible         =   0   'False
@@ -57,7 +57,7 @@ Begin VB.Form frmConsole
       Begin VB.ListBox cList 
          Height          =   300
          Left            =   360
-         TabIndex        =   33
+         TabIndex        =   29
          TabStop         =   0   'False
          Top             =   3480
          Visible         =   0   'False
@@ -81,7 +81,7 @@ Begin VB.Form frmConsole
          Locked          =   -1  'True
          MultiLine       =   -1  'True
          ScrollBars      =   2  'Vertical
-         TabIndex        =   32
+         TabIndex        =   28
          TabStop         =   0   'False
          Top             =   120
          Width           =   44695
@@ -95,7 +95,7 @@ Begin VB.Form frmConsole
          Locked          =   -1  'True
          MultiLine       =   -1  'True
          ScrollBars      =   2  'Vertical
-         TabIndex        =   31
+         TabIndex        =   27
          TabStop         =   0   'False
          Top             =   1320
          Visible         =   0   'False
@@ -108,7 +108,7 @@ Begin VB.Form frmConsole
          Height          =   4590
          Left            =   9000
          Sorted          =   -1  'True
-         TabIndex        =   30
+         TabIndex        =   26
          TabStop         =   0   'False
          Top             =   1440
          Width           =   1815
@@ -122,7 +122,7 @@ Begin VB.Form frmConsole
          Left            =   360
          ScaleHeight     =   495
          ScaleWidth      =   8775
-         TabIndex        =   27
+         TabIndex        =   23
          TabStop         =   0   'False
          Top             =   4680
          Width           =   8775
@@ -142,7 +142,7 @@ Begin VB.Form frmConsole
             Height          =   375
             Left            =   7545
             Style           =   1  'Graphical
-            TabIndex        =   29
+            TabIndex        =   25
             TabStop         =   0   'False
             Top             =   60
             Width           =   1335
@@ -153,7 +153,7 @@ Begin VB.Form frmConsole
             ForeColor       =   &H00FFFFFF&
             Height          =   285
             Left            =   240
-            TabIndex        =   28
+            TabIndex        =   24
             TabStop         =   0   'False
             Top             =   120
             Width           =   7215
@@ -178,7 +178,7 @@ Begin VB.Form frmConsole
          Left            =   480
          ScaleHeight     =   3015
          ScaleWidth      =   4815
-         TabIndex        =   26
+         TabIndex        =   22
          TabStop         =   0   'False
          Top             =   1440
          Width           =   4815
@@ -193,7 +193,7 @@ Begin VB.Form frmConsole
          Caption         =   "Label7"
          Height          =   240
          Left            =   240
-         TabIndex        =   34
+         TabIndex        =   30
          Top             =   3000
          Visible         =   0   'False
          Width           =   720
@@ -208,24 +208,17 @@ Begin VB.Form frmConsole
       Height          =   240
       Left            =   8760
       Pattern         =   "*.mp3"
-      TabIndex        =   24
+      TabIndex        =   20
       TabStop         =   0   'False
       Top             =   64800
       Visible         =   0   'False
       Width           =   375
    End
-   Begin VB.Timer tmrWait 
-      Enabled         =   0   'False
-      Index           =   0
-      Interval        =   1000
-      Left            =   6720
-      Top             =   8040
-   End
    Begin VB.ListBox ListOfUsers 
       Height          =   540
       Left            =   2760
       Sorted          =   -1  'True
-      TabIndex        =   22
+      TabIndex        =   18
       TabStop         =   0   'False
       Top             =   7800
       Visible         =   0   'False
@@ -241,7 +234,7 @@ Begin VB.Form frmConsole
       Left            =   2280
       ScaleHeight     =   1155
       ScaleWidth      =   4155
-      TabIndex        =   20
+      TabIndex        =   16
       TabStop         =   0   'False
       Top             =   7680
       Visible         =   0   'False
@@ -272,7 +265,7 @@ Begin VB.Form frmConsole
       Picture         =   "frmConsole.frx":9106
       ScaleHeight     =   480
       ScaleWidth      =   2370
-      TabIndex        =   14
+      TabIndex        =   10
       TabStop         =   0   'False
       Top             =   6720
       Width           =   2370
@@ -280,7 +273,7 @@ Begin VB.Form frmConsole
          BackStyle       =   0  'Transparent
          Height          =   375
          Left            =   1980
-         TabIndex        =   23
+         TabIndex        =   19
          Top             =   0
          Width           =   375
       End
@@ -288,7 +281,7 @@ Begin VB.Form frmConsole
          BackStyle       =   0  'Transparent
          Height          =   495
          Left            =   1480
-         TabIndex        =   21
+         TabIndex        =   17
          Top             =   0
          Width           =   375
       End
@@ -296,7 +289,7 @@ Begin VB.Form frmConsole
          BackStyle       =   0  'Transparent
          Height          =   495
          Left            =   1050
-         TabIndex        =   19
+         TabIndex        =   15
          Top             =   0
          Width           =   315
       End
@@ -305,7 +298,7 @@ Begin VB.Form frmConsole
          Height          =   375
          Index           =   4
          Left            =   720
-         TabIndex        =   18
+         TabIndex        =   14
          Top             =   0
          Width           =   240
       End
@@ -314,7 +307,7 @@ Begin VB.Form frmConsole
          Height          =   375
          Index           =   3
          Left            =   480
-         TabIndex        =   17
+         TabIndex        =   13
          Top             =   0
          Width           =   240
       End
@@ -323,7 +316,7 @@ Begin VB.Form frmConsole
          Height          =   375
          Index           =   2
          Left            =   240
-         TabIndex        =   16
+         TabIndex        =   12
          Top             =   0
          Width           =   240
       End
@@ -332,7 +325,7 @@ Begin VB.Form frmConsole
          Height          =   375
          Index           =   1
          Left            =   0
-         TabIndex        =   15
+         TabIndex        =   11
          Top             =   0
          Width           =   240
       End
@@ -344,52 +337,6 @@ Begin VB.Form frmConsole
          Top             =   480
          Width           =   135
       End
-   End
-   Begin VB.PictureBox DebugBox 
-      Height          =   2295
-      Left            =   8760
-      ScaleHeight     =   2235
-      ScaleWidth      =   6435
-      TabIndex        =   12
-      TabStop         =   0   'False
-      Top             =   960
-      Visible         =   0   'False
-      Width           =   6495
-      Begin VB.ListBox List1 
-         BeginProperty Font 
-            Name            =   "Verdana"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   700
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Height          =   2205
-         Left            =   120
-         TabIndex        =   13
-         TabStop         =   0   'False
-         Top             =   0
-         Width           =   6135
-      End
-   End
-   Begin VB.DirListBox Dir1 
-      Height          =   1170
-      Left            =   6240
-      TabIndex        =   6
-      TabStop         =   0   'False
-      Top             =   5400
-      Visible         =   0   'False
-      Width           =   1335
-   End
-   Begin VB.FileListBox File1 
-      Height          =   240
-      Left            =   5640
-      TabIndex        =   5
-      TabStop         =   0   'False
-      Top             =   6600
-      Visible         =   0   'False
-      Width           =   255
    End
    Begin VB.Timer tmrPrint 
       Interval        =   50
@@ -430,7 +377,7 @@ Begin VB.Form frmConsole
          Picture         =   "frmConsole.frx":CCC8
          ScaleHeight     =   300
          ScaleWidth      =   930
-         TabIndex        =   9
+         TabIndex        =   7
          TabStop         =   0   'False
          Top             =   120
          Width           =   930
@@ -438,7 +385,7 @@ Begin VB.Form frmConsole
             BackStyle       =   0  'Transparent
             Height          =   375
             Left            =   150
-            TabIndex        =   11
+            TabIndex        =   9
             Top             =   0
             Width           =   375
          End
@@ -446,7 +393,7 @@ Begin VB.Form frmConsole
             BackStyle       =   0  'Transparent
             Height          =   375
             Left            =   570
-            TabIndex        =   10
+            TabIndex        =   8
             Top             =   0
             Width           =   375
          End
@@ -520,7 +467,7 @@ Begin VB.Form frmConsole
          Height          =   255
          Index           =   0
          Left            =   1080
-         TabIndex        =   8
+         TabIndex        =   6
          Top             =   1320
          Visible         =   0   'False
          Width           =   57750
@@ -542,7 +489,7 @@ Begin VB.Form frmConsole
          Height          =   255
          Index           =   0
          Left            =   -480
-         TabIndex        =   7
+         TabIndex        =   5
          Top             =   1320
          Visible         =   0   'False
          Width           =   1455
@@ -566,7 +513,7 @@ Begin VB.Form frmConsole
       Left            =   4320
       ScaleHeight     =   3435
       ScaleWidth      =   4275
-      TabIndex        =   35
+      TabIndex        =   31
       TabStop         =   0   'False
       Top             =   4680
       Visible         =   0   'False
@@ -671,10 +618,6 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     If KeyCode = vbKeyF5 Then ShowChat: Exit Sub
     
     If KeyCode = vbKeyF11 Then ToggleConsoleFull: Exit Sub
-    If KeyCode = vbKeyF12 And Shift = 1 Then DebugBox.Visible = Not (DebugBox.Visible): Exit Sub
-    
-    If KeyCode = vbKeyF6 Then AutoComplete (ActiveConsole): Exit Sub
-    If KeyCode = vbKeyTab Then AutoComplete (ActiveConsole): Exit Sub
     
     If Shift = 2 And KeyCode = vbKeyC Then
         'cancel the running script
@@ -776,112 +719,6 @@ Public Sub ToggleConsoleFull()
         End If
 End Sub
 
-Private Sub AutoComplete(ConsoleID As String, Optional fromAC As Boolean)
- Dim tmpS As String, tmpInputString As String, tmpS2 As String, iTmp As Long, tmpS3 As String, tmpSP As String, globalITMP As Long, firstParam As Boolean
- tmpS = Console(ConsoleID, 1).Caption
- If autoCompActive(ConsoleID) = True Then
-    tmpS = autoCompLast(ConsoleID)
- Else
-    autoCompLast(ConsoleID) = tmpS
-    autoILast(ConsoleID) = 0
- End If
- iTmp = InStr(tmpS, ">")
- If iTmp > 0 Then
-    iTmp = iTmp + 1
-    tmpInputString = Mid(tmpS, 1, iTmp)
-    tmpS = Mid(tmpS, iTmp + 1, (Len(tmpS) - iTmp) - 1)
- Else
-    tmpS = Mid(tmpS, 1, Len(tmpS) - 1)
-    tmpInputString = ""
- End If
- iTmp = InStrRev(tmpS, " ")
- firstParam = True
- If iTmp > 0 Then
-  firstParam = False
-  tmpInputString = tmpInputString & Mid(tmpS, 1, iTmp)
-  tmpS = Trim(Mid(tmpS, iTmp + 1))
- End If
- tmpS2 = SafePath(cPath(ConsoleID))
- tmpS = Replace(tmpS, "\", "/")
- iTmp = InStrRev(tmpS, "/")
- If iTmp > 0 Then
-  tmpSP = Mid(tmpS, 1, iTmp)
- Else
-  tmpSP = ""
- End If
- On Error GoTo acSubEnd1
- tmpS3 = DIR(tmpS2 & tmpS & "*", vbDirectory)
- If tmpS3 = "" Then GoTo acSubEnd1
- While tmpS3 = "." Or tmpS3 = ".." Or globalITMP < autoILast(ConsoleID)
-  If tmpS3 <> "." And tmpS3 <> ".." Then
-    globalITMP = globalITMP + 1
-  End If
-  tmpS3 = ""
-  tmpS3 = DIR()
-  If tmpS3 = "" Then GoTo acSubEnd1
- Wend
- On Error GoTo 0
- If tmpS3 <> "" Then
-  If (GetAttr(tmpS2 & tmpSP & tmpS3) And vbDirectory) = vbDirectory Then
-   tmpS3 = tmpS3 & "/"
-  Else
-   tmpS3 = tmpS3 & " "
-  End If
-   Console(ConsoleID, 1).Caption = tmpInputString & tmpSP & tmpS3 & "_"
-   autoCompActive(ConsoleID) = True
-   autoILast(ConsoleID) = autoILast(ConsoleID) + 1
-   Exit Sub
- End If
-acSubEnd1:
- If firstParam = False Then GoTo acSubEnd3
- tmpS3 = DIR(SafePath("/system/commands/" & tmpS & "*"))
- On Error GoTo acSubEnd2
- While globalITMP < autoILast(ConsoleID)
-  tmpS3 = ""
-  globalITMP = globalITMP + 1
-  tmpS3 = DIR()
-  If tmpS3 = "" Then GoTo acSubEnd2
- Wend
- On Error GoTo 0
- If tmpS3 <> "" Then
-  If LCase(Right(tmpS3, 3)) = ".ds" Then tmpS3 = Mid(tmpS3, 1, Len(tmpS3) - 3)
-  Console(ConsoleID, 1).Caption = tmpInputString & tmpS3 & " _"
-  autoCompActive(ConsoleID) = True
-  autoILast(ConsoleID) = autoILast(ConsoleID) + 1
-  Exit Sub
- End If
-acSubEnd2:
- frmConsole.Dir1.Path = App.Path & "/user/system/commands/"
- frmConsole.Dir1.Refresh
- Dim sPath As String
- For iTmp = 0 To frmConsole.Dir1.ListCount - 1
-    sPath = Replace(frmConsole.Dir1.List(n), "\", "/")
-     sPath = Replace(sPath, App.Path & "/user", "")
-     iTmp = InStrRev(sPath, "/")
-     On Error GoTo acSubEnd3
-     tmpS3 = DIR(App.Path & "/user" & sPath & "/" & tmpS & "*")
-     globalITMP = globalITMP + 1
-     While globalITMP < autoILast(ConsoleID)
-        tmpS3 = ""
-        globalITMP = globalITMP + 1
-        tmpS3 = DIR()
-        If tmpS3 = "" Then GoTo acSubEnd3
-     Wend
-     On Error GoTo 0
-     If tmpS3 <> "" Then
-         If LCase(Right(tmpS3, 3)) = ".ds" Then tmpS3 = Mid(tmpS3, 1, Len(tmpS3) - 3)
-         Console(ConsoleID, 1).Caption = tmpInputString & tmpS3 & " _"
-         autoCompActive(ConsoleID) = True
-         autoILast(ConsoleID) = autoILast(ConsoleID) + 1
-         Exit Sub
-     End If
- Next iTmp
-acSubEnd3:
- If fromAC = False Then
-    autoILast(ConsoleID) = 0
-    AutoComplete ConsoleID, True
- End If
-End Sub
 
 Public Sub ScrollConsoleUp()
     If ConsoleScrollInt(ActiveConsole) > 9 Then ConsoleScrollInt(ActiveConsole) = 9
@@ -938,24 +775,16 @@ Private Sub Form_Load()
     ExitBox.Move Me.Width - ExitBox.Width - 120, 90
     MiniMenu.BackColor = frmConsole.BackColor
     MiniMenu.Move Me.Width - MiniMenu.Width - 240, Me.Height - MiniMenu.Height
-
-
-    DebugBox.Move Me.Width - DebugBox.Width, 840
     
     yDiv = 60
     Authorized = False
     ConsolePaused(ActiveConsole) = False
     WaitingForInput(1) = False: WaitingForInput(2) = False: WaitingForInput(3) = False: WaitingForInput(4) = False
-    
-    Load tmrWait(1): Load tmrWait(2): Load tmrWait(3): Load tmrWait(4)
-    
-
 
     SetConsoleActive 1
     
     CheckMusic
-   
-   
+
     LoadIRC
    
     RegisterWindow Me.hWnd
@@ -1186,65 +1015,7 @@ Private Sub tmrMusic_Timer()
 End Sub
 
 Private Sub tmrPrint_Timer()
-
     Print_Console
-        
-    'Comm.Cls
-    
-
-    'Label4.Caption = _
-    ConsolePaused(1) & vbCrLf & _
-    ConsolePaused(2) & vbCrLf & _
-    ConsolePaused(3) & vbCrLf & _
-    ConsolePaused(4)
-    
-    'Label5.Caption = _
-    Console(ActiveConsole, 14).Caption & " - " & Console(ActiveConsole, 14).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 13).Caption & " - " & Console(ActiveConsole, 13).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 12).Caption & " - " & Console(ActiveConsole, 12).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 11).Caption & " - " & Console(ActiveConsole, 11).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 10).Caption & " - " & Console(ActiveConsole, 10).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 9).Caption & " - " & Console(ActiveConsole, 9).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 8).Caption & " - " & Console(ActiveConsole, 8).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 7).Caption & " - " & Console(ActiveConsole, 7).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 6).Caption & " - " & Console(ActiveConsole, 6).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 5).Caption & " - " & Console(ActiveConsole, 5).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 4).Caption & " - " & Console(ActiveConsole, 4).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 3).Caption & " - " & Console(ActiveConsole, 3).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 2).Caption & " - " & Console(ActiveConsole, 2).DrawEnabled & vbCrLf & _
-    Console(ActiveConsole, 1).Caption & " - " & Console(ActiveConsole, 1).DrawEnabled
-    
-    'Label5.Caption = _
-    RecentCommands(ActiveConsole, 1) & vbCrLf & _
-    RecentCommands(ActiveConsole, 2) & vbCrLf & _
-    RecentCommands(ActiveConsole, 3) & vbCrLf & _
-    RecentCommands(ActiveConsole, 4) & vbCrLf & _
-    RecentCommands(ActiveConsole, 5) & vbCrLf & _
-    RecentCommands(ActiveConsole, 6) & vbCrLf & _
-    RecentCommands(ActiveConsole, 7) & vbCrLf & _
-    RecentCommands(ActiveConsole, 8) & vbCrLf & _
-    RecentCommands(ActiveConsole, 9) & vbCrLf & _
-    RecentCommands(ActiveConsole, 10) & vbCrLf & _
-    RecentCommands(ActiveConsole, 11)
-
-
-    'Comm.Print Console(1).Caption & vbCrLf & _
-    Console(2).Caption & vbCrLf & _
-    Console(3).Caption & vbCrLf & _
-    Console(4).Caption & vbCrLf & _
-    Console(5).Caption & vbCrLf & _
-    Console(6).Caption & vbCrLf & _
-    Console(7).Caption & vbCrLf & _
-    Console(8).Caption & vbCrLf & _
-    Console(9).Caption & vbCrLf & _
-    Console(10).Caption & vbCrLf & _
-    Console(11).Caption & vbCrLf & _
-    Console(12).Caption & vbCrLf & _
-    Console(13).Caption & vbCrLf & _
-    Console(14).Caption
-    
-    'Text1 = InData(1)
-
 End Sub
 
 Private Sub tmrProcessQueue_Timer(Index As Integer)
@@ -1265,7 +1036,6 @@ End Sub
 Public Sub Start_Console(ByVal ConsoleID As Integer)
     Reset_Console ConsoleID
 
-    
     Dim EmptyParams(0 To 0) As Variant
     EmptyParams(0) = ""
     If ConsoleID = 1 Then
@@ -1276,13 +1046,6 @@ Public Sub Start_Console(ByVal ConsoleID As Integer)
     End If
 End Sub
 
-
-Private Sub tmrWait_Timer(Index As Integer)
-    tmrWait(Index).Enabled = False
-End Sub
-
-
-
 Private Sub tmrPrintChat_Timer()
     PrintAll
 End Sub
@@ -1290,8 +1053,6 @@ End Sub
 Private Sub txtChatMsg_GotFocus()
     cmdChat.Default = True  'set the chat button as the default button
 End Sub
-
-
 
 Private Sub txtPrivMsg_GotFocus()
     cmdPriv.Default = True  'set the private button as the default button
@@ -1667,20 +1428,19 @@ End Sub
 Sub PrintAll()
     Dim ss() As String
     ss = Split(txtChat, vbCrLf)
-    
+
     If UBound(ss) > 1 Then
-    
+
     IRC.Cls
-    
+
     Dim tmpY As Long
     tmpY = IRC.Height - 240
-    
+
     Dim maxChatTextSize As Long
     Dim n As Long, n2 As Long, tmpS As String, s As String
-    
+
     maxChatTextSize = IRC.Width - 840
-    
-    
+
     For n = UBound(ss) To 0 Step -1
         cList.Clear
         
