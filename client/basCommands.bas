@@ -428,7 +428,7 @@ NotASimpleCommandButWithOE:
 
 RunSplitCommand:
     If InjectYield Then
-        ParseCommandLineInt = ParseCommandLineInt & vbCrLf & "Yield" & vbCrLf
+        ParseCommandLineInt = ParseCommandLineInt & " : Yield : "
     End If
 
     If RestStart < 0 Then
