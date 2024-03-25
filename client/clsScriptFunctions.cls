@@ -937,7 +937,7 @@ End Function
 
 Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
     Dim Output As String
-    Output = RawRunCaptureA(True, True, Script, XArr)
+    Output = RawRunCaptureA(PrivDisableOutput And PrivRedirectOutput, PrivDisableOutput, Script, XArr)
     If PrivDisableOutput And PrivRedirectOutput Then
         Say Output
     End If
@@ -1013,7 +1013,7 @@ End Function
 
 Public Sub RunCodeA(ByVal Code As String, Optional XArr As Variant)
     Dim Output As String
-    Output = RawRunCaptureCodeA(True, True, Code, XArr)
+    Output = RawRunCaptureCodeA(PrivDisableOutput And PrivRedirectOutput, PrivDisableOutput, Code, XArr)
     If PrivDisableOutput And PrivRedirectOutput Then
         Say Output
     End If
