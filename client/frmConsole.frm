@@ -892,7 +892,7 @@ Private Sub Form_Unload(Cancel As Integer)
         End If
         Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
         lstUsers.Clear  'clear the list entries
-        display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
+        Display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
         sockIRC.Close_   'close the connection
     End If
     '------------------------------------------
@@ -1089,7 +1089,7 @@ Private Sub txtStatus_KeyPress(KeyAscii As Integer)
     KeyAscii = 0    'ignore the keypress
 End Sub
 
-Sub display(Msg$)   'display a message in the status field:
+Sub Display(Msg$)   'display a message in the status field:
     txtStatus.Text = txtStatus.Text + Msg$ + vbCrLf   ' add the message to the status field
     txtStatus.SelStart = Len(txtStatus.Text)  'select the end of the message
     txtStatus.SelLength = 0                'make sure nothing is displayed as "selected"
@@ -1124,7 +1124,7 @@ Sub processCommand()
         Params$ = Right$(Data$, Len(Data$) - (InStr(Data$, "PING") + 4))
             'take the paramaters from the right of the message starting from the first character after the PING message
         Send "PONG " + Params$   ' send the pong message to the server, together with the parameters
-        display "PING? PONG!"
+        Display "PING? PONG!"
     End If
     
     'This section processes all other commands
@@ -1234,7 +1234,7 @@ Sub processCommand()
                         displaychat "No topic set in " + processParam(processRest(Params$)) 'display it
                             'by displaying the second parameter
                     Case "353"  'if we received the channel user list
-                        display "<" + from$ + "> " + rest$ 'display the unprocessed message
+                        Display "<" + from$ + "> " + rest$ 'display the unprocessed message
                         Dim nick2$, othernicks$    'take one nick at a time
                         othernicks$ = processParam(processRest(processRest(processRest(Params$))))   'cut of the channel parameter, the nick parameter and the "="
                         Do
@@ -1256,28 +1256,28 @@ Sub processCommand()
                         Loop Until othernicks$ = ""     'loop through all the received nicknames
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "376"    'end of the motd
-                        display "<" + from$ + "> " + rest$ 'display the unprocessed message
+                        Display "<" + from$ + "> " + rest$ 'display the unprocessed message
                         Send "JOIN " + channel$ 'join the channel
                     Case "431"  'if we failed to change the nickname
                         nick$ = oldnick$    'change it back to the old one
-                        display "<!> Failed changing nickname (You have to supply a nickname)" 'let them know that it failed
+                        Display "<!> Failed changing nickname (You have to supply a nickname)" 'let them know that it failed
                         txtNick.Text = nick$    'change the content of the nick text field back
                     Case "432"  'if we failed to change the nickname
                         nick$ = oldnick$    'change it back to the old one
-                        display "<!> Failed changing nickname (The nickname you entered is not valid)" 'let them know that it failed
+                        Display "<!> Failed changing nickname (The nickname you entered is not valid)" 'let them know that it failed
                         txtNick.Text = nick$    'change the content of the nick text field back
                     Case "433"  'if we failed to change the nickname
                         nick$ = oldnick$    'change it back to the old one
-                        display "<!> Failed changing nickname (The nickname is already in use)" 'let them know that it failed
+                        Display "<!> Failed changing nickname (The nickname is already in use)" 'let them know that it failed
                         'this died for some reason txtNick.Text = nick$    'change the content of the nick text field back
                     Case Else   'if it's another message
-                      display "<" + from$ + "> " + rest$ 'display the unprocessed message
+                      Display "<" + from$ + "> " + rest$ 'display the unprocessed message
                 End Select
             Else   'if we failed
-                display "<" + from$ + "> " + rest$ 'display the unprocessed message
+                Display "<" + from$ + "> " + rest$ 'display the unprocessed message
             End If
         Else    'if we failed
-            display "<" + from$ + "> " + rest$ 'display the unprocessed message
+            Display "<" + from$ + "> " + rest$ 'display the unprocessed message
         End If
     End If
 End Sub
@@ -1322,7 +1322,7 @@ Private Sub sockIRC_Connect()   'as soon as we're connected to the server:
     On Error Resume Next
     nick$ = RegLoad("ircName", "DSO_" & Trim(myUsername) & "_" & MyRandNum$)
     connected = True    'set connected to true (cancel the timeout procedure)
-    display "> Connected to server !"
+    Display "> Connected to server !"
     
     Send "PASS none"    ' according to the rfc it's better to send this before sending a nick / user
     Send "NICK " + nick$    ' send the nick message
@@ -1383,8 +1383,8 @@ Private Sub cmdChat_Click()
                     Send "NICK " & Trim(Msg)
                     IRCTxtList "/nick" + Trim(Msg)
                 Else
-                    display "Error in syntax."
-                    display "/nick <new nickname>"
+                    Display "Error in syntax."
+                    Display "/nick <new nickname>"
                 End If
             ElseIf IRCCommand = "/msg " Then
                 Msg = Trim(Mid(txtChatMsg.Text, 5))
@@ -1395,11 +1395,11 @@ Private Sub cmdChat_Click()
                     IRCTxtList "/msg " & PMName & " " & PMMsg
                     displaychat ">" + MyIRCName + "< " + PMMsg
                 Else
-                    display "Error in syntax."
-                    display "/msg <nickname> <message>"
+                    Display "Error in syntax."
+                    Display "/msg <nickname> <message>"
                 End If
             Else
-                display "Command not found."
+                Display "Command not found."
             End If
         End If
     Else

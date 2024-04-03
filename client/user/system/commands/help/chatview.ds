@@ -5,5 +5,4 @@ propsforexamples = "{lgreen 12}"
 
 Say props & "Command: CHATVIEW [parameter]"
 Say "{lgrey}If set to on, will display chat in the status window."
-Say "{lgrey}CHATVIEW parameters are ON and OFF"
-
+Say "{lgrey}CHATVIEW parameters are TRUE and FALSE"

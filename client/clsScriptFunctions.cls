@@ -988,6 +988,23 @@ Public Sub Run(ParamArray XArr() As Variant)
     RunA Script, SParamArr
 End Sub
 
+' IRC
+
+Public Sub ChatSend(ByVal Msg As String)
+    AssertLocalOnly
+
+    Yield
+    frmConsole.ChatSend Msg
+End Sub
+
+Public Sub ChatView(ByVal Enabled As Boolean)
+    AssertLocalOnly
+
+    Yield
+    frmConsole.ChatView Enabled
+End Sub
+
+
 ' RUN CODE FROM STRING
 
 Private Function RawRunCaptureCodeA(ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Code As String, Optional XArr As Variant) As String
