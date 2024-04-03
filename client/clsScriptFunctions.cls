@@ -632,6 +632,32 @@ Public Function ConsoleWidth() As Long
     ConsoleWidth = frmConsole.Width - (ConsoleXSpacing * 2)
 End Function
 
+Public Sub MUSIC(ByVal Command As String)
+    AssertLocalOnly
+
+    Yield
+    MusicCommand Command
+    Yield
+End Sub
+
+Public Sub MAIL()
+    AssertLocalOnly
+
+    Yield
+    frmDSOMail.Show vbModal
+    Yield
+End Sub
+
+Public Sub PAUSE(ByVal Prompt As String)
+    Yield
+    If PrivDisableOutput Then
+        Exit Sub
+    End If
+
+    PauseConsole Prompt, PrivConsoleID
+    Yield
+End Sub
+
 Public Sub LOGIN()
     AssertLocalOnly
     

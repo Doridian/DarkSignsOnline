@@ -653,22 +653,6 @@ Public Sub MusicCommand(ByVal s As String)
 End Sub
 
 
-Public Sub ListKeys(ByVal ConsoleID As Integer)
-    Dim ss As String
-    ss = "{gold}"
-    
-    SayRaw ConsoleID, "Dark Signs Keyboard Actions{gold 14}"
-    
-    SayRaw ConsoleID, "Page Up: Scroll the console up." & ss
-    SayRaw ConsoleID, "Page Down: Scroll the console down." & ss
-    
-    SayRaw ConsoleID, "Shift + Page Up: Decrease size of the COMM." & ss
-    SayRaw ConsoleID, "Shift + Page Down: Incease size of the COMM." & ss
-    
-    SayRaw ConsoleID, "F11: Toggle maximum console display." & ss
-End Sub
-
-
 Public Sub SetUsername(ByVal s As String, ByVal ConsoleID As Integer)
     If Authorized = True Then
         SayError "You are already logged in.", ConsoleID
@@ -719,7 +703,6 @@ Public Sub ClearConsole(ByVal ConsoleID As Integer)
     Next n
 End Sub
 
-
 Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
     If s = "" Then
         Exit Sub
@@ -747,12 +730,6 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
 errorDir:
 End Sub
 
-Public Sub ShowMail(ByVal s As String, ByVal ConsoleID As Integer)
-    frmDSOMail.Show vbModal
-    Exit Sub
-errorDir:
-End Sub
-
 Public Function GetShortName(ByVal s As String) As String
     s = ReverseString(s)
     s = Replace(s, "\", "/")
@@ -770,8 +747,7 @@ Public Function SayError(s As String, ByVal ConsoleID As Integer)
     SayRaw ConsoleID, "Error - " & s & " {orange}"
 End Function
 
-
-Public Sub PauseConsole(s As String, ByVal ConsoleID As Integer)
+Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer)
     ConsolePaused(ConsoleID) = True
 
     Dim propSpace As String
