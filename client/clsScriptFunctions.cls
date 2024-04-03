@@ -413,7 +413,6 @@ Public Sub PrintVar(ParamArray Param() As Variant)
     End If
 
     If LBound(Param) = UBound(Param) And VarType(Param(UBound(Param))) = vbString Then
-        Say "{blue}Single value of type String. See below:"
         Say Param(UBound(Param))
         Exit Sub
     End If
