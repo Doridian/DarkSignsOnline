@@ -998,6 +998,35 @@ Public Sub Unregister(ByVal Domain As String)
     Yield
 End Sub
 
+Public Sub Register(ByVal Domain As String)
+    AssertLocalOnly
+
+    Yield
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("domain_register.php", True, "d=" & EncodeURLParameter(Domain))
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    Yield
+End Sub
+
+Public Function RegisterPrices(ByVal Domain As String) As String
+    AssertLocalOnly
+
+    Yield
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("domain_register.php?prices=true", False, "")
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    Yield
+    RegisterPrices = DomainRequest.Response
+End Function
+
 Public Sub ClosePort(ByVal Domain As String, ByVal Port As Long)
     AssertLocalOnly
     

@@ -582,23 +582,30 @@ Public Function Font_Height(ByVal theFontName As String, ByVal theFontSize As St
     Font_Height = frmConsole.lfont.Height + yDiv
 End Function
 
-Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional withNewLineAfter As Boolean = True, Optional SkipPropertySpace As Integer)
-    If ConsoleID > 4 Then Exit Function
-    If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
 
+Public Function StripAfterNewline(ByVal s As String) As String
     Dim CrPos As Long, LfPos As Long
     CrPos = InStr(s, vbCr)
     LfPos = InStr(s, vbLf)
 
     If CrPos > 0 Then
         If LfPos > 0 And LfPos < CrPos Then
-            s = Mid(s, 1, LfPos - 1)
+            StripAfterNewline = Mid(s, 1, LfPos - 1)
         Else
-            s = Mid(s, 1, CrPos - 1)
+            StripAfterNewline = Mid(s, 1, CrPos - 1)
         End If
     ElseIf LfPos > 0 Then
-        s = Mid(s, 1, LfPos - 1)
+        StripAfterNewline = Mid(s, 1, LfPos - 1)
+    Else
+        StripAfterNewline = s
     End If
+End Function
+
+Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional withNewLineAfter As Boolean = True, Optional SkipPropertySpace As Integer)
+    If ConsoleID > 4 Then Exit Function
+    If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
+
+    s = StripAfterNewline(s)
 
     Dim tmpLine As ConsoleLine, propertySpace As String
     

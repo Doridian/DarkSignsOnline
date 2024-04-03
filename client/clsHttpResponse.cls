@@ -22,6 +22,6 @@ End Function
 
 Public Function RaiseForStatus()
     If Not IsSuccess() Then
-        Err.Raise vbObjectError + 6000 + Code, "DSO", "HTTP error " & Code
+        Err.Raise vbObjectError + 6000 + Code, "DSO", "HTTP error " & Code & ": " & StripAfterNewline(Response)
     End If
 End Function
