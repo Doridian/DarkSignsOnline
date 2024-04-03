@@ -579,8 +579,6 @@ End Sub
 
 
 Sub SetConsoleActive(ByVal ConsoleID As Integer)
-    Print_Console
-
     consoleShape.Width = 120
     consoleShape.Height = 60
     consoleShape.Top = MiniMenu.Height - consoleShape.Height - 60
@@ -591,6 +589,8 @@ Sub SetConsoleActive(ByVal ConsoleID As Integer)
         Case 3: consoleShape.Left = 540
         Case 4: consoleShape.Left = 750
     End Select
+
+    QueueConsoleRender
 End Sub
 
 Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
@@ -675,6 +675,7 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
             If RecentCommandsIndex(ActiveConsole) <= 0 Then Exit Sub
             RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) - 1
             Console(ActiveConsole, 1).Caption = tmpInputString & RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole)) & "_"
+            QueueConsoleRender
             Exit Sub
         End If
         If KeyCode = vbKeyUp Then
@@ -683,17 +684,13 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
             RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) + 1
             If RecentCommandsIndex(ActiveConsole) = 1 Then RecentCommands(ActiveConsole, 0) = tmpS
             Console(ActiveConsole, 1).Caption = tmpInputString & RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole)) & "_"
+            QueueConsoleRender
             Exit Sub
         End If
     End If
-    
-    
-    
-    
 
     Add_Key KeyCode, Shift, ActiveConsole
-    Print_Console
-
+    QueueConsoleRender
 End Sub
 
 
@@ -717,12 +714,14 @@ Public Sub ScrollConsoleUp()
     If ConsoleScrollInt(ActiveConsole) > 9 Then ConsoleScrollInt(ActiveConsole) = 9
     ConsoleScrollInt(ActiveConsole) = ConsoleScrollInt(ActiveConsole) + 1
     
+    QueueConsoleRender
 End Sub
 
 Public Sub ScrollConsoleDown()
     ConsoleScrollInt(ActiveConsole) = ConsoleScrollInt(ActiveConsole) - 1
     If ConsoleScrollInt(ActiveConsole) < 1 Then ConsoleScrollInt(ActiveConsole) = 0
     
+    QueueConsoleRender
 End Sub
 
 Private Sub Form_KeyPress(KeyAscii As Integer)
