@@ -738,15 +738,15 @@ Public Function Kill_Property_Space(ByVal s As String) As String
 
     For n = 1 To Len(s)
         If Mid(s, n, 1) = "{" Then
-            isOn = False
+            isOn = True
         End If
-        
-        If isOn = True Then
+
+        If isOn = False Then
             Kill_Property_Space = Kill_Property_Space & Mid(s, n, 1)
         End If
         
         If Mid(s, n, 1) = "}" Then
-            isOn = True
+            isOn = False
         End If
     Next n
     

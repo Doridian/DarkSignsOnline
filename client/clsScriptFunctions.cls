@@ -714,7 +714,7 @@ Public Sub yDiv(ByVal setValue As Integer)
     SetYDiv setValue
 End Sub
 
-Public Sub PAUSE(ByVal Prompt As String)
+Public Sub PAUSE(Optional ByVal Prompt As String = "")
     Yield
     If PrivDisableOutput Then
         Exit Sub
