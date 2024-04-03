@@ -879,6 +879,7 @@ Public Function Stats(ByVal setValue As Integer) As String
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
 
+    Yield
     Stats = DomainRequest.Response
 End Function
 
@@ -891,6 +892,7 @@ Public Function Lookup(ByVal Domain As String) As String
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
 
+    Yield
     Lookup = DomainRequest.Response
 End Function
 
@@ -903,7 +905,25 @@ Public Function GetDomain(ByVal IP As String) As String
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
 
+    Yield
     GetDomain = DomainRequest.Response
+End Function
+
+Public Function PingPort(ByVal Domain As String, ByVal Port As Integer) As Boolean
+    Yield
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("ping.php?domain=" & EncodeURLParameter(Domain) & "&port=" & EncodeURLParameter(Port), False, "")
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    Yield
+    PingPort = Trim(DomainRequest.Response) = "1"
+End Function
+
+Public Function Ping(ByVal Domain As String) As Boolean
+    Ping = PingPort(Domain, 0)
 End Function
 
 Public Function GetIP(ByVal Domain As String) As String

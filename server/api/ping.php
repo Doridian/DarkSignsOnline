@@ -3,8 +3,8 @@
 $rewrite_done = true;
 require_once("function.php");
 
-$domain = $_POST['domain'];
-$port = (int)$_POST['port'];
+$domain = $_REQUEST['domain'];
+$port = (int)$_REQUEST['port'];
 
 $dInfo = getDomainInfo($domain);
 if ($dInfo[0] < 0)
