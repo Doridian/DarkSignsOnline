@@ -190,7 +190,7 @@ End Sub
 Public Sub OnLoginSuccess()
     Authorized = True
     frmConsole.lblUsername.Caption = "You are online as " & myUsername & "."
-    frmConsole.Shape1.BackColor = iGreen: DoEvents
+    frmConsole.Shape1.BackColor = iGreen
     SayCOMM "You have been authorized as " & myUsername & "."
     SayCOMM "Welcome to the Dark Signs Network!"
     SayCOMM "Dark Signs Online - Version " & VersionStr()
@@ -218,7 +218,7 @@ End Sub
 Public Sub OnLoginFailure()
     Authorized = False
     frmConsole.lblUsername.Caption = "Unable to log in."
-    frmConsole.Shape1.BackColor = iOrange: DoEvents
+    frmConsole.Shape1.BackColor = iOrange
     SayCOMM "Unable to log in. Please check your username and password."
         
     MsgBox "Your username and password was denied by the server." & vbCrLf & vbCrLf & "Username: " & myUsername & vbCrLf & "Password: [hidden]" & vbCrLf & vbCrLf & "If the information above is not correct, use the USERNAME command to change your username, or the PASSWORD command to change your password. Then type LOGIN again. Contact us if you continue to experience problems." & vbCrLf & vbCrLf & "https://darksignsonline.com", vbCritical, "Account Information"
