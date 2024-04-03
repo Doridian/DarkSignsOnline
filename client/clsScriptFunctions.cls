@@ -387,6 +387,16 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     Yield
 End Function
 
+Public Sub RESTART()
+    If PrivDisableOutput Then
+        Yield
+        Exit Sub
+    End If
+
+    frmConsole.Start_Console PrivConsoleID
+    Yield
+End Sub
+
 Public Sub EDIT(ByVal File As String)
     AssertLocalOnly
 
@@ -1219,7 +1229,13 @@ Public Sub Wait(ByVal Milliseconds As Long)
 End Sub
 
 Public Sub Clear()
+    If PrivDisableOutput Then
+        Yield
+        Exit Sub
+    End If
+
     ClearConsole PrivConsoleID
+    Yield
 End Sub
 
 Public Function ArgC() As Long
