@@ -3,8 +3,8 @@ Dim props, propsforexamples
 props = "{green 12 underline}"
 propsforexamples = "{lgreen 12}"
 
-Say props & "Command: APPENDFILE file text"
-Say propsforexamples & "Example #1: APPENDFILE myfile.txt new data"
+Say props & "Command: APPEND file text"
+Say propsforexamples & "Example #1: APPEND myfile.txt new data"
 Say "{lgrey}Append (add) text or data to the specified file."
 Say "{lgrey}Data will be added to the end of the file."
 Say "{lorange}If the specified file doesn't exist, it will be created."

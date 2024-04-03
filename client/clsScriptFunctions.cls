@@ -632,13 +632,13 @@ Public Function ConsoleWidth() As Long
     ConsoleWidth = frmConsole.Width - (ConsoleXSpacing * 2)
 End Function
 
-Public Sub WriteFile(ByVal File As String, ByVal Content As String)
+Public Sub Overwrite(ByVal File As String, ByVal Content As String)
     AssertLocalOnly
 
     basGeneral.WriteFile ResolvePath(File), Content
 End Sub
 
-Public Sub AppendFile(ByVal File As String, ByVal Content As String)
+Public Sub Append(ByVal File As String, ByVal Content As String)
     AssertLocalOnly
     
     Dim FF As Long
@@ -649,6 +649,44 @@ Public Sub AppendFile(ByVal File As String, ByVal Content As String)
     Open SafePath(File) For Binary Access Write As #FF
         Seek #FF, LOF(FF) + 1
         Put #FF, , Content
+    Close #FF
+End Sub
+
+Public Sub Display(ByVal File As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0)
+    AssertLocalOnly
+
+    File = ResolvePath(File)
+
+    If StartLine < 1 Then
+        StartLine = 1
+    End If
+
+    Dim EndLine As Long
+    EndLine = StartLine + MaxLines
+
+    Dim CurLine As Long
+    CurLine = 0
+
+    Dim Content As String
+    Dim FF As Long
+    FF = FreeFile
+    Open SafePath(File) For Input As #FF
+        While Not EOF(FF)
+            CurLine = CurLine + 1
+            
+            If MaxLines > 0 And CurLine >= EndLine Then
+                GoTo AbortPrintDisplayLoop
+            End If
+
+            Line Input #FF, Content
+            If CurLine < StartLine Then
+                GoTo DontPrintDisplay
+            End If
+            
+            Say Content
+DontPrintDisplay:
+        Wend
+AbortPrintDisplayLoop:
     Close #FF
 End Sub
 
@@ -743,7 +781,7 @@ Public Sub LOGOUT()
     If frmConsole.getConnected Then
         frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
         frmConsole.lstUsers.Clear  'clear the list entries
-        frmConsole.display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
+        frmConsole.Display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
         frmConsole.sockIRC.Close_   'close the connection
         frmConsole.setConnected False
     End If
