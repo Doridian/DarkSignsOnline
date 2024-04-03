@@ -12,8 +12,11 @@ $to = userToId($_REQUEST['to']);
 $description = $_REQUEST['description'];
 $status = transaction($user['id'], $to, $description, $amount);
 
-$usercash = getCash($user['id']);
+if ($ver > 1) {
+	die($status);
+}
 
+$usercash = getCash($user['id']);
 if ($status === 'COMPLETE') {
 	die("Payment of $$amount2 to $to is complete. Your new balance is $$usercash.00");
 }

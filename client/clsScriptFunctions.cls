@@ -1011,7 +1011,7 @@ Public Function MyIPs() As String
     MyIPs = MyDomainsHelper("ip")
 End Function
 
-Public Function Transfer(ByVal Target As String, ByVal Amount As Long, ByVal Description As String) As Boolean
+Public Function Transfer(ByVal Target As String, ByVal Amount As Long, ByVal Description As String) As String
     Yield
 
     Target = Trim(Target)
@@ -1032,7 +1032,7 @@ Public Function Transfer(ByVal Target As String, ByVal Amount As Long, ByVal Des
     Yield
 
     If AuthorizePayment = False Then
-        RaiseMiscError "Payment declined"
+        RaiseMiscError "Payment declined by user"
         Exit Function
     End If
 
@@ -1050,6 +1050,10 @@ Public Function Transfer(ByVal Target As String, ByVal Amount As Long, ByVal Des
     Dim TransferRequest As clsHttpResponse
     Set TransferRequest = WAITFOR(TransferRequestIndex)
     TransferRequest.RaiseForStatus
+
+    SayCOMM "Paymenmt result was " & TransferRequest.Response
+
+    Transfer = TransferRequest.Response
 End Function
 
 Public Sub Wait(ByVal Milliseconds As Long)
