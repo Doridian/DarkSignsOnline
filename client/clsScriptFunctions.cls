@@ -952,6 +952,20 @@ Public Sub DOWNLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename A
     Yield
 End Sub
 
+Public Sub Unregister(ByVal Domain As String)
+    AssertLocalOnly
+    
+    Yield
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("domain_unregister.php", True, "d=" & EncodeURLParameter(Domain))
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    Yield
+End Sub
+
 Public Sub ClosePort(ByVal Domain As String, ByVal Port As Long)
     AssertLocalOnly
     
@@ -969,6 +983,33 @@ Public Sub ClosePort(ByVal Domain As String, ByVal Port As Long)
 
     Yield
 End Sub
+
+Private Function MyDomainsHelper(ByVal DomainType As String) As String
+    AssertLocalOnly
+    
+    Yield
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("my_domains.php?type=" & EncodeURLParameter(DomainType), False, "")
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    MyDomainsHelper = DomainRequest.Response
+    Yield
+End Function
+
+Public Function MyDomains() As String
+    MyDomains = MyDomainsHelper("domain")
+End Function
+
+Public Function MySubdomains() As String
+    MySubdomains = MyDomainsHelper("subdomain")
+End Function
+
+Public Function MyIPs() As String
+    MyIPs = MyDomainsHelper("ip")
+End Function
 
 Public Sub Wait(ByVal Milliseconds As Long)
     Dim EndTime As Long
