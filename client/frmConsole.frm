@@ -615,6 +615,7 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     If Shift = 2 And KeyCode = vbKeyC Then
         'cancel the running script
         CancelScript(ActiveConsole) = True
+        New_Console_Line ActiveConsole
         Exit Sub
     End If
     
