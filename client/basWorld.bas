@@ -256,14 +256,15 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
     End If
 
     Dim cCode As String
-    'MsgBox s
     cCode = Mid(s, 1, 4)
     s = Mid(s, 5)
 
     Select Case cCode
+        ' MISC
         Case "0001" 'it's the user list
             LoadUserList s, ConsoleID
 
+        ' FILE LIBRARY
         Case "4300" 'file library upload complete
             frmLibrary.lStatus.Caption = s
             frmLibrary.UploadBox.Visible = False
@@ -284,14 +285,13 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
             Else
                 frmLibrary.lStatus = "File download error! (8234)"
             End If
-        
         Case "4500"
             frmLibrary.tsl.Caption = s
-            
         Case "4501"
             frmLibrary.TS.Text = s
             frmLibrary.tsl.Caption = "Loaded!"
         
+        ' DSMAIL
         Case "7001" 'mail inbox
             frmDSOMail.EnableAll
             Dim emails() As String
@@ -328,11 +328,6 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
             End If
 
         Case Else
-
-            If Trim(Replace(s, vbCrLf, "")) = "" Then Exit Sub
-            If InStr(i(sSource), "z_online") > 0 Then Exit Sub
-            If InStr(i(sSource), "chat") > 0 Then Exit Sub
-
             SayCOMM "The function [" & sSource & "] returned some strange data."
     End Select
     

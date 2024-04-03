@@ -161,8 +161,6 @@ Private Sub ManageSockError(Reason As String)
 
         Send
 
-        If InStr(i(Url), "z_online") > 0 Then Exit Sub 'don't show these errors
-        If InStr(i(Url), "chat") > 0 Then Exit Sub 'don't show these errors
         SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry " & Trim(Str(Retries)) & " of " & Trim(Str(basWorld.MaxSockRetries)) & "."
    Else
         SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry count expired."
