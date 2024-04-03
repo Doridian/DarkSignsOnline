@@ -1,0 +1,9 @@
+Option Explicit
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"
+
+Say props & "Command: REMOTEDOWNLOAD domain filename targetname"
+Say propsforexamples & "Example #1: REMOTEDOWNLOAD matrix.com remotefile.ds localfile.ds"
+Say "{lgrey}Download a file from your domain name file system to your local file system."
+Say "{lorange}You must own the domain, or have subowner privileges on the domain."
