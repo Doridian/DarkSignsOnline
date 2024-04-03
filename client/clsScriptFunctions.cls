@@ -1046,7 +1046,7 @@ Public Function Transfer(ByVal Target As String, ByVal Amount As Long, ByVal Des
                 "&description=" & EncodeURLParameter(Description)
 
     Dim TransferRequestIndex As Long
-    TransferRequestIndex = DoDownloadAPI("transfer.php" & Encode, False, "")
+    TransferRequestIndex = DoDownloadAPI("transfer.php", False, "")
     Dim TransferRequest As clsHttpResponse
     Set TransferRequest = WAITFOR(TransferRequestIndex)
     TransferRequest.RaiseForStatus
