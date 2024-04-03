@@ -373,11 +373,11 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     Yield
 End Function
 
-Public Sub EDIT(ByVal file As String)
+Public Sub EDIT(ByVal File As String)
     AssertCLIOnly
 
     Yield
-    EditFile ResolvePath(file), PrivConsoleID
+    EditFile ResolvePath(File), PrivConsoleID
     Yield
 End Sub
 
@@ -631,6 +631,26 @@ End Function
 Public Function ConsoleWidth() As Long
     ConsoleWidth = frmConsole.Width - (ConsoleXSpacing * 2)
 End Function
+
+Public Sub WriteFile(ByVal File As String, ByVal Content As String)
+    AssertLocalOnly
+
+    basGeneral.WriteFile ResolvePath(File), Content
+End Sub
+
+Public Sub AppendFile(ByVal File As String, ByVal Content As String)
+    AssertLocalOnly
+    
+    Dim FF As Long
+    FF = FreeFile
+
+    File = ResolvePath(File)
+    
+    Open SafePath(File) For Binary Access Write As #FF
+        Seek #FF, LOF(FF) + 1
+        Put #FF, , Content
+    Close #FF
+End Sub
 
 Public Sub MUSIC(ByVal Command As String)
     AssertLocalOnly
