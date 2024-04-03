@@ -102,7 +102,7 @@ Private Sub CrashIfReached()
 End Sub
 
 Public Function IsLocal() As Boolean
-    IsLocal = PrivServerPort > 0
+    IsLocal = PrivServerPort <= 0
 End Function
 
 Private Sub AssertRemoteOnly()
