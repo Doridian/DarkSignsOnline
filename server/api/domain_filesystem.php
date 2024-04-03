@@ -13,9 +13,13 @@ $dInfo = getDomainInfo($d);
 
 print_returnwith();
 
-function verify_keycode($filename) {
+function verify_keycode($filename, $require_owner = false) {
 	global $db, $d, $dInfo, $user;
 	$is_owner = $user['id'] === $dInfo[1];
+
+	if (!$is_owner && $require_owner) {
+		die_error("Error - ($filename) Not owner: " . strtoupper($d));
+	}
 
 	if ($_REQUEST['is_local_script'] !== 'true' || !$is_owner) {
 		$keycode = $_REQUEST['keycode'];
@@ -24,7 +28,11 @@ function verify_keycode($filename) {
 		}
 	}
 
-	$stmt = $db->prepare("SELECT * FROM domain_files WHERE domain = ? AND filename = ?");
+	if (empty($filename)) {
+		return;
+	}
+
+	$stmt = $db->prepare('SELECT * FROM domain_files WHERE domain = ? AND filename = ?');
 	$stmt->bind_param('is', $dInfo[0], $filename);
 	$stmt->execute();
 	$res = $stmt->get_result();
@@ -51,13 +59,13 @@ function write_file($file_id, $filename, $contents) {
 		if ($file_id < 0) {
 			return;
 		}
-		$stmt = $db->prepare("DELETE FROM domain_files WHERE id = ?");
+		$stmt = $db->prepare('DELETE FROM domain_files WHERE id = ?');
 		$stmt->bind_param('i', $file_id);
 	} else if ($file_id < 0) {
-		$stmt = $db->prepare("INSERT INTO domain_files (domain, filename, contents) VALUES (?, ?, ?)");
+		$stmt = $db->prepare('INSERT INTO domain_files (domain, filename, contents) VALUES (?, ?, ?)');
 		$stmt->bind_param('iss', $dInfo[0], $filename, $contents);
 	} else {
-		$stmt = $db->prepare("UPDATE domain_files SET contents = ? WHERE id = ?");
+		$stmt = $db->prepare('UPDATE domain_files SET contents = ? WHERE id = ?');
 		$stmt->bind_param('si', $contents, $file_id);
 	}
 
@@ -109,10 +117,24 @@ if (!empty($append)) {
 	exit;
 }
 
-$downloadfile = $_REQUEST['downloadfile'];
-if (!empty($downloadfile)) {
-	$file = verify_keycode($fileserver);
-	die($file['contents']);
+$delete = $_REQUEST['delete'];
+if (!empty($delete)) {
+	$file = verify_keycode($delete, true);
+	write_file($file['id'], $delete, '');
+	exit;
+}
+
+$dir = $_REQUEST['dir'];
+if (!empty($dir)) {
+	verify_keycode('', true);
+
+	$stmt = $db->prepare('SELECT filename FROM domain_files WHERE domain = ?');
+	$stmt->bind_param('is', $dInfo[0]);
+	$stmt->execute();
+	$res = $stmt->get_result();
+	while ($row = $res->fetch_assoc()) {
+		echo $row['filename'] . "\r\n";
+	}
 }
 
 die_error('No action selected');

@@ -105,6 +105,14 @@ Public Function IsLocal() As Boolean
     IsLocal = PrivServerPort > 0
 End Function
 
+Private Sub AssertRemoteOnly()
+    If Not IsLocal() Then
+        Exit Sub
+    End If
+    Err.Raise vbObjectError + 9008, "DSO", "remote only functionality"
+    CrashIfReached
+End Sub
+
 Private Sub AssertLocalOnly()
     If IsLocal() Then
         Exit Sub
@@ -999,8 +1007,8 @@ Private Function MyDomainsHelper(ByVal DomainType As String) As String
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
 
-    MyDomainsHelper = DomainRequest.Response
     Yield
+    MyDomainsHelper = DomainRequest.Response
 End Function
 
 Private Function DomainFilesystemHelper(ByVal Domain As String, ByVal PostData As String) As String
@@ -1023,24 +1031,72 @@ Private Function DomainFilesystemHelper(ByVal Domain As String, ByVal PostData A
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
 
-    DomainFilesystemHelper = DomainRequest.Response
     Yield
+    DomainFilesystemHelper = DomainRequest.Response
 End Function
 
 Public Sub RemoteWrite(ByVal Domain As String, ByVal Filename As String, ByVal Contents As String)
+    AssertLocalOnly
+
     DomainFilesystemHelper Domain, "write=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
 End Sub
 
+Public Sub RemoteAppend(ByVal Domain As String, ByVal Filename As String, ByVal Contents As String)
+    AssertLocalOnly
+
+    DomainFilesystemHelper Domain, "append=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
+End Sub
+
 Public Sub RemoteDelete(ByVal Domain As String, ByVal Filename As String)
+    AssertLocalOnly
+    
     DomainFilesystemHelper Domain, "delete=" & EncodeURLParameter(Filename)
 End Sub
 
-Public Sub RemoteDir(ByVal Domain As String, ByVal Filename As String)
-    DomainFilesystemHelper Domain, "dir=" & EncodeURLParameter(Filename)
-End Sub
+Public Function RemoteDir(ByVal Domain As String) As Variant()
+    AssertLocalOnly
+    
+    RemoteDir = Split(DomainFilesystemHelper(Domain, "dir=/"), vbCrLf)
+End Function
 
 Public Function RemoteView(ByVal Domain As String, ByVal Filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    AssertLocalOnly
+    
     RemoteView = DomainFilesystemHelper(Domain, "fileserver=" & EncodeURLParameter(Filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
+End Function
+
+Public Sub ServerWrite(ByVal Filename As String, ByVal Contents As String)
+    AssertRemoteOnly
+
+    DomainFilesystemHelper ServerDomain, "write=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
+End Sub
+
+Public Sub ServerAppend(ByVal Filename As String, ByVal Contents As String)
+    AssertRemoteOnly
+
+    DomainFilesystemHelper ServerDomain, "append=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
+End Sub
+
+Public Sub ServerDelete(ByVal Filename As String)
+    AssertRemoteOnly
+    
+    DomainFilesystemHelper ServerDomain, "delete=" & EncodeURLParameter(Filename)
+End Sub
+
+Public Function ServerDir() As Variant()
+    AssertRemoteOnly
+
+    ServerDir = Split(DomainFilesystemHelper(ServerDomain, "dir=/"), vbCrLf)
+End Function
+
+Public Function ServerView(ByVal Filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    AssertRemoteOnly
+    
+    ServerView = DomainFilesystemHelper(ServerDomain, "fileserver=" & EncodeURLParameter(Filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
+End Function
+
+Public Function FileServer(ByVal Filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    FileServer = ServerView(Filename, StartLine, MaxLines)
 End Function
 
 Public Function MyDomains() As String
