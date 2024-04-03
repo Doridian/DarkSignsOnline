@@ -849,6 +849,18 @@ Public Sub LOGOUT()
     Yield
 End Sub
 
+Public Function Lookup(ByVal Domain As String) As String
+    Yield
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("lookup.php?d=" & EncodeURLParameter(Domain), False, "")
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    Lookup = DomainRequest.Response
+End Function
+
 Public Function GetDomain(ByVal IP As String) As String
     Yield
 

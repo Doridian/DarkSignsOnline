@@ -3,9 +3,6 @@ Dim props, propsforexamples
 props = "{green 12 underline}"
 propsforexamples = "{lgreen 12}"
 
-Say props & "Command: LOOKUP domain-or-username"
+Say props & "Command: LOOKUP domain"
 Say propsforexamples & "Example #1: LOOKUP website.com"
-Say propsforexamples & "Example #2: LOOKUP jsmith"
-Say "{lgrey}View information about the specified domain name or user account."
-Say "{lgrey}This command can be used on both domain names and user accounts."
-Say "{lorange}Data will be returned in the COMM window."
+Say "{lgrey}View information about the specified domain name."
