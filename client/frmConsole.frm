@@ -339,7 +339,7 @@ Begin VB.Form frmConsole
       End
    End
    Begin VB.Timer tmrPrint 
-      Interval        =   50
+      Interval        =   1
       Left            =   5280
       Top             =   5280
    End
@@ -579,8 +579,7 @@ End Sub
 
 
 Sub SetConsoleActive(ByVal ConsoleID As Integer)
-    
-    Print_Console True
+    Print_Console
 
     consoleShape.Width = 120
     consoleShape.Height = 60
@@ -592,19 +591,13 @@ Sub SetConsoleActive(ByVal ConsoleID As Integer)
         Case 3: consoleShape.Left = 540
         Case 4: consoleShape.Left = 750
     End Select
-    
 End Sub
 
 Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
-    
-    
     If KeyCode = vbKeyEscape Then
         Unload Me
     End If
-    
-    If tmrPrint.Enabled = False Then tmrPrint.Enabled = True
-    
-    
+ 
     If KeyCode = vbKeyPageDown And Shift = 1 Then CommLarger: Exit Sub
     If KeyCode = vbKeyPageUp And Shift = 1 Then CommSmaller: Exit Sub
     If KeyCode = vbKeyPageDown And Shift = 0 Then ScrollConsoleDown: Exit Sub
@@ -995,7 +988,8 @@ Private Sub tmrFlash_Timer()
     FlashFast = Not (FlashFast)
     If FlashCounter Mod 2 = 1 Then Flash = Not (Flash)
     If FlashCounter Mod 5 = 1 Then FlashSlow = Not (FlashSlow)
-    
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 
@@ -1014,8 +1008,13 @@ Private Sub tmrMusic_Timer()
     basMusic.CheckMusic
 End Sub
 
+Public Sub QueueConsoleRender()
+    tmrPrint.Enabled = True
+End Sub
+
 Private Sub tmrPrint_Timer()
     Print_Console
+    tmrPrint.Enabled = False
 End Sub
 
 Private Sub tmrProcessQueue_Timer(Index As Integer)

@@ -224,6 +224,8 @@ Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
     'If InStr(s, "_") < Len(Console_Prompt(True)) Then Exit Sub
     
     Console(ConsoleID, 1).Caption = s
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MoveUnderscoreToHome(ByVal ConsoleID As Integer)
@@ -236,6 +238,8 @@ Public Sub MoveUnderscoreToHome(ByVal ConsoleID As Integer)
 
     
     Console(ConsoleID, 1).Caption = s
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MoveUnderscoreToEnd(ByVal ConsoleID As Integer)
@@ -245,6 +249,8 @@ Public Sub MoveUnderscoreToEnd(ByVal ConsoleID As Integer)
     s = Replace(s, "_", "") & "_"
 
     Console(ConsoleID, 1).Caption = s
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MoveUnderscoreLeft(ByVal ConsoleID As Integer)
@@ -260,6 +266,8 @@ Public Sub MoveUnderscoreLeft(ByVal ConsoleID As Integer)
     If InStr(s, "_") < Len(Console_Prompt(True, ConsoleID)) Then Exit Sub
     
     Console(ConsoleID, 1).Caption = s
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub Insert_Char(ByVal sChar As String, ByVal ConsoleID As Integer)
@@ -269,6 +277,8 @@ Public Sub Insert_Char(ByVal sChar As String, ByVal ConsoleID As Integer)
     
     
     Console(ConsoleID, 1).Caption = tmpS
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub New_Console_Line_InProgress(ByVal ConsoleID As Integer)
@@ -276,6 +286,8 @@ Public Sub New_Console_Line_InProgress(ByVal ConsoleID As Integer)
     
     Console(ConsoleID, 1) = Console_Line_Defaults
     Console(ConsoleID, 1).Caption = " "
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub New_Console_Line(ByVal ConsoleID As Integer)
@@ -284,6 +296,8 @@ Public Sub New_Console_Line(ByVal ConsoleID As Integer)
     Console(ConsoleID, 1) = Console_Line_Defaults
     'add the standard prompt if required
     Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
@@ -300,6 +314,8 @@ Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
         End If
     End If
     '--------------------------------------------------
+    
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub Shift_Console_Lines_Reverse(ByVal ConsoleID As Integer)
@@ -307,6 +323,8 @@ Public Sub Shift_Console_Lines_Reverse(ByVal ConsoleID As Integer)
     For n = 0 To 298
         Console(ConsoleID, n) = Console(ConsoleID, n + 1)
     Next n
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub RemLastKey(ByVal ConsoleID As Integer)
@@ -330,6 +348,8 @@ Public Sub RemLastKey(ByVal ConsoleID As Integer)
     
     
     Console(ConsoleID, 1).Caption = tmpS
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub RemNextKey(ByVal ConsoleID As Integer)
@@ -353,6 +373,8 @@ Public Sub RemNextKey(ByVal ConsoleID As Integer)
     
     
     Console(ConsoleID, 1).Caption = tmpS
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub Reset_Console(ByVal ConsoleID As Integer)
@@ -362,24 +384,13 @@ Public Sub Reset_Console(ByVal ConsoleID As Integer)
     Next n
     
     Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
+    frmConsole.QueueConsoleRender
 End Sub
 
-Public Sub Print_Console(Optional ForcePrintConsole As Boolean = False)
+Public Sub Print_Console()
     On Error Resume Next
 
-    If ForcePrintConsole = True Then GoTo zzz
-
     Dim sText As String * 255
-
-    If i(Left$(sText, GetWindowText(GetForegroundWindow, ByVal sText, 255))) = i(frmConsole.Caption) Then
-    Else
-        'save RESOURCES!!!!!!!! YAY!!!!!!!!!!
-        'exit sub - don't print if frmConsole is NOT the active window
-        'save RESOURCES!!!!!!!! YAY!!!!!!!!!!
-        Exit Sub
-    End If
-
-zzz:
     Dim n As Integer, n2 As Integer, tmpY As Long, tmpY2 As Long, printHeight As Long, tmpS As String, isAligned As Boolean
     n = 0
 
@@ -637,6 +648,7 @@ SkipPropertySpaceNow:
     'put the current line back at the next line
     Console(ConsoleID, 1) = tmpLine
 
+    frmConsole.QueueConsoleRender
     DoEvents
 End Function
 
