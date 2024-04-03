@@ -648,6 +648,14 @@ Public Sub MAIL()
     Yield
 End Sub
 
+Public Sub yDiv(ByVal setValue As Integer)
+    If PrivDisableOutput Then
+        Exit Sub
+    End If
+
+    SetYDiv setValue
+End Sub
+
 Public Sub PAUSE(ByVal Prompt As String)
     Yield
     If PrivDisableOutput Then
