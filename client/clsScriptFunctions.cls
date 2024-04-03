@@ -208,6 +208,14 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     PrivAllowUnAbort = NewAllowUnAbort
 End Sub
 
+Public Sub Cls()
+    Clear
+End Sub
+
+Public Sub Delete(ByVal File As String)
+    Del File
+End Sub
+
 Private Sub AddCustomDownload(ByVal ResIndex As Long)
     ReDim Preserve PendingCustomDownloads(0 To UBound(PendingCustomDownloads) + 1)
     PendingCustomDownloads(UBound(PendingCustomDownloads)) = ResIndex
@@ -711,7 +719,7 @@ Public Sub RD(ByVal OldDir As String)
     RmDir SafePath(OldDir)
 End Sub
 
-Public Sub Display(ByVal File As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0)
+Public Function Display(ByVal File As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     AssertLocalOnly
 
     File = ResolvePath(File)
@@ -727,6 +735,8 @@ Public Sub Display(ByVal File As String, Optional ByVal StartLine As Long = 0, O
     CurLine = 0
 
     Dim Content As String
+    Display = ""
+
     Dim FF As Long
     FF = FreeFile
     Open SafePath(File) For Input As #FF
@@ -741,13 +751,13 @@ Public Sub Display(ByVal File As String, Optional ByVal StartLine As Long = 0, O
             If CurLine < StartLine Then
                 GoTo DontPrintDisplay
             End If
-            
-            Say Content
+
+            Display = Display & Content & vbCrLf
 DontPrintDisplay:
         Wend
 AbortPrintDisplayLoop:
     Close #FF
-End Sub
+End Function
 
 Public Sub MUSIC(ByVal Command As String)
     AssertLocalOnly
@@ -848,6 +858,18 @@ Public Sub LOGOUT()
 
     Yield
 End Sub
+
+Public Function Stats(ByVal setValue As Integer) As String
+    Yield
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("get_user_stats.php", False, "")
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    Stats = DomainRequest.Response
+End Function
 
 Public Function Lookup(ByVal Domain As String) As String
     Yield
