@@ -610,6 +610,17 @@ Public Function URLEncode(ByVal Param As String) As String
     URLEncode = basWorld.EncodeURLParameter(Param)
 End Function
 
+Public Function BoolToString(ByVal Param As String) As Boolean
+    Param = LCase(Trim(Param))
+    If Param = "on" Or Param = "true" Or Param = "yes" Then
+        BoolToString = True
+    ElseIf Param = "off" Or Param = "false" Or Param = "no" Then
+        BoolToString = False
+    Else
+        RaiseMiscError "Invalid value for boolean: " & Param
+    End If
+End Function
+
 Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String)
     If PrivDisableOutput Then
         Yield

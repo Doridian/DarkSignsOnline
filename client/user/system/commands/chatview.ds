@@ -1,10 +1,1 @@
-Dim Param
-Param = LCase(Trim(ArgV(1)))
-
-If Param = "on" or Param = "true" or param = "yes" Then
-    ChatView True
-ElseIf Param = "off" or Param = "false" or param = "no" Then
-    ChatView False
-Else
-    Say "Invalid parameter. Use TRUE or FALSE."
-End If
+ChatView BoolToString(ArgV(1))
