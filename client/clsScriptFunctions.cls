@@ -101,14 +101,6 @@ Private Sub CrashIfReached()
     While True: Wend
 End Sub
 
-'Private Sub AssertCLIOnly()
-'    If IsCLIInput Then
-'        Exit Sub
-'    End If
-'    Err.Raise vbObjectError + 9006, "DSO", "CLI only functionality"
-'    CrashIfReached
-'End Sub
-
 Private Sub AssertLocalOnly()
     If PrivServerPort <= 0 Then
         Exit Sub
