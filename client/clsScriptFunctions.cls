@@ -53,7 +53,7 @@ Public Property Get ServerPort() As Long
 End Property
 
 Public Property Let UserName(ByVal NewValue As String)
-    AssertCLIOnly
+    AssertLocalOnly
 
     SetUsername NewValue, ConsoleID
 End Property
@@ -75,7 +75,7 @@ Public Property Get IsOutputRedirected() As Boolean
 End Property
 
 Public Property Let Password(ByVal NewValue As String)
-    AssertCLIOnly
+    AssertLocalOnly
 
     SetPassword NewValue, ConsoleID
 End Property
@@ -101,13 +101,13 @@ Private Sub CrashIfReached()
     While True: Wend
 End Sub
 
-Private Sub AssertCLIOnly()
-    If IsCLIInput Then
-        Exit Sub
-    End If
-    Err.Raise vbObjectError + 9006, "DSO", "CLI only functionality"
-    CrashIfReached
-End Sub
+'Private Sub AssertCLIOnly()
+'    If IsCLIInput Then
+'        Exit Sub
+'    End If
+'    Err.Raise vbObjectError + 9006, "DSO", "CLI only functionality"
+'    CrashIfReached
+'End Sub
 
 Private Sub AssertLocalOnly()
     If PrivServerPort <= 0 Then
@@ -376,7 +376,7 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
 End Function
 
 Public Sub EDIT(ByVal File As String)
-    AssertCLIOnly
+    AssertLocalOnly
 
     Yield
     EditFile ResolvePath(File), PrivConsoleID
@@ -858,7 +858,7 @@ Public Sub LOGOUT()
 End Sub
 
 Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As String)
-    AssertCLIOnly
+    AssertLocalOnly
     
     Yield
 
@@ -876,6 +876,44 @@ Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As 
 
     Dim DomainRequestIdx As Long
     DomainRequestIdx = DoDownloadAPI("domain_upload.php", True, PostData)
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    Yield
+End Sub
+
+Public Sub DOWNLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As String)
+    AssertLocalOnly
+    
+    Yield
+
+    Dim PostData As String
+    PostData = "port=" & EncodeURLParameter(Port) & _
+    "&d=" & EncodeURLParameter(Domain)
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("domain_download.php", True, PostData)
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    WriteFile ResolvePath(Filename), DomainRequest.Response
+
+    Yield
+End Sub
+
+Public Sub ClosePort(ByVal Domain As String, ByVal Port As Long)
+    AssertLocalOnly
+    
+    Yield
+
+    Dim PostData As String
+    PostData = "port=" & EncodeURLParameter(Port) & _
+    "&d=" & EncodeURLParameter(Domain)
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("domain_close.php", True, PostData)
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
