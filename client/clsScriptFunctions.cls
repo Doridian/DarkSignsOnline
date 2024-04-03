@@ -730,6 +730,10 @@ Public Sub RD(ByVal OldDir As String)
     RmDir SafePath(OldDir)
 End Sub
 
+Public Function Cat(ByVal File As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    Cat = Display(File, StartLine, MaxLines)
+End Function
+
 Public Function Display(ByVal File As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     AssertLocalOnly
 

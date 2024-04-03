@@ -1,3 +1,5 @@
+Option Explicit
+
 Dim LSArg
 LSArg = "."
 IF ArgC() > 0 Then
