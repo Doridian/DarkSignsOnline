@@ -849,6 +849,30 @@ Public Sub LOGOUT()
     Yield
 End Sub
 
+Public Function GetDomain(ByVal IP As String) As String
+    Yield
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("domain_meta.php?getdomain=" & EncodeURLParameter(IP), False, "")
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    GetDomain = DomainRequest.Response
+End Function
+
+Public Function GetIP(ByVal Domain As String) As String
+    Yield
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("domain_meta.php?getip=" & EncodeURLParameter(Domain), False, "")
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    GetIP = DomainRequest.Response
+End Function
+
 Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As String)
     AssertLocalOnly
     
