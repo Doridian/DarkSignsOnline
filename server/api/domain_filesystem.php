@@ -17,9 +17,11 @@ function verify_keycode($filename) {
 	global $db, $d, $dInfo, $user;
 	$is_owner = $user['id'] === $dInfo[1];
 
-	$keycode = $_REQUEST['keycode'];
-	if ($keycode !== $dInfo[2]) {
-		die_error("Error - ($filename) Invalid Server Key: " . strtoupper($d));
+	if ($_REQUEST['is_local_script'] !== 'true' || !$is_owner) {
+		$keycode = $_REQUEST['keycode'];
+		if ($keycode !== $dInfo[2]) {
+			die_error("Error - ($filename) Invalid Server Key: " . strtoupper($d));
+		}
 	}
 
 	$stmt = $db->prepare("SELECT * FROM domain_files WHERE domain = ? AND filename = ?");

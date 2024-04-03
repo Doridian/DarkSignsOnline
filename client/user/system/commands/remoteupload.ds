@@ -1,0 +1,5 @@
+Option Explicit
+
+Dim Contents
+Contents = Display(ArgV(2))
+RemoteWrite(ArgV(1), Contents)

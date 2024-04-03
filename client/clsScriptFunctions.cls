@@ -101,8 +101,12 @@ Private Sub CrashIfReached()
     While True: Wend
 End Sub
 
+Public Function IsLocal() As Boolean
+    IsLocal = PrivServerPort > 0
+End Function
+
 Private Sub AssertLocalOnly()
-    If PrivServerPort <= 0 Then
+    If IsLocal() Then
         Exit Sub
     End If
     Err.Raise vbObjectError + 9007, "DSO", "local only functionality"
@@ -997,6 +1001,46 @@ Private Function MyDomainsHelper(ByVal DomainType As String) As String
 
     MyDomainsHelper = DomainRequest.Response
     Yield
+End Function
+
+Private Function DomainFilesystemHelper(ByVal Domain As String, ByVal PostData As String) As String
+    Yield
+
+    Dim IsLocalValue As String
+    IsLocalValue = "false"
+    If IsLocal() Then
+        IsLocalValue = "true"
+    End If
+    
+    PostData = "is_local_script=" & EncodeURLParameter(IsLocalValue) & _
+                                        "&keycode=" & EncodeURLParameter(FileKey) & _
+                                        "&d=" & EncodeURLParameter(Domain) & _
+                                        "&" & PostData
+
+    Dim DomainRequestIdx As Long
+    DomainRequestIdx = DoDownloadAPI("domain_filesystem.php", True, PostData)
+    Dim DomainRequest As clsHttpResponse
+    Set DomainRequest = WAITFOR(DomainRequestIdx)
+    DomainRequest.RaiseForStatus
+
+    DomainFilesystemHelper = DomainRequest.Response
+    Yield
+End Function
+
+Public Sub RemoteWrite(ByVal Domain As String, ByVal Filename As String, ByVal Contents As String)
+    DomainFilesystemHelper Domain, "write=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
+End Sub
+
+Public Sub RemoteDelete(ByVal Domain As String, ByVal Filename As String)
+    DomainFilesystemHelper Domain, "delete=" & EncodeURLParameter(Filename)
+End Sub
+
+Public Sub RemoteDir(ByVal Domain As String, ByVal Filename As String)
+    DomainFilesystemHelper Domain, "dir=" & EncodeURLParameter(Filename)
+End Sub
+
+Public Function RemoteView(ByVal Domain As String, ByVal Filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    RemoteView = DomainFilesystemHelper(Domain, "fileserver=" & EncodeURLParameter(Filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
 End Function
 
 Public Function MyDomains() As String
