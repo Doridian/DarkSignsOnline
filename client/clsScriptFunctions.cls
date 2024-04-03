@@ -707,6 +707,7 @@ Public Sub MAIL()
 End Sub
 
 Public Sub yDiv(ByVal setValue As Integer)
+    Yield
     If PrivDisableOutput Then
         Exit Sub
     End If
