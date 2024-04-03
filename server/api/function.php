@@ -208,7 +208,7 @@ function transaction($from_id, $to_id, $description, $amount, $returnkeycodeinst
 	if ($returnkeycodeinstead == 1) {
 		return $vercode;
 	}
-	return $status == 'COMPLETE';
+	return $status;
 }
 
 function idToUser($id) {

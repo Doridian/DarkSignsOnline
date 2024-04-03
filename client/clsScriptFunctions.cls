@@ -1011,6 +1011,47 @@ Public Function MyIPs() As String
     MyIPs = MyDomainsHelper("ip")
 End Function
 
+Public Function Transfer(ByVal Target As String, ByVal Amount As Long, ByVal Description As String) As Boolean
+    Yield
+
+    Target = Trim(Target)
+    Description = Trim(Description)
+
+    If Amount < 1 Then
+        RaiseMiscError "Invalid amount: $" & Amount & ".00!"
+        Exit Function
+    End If
+    
+    AuthorizePayment = False
+    frmPayment.lAmount = "$" & Amount & ".00"
+    frmPayment.lDescription = Description
+    frmPayment.lTo = Target
+
+    Yield
+    frmPayment.Show vbModal
+    Yield
+
+    If AuthorizePayment = False Then
+        RaiseMiscError "Payment declined"
+        Exit Function
+    End If
+
+    SayCOMM "Processing Payment..."
+
+    Yield
+
+    Dim PostData As String
+    PostData = "to=" & EncodeURLParameter(Target) & _
+                "&amount=" & EncodeURLParameter(Amount) & _
+                "&description=" & EncodeURLParameter(Description)
+
+    Dim TransferRequestIndex As Long
+    TransferRequestIndex = DoDownloadAPI("transfer.php" & Encode, False, "")
+    Dim TransferRequest As clsHttpResponse
+    Set TransferRequest = WAITFOR(TransferRequestIndex)
+    TransferRequest.RaiseForStatus
+End Function
+
 Public Sub Wait(ByVal Milliseconds As Long)
     Dim EndTime As Long
     EndTime = GetTickCount() + Milliseconds

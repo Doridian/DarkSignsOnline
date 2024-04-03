@@ -14,7 +14,7 @@ print_returnwith();
 
 $dInfo = getDomainInfo($d);
 if ($dInfo[0] <= 0) {
-	die ('Domain does not exist.');
+	die('Domain does not exist.');
 }
 
 $stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain=? AND port=? AND owner=? AND ver = ?');
@@ -27,7 +27,7 @@ if (!empty($row)) {
 
 	$script = str_replace("\n", "*- -*", $script);
 	$script = str_replace("\r", "", $script);
-	die ("$filename:$script");
+	die("$filename:$script");
 } else {
-	die ("No Script Found: " . strtoupper($d) . ":$port");
+	die("No Script Found: " . strtoupper($d) . ":$port");
 }

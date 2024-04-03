@@ -3,18 +3,19 @@
 include_once('function.php');
 global $db;
 
-
 print_returnwith();
 
-$u=trim($u);
-$p=trim($p);
+$amount = (int)$_REQUEST['amount'];
+$amount2 = number_format($amount);
 
-$amount2=number_format($amount);
+$to = userToId($_REQUEST['to']);
+$description = $_REQUEST['description'];
+$status = transaction($user['id'], $to, $description, $amount);
 
-if (transaction($u,$to,$description,$amount)==true){
-	$usercash=number_format(grab_from_users("cash"));
-	die("Payment of $$amount2 to $to is complete.newlineYour new balance is $$usercash.");
-}else{
-	$usercash=number_format(grab_from_users("cash"));
-	die("Payment of $$amount2 to $to was DECLINED by the bank.newlineYour account balance of $$usercash may be insufficient.");
+$usercash = getCash($user['id']);
+
+if ($status === 'COMPLETE') {
+	die("Payment of $$amount2 to $to is complete. Your new balance is $$usercash.00");
 }
+
+die_error("Payment of $$amount2 to $to was DECLINED by the bank with error: $status");
