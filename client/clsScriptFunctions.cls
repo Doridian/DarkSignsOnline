@@ -38,6 +38,8 @@ Private PrivServerPort As Long
 
 Private PendingCustomDownloads() As Long
 
+Private Declare Function GetTickCount Lib "kernel32" () As Long
+
 Public Property Get UserName() As String
     UserName = myUsername
 End Property
@@ -513,6 +515,10 @@ Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As
     Yield
 End Sub
 
+Public Sub LineUp()
+    Say "-"
+End Sub
+
 Public Sub Say(ParamArray Params() As Variant)
     Dim X As Long
     Dim sStr As String
@@ -650,6 +656,56 @@ Public Sub Append(ByVal File As String, ByVal Content As String)
         Seek #FF, LOF(FF) + 1
         Put #FF, , Content
     Close #FF
+End Sub
+
+Public Sub Del(ByVal File As String)
+    AssertLocalOnly
+
+    Yield
+    File = ResolvePath(File)
+    Kill SafePath(File)
+End Sub
+
+Public Sub Copy(ByVal Source As String, ByVal Destination As String)
+    AssertLocalOnly
+    
+    Yield
+    Source = ResolvePath(Source)
+    Destination = ResolvePath(Destination)
+    
+    FileCopy SafePath(Source), SafePath(Destination)
+End Sub
+
+Public Sub Rename(ByVal Source As String, ByVal Destination As String)
+    Move Source, Destination
+End Sub
+
+Public Sub Move(ByVal Source As String, ByVal Destination As String)
+    AssertLocalOnly
+    
+    Yield
+    Source = ResolvePath(Source)
+    Destination = ResolvePath(Destination)
+
+    Name SafePath(Source) As SafePath(Destination)
+End Sub
+
+Public Sub MD(ByVal NewDir As String)
+    AssertLocalOnly
+
+    Yield
+    NewDir = ResolvePath(NewDir)
+
+    MkDir SafePath(NewDir)
+End Sub
+
+Public Sub RD(ByVal OldDir As String)
+    AssertLocalOnly
+
+    Yield
+    OldDir = ResolvePath(OldDir)
+
+    RmDir SafePath(OldDir)
 End Sub
 
 Public Sub Display(ByVal File As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0)
@@ -814,6 +870,15 @@ Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As 
     DomainRequest.RaiseForStatus
 
     Yield
+End Sub
+
+Public Sub Wait(ByVal Milliseconds As Long)
+    Dim EndTime As Long
+    EndTime = GetTickCount() + Milliseconds
+    
+    While GetTickCount() < EndTime
+        Yield
+    Wend
 End Sub
 
 Public Sub Clear()

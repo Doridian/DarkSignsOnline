@@ -30,6 +30,8 @@ Private ResponseSent As Boolean
 
 Private Const HTTPREQUEST_SETCREDENTIALS_FOR_SERVER As Long = 0
 
+Private Declare Function GetTickCount Lib "kernel32" () As Long
+
 Private Sub Class_Initialize()
     Set HttpRequest = Nothing
     Done = True
@@ -151,11 +153,11 @@ Private Sub ManageSockError(Reason As String)
     If AllowRetry Then
         Retries = Retries + 1
         
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
+        Dim EndTime As Long
+        EndTime = GetTickCount() + 1000
+        While GetTickCount() < EndTime
+            DoEvents
+        Wend
 
         Send
 
