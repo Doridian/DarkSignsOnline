@@ -1012,7 +1012,7 @@ Public Sub Register(ByVal Domain As String)
     Yield
 End Sub
 
-Public Function RegisterPrices(ByVal Domain As String) As String
+Public Function RegisterPrices() As String
     AssertLocalOnly
 
     Yield
