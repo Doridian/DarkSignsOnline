@@ -1261,6 +1261,7 @@ End Function
 
 Public Sub Yield()
     If CancelScript(PrivConsoleID) Or Aborted Then
+        ConsoleWaitingOnRemote(PrivConsoleID) = False
         Aborted = True
         Err.Raise vbObjectError + 9001, "DSO", "Script canceled"
         Exit Sub
