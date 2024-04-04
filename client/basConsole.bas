@@ -405,11 +405,11 @@ Public Sub Print_Console()
     frmConsole.CurrentY = printHeight
 
     If ConsoleWaitingOnRemote(ActiveConsole) Then
-        frmConsole.CurrentX = ConsoleXSpacing - 80
+        frmConsole.CurrentX = ConsoleXSpacing
         If LoadingSpinner < 1 Then
             LoadingSpinner = 1
         End If
-        frmConsole.Print Mid(LoadingSpinnerAnim, LoadingSpinner, 1)
+        frmConsole.Print "Loading... " & Mid(LoadingSpinnerAnim, LoadingSpinner, 1)
     End If
 
     frmConsole.CurrentX = ConsoleXSpacing
