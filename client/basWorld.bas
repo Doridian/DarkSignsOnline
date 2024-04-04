@@ -24,7 +24,7 @@ Private Const INTERNET_MAX_URL_LENGTH As Long = 2048
 Private Const URL_ESCAPE_PERCENT As Long = &H1000&
 
 Private Type ProcessQueueEntry
-    data As String
+    Data As String
     DataSource As String
     ConsoleID As Integer
     IsCustomDownload As Long
@@ -146,7 +146,7 @@ End Sub
 
 Public Sub Process(ByVal s As String, ByVal Code As Integer, sSource As String, ByVal ConsoleID As Integer, ByVal IsCustomDownload As Long)
     Dim NewEntry As ProcessQueueEntry
-    NewEntry.data = s
+    NewEntry.Data = s
     NewEntry.Code = Code
     NewEntry.DataSource = sSource
     NewEntry.ConsoleID = ConsoleID
@@ -208,7 +208,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
     Dim IsCustomDownload As Long
     Dim Code As Integer
 
-    s = ProcessQueue(Index).data
+    s = ProcessQueue(Index).Data
     Code = ProcessQueue(Index).Code
     sSource = ProcessQueue(Index).DataSource
     ConsoleID = ProcessQueue(Index).ConsoleID
@@ -237,6 +237,9 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
 
     Select Case cCode
         ' MISC
+        Case "0000"
+            ' Ignore this entirely
+
         Case "0001" 'it's the user list
             LoadUserList s, ConsoleID
 
