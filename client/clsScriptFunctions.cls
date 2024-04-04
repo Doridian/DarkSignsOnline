@@ -317,9 +317,7 @@ Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
 
     While Not DownloadDone(ResIndex)
         If Not YieldSafe() Then GoTo WaitForExit
-        If Not HasPendingCustomDownload(ResIndex) Then
-            GoTo WaitForExit
-        End If
+        If Not HasPendingCustomDownload(ResIndex) Then GoTo WaitForExit
     Wend
 
     Dim Res As clsHttpResponse
