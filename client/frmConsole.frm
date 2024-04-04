@@ -742,7 +742,6 @@ End Sub
 
 Private Sub Form_Load()
     basCommands.InitBasCommands
-    basWorld.InitBasWorld
 
     Dim X As Integer
     For X = 1 To 30
@@ -999,8 +998,7 @@ End Sub
 
 
 Private Sub tmrKeepOnline_Timer()
-    'KeepOnline
-    basWorld.CleanHttpRequests
+    KeepOnline
 End Sub
 
 Public Sub KeepOnline()

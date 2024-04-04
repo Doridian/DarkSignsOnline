@@ -33,7 +33,14 @@ Private Const HTTPREQUEST_SETCREDENTIALS_FOR_SERVER As Long = 0
 Private Declare Function GetTickCount Lib "kernel32" () As Long
 
 Private Sub Class_Initialize()
-    Set HttpRequest = Nothing
+    Set HttpRequest = New cHttpRequest
+    HttpRequest.Option_(WinHttpRequestOption_EnableHttp1_1) = True
+    HttpRequest.Option_(WinHttpRequestOption_UserAgentString) = "Mozilla/4.0 (compatible; Win32; VbAsyncSocket; DarkSignsOnline/" & VersionStr() & ")"
+    HttpRequest.SetTimeouts basWorld.TimeOutSeconds * 1000, basWorld.TimeOutSeconds * 1000, basWorld.TimeOutSeconds * 1000, basWorld.TimeOutSeconds * 1000
+    DoneForever = True
+End Sub
+
+Public Sub Rearm()
     Done = True
     DoneForever = False
     ResponseSent = False
@@ -53,7 +60,6 @@ Private Sub SetDoneForever()
     End If
     DoneForever = True
     Done = True
-    basWorld.CleanHttpRequests
 End Sub
 
 Public Sub Abort()
@@ -78,9 +84,7 @@ Public Sub Send()
     End If
 
     Abort_
-    Set HttpRequest = New cHttpRequest
 
-    HttpRequest.SetTimeouts basWorld.TimeOutSeconds * 1000, basWorld.TimeOutSeconds * 1000, basWorld.TimeOutSeconds * 1000, basWorld.TimeOutSeconds * 1000
     Done = False
 
     HttpRequest.Open_ Method, Url, True
@@ -88,7 +92,6 @@ Public Sub Send()
         HttpRequest.SetCredentials UserName, Password, HTTPREQUEST_SETCREDENTIALS_FOR_SERVER
     End If
 
-    HttpRequest.SetRequestHeader "User-Agent", "Mozilla/4.0 (compatible; Win32; VbAsyncSocket; DarkSignsOnline/" & VersionStr() & ")"
     HttpRequest.SetRequestHeader "DSO-Protocol-Version", "2"
 
     If Method = "POST" Then

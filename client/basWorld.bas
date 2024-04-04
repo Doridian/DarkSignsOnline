@@ -15,7 +15,7 @@ Public Const TimeOutSeconds = 8
 Public Authorized As Boolean
 
 Public Comms(1 To 49) As String
-Public HttpRequests() As clsHttpRequestor
+Public HttpRequests(1 To 30) As New clsHttpRequestor
 
 Private Declare Function UrlEscape Lib "shlwapi" Alias "UrlEscapeW" (ByVal pszURL As Long, ByVal pszEscaped As Long, pcchEscaped As Long, ByVal dwFlags As Long) As Long
 Private Const E_POINTER As Long = &H80004003
@@ -34,44 +34,6 @@ End Type
 Private ProcessQueue(1 To 30) As ProcessQueueEntry
 
 
-Public Sub InitBasWorld()
-    ReDim HttpRequests(0 To 0)
-End Sub
-
-
-Public Sub CleanHttpRequests()
-    Dim X As Long
-    Dim Y As Long
-    Dim MadeChanges As Boolean
-    Dim NewHttpRequests() As clsHttpRequestor
-
-    If UBound(HttpRequests) < 1 Then
-        Exit Sub
-    End If
-
-    ReDim NewHttpRequests(1 To UBound(HttpRequests))
-    Y = 0
-    For X = 1 To UBound(HttpRequests)
-        If Not HttpRequests(X).SafeToDelete() Then
-            Y = Y + 1
-            Set NewHttpRequests(Y) = HttpRequests(X)
-        Else
-            MadeChanges = True
-        End If
-    Next
-
-    'We did not do any cleanup, so don't redo the array for no reason
-    If Not MadeChanges Then
-        Exit Sub
-    End If
-
-    ReDim HttpRequests(0 To Y)
-    For X = 1 To UBound(HttpRequests)
-        Set HttpRequests(X) = NewHttpRequests(X)
-    Next
-End Sub
-
-
 Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Long, Optional NoAuth As Boolean)
     If Not NoAuth And InStr(i(sUrl), "auth.php") = 0 And Not Authorized Then
         SayRaw ConsoleID, "You must be logged in to do that!{36 center orange impact nobold}"
@@ -85,8 +47,19 @@ Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Option
  
     sUrl = Trim(Replace(sUrl, "&&", "&"))
     sUrl = Replace(sUrl, " ", "%20")
+    
+    Dim Requestor As clsHttpRequestor
 
-    Dim Requestor As New clsHttpRequestor
+    Dim X As Long
+    For X = 1 To 30
+        If HttpRequests(X).SafeToDelete() Then
+            Set Requestor = HttpRequests(X)
+            Exit For
+        End If
+    Next
+
+    Requestor.Rearm
+
     Requestor.ConsoleID = ConsoleID
     Requestor.IsCustomDownload = IsCustomDownload
 
@@ -110,9 +83,6 @@ Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Option
         Requestor.Method = "GET"
         Requestor.PostData = ""
     End If
-    
-    ReDim Preserve HttpRequests(0 To UBound(HttpRequests) + 1)
-    Set HttpRequests(UBound(HttpRequests)) = Requestor
 
     Requestor.Send
 End Function
@@ -208,7 +178,7 @@ Public Sub OnLoginSuccess()
     If frmConsole.getConnected Then
         frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
         frmConsole.lstUsers.Clear  'clear the list entries
-        frmConsole.display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
+        frmConsole.Display "XXXXXXxxxxxxxxx...... Disconnected"    'display a message
         frmConsole.sockIRC.Close_   'close the connection
     End If
 
