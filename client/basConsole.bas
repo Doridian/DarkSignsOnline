@@ -12,6 +12,8 @@ Public scrConsoleContext(1 To 4) As clsScriptFunctions
 
 Public ConsolePaused(1 To 4) As Boolean
 
+Public ConsoleWaitingOnRemote(1 To 4) As Boolean
+
 Private Base64 As New clsBase64
 
 Public Type ConsoleLine
@@ -49,6 +51,7 @@ Public Const DrawDividerWidth = 24
 Public Const Max_Font_Size = 144
 Public Const PreSpace = "-->" 'this will indent the text
 Public Const ConsoleXSpacing = 360
+Public Const ConsoleXSpacingIndent = 960
 
 
 Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal ConsoleID As Integer)
@@ -401,6 +404,15 @@ Public Sub Print_Console()
     printHeight = frmConsole.Height - 840 + addOn 'Font_Height(Console_FontName(1), Console_FontSize(1)) - ConsoleXSpacing
     frmConsole.CurrentY = printHeight
 
+    If ConsoleWaitingOnRemote(ActiveConsole) Then
+        frmConsole.CurrentX = ConsoleXSpacing - 80
+        If LoadingSpinner < 1 Then
+            LoadingSpinner = 1
+        End If
+        frmConsole.Print Mid(LoadingSpinnerAnim, LoadingSpinner, 1)
+    End If
+
+    frmConsole.CurrentX = ConsoleXSpacing
     n = 0
     Do
         n = n + 1
@@ -500,7 +512,7 @@ DontDraw:
             If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
 
             If InStr(tmpS, PreSpace) > 0 Then
-                If isAligned <> True Then frmConsole.CurrentX = 960
+                If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
                 tmpS = Replace(tmpS, PreSpace, "")
             End If
             frmConsole.Print tmpS

@@ -34,6 +34,9 @@ Public FlashFast As Boolean
 Public FlashSlow As Boolean
 Public Flash As Boolean
 
+Public LoadingSpinner As Integer
+Public Const LoadingSpinnerAnim = "/-\|"
+
 Public cPath(1 To 5) As String
 Public cPath_tmp(1 To 4) As String
 

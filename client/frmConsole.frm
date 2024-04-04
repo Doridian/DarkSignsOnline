@@ -989,6 +989,11 @@ Private Sub tmrFlash_Timer()
     If FlashCounter Mod 2 = 1 Then Flash = Not (Flash)
     If FlashCounter Mod 5 = 1 Then FlashSlow = Not (FlashSlow)
 
+    LoadingSpinner = LoadingSpinner + 1
+    If LoadingSpinner > Len(LoadingSpinnerAnim) Then
+        LoadingSpinner = 1
+    End If
+
     frmConsole.QueueConsoleRender
 End Sub
 

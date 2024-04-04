@@ -310,11 +310,14 @@ Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal
 End Function
 
 Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
+    ConsoleWaitingOnRemote(PrivConsoleID) = True
+    frmConsole.QueueConsoleRender
+    Yield
+
     While Not DownloadDone(ResIndex)
         Yield
         If Not HasPendingCustomDownload(ResIndex) Then
-            Err.Raise vbObjectError + 9300, "DSO", "Invalid WaitFor Index " & ResIndex
-            Exit Function
+            GoTo WaitForExit
         End If
     Wend
 
@@ -326,6 +329,10 @@ Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
 
     DownloadInUse(ResIndex) = False
     RemoveCustomDownload ResIndex
+
+WaitForExit:
+    ConsoleWaitingOnRemote(PrivConsoleID) = False
+    frmConsole.QueueConsoleRender
     Yield
 End Function
 
