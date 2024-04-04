@@ -312,10 +312,11 @@ End Function
 Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
     ConsoleWaitingOnRemote(PrivConsoleID) = True
     frmConsole.QueueConsoleRender
-    Yield
+    
+    If Not YieldSafe() Then GoTo WaitForExit
 
     While Not DownloadDone(ResIndex)
-        Yield
+        If Not YieldSafe() Then GoTo WaitForExit
         If Not HasPendingCustomDownload(ResIndex) Then
             GoTo WaitForExit
         End If
@@ -1259,15 +1260,22 @@ Public Function ArgV(ByVal Number As Long) As Variant
     ArgV = PrivParameters(Number)
 End Function
 
-Public Sub Yield()
+Private Function YieldSafe() As Boolean
+    YieldSafe = True
+
     If CancelScript(PrivConsoleID) Or Aborted Then
-        ConsoleWaitingOnRemote(PrivConsoleID) = False
         Aborted = True
-        Err.Raise vbObjectError + 9001, "DSO", "Script canceled"
-        Exit Sub
+        YieldSafe = False
+        Exit Function
     End If
 
     DoEvents
+End Function
+
+Public Sub Yield()
+    If Not YieldSafe() Then
+        Err.Raise vbObjectError + 9001, "DSO", "Script canceled"
+    End If
 End Sub
 
 
