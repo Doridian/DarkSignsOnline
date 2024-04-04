@@ -24,7 +24,7 @@ Private Const INTERNET_MAX_URL_LENGTH As Long = 2048
 Private Const URL_ESCAPE_PERCENT As Long = &H1000&
 
 Private Type ProcessQueueEntry
-    Data As String
+    data As String
     DataSource As String
     ConsoleID As Integer
     IsCustomDownload As Long
@@ -50,10 +50,16 @@ Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Option
     
     Dim Requestor As clsHttpRequestor
 
-    Dim X As Long
+    Dim X As Integer
+    Dim Y As Integer
     For X = 1 To 30
-        If HttpRequests(X).SafeToDelete() Then
-            Set Requestor = HttpRequests(X)
+        If NoAuth Then
+            Y = 31 - X
+        Else
+            Y = X
+        End If
+        If HttpRequests(Y).SafeToDelete() Then
+            Set Requestor = HttpRequests(Y)
             Exit For
         End If
     Next
@@ -140,7 +146,7 @@ End Sub
 
 Public Sub Process(ByVal s As String, ByVal Code As Integer, sSource As String, ByVal ConsoleID As Integer, ByVal IsCustomDownload As Long)
     Dim NewEntry As ProcessQueueEntry
-    NewEntry.Data = s
+    NewEntry.data = s
     NewEntry.Code = Code
     NewEntry.DataSource = sSource
     NewEntry.ConsoleID = ConsoleID
@@ -202,7 +208,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
     Dim IsCustomDownload As Long
     Dim Code As Integer
 
-    s = ProcessQueue(Index).Data
+    s = ProcessQueue(Index).data
     Code = ProcessQueue(Index).Code
     sSource = ProcessQueue(Index).DataSource
     ConsoleID = ProcessQueue(Index).ConsoleID
