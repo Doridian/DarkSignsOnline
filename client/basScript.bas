@@ -48,23 +48,35 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
     GoTo ScriptEnd
     Exit Function
 EvalError:
-    If Err.Number = vbObjectError + 9002 Then
+    Dim ErrNumber As Long
+    Dim ErrDescription As String
+    Dim ErrHelpFile As String
+    Dim ErrSource As String
+    Dim ErrHelpContext As String
+    ErrNumber = Err.Number
+    ErrDescription = Err.Description
+    ErrHelpFile = Err.HelpFile
+    ErrHelpContext = Err.HelpContext
+    ErrSource = Err.Source
+    On Error GoTo 0
+
+    If ErrNumber = vbObjectError + 9002 Then
         GoTo ScriptEnd
     End If
     If Not ErrorHandling Then
-        Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
+        Err.Raise ErrNumber, ErrSource, ErrDescription, ErrHelpFile, ErrHelpContext
         Exit Function
     End If
-    If Err.Number = vbObjectError + 9001 Then
+    If ErrNumber = vbObjectError + 9001 Then
         GoTo ScriptCancelled
     End If
 
     Dim ErrHelp As String
     ErrHelp = ""
-    If Err.Number = 13 Then
+    If ErrNumber = 13 Then
         ErrHelp = "This error might mean a function you tried to use does not exist"
     End If
-    SayRaw ConsoleID, "Error processing script: " & Err.Description & " (" & Str(Err.Number) & ") " & ErrHelp & " {red}"
+    SayRaw ConsoleID, "Error processing script: " & ErrDescription & " (" & Str(ErrNumber) & ") " & ErrHelp & " {red}"
     GoTo ScriptEnd
 
 ScriptCancelled:

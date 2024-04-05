@@ -5,6 +5,8 @@ LSArg = "."
 IF ArgC() > 0 Then
 	LSArg = ArgV(1)
 END IF
+
+Dim Res
 Res = ReadDir(LSArg)
 
 IF LBound(Res) < 0 Then
