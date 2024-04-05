@@ -51,10 +51,16 @@ EvalError:
     Dim ErrNumber As Long
     Dim ErrDescription As String
     ErrNumber = Err.Number
-    ErrDescription = Err.Description
+    ErrDescription = s.Error.Description
+    If s.Error.Number = 0 Or ErrDescription = "" Then
+        ErrNumber = Err.Number
+        ErrDescription = Err.Description
+    End If
+
+    s.Error.Clear
     Err.Clear
     On Error GoTo 0
-    
+
     Dim ObjectErrNumber As Long
     ObjectErrNumber = ErrNumber - vbObjectError
 
@@ -70,10 +76,10 @@ EvalError:
     End If
     
     Dim ErrNumberStr As String
-    If ObjectErrNumber > 0 And ObjectErrNumber < 65535 Then
-        ErrNumberStr = "[" & Str(ObjectErrNumber) & "]"
+    If ObjectErrNumber >= 0 And ObjectErrNumber <= 65535 Then
+        ErrNumberStr = "(O#" & ObjectErrNumber & ")"
     Else
-        ErrNumberStr = "(" & Str(ErrNumber) & ")"
+        ErrNumberStr = "(E#" & ErrNumber & ")"
     End If
 
     Dim ErrHelp As String

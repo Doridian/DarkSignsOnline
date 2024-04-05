@@ -144,6 +144,7 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     New_Console_Line_InProgress ConsoleID
 
     scrConsoleContext(ConsoleID).UnAbort
+    scrConsole(ConsoleID).Error.Clear
 
     On Error GoTo EvalError
 
@@ -163,7 +164,12 @@ EvalError:
     Dim ErrNumber As Long
     Dim ErrDescription As String
     ErrNumber = Err.Number
-    ErrDescription = Err.Description
+    ErrDescription = scrConsole(ConsoleID).Error.Description
+    If scrConsole(ConsoleID).Error.Number = 0 Or ErrDescription = "" Then
+        ErrDescription = Err.Description
+    End If
+
+    scrConsole(ConsoleID).Error.Clear
     Err.Clear
     On Error GoTo 0
 
@@ -183,10 +189,10 @@ EvalError:
     End If
     
     Dim ErrNumberStr As String
-    If ObjectErrNumber > 0 And ObjectErrNumber < 65535 Then
-        ErrNumberStr = "[" & Str(ObjectErrNumber) & "]"
+    If ObjectErrNumber >= 0 And ObjectErrNumber <= 65535 Then
+        ErrNumberStr = "(O#" & ObjectErrNumber & ")"
     Else
-        ErrNumberStr = "(" & Str(ErrNumber) & ")"
+        ErrNumberStr = "(E#" & ErrNumber & ")"
     End If
     
     SayRaw ConsoleID, "Error processing CLI input: " & ErrDescription & " " & ErrNumberStr & " " & ErrHelp & " {red}"

@@ -109,7 +109,7 @@ Private Sub HttpRequest_OnError(ByVal ErrorNumber As Long, ByVal ErrorDescriptio
     End If
     Done = True
     
-    ManageSockError "Socket error code " & Str(ErrorNumber) & " = " & ErrorDescription
+    ManageSockError "Socket error code " & ErrorNumber & " = " & ErrorDescription
 End Sub
 
 Private Function IsHTTPCodeRetry(Code As Long) As Boolean
@@ -131,7 +131,7 @@ Private Sub HttpRequest_OnResponseFinished()
     Done = True
 
     If IsHTTPCodeRetry(HttpRequest.Status) Then
-        ManageSockError "HTTP Status " & Str(HttpRequest.Status)
+        ManageSockError "HTTP Status " & HttpRequest.Status
         Exit Sub
     End If
 
