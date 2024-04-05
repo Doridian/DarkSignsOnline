@@ -200,7 +200,7 @@ Begin VB.Form frmConsole
       End
    End
    Begin VB.Timer tmrMusic 
-      Interval        =   2000
+      Interval        =   500
       Left            =   9480
       Top             =   6840
    End
@@ -778,8 +778,6 @@ Private Sub Form_Load()
     CheckMusic
 
     LoadIRC
-   
-    RegisterWindow Me.hWnd
 End Sub
 
 Sub ConnectIRC()
@@ -875,7 +873,6 @@ End Sub
 
 Private Sub Form_Terminate()
     basMusic.StopMusic
-    UnregisterWindow Me.hWnd
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -895,10 +892,8 @@ Private Sub Form_Unload(Cancel As Integer)
         sockIRC.Close_   'close the connection
     End If
     '------------------------------------------
-    
+
     basMusic.StopMusic
-    UnregisterWindow Me.hWnd
-    
     End
 End Sub
 

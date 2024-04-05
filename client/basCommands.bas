@@ -659,12 +659,12 @@ Public Sub MusicCommand(ByVal s As String)
 
     Case "start": RegSave "music", "on"
     Case "on": RegSave "music", "on"
-        
-    Case "stop": RegSave "music", "off"
-    Case "off": RegSave "music", "off"
-    
+
+    Case "stop": RegSave "music", "off": basMusic.StopMusic
+    Case "off": RegSave "music", "off": basMusic.StopMusic
+
     Case "next": basMusic.StopMusic
-        
+
     Case "prev":
         basMusic.PrevMusicIndex
         basMusic.PrevMusicIndex
