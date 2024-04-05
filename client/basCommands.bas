@@ -31,7 +31,7 @@ Public Function SafePath(ByVal Path As String) As String
     Path = Replace(Path, "\", "/")
     If Path = ".." Or Left(Path, 3) = "../" Or Right(Path, 3) = "/.." Or InStr(Path, "/../") > 0 Then
         SafePath = App.Path & "/user/f/a/i/l/s/a/f/e.txt"
-        Err.Raise vbObjectError + 9666, "DSO", "Invalid character in path"
+        Err.Raise vbObjectError + 9666, , "Invalid character in path"
         Exit Function
     End If
 
@@ -154,22 +154,42 @@ Public Function Run_Command(CLine As ConsoleLine, ByVal ConsoleID As Integer, Op
     scrConsoleDScript(ConsoleID) = OptionDScript
 
     scrConsole(ConsoleID).AddCode RunStr
+
     On Error GoTo 0
+
     GoTo ScriptEnd
 
 EvalError:
-    If Err.Number = vbObjectError + 9001 Then
+    Dim ErrNumber As Long
+    Dim ErrDescription As String
+    ErrNumber = Err.Number
+    ErrDescription = Err.Description
+    Err.Clear
+    On Error GoTo 0
+
+    Dim ObjectErrNumber As Long
+    ObjectErrNumber = ErrNumber - vbObjectError
+    
+    If ObjectErrNumber = 9001 Then
         GoTo ScriptCancelled
     End If
-    If Err.Number = vbObjectError + 9002 Then
+    If ObjectErrNumber = 9002 Then
         GoTo ScriptEnd
     End If
     Dim ErrHelp As String
     ErrHelp = ""
-    If Err.Number = 13 Then
+    If ErrNumber = 13 Then
         ErrHelp = "This error might mean the command you tried to use does not exist"
     End If
-    SayRaw ConsoleID, "Error processing CLI input: " & Err.Description & " (" & Str(Err.Number) & ") " & ErrHelp & " {red}"
+    
+    Dim ErrNumberStr As String
+    If ObjectErrNumber > 0 And ObjectErrNumber < 65535 Then
+        ErrNumberStr = "[" & Str(ObjectErrNumber) & "]"
+    Else
+        ErrNumberStr = "(" & Str(ErrNumber) & ")"
+    End If
+    
+    SayRaw ConsoleID, "Error processing CLI input: " & ErrDescription & " " & ErrNumberStr & " " & ErrHelp & " {red}"
     GoTo ScriptEnd
 
 ScriptCancelled:
@@ -304,7 +324,7 @@ AddToArg:
         GoTo CommandForNext
     End If
     If InQuotes <> "" Then
-        Err.Raise vbObjectError + 9302, "DSO", "Unclosed quote in command"
+        Err.Raise vbObjectError + 9302, , "Unclosed quote in command"
     End If
 NextArg:
     If curArg <> "" Or InQuotes <> "" Then

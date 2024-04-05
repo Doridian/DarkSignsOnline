@@ -109,7 +109,7 @@ Private Sub AssertRemoteOnly()
     If Not IsLocal() Then
         Exit Sub
     End If
-    Err.Raise vbObjectError + 9008, "DSO", "remote only functionality"
+    Err.Raise vbObjectError + 9008, , "remote only functionality"
     CrashIfReached
 End Sub
 
@@ -117,7 +117,7 @@ Private Sub AssertLocalOnly()
     If IsLocal() Then
         Exit Sub
     End If
-    Err.Raise vbObjectError + 9007, "DSO", "local only functionality"
+    Err.Raise vbObjectError + 9007, , "local only functionality"
     CrashIfReached
 End Sub
 
@@ -151,7 +151,7 @@ End Sub
 
 Public Sub Quit()
     Aborted = True
-    Err.Raise vbObjectError + 9002, "DSO", "Script exited"
+    Err.Raise vbObjectError + 9002, , "Script exited"
 End Sub
 
 Public Function ScriptGetOutput() As String
@@ -296,7 +296,7 @@ Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal
         End If
     Next
     If DoDownload <= 0 Then
-        Err.Raise vbObjectError + 9100, "DSO", "No free download slots"
+        Err.Raise vbObjectError + 9100, , "No free download slots"
         Exit Function
     End If
 
@@ -358,7 +358,7 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     
     Attr = GetAttr(Path)
     If (Attr And vbDirectory) <> vbDirectory Then
-        Err.Raise 9301, "DSO", "Can only list directories"
+        Err.Raise 9301, , "Can only list directories"
         Exit Function
     End If
     
@@ -658,7 +658,7 @@ Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal
 End Function
 
 Private Sub RaiseMiscError(ByVal Desc As String)
-    Err.Raise vbObjectError + 9666, "DSO", Desc
+    Err.Raise vbObjectError + 9666, , Desc
 End Sub
 
 Public Function TextWidth(ByVal FontName As String, ByVal FontSize As String, ByVal Text As String) As Long
@@ -849,7 +849,6 @@ Public Sub LOGIN()
         SayRaw ConsoleID, "Warning - You are not logged in!{16 center underline}"
         SayRaw ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
         RaiseMiscError "Username and/or password not set"
-        Exit Sub
     End If
 
     SayCOMM "Logging in..."
@@ -1272,7 +1271,7 @@ End Function
 
 Public Sub Yield()
     If Not YieldSafe() Then
-        Err.Raise vbObjectError + 9001, "DSO", "Script canceled"
+        Err.Raise vbObjectError + 9001, , "Script canceled"
     End If
 End Sub
 
@@ -1521,7 +1520,7 @@ End Sub
 Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
     Yield
     If Port < 1 Or Port > 65535 Then
-        Err.Raise vbObjectError + 9999, "DSO", "Invalid Port Number: " & Port
+        Err.Raise vbObjectError + 9999, , "Invalid Port Number: " & Port
         Exit Function
     End If
 

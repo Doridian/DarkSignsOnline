@@ -50,25 +50,30 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
 EvalError:
     Dim ErrNumber As Long
     Dim ErrDescription As String
-    Dim ErrHelpFile As String
-    Dim ErrSource As String
-    Dim ErrHelpContext As String
     ErrNumber = Err.Number
     ErrDescription = Err.Description
-    ErrHelpFile = Err.HelpFile
-    ErrHelpContext = Err.HelpContext
-    ErrSource = Err.Source
+    Err.Clear
     On Error GoTo 0
+    
+    Dim ObjectErrNumber As Long
+    ObjectErrNumber = ErrNumber - vbObjectError
 
-    If ErrNumber = vbObjectError + 9002 Then
+    If ObjectErrNumber = 9002 Then
         GoTo ScriptEnd
     End If
     If Not ErrorHandling Then
-        Err.Raise ErrNumber, ErrSource, ErrDescription, ErrHelpFile, ErrHelpContext
+        Err.Raise ErrNumber, , ErrDescription
         Exit Function
     End If
-    If ErrNumber = vbObjectError + 9001 Then
+    If ObjectErrNumber = 9001 Then
         GoTo ScriptCancelled
+    End If
+    
+    Dim ErrNumberStr As String
+    If ObjectErrNumber > 0 And ObjectErrNumber < 65535 Then
+        ErrNumberStr = "[" & Str(ObjectErrNumber) & "]"
+    Else
+        ErrNumberStr = "(" & Str(ErrNumber) & ")"
     End If
 
     Dim ErrHelp As String
@@ -76,7 +81,7 @@ EvalError:
     If ErrNumber = 13 Then
         ErrHelp = "This error might mean a function you tried to use does not exist"
     End If
-    SayRaw ConsoleID, "Error processing script: " & ErrDescription & " (" & Str(ErrNumber) & ") " & ErrHelp & " {red}"
+    SayRaw ConsoleID, "Error processing script: " & ErrDescription & " " & ErrNumberStr & " " & ErrHelp & " {red}"
     GoTo ScriptEnd
 
 ScriptCancelled:
