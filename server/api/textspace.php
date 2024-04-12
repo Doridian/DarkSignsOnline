@@ -3,18 +3,24 @@
 require_once('function.php');
 
 $action = $_REQUEST['action'];
-if ($action == 'download')
+
+if ($action === 'download')
 {
-	$data = $_REQUEST['data'];
-	$result = $db->query("SELECT `text` FROM textspace WHERE chan='$data' ORDER BY rev DESC LIMIT 1") or die($db->error);;
-	if ($db->num_rows($result) == 1)
-	{
-		die('4501'.$db->result($result, 0));
+	$data = (int)$_REQUEST['data'];
+	$stmt = $db->prepare('SELECT `text` FROM textspace WHERE chan = ? ORDER BY id DESC LIMIT 1');
+	$stmt->bind_param('i', $data);
+	$stmt->execute();
+	$res = $stmt->get_result();
+	$row = $res->fetch_array();
+
+	if (empty($row)) {
+		die_error('4501  ', 404);
 	}
-	die_error('4501  ', 404);
+
+	die('4501'.$row['text']);
 }
 
-if ($action == 'upload')
+if ($action === 'upload')
 {
 	$chan = (int)$_REQUEST['chan'];
 	if ($chan <= 1)
@@ -24,17 +30,10 @@ if ($action == 'upload')
 
 	$data = $_REQUEST['data'];
 	$time = time();
-	$result = $db->query("SELECT rev FROM textspace WHERE chan=$chan ORDER BY rev DESC LIMIT 1");
-	if ($db->num_rows($result) == 0)
-	{
-		$result = $db->query("INSERT INTO textspace (`rev`, `chan`, `user`, `lastupdate`, `text`, `active`) VALUES (1, $chan, $user[id], $time, '$data', 1)") or die('X '.$db->error.' (B)');
-	}
-	else
-	{
-		$rev = $db->result($result, 0)+1;
-		$result = $db->query("INSERT INTO textspace (`rev`, `chan`, `user`, `lastupdate`, `text`) VALUES ($rev, $chan, $user[id], $time, '$data')") or die('X '.$db->error.' (C)');
-		
-	}
-	
+
+	$stmt = $db->prepare('INSERT INTO textspace (`chan`, `owner`, `lastupdate`, `text`, `deleted`) VALUES (?, ?, ?, ?, 0)');
+	$stmt->bind_param('iiis', $chan, $user['id'], $time, $data);
+	$stmt->execute();
+
 	die("4500Updated: $chan!");
 }
