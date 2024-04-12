@@ -1,6 +1,11 @@
 <?php require('_top.php'); ?>
 <span class="style5"><br />- News - <br /><br />
 
+  <strong>April 11th 2024</strong><br /><span class="style9">
+    I am now at a point where I think I am fully happy with where the client is.<br />
+    Only need to fix DSMail and the Script Library<br />
+    Then on to update the documentation on the wiki</span><br /><br />
+
   <strong>March 22nd 2024</strong><br /><span class="style9">
     Completely redid the DSO scripting engine. It now uses (the safe subset of) VBScript.<br />
     There is also a parser to turn "CLI-like" language into VBScript for you.<br />
