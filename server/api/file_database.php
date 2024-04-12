@@ -33,7 +33,7 @@ if (!empty($getfile)){
 
 $removenow = $_REQUEST['removenow'];
 if (!empty($removenow)){
-    $stmt = $db->prepare('UPDATE file_database SET deleted = 1 WHERE id = ? AND author = ?');
+    $stmt = $db->prepare('UPDATE file_database SET deleted = 1 WHERE id = ? AND owner = ?');
     $stmt->bind_param('ii', $removenow, $user['id']);
     $stmt->execute();
     die("File ID $removenow was removed.");
@@ -42,7 +42,7 @@ if (!empty($removenow)){
 
 $getforremoval = $_REQUEST['getforremoval'];
 if (!empty($getforremoval)){
-    $stmt = $db->prepare('SELECT * FROM file_database WHERE author = ? AND deleted = 0');
+    $stmt = $db->prepare('SELECT * FROM file_database WHERE owner = ? AND deleted = 0');
     $stmt->bind_param('i', $user['id']);
     $stmt->execute();
     $res = $stmt->get_result();
@@ -51,7 +51,7 @@ if (!empty($getforremoval)){
         $sid = $row['id'];
         $title = $row['title'];
         $version = $row['version'];
-        $author = $row['author'];
+        $owner = $row['owner'];
         $description = $row['description'];
         $cdate = $row['createdate'];								
         $ctime = $row['createtime'];
@@ -72,14 +72,14 @@ if (!empty($getcategory)){
         $sid = $row['id'];
         $title = $row['title'];
         $version = $row['version'];
-        $author = $row['author'];
+        $owner = $row['owner'];
         $filesize = $row['filesize'];
         $description = $row['description'];
         $cdate = $row['createdate'];								
         $ctime = $row['createtime'];
         $fname = $row['filename'];
 
-        echo $sid.":--:".$title.":--:".$version.":--:".$filesize.":--:".$author.":--:".$fname.":--:".$description.":--:".$cdate.":--:".$ctime.":--:--:";
+        echo $sid.":--:".$title.":--:".$version.":--:".$filesize.":--:".$owner.":--:".$fname.":--:".$description.":--:".$cdate.":--:".$ctime.":--:--:";
     }
     exit;
 }
