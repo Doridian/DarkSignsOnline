@@ -259,7 +259,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
             If InStr(s, ":") > 0 Then
                 sF1 = Trim(Mid(s, 1, InStr(s, ":") - 1))
                 sF2 = Trim(Mid(s, InStr(s, ":") + 1, Len(s)))
-                WriteFile "downloads/" & sF1, sF2
+                WriteFile sF1, sF2, "downloads/"
                 frmLibrary.lStatus = "File downloaded ok: /downloads/" & sF1
             Else
                 frmLibrary.lStatus = "File download error! (8234)"

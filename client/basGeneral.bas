@@ -80,12 +80,12 @@ Public Function WriteFileUnsafe(ByVal Filename As String, ByVal Contents As Stri
     Close #Handle
 End Function
 
-Function WriteFile(ByVal Filename As String, ByVal Contents As String)
-    WriteFileUnsafe SafePath(Filename), Contents
+Function WriteFile(ByVal Filename As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+    WriteFileUnsafe SafePath(Filename, Prefix), Contents
 End Function
 
-Function GetFile(ByVal Filename As String) As String
-    GetFile = GetFileUnsafe(SafePath(Filename))
+Function GetFile(ByVal Filename As String, Optional ByVal Prefix As String = "") As String
+    GetFile = GetFileUnsafe(SafePath(Filename, Prefix))
 End Function
 
 Public Function CountCharInString(s As String, ByVal sToCount As String) As Long

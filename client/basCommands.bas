@@ -27,7 +27,7 @@ Public Sub InitBasCommands()
     Next
 End Sub
 
-Public Function SafePath(ByVal Path As String) As String
+Public Function SafePath(ByVal Path As String, Optional ByVal Prefix As String = "") As String
     Path = Replace(Path, "\", "/")
     If Path = ".." Or Left(Path, 3) = "../" Or Right(Path, 3) = "/.." Or InStr(Path, "/../") > 0 Then
         SafePath = App.Path & "/user/f/a/i/l/s/a/f/e.txt"
@@ -35,7 +35,7 @@ Public Function SafePath(ByVal Path As String) As String
         Exit Function
     End If
 
-    SafePath = App.Path & "/user/" & Path
+    SafePath = App.Path & "/user/" & Prefix & Path
     While InStr(SafePath, "//") > 0
         SafePath = Replace(SafePath, "//", "/")
     Wend
