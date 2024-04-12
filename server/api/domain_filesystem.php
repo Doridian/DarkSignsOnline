@@ -13,7 +13,7 @@ $dInfo = getDomainInfo($d);
 
 print_returnwith();
 
-function verify_keycode($filename, $require_owner = false) {
+function verify_keycode($filename, $opname, $require_owner = false) {
 	global $db, $d, $dInfo, $user;
 	$is_owner = $user['id'] === $dInfo[1];
 
@@ -42,8 +42,19 @@ function verify_keycode($filename, $require_owner = false) {
 		if (empty($row)) {
 			die_error("Error - ($filename) File not found: " . strtoupper($d), 404);
 		}
-		if(strtoupper(substr($row['contents'], 0, 6)) !== 'PUBLIC') {
+
+		$fileheader = strtolower(explode("\r\n", $row['contents'], 2)[0]);
+		if (substr($fileheader, 0, 6) !== 'public') {
 			die_error("Error - ($filename) Private file: " . strtoupper($d), 403);
+		}
+
+		$fileheader_parts = explode(' ', $fileheader);
+		if ($fileheader_parts[0] !== 'public') {
+			die_error("Error - ($filename) Invalid file header: " . strtoupper($d), 403);
+		}
+
+		if (!in_array($opname, $fileheader_parts, true)) {
+			die_error("Error - ($filename) Private operation: " . strtoupper($d), 403);
 		}
 	}
 
@@ -74,7 +85,7 @@ function write_file($file_id, $filename, $contents) {
 
 $fileserver = $_REQUEST['fileserver'];
 if (!empty($fileserver)) {
-	$file = verify_keycode($fileserver);
+	$file = verify_keycode($fileserver, 'fileserver');
 
 	$maxlines = (int)$_REQUEST['maxlines'];
 	$startline = (int)$_REQUEST['startline'];
@@ -103,7 +114,7 @@ if (!empty($fileserver)) {
 
 $write = $_REQUEST['write'];
 if (!empty($write)) {
-	$file = verify_keycode($write);
+	$file = verify_keycode($write, 'write');
 	$filedata = line_endings_to_dos($_REQUEST['filedata']);
 	write_file($file['id'], $write, $filedata);
 	exit;
@@ -111,22 +122,47 @@ if (!empty($write)) {
 
 $append = $_REQUEST['append'];
 if (!empty($append)) {
-	$file = verify_keycode($append);
+	$file = verify_keycode($append, 'append');
 	$filedata = $file['contents'] . line_endings_to_dos($_REQUEST['filedata']);
 	write_file($file['id'], $append, $filedata);
 	exit;
 }
 
+$safeappend = $_REQUEST['safeappend'];
+if (!empty($safeappend)) {
+	$file = verify_keycode($safeappend, 'safeappend');
+
+	$filedata = $_REQUEST['filedata'];
+	$idx = strpos($filedata, "\r");
+	if ($idx !== false) {
+		$filedata = substr($filedata, 0, $idx);
+	}
+	$idx = strpos($filedata, "\n");
+	if ($idx !== false) {
+		$filedata = substr($filedata, 0, $idx);
+	}
+
+	$filedata = $file['contents'];
+	if (!empty($filedata) && substr($filedata, -2) !== "\r\n") {
+		$filedata .= "\r\n";
+	}
+
+	$filedata = $filedata . $user['name'] . ':' . $filedata . "\r\n";
+	write_file($file['id'], $append, $filedata);
+	exit;
+}
+
+
 $delete = $_REQUEST['delete'];
 if (!empty($delete)) {
-	$file = verify_keycode($delete, true);
+	$file = verify_keycode($delete, 'delete', true);
 	write_file($file['id'], $delete, '');
 	exit;
 }
 
 $dir = $_REQUEST['dir'];
 if (!empty($dir)) {
-	verify_keycode('', true);
+	verify_keycode('', 'dir', true);
 
 	$stmt = $db->prepare('SELECT filename FROM domain_files WHERE domain = ?');
 	$stmt->bind_param('is', $dInfo[0]);
