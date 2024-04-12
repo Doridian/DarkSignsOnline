@@ -813,13 +813,15 @@ Public Sub AddListItems(ByVal s As String)
 End Sub
 
 Private Sub Form_Load()
-    
-    
-    
-'
-'    Me.Width = Screen.Width
-'    Me.Height = Screen.Height - 480
-'    Me.Move 0, 0
+    LV.ColumnHeaders.Add 1, , "sID", 1306
+    LV.ColumnHeaders.Add 2, , "Title", 6068
+    LV.ColumnHeaders.Add 3, , "Version", 1765
+    LV.ColumnHeaders.Add 4, , "Size", 2540
+    LV.ColumnHeaders.Add 5, , "Author", 2540
+    LV.ColumnHeaders.Add 6, , "Filename", 3246
+    LV.ColumnHeaders.Add 7, , "Description", 4304
+    LV.ColumnHeaders.Add 8, , "Date", 4304
+    LV.ColumnHeaders.Add 9, , "Time", 2540
 
     Me.Width = (Screen.Width / 7) * 6
     Me.Height = (Screen.Height / 6) * 5
