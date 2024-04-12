@@ -628,7 +628,7 @@ Sub DownloadOne()
         MsgBox "No item is selected!", vbCritical, "Error"
         Exit Sub
     End If
-    lStatus.Caption = "Downloading to /downloads/" & Trim(LV.SelectedItem.ListSubItems(4).Text) & "..."
+    lStatus.Caption = "Downloading to /downloads/" & Trim(LV.SelectedItem.ListSubItems(5).Text) & "..."
     RunPage "file_database.php?returnwith=4304&getfile=" & EncodeURLParameter(sID), 5, False, "", False
 End Sub
 
