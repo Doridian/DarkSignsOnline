@@ -79,7 +79,7 @@ if (!empty($getcategory)){
         $ctime = $row['createtime'];
         $fname = $row['filename'];
 
-        echo $res.$sid.":--:".$title.":--:".$version.":--:".$filesize.":--:".$author.":--:".$fname.":--:".$description.":--:".$cdate.":--:".$ctime.":--:--:";
+        echo $sid.":--:".$title.":--:".$version.":--:".$filesize.":--:".$author.":--:".$fname.":--:".$description.":--:".$cdate.":--:".$ctime.":--:--:";
     }
     exit;
 }
