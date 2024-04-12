@@ -65,6 +65,10 @@ if (!empty($getcategory)){
 
 $shortfilename = $_REQUEST['shortfilename'];
 if (!empty($shortfilename)){
+    if (strpos($shortfilename, '/') !== false || strpos($shortfilename, '\\') !== false || strpos($shortfilename, ':') !== false) {
+        die_error('Invalid filename.', 400);
+    }
+
     $timestamp = time();
     $aip = $_SERVER['REMOTE_ADDR'];
     $stmt = $db->prepare('INSERT INTO file_database (filename, version, title, description, category, createtime, ip, deleted, owner, ver) VALUES (?,?,?,?,?,?,?,0,?,?)');
