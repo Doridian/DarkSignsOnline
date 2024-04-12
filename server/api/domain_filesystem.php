@@ -13,6 +13,35 @@ $dInfo = getDomainInfo($d);
 
 print_returnwith();
 
+function is_public_operation_allowed($fileheader, $opname) {
+	$fileheader = trim($fileheader);
+	$fileheader = strtolower($fileheader);
+	if (empty($fileheader)) {
+		return false;
+	}
+
+	if (substr($fileheader, 0, 6) === 'public') {
+		return true;
+	}
+
+	$fileheader_parts = explode('=', $fileheader, 2);
+	if (count($fileheader_parts) !== 2) {
+		return false;
+	}
+
+	if (trim($fileheader_parts[0]) !== 'allowlist') {
+		return false;
+	}
+
+	$ops = explode(',', $fileheader_parts[1]);
+	foreach ($ops AS $op) {
+		if (trim($op) === $opname) {
+			return true;
+		}
+	}
+	return false;
+}
+
 function verify_keycode($filename, $opname, $require_owner = false) {
 	global $db, $d, $dInfo, $user;
 	$is_owner = $user['id'] === $dInfo[1];
@@ -43,17 +72,8 @@ function verify_keycode($filename, $opname, $require_owner = false) {
 			die_error("Error - ($filename) File not found: " . strtoupper($d), 404);
 		}
 
-		$fileheader = strtolower(explode("\r\n", $row['contents'], 2)[0]);
-		if (substr($fileheader, 0, 6) !== 'public') {
-			die_error("Error - ($filename) Private file: " . strtoupper($d), 403);
-		}
-
-		$fileheader_parts = explode(' ', $fileheader);
-		if ($fileheader_parts[0] !== 'public') {
-			die_error("Error - ($filename) Invalid file header: " . strtoupper($d), 403);
-		}
-
-		if (!in_array($opname, $fileheader_parts, true)) {
+		$fileheader = explode("\r\n", $row['contents'], 2)[0];
+		if (!is_public_operation_allowed($fileheader, $opname)) {
 			die_error("Error - ($filename) Private operation: " . strtoupper($d), 403);
 		}
 	}
