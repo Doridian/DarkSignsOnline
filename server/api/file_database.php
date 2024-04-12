@@ -12,7 +12,7 @@ echo $returnwith;
 
 $getfile = $_REQUEST['getfile'];
 if (!empty($getfile)){
-    $stmt = $db->prepare('SELECT * FROM file_database WHERE id = ? AND deleted = 0 AND ver = ?');
+    $stmt = $db->prepare('SELECT filename, filedata FROM file_database WHERE id = ? AND deleted = 0 AND ver = ?');
     $stmt->bind_param('ii', $getfile, $ver);
     $stmt->execute();
     $res = $stmt->get_result();
@@ -38,21 +38,13 @@ if (!empty($removenow)){
 
 $getforremoval = $_REQUEST['getforremoval'];
 if (!empty($getforremoval)){
-    $stmt = $db->prepare('SELECT * FROM file_database WHERE owner = ? AND deleted = 0 AND ver = ?');
+    $stmt = $db->prepare('SELECT id, title, version, createtime FROM file_database WHERE owner = ? AND deleted = 0 AND ver = ?');
     $stmt->bind_param('ii', $user['id'], $ver);
     $stmt->execute();
     $res = $stmt->get_result();
 
     while($row = $res->fetch_array()) {
-        $sid = $row['id'];
-        $title = $row['title'];
-        $version = $row['version'];
-        $owner = $row['owner'];
-        $description = $row['description'];
-        $cdate = $row['createdate'];								
-        $ctime = $row['createtime'];
-
-        echo "$sid: $title (version $version) $cdate:--:";
+        echo $row['id'] . ': ' . $row['title'] . '(version ' . $row['version'] . ') ' . date('d.m.Y', $row['createtime'])  . ':--:';
     }
 
     exit;
@@ -60,22 +52,13 @@ if (!empty($getforremoval)){
 
 $getcategory = $_REQUEST['getcategory'];
 if (!empty($getcategory)){
-    $stmt = $db->prepare('SELECT * FROM file_database WHERE category = ? AND deleted = 0 AND ver = ?');
+    $stmt = $db->prepare('SELECT id, title, version, owner, LEN(filedata) AS filesize, description, createtime, filename FROM file_database WHERE category = ? AND deleted = 0 AND ver = ?');
     $stmt->bind_param('si', $getcategory, $ver);
     $stmt->execute();
     $res = $stmt->get_result();
     while($row = $res->fetch_array()) {
-        $sid = $row['id'];
-        $title = $row['title'];
-        $version = $row['version'];
-        $owner = $row['owner'];
-        $filesize = $row['filesize'];
-        $description = $row['description'];
-        $cdate = $row['createdate'];								
-        $ctime = $row['createtime'];
-        $fname = $row['filename'];
-
-        echo $sid.":--:".$title.":--:".$version.":--:".$filesize.":--:".$owner.":--:".$fname.":--:".$description.":--:".$cdate.":--:".$ctime.":--:--:";
+        $time = $row['createtime'];
+        echo $row['id'].":--:".$row['title'].":--:".$row['version'].":--:".$row['filesize'].":--:".$row['owner'].":--:".$row['filename'].":--:".$row['$description'].":--:".date('d.m.Y', $time).":--:".date('H:i:s', $time).":--:--:";
     }
     exit;
 }
