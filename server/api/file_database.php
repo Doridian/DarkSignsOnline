@@ -12,8 +12,8 @@ echo $returnwith;
 
 $getfile = $_REQUEST['getfile'];
 if (!empty($getfile)){
-    $stmt = $db->prepare('SELECT * FROM file_database WHERE id = ? AND deleted = 0');
-    $stmt->bind_param('i', $getfile);
+    $stmt = $db->prepare('SELECT * FROM file_database WHERE id = ? AND deleted = 0 AND ver = ?');
+    $stmt->bind_param('ii', $getfile, $ver);
     $stmt->execute();
     $res = $stmt->get_result();
     $row = $res->fetch_array();
@@ -33,8 +33,8 @@ if (!empty($getfile)){
 
 $removenow = $_REQUEST['removenow'];
 if (!empty($removenow)){
-    $stmt = $db->prepare('UPDATE file_database SET deleted = 1 WHERE id = ? AND owner = ?');
-    $stmt->bind_param('ii', $removenow, $user['id']);
+    $stmt = $db->prepare('UPDATE file_database SET deleted = 1 WHERE id = ? AND owner = ? AND ver = ?');
+    $stmt->bind_param('iii', $removenow, $user['id'], $ver);
     $stmt->execute();
     die("File ID $removenow was removed.");
 }
@@ -42,8 +42,8 @@ if (!empty($removenow)){
 
 $getforremoval = $_REQUEST['getforremoval'];
 if (!empty($getforremoval)){
-    $stmt = $db->prepare('SELECT * FROM file_database WHERE owner = ? AND deleted = 0');
-    $stmt->bind_param('i', $user['id']);
+    $stmt = $db->prepare('SELECT * FROM file_database WHERE owner = ? AND deleted = 0 AND ver = ?');
+    $stmt->bind_param('ii', $user['id'], $ver);
     $stmt->execute();
     $res = $stmt->get_result();
 
@@ -64,8 +64,8 @@ if (!empty($getforremoval)){
 
 $getcategory = $_REQUEST['getcategory'];
 if (!empty($getcategory)){
-    $stmt = $db->prepare('SELECT * FROM file_database WHERE category = ? AND deleted = 0');
-    $stmt->bind_param('s', $getcategory);
+    $stmt = $db->prepare('SELECT * FROM file_database WHERE category = ? AND deleted = 0 AND ver = ?');
+    $stmt->bind_param('si', $getcategory, $ver);
     $stmt->execute();
     $res = $stmt->get_result();
     while($row = $res->fetch_array()) {
@@ -88,8 +88,8 @@ $shortfilename = $_REQUEST['shortfilename'];
 if (!empty($shortfilename)){
     $timestamp = time();
     $aip = $_SERVER['REMOTE_ADDR'];
-    $stmt = $db->prepare('INSERT INTO file_database (filename, version, title, description, createtime, ip, deleted, owner) VALUES (?,?,?,?,?,?,0,?)');
-    $stmt->bind_param('ssssis', $shortfilename, $_REQUEST['version'], $_REQUEST['title'], $_REQUEST['description'], $timestamp, $aip, $user['id']);
+    $stmt = $db->prepare('INSERT INTO file_database (filename, version, title, description, createtime, ip, deleted, owner, ver) VALUES (?,?,?,?,?,?,0,?,?)');
+    $stmt->bind_param('ssssisis', $shortfilename, $_REQUEST['version'], $_REQUEST['title'], $_REQUEST['description'], $timestamp, $aip, $user['id'], $ver);
     $stmt->execute();
 
     die("Upload complete!");
