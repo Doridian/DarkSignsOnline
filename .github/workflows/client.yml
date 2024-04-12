@@ -73,6 +73,8 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
 
+        Start-Process -FilePath ".\client\libs\vbrun60sp6.exe" -Wait -PassThru
+
         mkdir ".\logs"
         mkdir "C:\vb6"
 
