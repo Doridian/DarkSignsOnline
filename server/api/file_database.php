@@ -84,9 +84,9 @@ $shortfilename = $_REQUEST['shortfilename'];
 if (!empty($shortfilename)){
     $timestamp = time();
     $aip = $_SERVER['REMOTE_ADDR'];
-    $stmt = $db->prepare('INSERT INTO file_database (filename, version, title, description, category, createtime, ip, deleted, owner, ver) VALUES (?,?,?,?,?,?,0,?,?)') or die($db->error);
+    $stmt = $db->prepare('INSERT INTO file_database (filename, version, title, description, category, createtime, ip, deleted, owner, ver) VALUES (?,?,?,?,?,?,?,0,?,?)');
     $stmt->bind_param('sssssisii', $shortfilename, $_REQUEST['version'], $_REQUEST['title'], $_REQUEST['description'], $_REQUEST['category'], $timestamp, $aip, $user['id'], $ver);
-    $stmt->execute() or die($db->error);
+    $stmt->execute();
 
     die("Upload complete!");
 }
