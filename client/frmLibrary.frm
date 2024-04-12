@@ -771,21 +771,21 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
 End Sub
 
 Public Sub AddListItems(ByVal s As String)
-    
-    
-    
     Dim AllResults() As String
     AllResults = Split(s, ":--:--:")
     
-    Dim SubResults() As String
-    
     LV.ListItems.Clear
+
+    If UBound(AllResults) < 1 Then
+        frmLibrary.lStatus = "No results found."
+        Exit Sub
+    End If
+    
+    Dim SubResults() As String
     
     Dim n As Long
     For n = UBound(AllResults) To 0 Step -1
     If Len(AllResults(n)) > 5 Then
-        
-        
         SubResults = Split(AllResults(n), ":--:")
         
         LV.ListItems.Add , , SubResults(0)
@@ -797,19 +797,10 @@ Public Sub AddListItems(ByVal s As String)
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(6)
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(7)
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(8)
-        
-        
-        
-        
-        
-        
     End If
     Next n
-    
-    
-    
-    frmLibrary.lStatus = Trim(Str(LV.ListItems.Count)) & " results found."
-            
+
+    frmLibrary.lStatus = Trim("" & LV.ListItems.Count) & " results found."
 End Sub
 
 Private Sub Form_Load()

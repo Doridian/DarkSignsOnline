@@ -21,13 +21,9 @@ if (!empty($getfile)){
         die_error('File not found.', 404);
     }
 
-    $sid = $row['id'];
-    $filedata = $row['filedata'];
-    $fname = $row['filename'];
-    $fname=str_replace("\\","",$fname);
-    $fname=str_replace("/","",$fname);
-    
-    die("$fname:$filedata");
+    echo $row['filename'];
+    echo ':';
+    die($row['filedata']);
 }
 
 
@@ -88,9 +84,11 @@ $shortfilename = $_REQUEST['shortfilename'];
 if (!empty($shortfilename)){
     $timestamp = time();
     $aip = $_SERVER['REMOTE_ADDR'];
-    $stmt = $db->prepare('INSERT INTO file_database (filename, version, title, description, createtime, ip, deleted, owner, ver) VALUES (?,?,?,?,?,?,0,?,?)');
-    $stmt->bind_param('ssssisis', $shortfilename, $_REQUEST['version'], $_REQUEST['title'], $_REQUEST['description'], $timestamp, $aip, $user['id'], $ver);
-    $stmt->execute();
+    $stmt = $db->prepare('INSERT INTO file_database (filename, version, title, description, createtime, ip, deleted, owner, ver) VALUES (?,?,?,?,?,?,0,?,?)') or die($db->error);
+    $stmt->bind_param('ssssisii', $shortfilename, $_REQUEST['version'], $_REQUEST['title'], $_REQUEST['description'], $timestamp, $aip, $user['id'], $ver);
+    $stmt->execute() or die($db->error);
 
     die("Upload complete!");
 }
+
+die_error('Invalid request.', 400);

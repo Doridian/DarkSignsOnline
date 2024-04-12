@@ -148,8 +148,10 @@ Private Sub ManageSockError(Reason As String)
 
     Dim AllowRetry As Boolean
     AllowRetry = Retries < basWorld.MaxSockRetries
-    If IsCustomDownload > 0 And DownloadAborted(IsCustomDownload) Then
-        AllowRetry = False
+    If IsCustomDownload > 0 Then
+        If DownloadAborted(IsCustomDownload) Then
+            AllowRetry = False
+        End If
     End If
 
     'on error consider retrying
