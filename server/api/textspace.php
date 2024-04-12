@@ -41,3 +41,5 @@ if (!empty($upload)) {
 
 	die("4500Updated: $upload_int!");
 }
+
+die_error('4500Invalid action.', 400);
