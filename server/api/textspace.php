@@ -35,9 +35,9 @@ if (!empty($upload)) {
 	$data = $_REQUEST['data'];
 	$time = time();
 
-	$stmt = $db->prepare('INSERT INTO textspace (`chan`, `owner`, `lastupdate`, `text`, `deleted`) VALUES (?, ?, ?, ?, 0)');
+	$stmt = $db->prepare('INSERT INTO textspace (`chan`, `owner`, `lastupdate`, `text`, `deleted`) VALUES (?, ?, ?, ?, 0)') or die($db->error);
 	$stmt->bind_param('iiis', $upload_int, $user['id'], $time, $data);
-	$stmt->execute();
+	$stmt->execute() or die($db->error);
 
 	die("4500Updated: $upload_int!");
 }
