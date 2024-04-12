@@ -52,7 +52,7 @@ if (!empty($getforremoval)){
 
 $getcategory = $_REQUEST['getcategory'];
 if (!empty($getcategory)){
-    $stmt = $db->prepare('SELECT id, title, version, owner, LEN(filedata) AS filesize, description, createtime, filename FROM file_database WHERE category = ? AND deleted = 0 AND ver = ?');
+    $stmt = $db->prepare('SELECT id, title, version, owner, LENGTH(filedata) AS filesize, description, createtime, filename FROM file_database WHERE category = ? AND deleted = 0 AND ver = ?');
     $stmt->bind_param('si', $getcategory, $ver);
     $stmt->execute();
     $res = $stmt->get_result();
