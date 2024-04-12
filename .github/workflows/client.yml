@@ -118,6 +118,7 @@ jobs:
         cd ".\client\dist"
         Copy-Item ..\user .\ -Recurse -Force
         Copy-Item ..\libs\VbAsyncSocket\LICENSE .\LICENSE-VbAsyncSocket.txt
+        Copy-Item ..\libs\VBCCR\LICENSE.md .\LICENSE-VBCCR.md
         Copy-Item ..\libs\vbrun60sp6.exe .\vb6-sp6-runtime-installer.exe
         Copy-Item ..\..\LICENSE .\LICENSE.txt
         & "C:\Program Files\7-Zip\7z.exe" a -tzip "..\..\client.zip" -r * "-x!dso.pdb"
