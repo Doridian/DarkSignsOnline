@@ -139,6 +139,9 @@ Public Sub RegSave(ByVal sCat As String, ByVal sVal As String)
     sCat = i(sCat)
     sVal = Trim(sVal)
 
+    On Error Resume Next
+    SettingsCollection.Remove sCat
+    On Error GoTo 0
     SettingsCollection.Add sVal, sCat
     SaveSetting App.Title, "Settings", sCat, sVal
 End Sub
