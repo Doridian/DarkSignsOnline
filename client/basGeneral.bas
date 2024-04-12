@@ -43,6 +43,8 @@ Public cPath_tmp(1 To 4) As String
 Public EditorFile_Short As String
 Public EditorFile_Long As String
 Public EditorRunFile As String
+
+Private SettingsCollection As New Collection
         
 Public Declare Function GetForegroundWindow Lib "user32" () As Long
 Public Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hWnd As Long, ByVal lpString As String, ByVal cch As Long) As Long
@@ -57,35 +59,35 @@ Public Function VersionStr() As String
     End If
 End Function
 
-Public Function GetFileUnsafe(ByVal Filename As String) As String
-    GetAttr Filename
+Public Function GetFileUnsafe(ByVal FileName As String) As String
+    GetAttr FileName
 
     Dim Handle As Long
     Handle = FreeFile
-    Open Filename$ For Binary Access Read As #Handle
+    Open FileName$ For Binary Access Read As #Handle
     GetFileUnsafe = Space$(LOF(Handle))
     Get #Handle, , GetFileUnsafe
     Close #Handle
 End Function
 
-Public Function WriteFileUnsafe(ByVal Filename As String, ByVal Contents As String)
+Public Function WriteFileUnsafe(ByVal FileName As String, ByVal Contents As String)
     On Error Resume Next
-    Kill Filename$
+    Kill FileName$
     On Error GoTo 0
 
     Dim Handle As Long
     Handle = FreeFile
-    Open Filename$ For Binary Access Write As #Handle
+    Open FileName$ For Binary Access Write As #Handle
     Put #Handle, , Contents
     Close #Handle
 End Function
 
-Function WriteFile(ByVal Filename As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
-    WriteFileUnsafe SafePath(Filename, Prefix), Contents
+Function WriteFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+    WriteFileUnsafe SafePath(FileName, Prefix), Contents
 End Function
 
-Function GetFile(ByVal Filename As String, Optional ByVal Prefix As String = "") As String
-    GetFile = GetFileUnsafe(SafePath(Filename, Prefix))
+Function GetFile(ByVal FileName As String, Optional ByVal Prefix As String = "") As String
+    GetFile = GetFileUnsafe(SafePath(FileName, Prefix))
 End Function
 
 Public Function CountCharInString(s As String, ByVal sToCount As String) As Long
@@ -133,12 +135,25 @@ zz:
     FileTitleOnly = Trim(FileTitleOnly)
 End Function
 
-Public Sub RegSave(sCat As String, sVal As String)
-    SaveSetting App.Title, "Settings", i(sCat), sVal
+Public Sub RegSave(ByVal sCat As String, ByVal sVal As String)
+    sCat = i(sCat)
+    sVal = Trim(sVal)
+
+    SettingsCollection.Add sVal, sCat
+    SaveSetting App.Title, "Settings", sCat, sVal
 End Sub
 
-Public Function RegLoad(sCat As String, sDefault As String) As String
-    RegLoad = Trim(GetSetting(App.Title, "Settings", i(sCat), sDefault))
+Public Function RegLoad(ByVal sCat As String, ByVal sDefault As String) As String
+    sCat = i(sCat)
+    sDefault = Trim(sDefault)
+
+    On Error GoTo NoSuchItem
+    RegLoad = SettingsCollection.Item(sCat)
+    Exit Function
+
+NoSuchItem:
+    RegLoad = GetSetting(App.Title, "Settings", sCat, sDefault)
+    SettingsCollection.Add RegLoad, sCat
 End Function
 
 Public Function ReverseString(s As String) As String

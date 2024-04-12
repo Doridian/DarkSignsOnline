@@ -1,5 +1,4 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "MSCOMCTL.OCX"
 Begin VB.Form frmDSOMail 
    Caption         =   "DSO Mail"
    ClientHeight    =   5895
@@ -20,22 +19,16 @@ Begin VB.Form frmDSOMail
    ScaleHeight     =   5895
    ScaleWidth      =   9375
    StartUpPosition =   3  'Windows Default
-   Begin MSComctlLib.StatusBar StatusBar1 
+   Begin DSO.StatusBar StatusBar1 
       Align           =   2  'Align Bottom
-      Height          =   255
+      Height          =   300
       Left            =   0
-      TabIndex        =   3
-      Top             =   5640
+      Top             =   5595
       Width           =   9375
       _ExtentX        =   16536
-      _ExtentY        =   450
+      _ExtentY        =   529
       Style           =   1
-      _Version        =   393216
-      BeginProperty Panels {8E3867A5-8586-11D1-B16A-00C0F0283628} 
-         NumPanels       =   1
-         BeginProperty Panel1 {8E3867AB-8586-11D1-B16A-00C0F0283628} 
-         EndProperty
-      EndProperty
+      InitPanels      =   "frmMail.frx":0000
    End
    Begin VB.CommandButton btnNew 
       Caption         =   "New"
@@ -53,7 +46,7 @@ Begin VB.Form frmDSOMail
       Top             =   600
       Width           =   1215
    End
-   Begin MSComctlLib.ListView inbox 
+   Begin DSO.ListView inbox 
       Height          =   5415
       Left            =   1440
       TabIndex        =   0
@@ -61,16 +54,11 @@ Begin VB.Form frmDSOMail
       Width           =   7815
       _ExtentX        =   13785
       _ExtentY        =   9551
+      BackColor       =   -2147483633
+      ForeColor       =   0
       View            =   3
-      LabelWrap       =   -1  'True
-      HideSelection   =   -1  'True
       FullRowSelect   =   -1  'True
       HoverSelection  =   -1  'True
-      _Version        =   393217
-      ForeColor       =   0
-      BackColor       =   -2147483633
-      Appearance      =   0
-      NumItems        =   0
    End
 End
 Attribute VB_Name = "frmDSOMail"
@@ -82,7 +70,7 @@ Private Function keyExists(k As String) As Boolean
     Dim n As Long
     For n = 0 To inbox.ListItems.Count Step 1
         If n > 0 Then
-            If inbox.ListItems(n).key = k Then
+            If inbox.ListItems(n).Key = k Then
                 keyExists = True
             End If
         End If
@@ -106,7 +94,7 @@ Public Sub reloadInbox()
     
     'MsgBox UBound(AllResults)
     Dim n As Long
-    Dim key As String
+    Dim Key As String
     
     For n = 0 To UBound(AllResults) Step 1
         SubResults = Split(AllResults(n), Chr(7))
@@ -119,8 +107,8 @@ Public Sub reloadInbox()
         
         If UBound(SubResults) = 5 Then
             'If keyExists(SubResults(0)) = False Then
-                key = SubResults(1)
-                inbox.ListItems.Add , key, SubResults(2)
+                Key = SubResults(1)
+                inbox.ListItems.Add , Key, SubResults(2)
                 inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(3)
                 inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(5)
                 
@@ -236,14 +224,14 @@ Private Sub inbox_DblClick()
     
     Dim SubResults() As String
     Dim n As Long
-    Dim key As String
-    key = inbox.ListItems(inbox.SelectedItem.Index).key
+    Dim Key As String
+    Key = inbox.ListItems(inbox.SelectedItem.Index).Key
     
     For n = 0 To UBound(AllResults) Step 1
         SubResults = Split(AllResults(n), Chr(7))
        
         If UBound(SubResults) = 5 Then
-            If SubResults(1) = key Then
+            If SubResults(1) = Key Then
                 frmDSOMailRead.msgBody.Text = SubResults(4)
                 n = UBound(AllResults)
             End If
@@ -253,7 +241,7 @@ Private Sub inbox_DblClick()
     frmDSOMailRead.msgBody.Text = Replace(frmDSOMailRead.msgBody.Text, Chr(6), vbNewLine)
     
     If inbox.ListItems(inbox.SelectedItem.Index).Bold = True Then
-        markAsRead (key)
+        markAsRead (Key)
     End If
     
     frmDSOMailRead.Show vbModal
@@ -282,7 +270,7 @@ Private Sub markAsRead(k As String)
     WriteFileUnsafe App.Path & "/mail.dat", Join(AllResults, vbNewLine)
 End Sub
 
-Private Sub inbox_ColumnClick(ByVal ColumnHeader As MSComctlLib.ColumnHeader)
+Private Sub inbox_ColumnClick(ByVal ColumnHeader As LvwColumnHeader)
     With inbox '// change to the name of the list view
         Static iLast As Long, iCur As Long
         .Sorted = True

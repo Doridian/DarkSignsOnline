@@ -1,5 +1,4 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "MSCOMCTL.OCX"
 Begin VB.Form frmLibrary 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "File Library"
@@ -551,7 +550,7 @@ Begin VB.Form frmLibrary
       Top             =   480
       Width           =   2895
    End
-   Begin MSComctlLib.ListView LV 
+   Begin DSO.ListView LV 
       Height          =   6375
       Left            =   3120
       TabIndex        =   24
@@ -559,74 +558,12 @@ Begin VB.Form frmLibrary
       Width           =   7935
       _ExtentX        =   13996
       _ExtentY        =   11245
+      BackColor       =   16777215
+      ForeColor       =   0
       View            =   3
-      LabelWrap       =   -1  'True
-      HideSelection   =   0   'False
       FullRowSelect   =   -1  'True
       GridLines       =   -1  'True
-      _Version        =   393217
-      ForeColor       =   0
-      BackColor       =   16777215
-      Appearance      =   0
-      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-         Name            =   "Verdana"
-         Size            =   9.75
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      NumItems        =   9
-      BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         Key             =   "result"
-         Text            =   "sID"
-         Object.Width           =   1306
-      EndProperty
-      BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   1
-         Key             =   "title"
-         Text            =   "Title"
-         Object.Width           =   6068
-      EndProperty
-      BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   2
-         Key             =   "author"
-         Text            =   "Version"
-         Object.Width           =   1765
-      EndProperty
-      BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   3
-         Text            =   "Size"
-         Object.Width           =   2540
-      EndProperty
-      BeginProperty ColumnHeader(5) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   4
-         Key             =   "description"
-         Text            =   "Author"
-         Object.Width           =   2540
-      EndProperty
-      BeginProperty ColumnHeader(6) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   5
-         Text            =   "Filename"
-         Object.Width           =   3246
-      EndProperty
-      BeginProperty ColumnHeader(7) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   6
-         Key             =   "path"
-         Text            =   "Description"
-         Object.Width           =   4304
-      EndProperty
-      BeginProperty ColumnHeader(8) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   7
-         Text            =   "Date"
-         Object.Width           =   4304
-      EndProperty
-      BeginProperty ColumnHeader(9) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   8
-         Text            =   "Time"
-         Object.Width           =   2540
-      EndProperty
+      HideSelection   =   0   'False
    End
    Begin VB.Label lStatus 
       BackStyle       =   0  'Transparent
@@ -710,7 +647,7 @@ Sub UploadIt()
     sCategory = Trim(uplist.Text)
     sTitle = Trim(txtTitle)
     
-    If FileExists(sFile) = False Then
+    If basGeneral.FileExists(sFile) = False Then
         MsgBox "The file does not exist! Check the file name." & vbCrLf & vbCrLf & sFile, vbCritical, "Error"
         Exit Sub
     End If
@@ -1061,7 +998,7 @@ Sub LoadList3()
     
 End Sub
 
-Private Sub LV_ColumnClick(ByVal ColumnHeader As MSComctlLib.ColumnHeader)
+Private Sub LV_ColumnClick(ByVal ColumnHeader As LvwColumnHeader)
     With LV '// change to the name of the list view
         Static iLast As Long, iCur As Long
         .Sorted = True
