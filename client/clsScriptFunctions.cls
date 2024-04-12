@@ -1127,6 +1127,12 @@ Public Sub RemoteAppend(ByVal Domain As String, ByVal Filename As String, ByVal 
     DomainFilesystemHelper Domain, "append=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
 End Sub
 
+Public Sub RemoteSafeAppend(ByVal Domain As String, ByVal Filename As String, ByVal Line As String)
+    AssertLocalOnly
+
+    DomainFilesystemHelper Domain, "safeappend=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Line)
+End Sub
+
 Public Sub RemoteDelete(ByVal Domain As String, ByVal Filename As String)
     AssertLocalOnly
     
@@ -1155,6 +1161,12 @@ Public Sub ServerAppend(ByVal Filename As String, ByVal Contents As String)
     AssertRemoteOnly
 
     DomainFilesystemHelper ServerDomain, "append=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
+End Sub
+
+Public Sub ServerSafeAppend(ByVal Filename As String, ByVal Line As String)
+    AssertRemoteOnly
+
+    DomainFilesystemHelper ServerDomain, "safeappend=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Line)
 End Sub
 
 Public Sub ServerDelete(ByVal Filename As String)
