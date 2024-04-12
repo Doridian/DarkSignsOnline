@@ -32,12 +32,12 @@ if (!empty($upload)) {
 		die_error('4500Invalid channel.', 400);
 	}
 
-	$data = $_REQUEST['data'];
+	$data = $_REQUEST['textdata'];
 	$time = time();
 
-	$stmt = $db->prepare('INSERT INTO textspace (`chan`, `owner`, `lastupdate`, `text`, `deleted`) VALUES (?, ?, ?, ?, 0)') or die($db->error);
+	$stmt = $db->prepare('INSERT INTO textspace (`chan`, `owner`, `lastupdate`, `text`, `deleted`) VALUES (?, ?, ?, ?, 0)');
 	$stmt->bind_param('iiis', $upload_int, $user['id'], $time, $data);
-	$stmt->execute() or die($db->error);
+	$stmt->execute();
 
 	die("4500Updated: $upload_int!");
 }
