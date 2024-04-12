@@ -19,7 +19,7 @@ if (!empty($download)) {
 	$row = $res->fetch_array();
 
 	if (empty($row)) {
-		die('4501  ');
+		die('4501');
 	}
 
 	die('4501'.$row['text']);
