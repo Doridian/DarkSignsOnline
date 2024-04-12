@@ -58,7 +58,7 @@ if (!empty($getcategory)){
     $res = $stmt->get_result();
     while($row = $res->fetch_array()) {
         $time = $row['createtime'];
-        echo $row['id'].":--:".$row['title'].":--:".$row['version'].":--:".$row['filesize'].":--:".$row['owner'].":--:".$row['filename'].":--:".$row['$description'].":--:".date('d.m.Y', $time).":--:".date('H:i:s', $time).":--:--:";
+        echo $row['id'].":--:".$row['title'].":--:".$row['version'].":--:".$row['filesize'].":--:".$row['owner'].":--:".$row['filename'].":--:".$row['description'].":--:".date('d.m.Y', $time).":--:".date('H:i:s', $time).":--:--:";
     }
     exit;
 }
