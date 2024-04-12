@@ -734,6 +734,15 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
         Exit Sub
     End If
 
+    Dim ExternalEditor As Boolean
+    ExternalEditor = RegLoad("externaleditor", False)
+
+    If ExternalEditor Then
+        SayRaw ConsoleID, "{green}Opening external editor for " & s
+        frmConsole.OpenFileDefault s
+        Exit Sub
+    End If
+
     EditorFile_Short = GetShortName(s)
     EditorFile_Long = s
 

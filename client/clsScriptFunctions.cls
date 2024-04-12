@@ -66,14 +66,6 @@ Public Property Get Password() As String
     End If
 End Property
 
-Public Property Get IsOutputDisabled() As Boolean
-    IsOutputDisabled = PrivDisableOutput
-End Property
-
-Public Property Get IsOutputRedirected() As Boolean
-    IsOutputRedirected = PrivRedirectOutput
-End Property
-
 Public Property Let Password(ByVal NewValue As String)
     AssertLocalOnly
 
@@ -90,6 +82,26 @@ Public Property Let CWD(ByVal NewValue As String)
     AssertLocalOnly
 
     cPath(PrivConsoleID) = ResolvePath(CWD)
+End Property
+
+Public Property Let ExternalEditor(ByVal NewValue As Boolean)
+    AssertLocalOnly
+
+    RegSave "externaleditor", "" & NewValue
+End Property
+
+Public Property Get ExternalEditor() As Boolean
+    AssertLocalOnly
+
+    ExternalEditor = RegLoad("externaleditor", False)
+End Property
+
+Public Property Get IsOutputDisabled() As Boolean
+    IsOutputDisabled = PrivDisableOutput
+End Property
+
+Public Property Get IsOutputRedirected() As Boolean
+    IsOutputRedirected = PrivRedirectOutput
 End Property
 
 Public Property Get ConsoleID() As String

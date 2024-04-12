@@ -557,6 +557,11 @@ Dim autoCompActive(1 To 4) As Boolean
 Dim autoCompLast(1 To 4) As String
 Dim autoILast(1 To 4) As Integer
 
+Private Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hWnd As Long, ByVal lpOperation As String, ByVal lpFile As String, ByVal lpParameters As String, ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
+
+Public Sub OpenFileDefault(ByVal File As String)
+    ShellExecute hWnd, "open", SafePath(File), vbNullString, vbNullString, 1
+End Sub
 
 Sub CommLarger()
     If Comm.Height < ((Me.Height / 3) * 2) Then

@@ -88,21 +88,6 @@ Function GetFile(ByVal Filename As String) As String
     GetFile = GetFileUnsafe(SafePath(Filename))
 End Function
 
-
-
-Public Sub OpenURL(sUrl As String)
-    On Error Resume Next
-    Shell Environ("windir") & "\explorer.exe " & Chr(34) & sUrl & Chr(34), vbNormalFocus
-    DoEvents
-    'Unload frmMain
-End Sub
-
-Public Function GetFunctionPart(ByVal tmpS As String) As String
-    If InStr(tmpS, "=") > 0 Then tmpS = Trim(Mid(tmpS, InStr(tmpS, "=") + 1, Len(tmpS)))
-    If InStr(tmpS, "(") > 0 Then tmpS = Trim(Mid(tmpS, 1, InStr(tmpS, "(") - 1))
-    GetFunctionPart = tmpS
-End Function
-
 Public Function CountCharInString(s As String, ByVal sToCount As String) As Long
     sToCount = Trim(LCase(sToCount))
     CountCharInString = 0
@@ -199,40 +184,6 @@ Public Function FormatKB(ByVal Amount As Long) _
     End If
 End Function
 
-Public Function KillBadDirChars(s As String) As String
-    KillBadDirChars = s
-    
-    KillBadDirChars = Replace(KillBadDirChars, "|", "")
-    KillBadDirChars = Replace(KillBadDirChars, "*", "")
-    KillBadDirChars = Replace(KillBadDirChars, "/", "")
-    KillBadDirChars = Replace(KillBadDirChars, "\", "")
-    KillBadDirChars = Replace(KillBadDirChars, Chr(34), "")
-    KillBadDirChars = Replace(KillBadDirChars, ":", "")
-    KillBadDirChars = Replace(KillBadDirChars, "<", "")
-    KillBadDirChars = Replace(KillBadDirChars, ">", "")
-End Function
-
-Public Function InvalidChars(ByVal s As String) As Boolean
-    s = Trim(s)
-    
-    InvalidChars = False
-    
-    'If InStr(s, "\") > 0 Then InvalidChars = True
-    'If InStr(s, "/") > 0 Then InvalidChars = True
-    If InStr(s, " ") > 0 Then InvalidChars = True
-    
-    If InStr(s, "|") > 0 Then InvalidChars = True
-    If InStr(s, "*") > 0 Then InvalidChars = True
-    
-    If InStr(s, Chr(34)) > 0 Then InvalidChars = True
-    If InStr(s, ":") > 0 Then InvalidChars = True
-    If InStr(s, "<") > 0 Then InvalidChars = True
-    If InStr(s, ">") > 0 Then InvalidChars = True
-    If InStr(s, ",") > 0 Then InvalidChars = True
-End Function
-
-
-
 Public Function DirExists(ByVal sDirName As String) As Boolean
     sDirName = SafePath(sDirName)
 
@@ -250,17 +201,4 @@ NotADir:
     DirExists = False
 End Function
 
-
-Public Function CountCharsInString(ByVal s As String, ByVal sFind As String) As Long
-    Dim n As Long
-    s = i(s)
-    sFind = i(sFind)
-    
-    For n = 1 To Len(s)
-        If Mid(s, n, Len(sFind)) = sFind Then
-            CountCharsInString = CountCharsInString + 1
-        End If
-        
-    Next n
-End Function
 
