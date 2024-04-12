@@ -9,7 +9,7 @@ $download = $_REQUEST['download'];
 if (!empty($download)) {
 	$download_int = (int)$download;
 	if ($download_int < 1) {
-		die_error('4501  ', 404);
+		die_error('4501', 404);
 	}
 
 	$stmt = $db->prepare('SELECT `text` FROM textspace WHERE chan = ? ORDER BY id DESC LIMIT 1');
