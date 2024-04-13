@@ -96,11 +96,11 @@ Public Sub reloadInbox()
     Dim Key As String
 
     For n = 0 To UBound(AllResults) Step 1
-        SubResults = Split(AllResults(n), Chr(7))
+        SubResults = Split(AllResults(n), ":--:")
         If UBound(SubResults) = 5 Then
             Key = SubResults(1)
             inbox.ListItems.Add , Key, SubResults(2)
-            inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(3)
+            inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , DecodeBase64Str(SubResults(3))
             inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(5)
             
             If SubResults(0) = "1" Then
@@ -129,7 +129,7 @@ Private Sub btnRefresh_Click()
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
     For n = UBound(AllResults) To 0 Step -1
-        SubResults = Split(AllResults(n), Chr(7))
+        SubResults = Split(AllResults(n), ":--:")
         'Mid(inbox.SelectedItem.key, 3)
         
         If UBound(SubResults) > 2 Then
@@ -224,18 +224,16 @@ Private Sub inbox_DblClick()
     Key = inbox.ListItems(SelectedIndex).Key
     
     For n = 0 To UBound(AllResults) Step 1
-        SubResults = Split(AllResults(n), Chr(7))
+        SubResults = Split(AllResults(n), ":--:")
        
         If UBound(SubResults) = 5 Then
             If SubResults(1) = Key Then
-                frmDSOMailRead.msgBody.Text = SubResults(4)
+                frmDSOMailRead.msgBody.Text = DecodeBase64Str(SubResults(4))
                 n = UBound(AllResults)
             End If
         End If
     Next n
-    
-    frmDSOMailRead.msgBody.Text = Replace(frmDSOMailRead.msgBody.Text, Chr(6), vbNewLine)
-    
+
     If inbox.ListItems(SelectedIndex).Bold = True Then
         markAsRead Key
     End If
@@ -252,7 +250,7 @@ Private Sub markAsRead(k As String)
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
     For n = UBound(AllResults) To 0 Step -1
-        SubResults = Split(AllResults(n), Chr(7))
+        SubResults = Split(AllResults(n), ":--:")
         'Mid(inbox.SelectedItem.key, 3)
         
         If UBound(SubResults) > 2 Then

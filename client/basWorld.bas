@@ -283,7 +283,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
             Else
                 Dim n As Long
                 For n = 0 To UBound(emails) - 1 Step 1
-                    emails(n) = "1" & Chr(7) & Trim(emails(n))
+                    emails(n) = "1:--:" & Trim(emails(n))
                 Next n
                 AppendFileUnsafe App.Path & "/mail.dat", Join(emails, vbNewLine) & vbNewLine
                 frmDSOMail.reloadInbox
