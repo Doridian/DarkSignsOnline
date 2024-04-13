@@ -24,7 +24,7 @@ Public Type ConsoleLine
     FontSize As String
     FontBold As Boolean
     FontItalic As Boolean
-    FontStrikeThru As Boolean
+    FontStrikethru As Boolean
     FontUnderline As Boolean
 
     Flash As Boolean
@@ -471,7 +471,7 @@ DontDraw:
             frmConsole.FontBold = Console(ActiveConsole, n).FontBold
             frmConsole.FontItalic = Console(ActiveConsole, n).FontItalic
             frmConsole.FontUnderline = Console(ActiveConsole, n).FontUnderline
-            frmConsole.FontStrikeThru = Console(ActiveConsole, n).FontStrikeThru
+            frmConsole.FontStrikethru = Console(ActiveConsole, n).FontStrikethru
 
             frmConsole.FontSize = Console_FontSize(n, ActiveConsole)
             
@@ -639,7 +639,7 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional w
         Console(ConsoleID, 1).FontBold = propertySpace_Bold(propertySpace)
         Console(ConsoleID, 1).FontItalic = propertySpace_Italic(propertySpace)
         Console(ConsoleID, 1).FontUnderline = propertySpace_Underline(propertySpace)
-        Console(ConsoleID, 1).FontStrikeThru = propertySpace_Strikethru(propertySpace)
+        Console(ConsoleID, 1).FontStrikethru = propertySpace_Strikethru(propertySpace)
         If InStr(propertySpace, "flash ") > 0 Then Console(ConsoleID, 1).Flash = True Else Console(ConsoleID, 1).Flash = False
         If InStr(propertySpace, "flashfast ") > 0 Then Console(ConsoleID, 1).FlashFast = True Else Console(ConsoleID, 1).FlashFast = False
         If InStr(propertySpace, "flashslow ") > 0 Then Console(ConsoleID, 1).FlashSlow = True Else Console(ConsoleID, 1).FlashSlow = False
@@ -681,7 +681,7 @@ Public Function Load_Property_Space(ByVal propertySpace As String, sCaption As S
     Load_Property_Space.FontBold = propertySpace_Bold(propertySpace)
     Load_Property_Space.FontItalic = propertySpace_Italic(propertySpace)
     Load_Property_Space.FontUnderline = propertySpace_Underline(propertySpace)
-    Load_Property_Space.FontStrikeThru = propertySpace_Strikethru(propertySpace)
+    Load_Property_Space.FontStrikethru = propertySpace_Strikethru(propertySpace)
     If InStr(propertySpace, "flash ") > 0 Then Load_Property_Space.Flash = True Else Load_Property_Space.Flash = False
     If InStr(propertySpace, "flashfast ") > 0 Then Load_Property_Space.FlashFast = True Else Load_Property_Space.FlashFast = False
     If InStr(propertySpace, "flashslow ") > 0 Then Load_Property_Space.FlashSlow = True Else Load_Property_Space.FlashSlow = False
@@ -960,6 +960,10 @@ Public Function EncodeBase64(ByRef arrData() As Byte) As String
     EncodeBase64 = Base64.EncodeByteArray(arrData)
 End Function
 
+Public Function EncodeBase64Str(ByVal strData As String) As String
+    EncodeBase64Str = EncodeBase64(StrConv(strData, vbFromUnicode))
+End Function
+
 Public Function DecodeBase64(ByVal strData As String) As Byte()
     If Len(strData) = 0 Then
         Dim EmptyData(0 To 0) As Byte
@@ -967,4 +971,8 @@ Public Function DecodeBase64(ByVal strData As String) As Byte()
         Exit Function
     End If
     DecodeBase64 = Base64.DecodeToByteArray(strData)
+End Function
+
+Public Function DecodeBase64Str(ByVal strData As String) As String
+    DecodeBase64Str = StrConv(DecodeBase64(strData), vbUnicode)
 End Function

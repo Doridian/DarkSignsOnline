@@ -789,12 +789,12 @@ Public Sub AddListItems(ByVal s As String)
         SubResults = Split(AllResults(n), ":--:")
         
         LV.ListItems.Add , , SubResults(0)
-        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64(SubResults(1))
-        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64(SubResults(2))
+        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64Str(SubResults(1))
+        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64Str(SubResults(2))
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , FormatKB(SubResults(3))
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(4)
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(5)
-        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64(SubResults(6))
+        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64Str(SubResults(6))
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(7)
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(8)
     End If
@@ -934,7 +934,7 @@ Public Sub AddtoRemoveList(ByVal s As String)
     Dim n As Long
     For n = UBound(sA) To 0 Step -1
         If Trim(sA(n)) <> "" Then
-            List2.AddItem DecodeBase64(sA(n))
+            List2.AddItem DecodeBase64Str(sA(n))
         End If
     Next n
 End Sub
