@@ -1371,6 +1371,12 @@ Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
     End If
 End Sub
 
+Public Sub IncludeCommand(ByVal Script As String)
+    AssertLocalOnly
+
+    Include ResolveCommand(Script)
+End Sub
+
 Public Sub Include(ByVal Script As String)
     AssertLocalOnly
 
@@ -1378,26 +1384,6 @@ Public Sub Include(ByVal Script As String)
     ScriptData = GetFile(ResolvePath(Script))
 
     SControl.AddCode ScriptData
-End Sub
-
-Public Sub RunForward(ByVal Script As String)
-    AssertLocalOnly
-
-    Dim X As Long
-
-    Dim SParamArr() As Variant
-    ReDim SParamArr(LBound(PrivParameters) To UBound(PrivParameters))
-    For X = LBound(PrivParameters) To UBound(PrivParameters)
-        SParamArr(X) = PrivParameters(X)
-    Next
-
-    Dim Output As String
-    Yield
-    Output = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "FORWARD", False, PrivRedirectOutput, PrivDisableOutput)
-    Yield
-    If PrivDisableOutput And PrivRedirectOutput Then
-        Say Output
-    End If
 End Sub
 
 Public Sub Run(ParamArray XArr() As Variant)
