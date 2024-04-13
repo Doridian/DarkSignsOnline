@@ -3,11 +3,7 @@
 $rewrite_done = true;
 require_once('function.php');
 
-$returnwith = (string)(int)$_REQUEST['returnwith'];
-if ($returnwith === '0') {
-	$returnwith = '7000';
-}
-echo $returnwith;
+print_returnwith('7000', -1);
 
 $action = $_REQUEST['action'];
 if ($action === 'inbox')

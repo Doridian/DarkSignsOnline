@@ -3,11 +3,7 @@
 $rewrite_done = true;
 require_once('function.php');
 
-$returnwith = (string)(int)$_REQUEST['returnwith'];
-if ($returnwith === '0') {
-	$returnwith = '2000';
-}
-echo $returnwith;
+print_returnwith('2000', -1);
 
 $getfile = $_REQUEST['getfile'];
 if (!empty($getfile)){
