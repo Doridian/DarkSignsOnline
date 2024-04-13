@@ -43,8 +43,6 @@ Public Type ConsoleLine
 End Type
 
 Public CurrentPromptInput(1 To 4) As String
-Public LastPromptRendered(1 To 4) As String
-Public LastPathRendered(1 To 4) As String
 Public CurrentPromptCursorIndex(1 To 4) As Long
 
 Public RecentCommandsIndex(1 To 4) As Integer
@@ -215,22 +213,14 @@ SkipAddingIt:
     RecentCommandsIndex(ActiveConsole) = 0
 End Sub
 
-Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer, Optional ByVal HideUnderscoreRenderLast As Boolean)
+Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
     If Not CurrentPromptVisible(ConsoleID) Then
         Exit Sub
     End If
     Console(ConsoleID, 1) = Console_Line_Defaults
 
     Dim PromptFull As String
-    
-    If HideUnderscoreRenderLast Then
-        Console(ConsoleID, 1).Caption = LastPathRendered(ConsoleID) & "> " & LastPromptRendered(ConsoleID)
-        Exit Sub
-    End If
-
-    LastPathRendered(ConsoleID) = cPath(ConsoleID)
     PromptFull = CurrentPromptInput(ConsoleID)
-    LastPromptRendered(ConsoleID) = PromptFull
 
     Dim CursorIdx As Long
     CursorIdx = CurrentPromptCursorIndex(ConsoleID)
@@ -249,7 +239,7 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer, Optional ByVal H
         PostUnderscore = Mid(PromptFull, CursorIdx + 1)
     End If
 
-    Console(ConsoleID, 1).Caption = LastPathRendered(ConsoleID) & "> " & PreUnderscore & "_" & PostUnderscore
+    Console(ConsoleID, 1).Caption = cPath(ConsoleID) & "> " & PreUnderscore & Chr(7) & PostUnderscore
 End Sub
 
 Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
@@ -285,9 +275,23 @@ Public Sub MoveUnderscoreLeft(ByVal ConsoleID As Integer)
 End Sub
 
 Public Sub Insert_Char(ByVal sChar As String, ByVal ConsoleID As Integer)
-    Dim tmpS As String
+    Dim Prompt As String
+    Prompt = CurrentPromptInput(ConsoleID)
+
+    Dim SelectionIndex As Long
+    SelectionIndex = CurrentPromptCursorIndex(ConsoleID)
+    If SelectionIndex <= 0 Then
+        CurrentPromptInput(ConsoleID) = sChar & Prompt
+        MoveUnderscoreRight ConsoleID
+        Exit Sub
+    End If
     
-    CurrentPromptInput(ConsoleID) = CurrentPromptInput(ConsoleID) & sChar
+    If SelectionIndex > Len(Prompt) Then
+        SelectionIndex = Len(Prompt)
+    End If
+
+    Prompt = Left(Prompt, SelectionIndex) & sChar & Mid(Prompt, SelectionIndex + 1)
+    CurrentPromptInput(ConsoleID) = Prompt
     MoveUnderscoreRight ConsoleID
 
     RefreshCommandLinePrompt ConsoleID
@@ -317,9 +321,6 @@ End Sub
 Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     Dim n As Integer
 
-    If CurrentPromptVisible(ConsoleID) Then
-        RefreshCommandLinePrompt ConsoleID, True
-    End If
     For n = 299 To 2 Step -1
         Console(ConsoleID, n) = Console(ConsoleID, n - 1)
     Next n
@@ -485,8 +486,16 @@ DontDraw:
             frmConsole.CurrentX = ConsoleXSpacing
 
             'make underscore flash
-            If n = 1 And Flash = True Then If Right(tmpS, 1) = "_" Then tmpS = Replace(tmpS, "_", " ")
-            
+            If n = 1 Then
+                If Flash = True Then
+                    tmpS = Replace(tmpS, Chr(7), " ")
+                Else
+                    tmpS = Replace(tmpS, Chr(7), "_")
+                End If
+            Else
+                tmpS = Replace(tmpS, Chr(7), "")
+            End If
+
             isAligned = False
             
             If Console(ActiveConsole, n).Center = True Then
