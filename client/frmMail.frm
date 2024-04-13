@@ -109,7 +109,7 @@ Public Sub reloadInbox()
     Dim key As String
     
     For n = 0 To UBound(AllResults) Step 1
-        SubResults = Split(AllResults(n), Chr(7))
+        SubResults = Split(AllResults(n), ":--:")
         'MsgBox UBound(SubResults)
         'MsgBox SubResults(0)
         'MsgBox SubResults(1)
@@ -121,7 +121,7 @@ Public Sub reloadInbox()
             'If keyExists(SubResults(0)) = False Then
                 key = SubResults(1)
                 inbox.ListItems.Add , key, SubResults(2)
-                inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(3)
+                inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , DecodeBase64Str(SubResults(3))
                 inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(5)
                 
                 If SubResults(0) = "1" Then
@@ -153,7 +153,7 @@ Private Sub btnRefresh_Click()
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
     For n = UBound(AllResults) To 0 Step -1
-        SubResults = Split(AllResults(n), Chr(7))
+        SubResults = Split(AllResults(n), ":--:")
         'Mid(inbox.SelectedItem.key, 3)
         
         If UBound(SubResults) > 2 Then
@@ -249,7 +249,7 @@ Private Sub inbox_DblClick()
     key = inbox.ListItems(inbox.SelectedItem.Index).key
     
     For n = 0 To UBound(AllResults) Step 1
-        SubResults = Split(AllResults(n), ":")
+        SubResults = Split(AllResults(n), ":--:")
 
         If UBound(SubResults) = 5 Then
             If SubResults(1) = key Then
@@ -273,7 +273,7 @@ Private Sub markAsRead(k As String)
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
     For n = UBound(AllResults) To 0 Step -1
-        SubResults = Split(AllResults(n), Chr(7))
+        SubResults = Split(AllResults(n), ":--:")
         'Mid(inbox.SelectedItem.key, 3)
         
         If UBound(SubResults) > 2 Then
