@@ -1,19 +1,7 @@
 Option Explicit
 
-Dim LSArg
-LSArg = "."
 IF ArgC() > 0 Then
-	LSArg = ArgV(1)
-END IF
-
-Dim Res
-Res = ReadDir(LSArg)
-
-IF LBound(Res) < 0 Then
-	Quit()
-END If
-
-Dim X
-FOR X = LBound(Res) To UBound(Res)
-	SAY(Res(X))
-NEXT
+	Run "dir", ArgV(1)
+Else
+	Run "dir"
+End If

@@ -59,6 +59,16 @@ Public Function VersionStr() As String
     End If
 End Function
 
+Public Function FileLenUnsafe(ByVal FileName As String) As Long
+    GetAttr FileName
+    
+    Dim Handle As Long
+    Handle = FreeFile
+    Open FileName$ For Binary Access Read As #Handle
+        FileLenUnsafe = LOF(Handle)
+    Close #Handle
+End Function
+
 Public Function GetFileUnsafe(ByVal FileName As String) As String
     GetAttr FileName
 
@@ -91,15 +101,19 @@ Public Function AppendFileUnsafe(ByVal FileName As String, ByVal Contents As Str
     Close #Handle
 End Function
 
-Function WriteFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+Public Function WriteFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
     WriteFileUnsafe SafePath(FileName, Prefix), Contents
 End Function
 
-Function AppendFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+Public Function AppendFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
     AppendFileUnsafe SafePath(FileName, Prefix), Contents
 End Function
 
-Function GetFile(ByVal FileName As String, Optional ByVal Prefix As String = "") As String
+Public Function FileLen(ByVal FileName As String, Optional ByVal Prefix As String = "") As Long
+    FileLen = FileLenUnsafe(SafePath(FileName, Prefix))
+End Function
+
+Public Function GetFile(ByVal FileName As String, Optional ByVal Prefix As String = "") As String
     GetFile = GetFileUnsafe(SafePath(FileName, Prefix))
 End Function
 
@@ -125,7 +139,7 @@ End Function
 Public Function FileExists(s As String) As Boolean
     On Error GoTo zxc
     Dim n As Long
-    n = FileLen(SafePath(s))
+    n = basGeneral.FileLen(s)
     FileExists = True
     Exit Function
 zxc:

@@ -674,6 +674,13 @@ Private Sub RaiseMiscError(ByVal Desc As String)
 End Sub
 
 Public Function TextWidth(ByVal FontName As String, ByVal FontSize As String, ByVal Text As String) As Long
+    If FontName = "" Then
+        FontName = basConsole.Console_Line_Defaults.FontName
+    End If
+    If FontSize = "" Then
+        FontSize = basConsole.Console_Line_Defaults.FontSize
+    End If
+
     frmConsole.lfont.FontName = FontName
     frmConsole.lfont.FontSize = FontSize
     frmConsole.lfont.Caption = Text
@@ -681,11 +688,21 @@ Public Function TextWidth(ByVal FontName As String, ByVal FontSize As String, By
 End Function
 
 Public Function TextHeight(ByVal FontName As String, ByVal FontSize As String) As Long
+    If FontName = "" Then
+        FontName = basConsole.Console_Line_Defaults.FontName
+    End If
+    If FontSize = "" Then
+        FontSize = basConsole.Console_Line_Defaults.FontSize
+    End If
     TextHeight = Font_Height(FontName, FontSize)
 End Function
 
 Public Function ConsoleWidth() As Long
     ConsoleWidth = frmConsole.Width - (ConsoleXSpacing * 2)
+End Function
+
+Public Function FormatKB(ToConvert As Long) As String
+    FormatKB = basGeneral.FormatKB(ToConvert)
 End Function
 
 Public Sub Overwrite(ByVal File As String, ByVal Content As String)
@@ -699,6 +716,12 @@ Public Sub Append(ByVal File As String, ByVal Content As String)
 
     AppendFile ResolvePath(File), Content
 End Sub
+
+Public Function FileLen(ByVal File As String) As Long
+    AssertLocalOnly
+
+    FileLen = basGeneral.FileLen(ResolvePath(File))
+End Function
 
 Public Sub Del(ByVal File As String)
     AssertLocalOnly

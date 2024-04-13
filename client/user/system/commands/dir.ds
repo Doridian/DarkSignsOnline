@@ -1,10 +1,13 @@
 Option Explicit
 
 Dim LSArg
-LSArg = "."
+LSArg = ""
 IF ArgC() > 0 Then
 	LSArg = ArgV(1)
 END IF
+If LSArg = "" Then
+	LSArg = "."
+End If
 
 Dim Res
 Res = ReadDir(LSArg)
@@ -13,7 +16,65 @@ IF LBound(Res) < 0 Then
 	Quit()
 END If
 
+Dim Dirs
+Dim Files
+ReDim Dirs(0)
+ReDim Files(0)
+
 Dim X
+Dim V
 FOR X = LBound(Res) To UBound(Res)
-	SAY(Res(X))
+	V = Res(X)
+	If Right(V, 1) = "/" Then
+		If V <> "./" And V <> "../" Then
+			ReDim Preserve Dirs(UBound(Dirs) + 1)
+			Dirs(UBound(Dirs)) = Left(V, Len(V) - 1)
+		End If
+	Else
+		ReDim Preserve Files(UBound(Files) + 1)
+		Files(UBound(Files)) = V
+	End If
 NEXT
+
+Dim StrStyle
+Dim Str
+Sub StartSaySubStr(Style)
+	Str = ""
+	StrStyle = Style
+End Sub
+Sub SaySubStr(AddStr, Sep)
+	If Str <> "" Then
+		Str = Str & Sep
+	End If
+	Str =  Str & AddStr
+
+	If TextWidth("", "", Str) > ConsoleWidth() - 4700 Then
+		Say Str & StrStyle
+		Str = ""
+	End If
+End Sub
+Sub EndSaySubStr()
+	If Str <> "" Then
+		Say Str & StrStyle
+		Str = ""
+	End If
+	StrStyle = ""
+End Sub
+
+If UBound(Dirs) > 0 Then
+	StartSaySubStr "{1yellow}"
+	For X = 1 To UBound(Dirs)
+		SaySubStr "[" & UCase(Dirs(X)) & "]", "    "
+	Next
+	EndSaySubStr
+End If
+
+If UBound(Files) > 0 Then
+	StartSaySubStr "{}"
+	For X = 1 To UBound(Files)
+		SaySubStr Files(X) & " (" & FormatKB(FileLen(LSArg & "/" & Files(X))) & ")", "    "
+	Next
+	EndSaySubStr
+End If
+
+Say UBound(Files) & " file(s) and " & UBound(Dirs) & " dir(s) found in " & ResolvePath(LSArg) & "{green 10}"
