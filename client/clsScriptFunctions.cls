@@ -318,10 +318,12 @@ Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal
     AddCustomDownload ResIndex
 
     RunPage Url, PrivConsoleID, UsePost, PostData, ResIndex, NoAuth
-    Yield
+    If NoAuth Then
+        Yield
+    End If
 End Function
 
-Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
+Public Function WAITFOR(ByVal ResIndex As Long, Optional ByVal NoYield As Boolean = False) As clsHttpResponse
     ConsoleWaitingOnRemote(PrivConsoleID) = True
     frmConsole.QueueConsoleRender
     
@@ -344,7 +346,9 @@ Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
 WaitForExit:
     ConsoleWaitingOnRemote(PrivConsoleID) = False
     frmConsole.QueueConsoleRender
-    Yield
+    If Not NoYield Then
+        Yield
+    End If
 End Function
 
 Public Sub CD(ByVal DIR As String)
@@ -854,15 +858,18 @@ End Sub
 
 Public Sub LOGIN()
     AssertLocalOnly
-    
-    Dim isBad As Boolean
-    isBad = False
+
+    While LoginInProgress
+        Yield
+    Wend
 
     If basWorld.Authorized = True Then
         SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
         Exit Sub
     End If
 
+    Dim isBad As Boolean
+    isBad = False
     If myUsername = "" Then
         SayRaw ConsoleID, "{14, orange,  center}Your username is not set - type: USERNAME = ""[username]"" to set it."
         isBad = True
@@ -878,17 +885,20 @@ Public Sub LOGIN()
         RaiseMiscError "Username and/or password not set"
     End If
 
+    LoginInProgress = True
     SayCOMM "Logging in..."
 
     Dim ResIndex As Long
     ResIndex = DoDownloadAPI("auth.php", True, "")
     Dim ResObj As clsHttpResponse
-    Set ResObj = WAITFOR(ResIndex)
+    Set ResObj = WAITFOR(ResIndex, True)
 
     If ResObj.IsSuccess() Then
         OnLoginSuccess
+        LoginInProgress = False
     Else
         OnLoginFailure
+        LoginInProgress = False
         RaiseMiscError "Login failed"
     End If
 

@@ -33,6 +33,8 @@ End Type
 
 Private ProcessQueue(1 To 30) As ProcessQueueEntry
 
+Public LoginInProgress As Boolean
+
 
 Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Long, Optional NoAuth As Boolean)
     If Not NoAuth And InStr(i(sUrl), "auth.php") = 0 And Not Authorized Then
