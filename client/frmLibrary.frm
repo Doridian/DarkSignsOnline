@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "MSCOMCTL.OCX"
 Begin VB.Form frmLibrary 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "File Library"
@@ -579,19 +579,16 @@ Begin VB.Form frmLibrary
       EndProperty
       NumItems        =   9
       BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         Key             =   "result"
-         Text            =   "sID"
+         Text            =   "ID"
          Object.Width           =   1306
       EndProperty
       BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          SubItemIndex    =   1
-         Key             =   "title"
          Text            =   "Title"
          Object.Width           =   6068
       EndProperty
       BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          SubItemIndex    =   2
-         Key             =   "author"
          Text            =   "Version"
          Object.Width           =   1765
       EndProperty
@@ -602,7 +599,6 @@ Begin VB.Form frmLibrary
       EndProperty
       BeginProperty ColumnHeader(5) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          SubItemIndex    =   4
-         Key             =   "description"
          Text            =   "Author"
          Object.Width           =   2540
       EndProperty
@@ -613,7 +609,6 @@ Begin VB.Form frmLibrary
       EndProperty
       BeginProperty ColumnHeader(7) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          SubItemIndex    =   6
-         Key             =   "path"
          Text            =   "Description"
          Object.Width           =   4304
       EndProperty
@@ -693,15 +688,9 @@ Sub DownloadOne()
     End If
 
     MakeADir App.Path & "\user\downloads\"
-    lStatus.Caption = "Downloading to \downloads\" & Trim(KillBadDirChars(LV.SelectedItem.ListSubItems(4).Text)) & "..."
-    
-    
+    lStatus.Caption = "Downloading to \downloads\" & Trim(KillBadDirChars(LV.SelectedItem.ListSubItems(5).Text)) & "..."
+
     RunPage "file_database.php?returnwith=4304&getfile=" & EncodeURLParameter(sID), 5, False, "", False
-        
-    
-    
-    
-    
 End Sub
 
 
@@ -862,12 +851,12 @@ Public Sub AddListItems(ByVal s As String)
         SubResults = Split(AllResults(n), ":--:")
         
         LV.ListItems.Add , , SubResults(0)
-        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(1)
-        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(2)
+        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64Str(SubResults(1))
+        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64Str(SubResults(2))
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , FormatKB(SubResults(3))
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(4)
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(5)
-        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(6)
+        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64Str(SubResults(6))
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(7)
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(8)
         
@@ -1018,7 +1007,6 @@ zxc:
 End Sub
 
 Public Sub AddtoRemoveList(ByVal s As String)
-
     List2.Clear
 
     Dim sA() As String
@@ -1026,20 +1014,11 @@ Public Sub AddtoRemoveList(ByVal s As String)
     
     Dim n As Integer
     For n = UBound(sA) To 0 Step -1
-    
         If Trim(sA(n)) <> "" Then
-        
-            List2.AddItem sA(n)
-        
+            List2.AddItem DecodeBase64Str(sA(n))
         End If
-    
     Next n
-
 End Sub
-
-
-
-
 
 Private Sub List1_Click()
     UpdateResults

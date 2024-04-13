@@ -72,18 +72,14 @@ Private Sub btnSend_Click()
    
    toSend = "action=send&returnwith=7002&to=" & EncodeURLParameter(Me.msgTo) & _
         "&subject=" & EncodeURLParameter(Me.msgSubject) & _
-        "&message=" & EncodeURLParameter(Replace(Me.msgBody.Text, vbNewLine, Chr(6)))
+        "&message=" & EncodeURLParameter(Me.msgBody.Text)
 
    RunPage "dsmail.php", consoleID, True, toSend
    
    DisableAll
-  'RunPage "domain_filesystem.php", consoleID, True, sPostData, 0
-    
-   
+
    btnSend.Caption = "Sending..."
    Me.Enabled = False
-   
-   'MsgBox "Sending mail"
 End Sub
 
 Public Sub DisableAll()

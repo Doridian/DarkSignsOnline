@@ -618,7 +618,7 @@ Public Sub UploadToDomain(ByVal s As String, ByVal consoleID As Integer)
         Dim tempStrA As String
 
         sFileData = GetFileClean(App.Path & "\user" & sFilename)
-        tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
+        tempStrA = EncodeBase64Str(sFileData)
 
         RunPage "domain_upload.php", consoleID, True, _
         "port=" & EncodeURLParameter(Trim(sPort)) & _

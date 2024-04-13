@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "MSCOMCTL.OCX"
 Begin VB.Form frmDSOMail 
    Caption         =   "DSO Mail"
    ClientHeight    =   5895
@@ -214,6 +214,15 @@ Private Sub Form_Load()
 End Sub
 
 Private Sub inbox_DblClick()
+    Dim SelectedIndex As Long
+    SelectedIndex = 0
+    On Error Resume Next
+    SelectedIndex = inbox.SelectedItem.Index
+    On Error GoTo 0
+    If SelectedIndex <= 0 Then
+        Exit Sub
+    End If
+
     'MsgBox Mid(inbox.SelectedItem.key, 3)
     'MsgBox inbox.SelectedItem.Index
     'MsgBox inbox.ListItems(inbox.SelectedItem.Index).key
@@ -240,18 +249,16 @@ Private Sub inbox_DblClick()
     key = inbox.ListItems(inbox.SelectedItem.Index).key
     
     For n = 0 To UBound(AllResults) Step 1
-        SubResults = Split(AllResults(n), Chr(7))
-       
+        SubResults = Split(AllResults(n), ":")
+
         If UBound(SubResults) = 5 Then
             If SubResults(1) = key Then
-                frmDSOMailRead.msgBody.Text = SubResults(4)
+                frmDSOMailRead.msgBody.Text = DecodeBase64Str(SubResults(4))
                 n = UBound(AllResults)
             End If
         End If
     Next n
-    
-    frmDSOMailRead.msgBody.Text = Replace(frmDSOMailRead.msgBody.Text, Chr(6), vbNewLine)
-    
+
     If inbox.ListItems(inbox.SelectedItem.Index).Bold = True Then
         markAsRead (key)
     End If

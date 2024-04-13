@@ -341,7 +341,6 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             If (s = "success") Then
                 SayComm "Upload Successful.", consoleID
             Else
-                MsgBox s
                 SayComm "Upload Failed.", consoleID
             End If
             
@@ -371,11 +370,8 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
                     s = Mid(s, InStr(s, "::") + 2, Len(s))
                 End If
             
-                Dim b64decoded() As Byte
-                b64decoded = basConsole.DecodeBase64(s)
                 Dim newS As String
-                newS = StrConv(b64decoded, vbUnicode)
-
+                newS = basConsole.DecodeBase64Str(s)
                 WriteClean App.Path & "\user\system\temp.dat", newS
                 Run_Script "\system\temp.dat", consoleID, sParameters, Left(sParameters, InStr(sParameters, "_") - 1)
             End If
@@ -428,7 +424,6 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             frmLibrary.tsl.Caption = "Loaded!"
         
         Case "7001" 'mail inbox
-            MsgBox s
             frmDSOMail.EnableAll
             Dim emails() As String
             emails = Split(s, vbNewLine)
@@ -472,12 +467,7 @@ Public Sub ProcessQueueEntry(ByVal Index As Integer)
             If Trim(Replace(s, vbCrLf, "")) = "" Then Exit Sub
             If InStr(i(sSource), "z_online") > 0 Then Exit Sub
             If InStr(i(sSource), "chat") > 0 Then Exit Sub
-
-            SayComm s
-            MsgBox s
             SayComm "The function [" & sSource & "] returned some strange data."
-
-        
     End Select
     
     
