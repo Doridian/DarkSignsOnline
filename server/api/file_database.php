@@ -7,19 +7,7 @@ $returnwith = (string)(int)$_REQUEST['returnwith'];
 if ($returnwith === '0') {
 	$returnwith = '2000';
 }
-
 echo $returnwith;
-
-function file_encode($str) {
-    global $ver;
-    if ($ver > 1) {
-        return base64_encode($str);
-    }
-    while (strpos($str, ':--:') !== false) {
-        $str = str_replace(':--:', ':-:', $str);
-    }
-    return $str;
-}
 
 $getfile = $_REQUEST['getfile'];
 if (!empty($getfile)){
@@ -55,7 +43,7 @@ if (!empty($getforremoval)){
     $res = $stmt->get_result();
 
     while($row = $res->fetch_array()) {
-        echo file_encode($row['id'] . ': ' . $row['title'] . '(version ' . $row['version'] . ') ' . date('d.m.Y', $row['createtime'])) . ':--:';
+        echo dso_b64_encode($row['id'] . ': ' . $row['title'] . '(version ' . $row['version'] . ') ' . date('d.m.Y', $row['createtime'])) . ':--:';
     }
 
     exit;
@@ -69,7 +57,7 @@ if (!empty($getcategory)){
     $res = $stmt->get_result();
     while($row = $res->fetch_array()) {
         $time = $row['createtime'];
-        echo $row['id'].':--:'.file_encode($row['title']).':--:'.file_encode($row['version']).':--:'.$row['filesize'].':--:'.idToUser($row['owner']).':--:'.$row['filename'].':--:'.file_encode($row['description']).':--:'.date('d.m.Y', $time).':--:'.date('H:i:s', $time).':--:--:';
+        echo $row['id'].':--:'.dso_b64_encode($row['title']).':--:'.dso_b64_encode($row['version']).':--:'.$row['filesize'].':--:'.idToUser($row['owner']).':--:'.$row['filename'].':--:'.dso_b64_encode($row['description']).':--:'.date('d.m.Y', $time).':--:'.date('H:i:s', $time).':--:--:';
     }
     exit;
 }
