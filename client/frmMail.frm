@@ -88,7 +88,7 @@ Public Sub reloadInbox()
     On Error GoTo 0
 
     Dim AllResults() As String
-    AllResults = Split(tmpFile, vbNewLine)
+    AllResults = Split(tmpFile, vbCrLf)
 
     Dim SubResults() As String
 
@@ -127,7 +127,7 @@ Private Sub btnRefresh_Click()
     On Error GoTo 0
     
     Dim AllResults() As String
-    AllResults = Split(tmpFile, vbNewLine)
+    AllResults = Split(tmpFile, vbCrLf)
     For n = UBound(AllResults) To 0 Step -1
         SubResults = Split(AllResults(n), ":--:")
         'Mid(inbox.SelectedItem.key, 3)
@@ -216,7 +216,7 @@ Private Sub inbox_DblClick()
     On Error GoTo 0
     
     Dim AllResults() As String
-    AllResults = Split(tmpFile, vbNewLine)
+    AllResults = Split(tmpFile, vbCrLf)
     
     Dim SubResults() As String
     Dim n As Long
@@ -248,7 +248,7 @@ Private Sub markAsRead(k As String)
     On Error GoTo 0
     
     Dim AllResults() As String
-    AllResults = Split(tmpFile, vbNewLine)
+    AllResults = Split(tmpFile, vbCrLf)
     For n = UBound(AllResults) To 0 Step -1
         SubResults = Split(AllResults(n), ":--:")
         'Mid(inbox.SelectedItem.key, 3)
@@ -263,7 +263,7 @@ Private Sub markAsRead(k As String)
         End If
     Next n
     
-    WriteFileUnsafe App.Path & "/mail.dat", Join(AllResults, vbNewLine)
+    WriteFileUnsafe App.Path & "/mail.dat", Join(AllResults, vbCrLf)
     
 NoResults:
 End Sub

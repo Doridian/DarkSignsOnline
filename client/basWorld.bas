@@ -274,7 +274,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
         Case "7001" 'mail inbox
             frmDSOMail.EnableAll
             Dim emails() As String
-            emails = Split(s, vbNewLine)
+            emails = Split(s, vbCrLf)
             Dim numEmails As Long
             numEmails = UBound(emails)
             
@@ -285,7 +285,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
                 For n = 0 To UBound(emails) - 1 Step 1
                     emails(n) = "1:--:" & Trim(emails(n))
                 Next n
-                AppendFileUnsafe App.Path & "/mail.dat", Join(emails, vbNewLine) & vbNewLine
+                AppendFileUnsafe App.Path & "/mail.dat", Join(emails, vbCrLf) & vbCrLf
                 frmDSOMail.reloadInbox
             End If
 
@@ -303,7 +303,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
                 frmDSOMailSend.EnableAll
                 frmDSOMailSend.btnSend.Caption = "Send"
                 frmDSOMailSend.Enabled = True
-                MsgBox "Mail failed to send." & vbNewLine & s
+                MsgBox "Mail failed to send." & vbCrLf & s
             End If
 
         Case Else
