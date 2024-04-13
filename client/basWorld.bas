@@ -170,20 +170,6 @@ Public Sub OnLoginSuccess()
     SayCOMM "You have been authorized as " & myUsername & "."
     SayCOMM "Welcome to the Dark Signs Network!"
     SayCOMM "Dark Signs Online - Version " & VersionStr()
-    
-    Dim EmptyParams(0 To 0) As Variant
-    EmptyParams(0) = ""
-    Run_Script "/system/login-1.ds", 1, EmptyParams, "BOOT", True, False, False
-    New_Console_Line 1
-    EmptyParams(0) = ""
-    Run_Script "/system/login-2.ds", 2, EmptyParams, "BOOT", True, False, False
-    New_Console_Line 2
-    EmptyParams(0) = ""
-    Run_Script "/system/login-3.ds", 3, EmptyParams, "BOOT", True, False, False
-    New_Console_Line 3
-    EmptyParams(0) = ""
-    Run_Script "/system/login-4.ds", 4, EmptyParams, "BOOT", True, False, False
-    New_Console_Line 4
 
     If frmConsole.getConnected Then
         frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
