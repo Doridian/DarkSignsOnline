@@ -1605,3 +1605,36 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     Yield
 End Function
 
+' Encoding helpers
+Public Function EncodeBase64Bytes(arrData As Variant) As String
+    Dim typedArrData() As Byte
+    Dim X As Long
+
+    ReDim typedArrData(LBound(arrData) To UBound(arrData))
+    For X = LBound(arrData) To UBound(arrData)
+        typedArrData(X) = arrData(X)
+    Next
+    EncodeBase64Bytes = basConsole.EncodeBase64Bytes(typedArrData)
+End Function
+
+Public Function EncodeBase64Str(ByVal strData As String) As String
+    EncodeBase64Str = basConsole.EncodeBase64Str(strData)
+End Function
+
+Public Function DecodeBase64Bytes(ByVal strData As String) As Variant()
+    Dim Res() As Byte
+    Dim ResVar() As Variant
+    Dim X As Long
+
+    Res = basConsole.DecodeBase64Bytes(strData)
+    ReDim ResVar(LBound(Res) To UBound(Res))
+    For X = LBound(Res) To UBound(Res)
+        ResVar(X) = Res(X)
+    Next
+    DecodeBase64Bytes = ResVar
+End Function
+
+Public Function DecodeBase64Str(ByVal strData As String) As String
+    DecodeBase64Str = basConsole.DecodeBase64Str(strData)
+End Function
+

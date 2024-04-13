@@ -952,27 +952,27 @@ Public Function propertySpace_Size(ByVal s As String) As String
     If propertySpace_Size > Max_Font_Size Then propertySpace_Size = Max_Font_Size
 End Function
 
-Public Function EncodeBase64(ByRef arrData() As Byte) As String
+Public Function EncodeBase64Bytes(ByRef arrData() As Byte) As String
     If LBound(arrData) = UBound(arrData) Then
-        EncodeBase64 = ""
+        EncodeBase64Bytes = ""
         Exit Function
     End If
-    EncodeBase64 = Base64.EncodeByteArray(arrData)
+    EncodeBase64Bytes = Base64.EncodeByteArray(arrData)
 End Function
 
 Public Function EncodeBase64Str(ByVal strData As String) As String
-    EncodeBase64Str = EncodeBase64(StrConv(strData, vbFromUnicode))
+    EncodeBase64Str = EncodeBase64Bytes(StrConv(strData, vbFromUnicode))
 End Function
 
-Public Function DecodeBase64(ByVal strData As String) As Byte()
+Public Function DecodeBase64Bytes(ByVal strData As String) As Byte()
     If Len(strData) = 0 Then
         Dim EmptyData(0 To 0) As Byte
-        DecodeBase64 = EmptyData
+        DecodeBase64Bytes = EmptyData
         Exit Function
     End If
-    DecodeBase64 = Base64.DecodeToByteArray(strData)
+    DecodeBase64Bytes = Base64.DecodeToByteArray(strData)
 End Function
 
 Public Function DecodeBase64Str(ByVal strData As String) As String
-    DecodeBase64Str = StrConv(DecodeBase64(strData), vbUnicode)
+    DecodeBase64Str = StrConv(DecodeBase64Bytes(strData), vbUnicode)
 End Function
