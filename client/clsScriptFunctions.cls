@@ -1371,6 +1371,26 @@ Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
     End If
 End Sub
 
+Public Sub RunForward(ByVal Script As String)
+    AssertLocalOnly
+
+    Dim X As Long
+
+    Dim SParamArr() As Variant
+    ReDim SParamArr(LBound(PrivParameters) To UBound(PrivParameters))
+    For X = LBound(PrivParameters) To UBound(PrivParameters)
+        SParamArr(X) = PrivParameters(X)
+    Next
+
+    Dim Output As String
+    Yield
+    Output = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "FORWARD", False, PrivRedirectOutput, PrivDisableOutput)
+    Yield
+    If PrivDisableOutput And PrivRedirectOutput Then
+        Say Output
+    End If
+End Sub
+
 Public Sub Run(ParamArray XArr() As Variant)
     If UBound(XArr) < 0 Then
         RaiseMiscError "Run needs at least one parameter (the script)"

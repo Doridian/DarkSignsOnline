@@ -1,7 +1,3 @@
 Option Explicit
 
-IF ArgC() > 0 Then
-	Run "dir", ArgV(1)
-Else
-	Run "dir"
-End If
+RunForward "dir"
