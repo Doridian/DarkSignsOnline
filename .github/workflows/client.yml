@@ -2,6 +2,9 @@ on:
   push:
     branches-ignore:
       - main
+    tags-ignore:
+      - latest
+      - main
   workflow_call: {}
 
 concurrency:
