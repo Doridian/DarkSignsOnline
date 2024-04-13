@@ -1,7 +1,5 @@
 Option Explicit
-Dim props, propsforexamples
-props = "{green 12 underline}"
-propsforexamples = "{lgreen 12}"
+Include "/system/commands/help/_util.ds"
 
 Say props & "Command: DISPLAY file optional-start-line optional-max-lines"
 Say propsforexamples & "Example #1: DISPLAY myfile.txt 1 5"

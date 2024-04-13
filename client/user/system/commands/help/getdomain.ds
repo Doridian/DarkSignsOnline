@@ -1,7 +1,5 @@
 Option Explicit
-Dim props, propsforexamples
-props = "{green 12 underline}"
-propsforexamples = "{lgreen 12}"
+Include "/system/commands/help/_util.ds"
 
 Say props & "Command: GETDOMAIN domain-or-ip-server"
 Say propsforexamples & "Example #1: GETDOMAIN 12.55.192.111"

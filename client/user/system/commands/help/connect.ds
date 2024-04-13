@@ -1,7 +1,5 @@
 Option Explicit
-Dim props, propsforexamples
-props = "{green 12 underline}"
-propsforexamples = "{lgreen 12}"
+Include "/system/commands/help/_util.ds"
 
 Say props & "Command: CONNECT server port-number [optional-parameters]"
 Say propsforexamples & "Example #1: CONNECT home.com 80"

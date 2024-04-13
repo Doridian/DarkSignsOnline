@@ -1,7 +1,5 @@
 Option Explicit
-Dim props, propsforexamples
-props = "{green 12 underline}"
-propsforexamples = "{lgreen 12}"
+Include "/system/commands/help/_util.ds"
 
 Say props & "Command: TRANSFER recipient-username amount description"
 Say propsforexamples & "Example #1: TRANSFER admin 5 A payment for you"
