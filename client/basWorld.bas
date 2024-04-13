@@ -285,7 +285,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
                 For n = 0 To UBound(emails) - 1 Step 1
                     emails(n) = "1" & Chr(7) & Trim(emails(n))
                 Next n
-                'AppendFile App.Path & "/mail.dat", Join(emails, vbNewLine)
+                AppendFileUnsafe App.Path & "/mail.dat", Join(emails, vbNewLine)
                 frmDSOMail.reloadInbox
             End If
             
@@ -395,7 +395,7 @@ Public Function EncodeURLParameter( _
     Optional ByVal SpacePlus As Boolean = True) As String
     
     Dim cchEscaped As Long
-    Dim hResult As Long
+    Dim HResult As Long
     
     If Url = "" Then
         EncodeURLParameter = ""
@@ -410,13 +410,13 @@ Public Function EncodeURLParameter( _
     cchEscaped = Len(Url)
     
     EncodeURLParameter = String$(cchEscaped, 0)
-    hResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
-    If hResult = E_POINTER Then
+    HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+    If HResult = E_POINTER Then
         EncodeURLParameter = String$(cchEscaped, 0)
-        hResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+        HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
     End If
 
-    If hResult <> S_OK Then
+    If HResult <> S_OK Then
         Err.Raise Err.LastDllError, "URLUtility.URLEncode", _
                   "System error"
     End If

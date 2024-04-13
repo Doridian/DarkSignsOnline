@@ -696,16 +696,8 @@ End Sub
 
 Public Sub Append(ByVal File As String, ByVal Content As String)
     AssertLocalOnly
-    
-    Dim FF As Long
-    FF = FreeFile
 
-    File = ResolvePath(File)
-    
-    Open SafePath(File) For Binary Access Write As #FF
-        Seek #FF, LOF(FF) + 1
-        Put #FF, , Content
-    Close #FF
+    AppendFile ResolvePath(File), Content
 End Sub
 
 Public Sub Del(ByVal File As String)

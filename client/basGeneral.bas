@@ -65,8 +65,8 @@ Public Function GetFileUnsafe(ByVal FileName As String) As String
     Dim Handle As Long
     Handle = FreeFile
     Open FileName$ For Binary Access Read As #Handle
-    GetFileUnsafe = Space$(LOF(Handle))
-    Get #Handle, , GetFileUnsafe
+        GetFileUnsafe = Space$(LOF(Handle))
+        Get #Handle, , GetFileUnsafe
     Close #Handle
 End Function
 
@@ -78,12 +78,25 @@ Public Function WriteFileUnsafe(ByVal FileName As String, ByVal Contents As Stri
     Dim Handle As Long
     Handle = FreeFile
     Open FileName$ For Binary Access Write As #Handle
-    Put #Handle, , Contents
+        Put #Handle, , Contents
+    Close #Handle
+End Function
+
+Public Function AppendFileUnsafe(ByVal FileName As String, ByVal Contents As String)
+    Dim Handle As Long
+    Handle = FreeFile
+    Open FileName For Binary Access Write As #Handle
+        Seek #Handle, LOF(Handle) + 1
+        Put #Handle, , Contents
     Close #Handle
 End Function
 
 Function WriteFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
     WriteFileUnsafe SafePath(FileName, Prefix), Contents
+End Function
+
+Function AppendFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+    AppendFileUnsafe SafePath(FileName, Prefix), Contents
 End Function
 
 Function GetFile(ByVal FileName As String, Optional ByVal Prefix As String = "") As String

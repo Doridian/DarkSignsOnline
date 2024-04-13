@@ -83,7 +83,9 @@ Public Sub reloadInbox()
     inbox.ListItems.Clear
     
     Dim tmpFile As String
+    On Error GoTo NoEntries
     tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    On Error GoTo 0
     
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
@@ -127,6 +129,8 @@ Public Sub reloadInbox()
         End If
         
     Next n
+
+NoEntries:
 End Sub
 
 Private Sub btnRefresh_Click()
@@ -134,9 +138,12 @@ Private Sub btnRefresh_Click()
     DisableAll
     StatusBar1.SimpleText = "Checking emails..."
     Dim last As String
-    
+    last = ""
+
     Dim tmpFile As String
+    On Error GoTo NoEntries
     tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    On Error GoTo 0
     
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
@@ -153,7 +160,8 @@ Private Sub btnRefresh_Click()
         End If
     Next n
     
-    
+
+NoEntries:
     If last = "" Then
         last = "0"
     End If
@@ -217,7 +225,10 @@ Private Sub inbox_DblClick()
             
     
     Dim tmpFile As String
+    tmpFile = ""
+    On Error Resume Next
     tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    On Error GoTo 0
     
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
@@ -249,7 +260,9 @@ End Sub
 
 Private Sub markAsRead(k As String)
     Dim tmpFile As String
+    On Error GoTo NoResults
     tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    On Error GoTo 0
     
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbNewLine)
@@ -268,6 +281,8 @@ Private Sub markAsRead(k As String)
     Next n
     
     WriteFileUnsafe App.Path & "/mail.dat", Join(AllResults, vbNewLine)
+    
+NoResults:
 End Sub
 
 Private Sub inbox_ColumnClick(ByVal ColumnHeader As LvwColumnHeader)
