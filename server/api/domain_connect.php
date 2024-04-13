@@ -3,6 +3,8 @@
 $rewrite_done = true;
 require_once('function.php');
 
+print_returnwith('4100');
+
 $port = (int)$_REQUEST['port'];
 
 if ($port < 1 || $port > 65535) {
