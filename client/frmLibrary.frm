@@ -776,7 +776,7 @@ Public Sub AddListItems(ByVal s As String)
     
     LV.ListItems.Clear
 
-    If UBound(AllResults) < 1 Then
+    If UBound(AllResults) < 0 Then
         frmLibrary.lStatus = "No results found."
         Exit Sub
     End If
@@ -789,12 +789,12 @@ Public Sub AddListItems(ByVal s As String)
         SubResults = Split(AllResults(n), ":--:")
         
         LV.ListItems.Add , , SubResults(0)
-        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(1)
-        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(2)
+        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64(SubResults(1))
+        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64(SubResults(2))
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , FormatKB(SubResults(3))
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(4)
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(5)
-        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(6)
+        LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , DecodeBase64(SubResults(6))
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(7)
         LV.ListItems(LV.ListItems.Count).ListSubItems.Add , , SubResults(8)
     End If
@@ -804,7 +804,7 @@ Public Sub AddListItems(ByVal s As String)
 End Sub
 
 Private Sub Form_Load()
-    LV.ColumnHeaders.Add 1, , "sID", 1306
+    LV.ColumnHeaders.Add 1, , "ID", 1306
     LV.ColumnHeaders.Add 2, , "Title", 6068
     LV.ColumnHeaders.Add 3, , "Version", 1765
     LV.ColumnHeaders.Add 4, , "Size", 2540
@@ -836,9 +836,7 @@ Private Sub Form_Load()
     Dim n As Long
     For n = 1 To 999
         List3.AddItem "Channel " & Format(n, "000")
-    
     Next n
-
 End Sub
 
 Sub LoadCategoryList()
@@ -901,26 +899,16 @@ Private Sub Form_Resize()
     
 End Sub
 
-
-
-
-
-
-
-
 Sub UpdateResults()
-
     Dim sCategory As String
     sCategory = Trim(List1.Text)
     If sCategory = "" Then Exit Sub
-    
+
     LV.ListItems.Clear
-    
+
     lStatus.Caption = "Updating..."
-    
+
     RunPage "file_database.php?returnwith=4301&getcategory=" & EncodeURLParameter(sCategory), 5, False, "", False
-    
-    
 End Sub
 
 
@@ -938,28 +926,18 @@ zxc:
 End Sub
 
 Public Sub AddtoRemoveList(ByVal s As String)
-
     List2.Clear
 
     Dim sA() As String
     sA = Split(s, ":--:")
-    
+
     Dim n As Long
     For n = UBound(sA) To 0 Step -1
-    
         If Trim(sA(n)) <> "" Then
-        
-            List2.AddItem sA(n)
-        
+            List2.AddItem DecodeBase64(sA(n))
         End If
-    
     Next n
-
 End Sub
-
-
-
-
 
 Private Sub List1_Click()
     UpdateResults

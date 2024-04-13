@@ -10,6 +10,17 @@ if ($returnwith === '0') {
 
 echo $returnwith;
 
+function file_encode($str) {
+    global $ver;
+    if ($ver > 1) {
+        return base64_encode($str);
+    }
+    while (strpos($str, ':--:') !== false) {
+        $str = str_replace(':--:', ':-:', $str);
+    }
+    return $str;
+}
+
 $getfile = $_REQUEST['getfile'];
 if (!empty($getfile)){
     $stmt = $db->prepare('SELECT filename, filedata FROM file_database WHERE id = ? AND deleted = 0 AND ver = ?');
@@ -44,7 +55,7 @@ if (!empty($getforremoval)){
     $res = $stmt->get_result();
 
     while($row = $res->fetch_array()) {
-        echo $row['id'] . ': ' . $row['title'] . '(version ' . $row['version'] . ') ' . date('d.m.Y', $row['createtime'])  . ':--:';
+        echo file_encode($row['id'] . ': ' . $row['title'] . '(version ' . $row['version'] . ') ' . date('d.m.Y', $row['createtime'])) . ':--:';
     }
 
     exit;
@@ -58,7 +69,7 @@ if (!empty($getcategory)){
     $res = $stmt->get_result();
     while($row = $res->fetch_array()) {
         $time = $row['createtime'];
-        echo $row['id'].":--:".$row['title'].":--:".$row['version'].":--:".$row['filesize'].":--:".idToUser($row['owner']).":--:".$row['filename'].":--:".$row['description'].":--:".date('d.m.Y', $time).":--:".date('H:i:s', $time).":--:--:";
+        echo $row['id'].':--:'.file_encode($row['title']).':--:'.file_encode($row['version']).':--:'.$row['filesize'].':--:'.idToUser($row['owner']).':--:'.$row['filename'].':--:'.file_encode($row['description']).':--:'.date('d.m.Y', $time).':--:'.date('H:i:s', $time).':--:--:';
     }
     exit;
 }
