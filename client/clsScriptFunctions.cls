@@ -617,7 +617,7 @@ Public Sub SayCOMM(ParamArray Params() As Variant)
     If sStr = "" Then
         Exit Sub
     End If
-    basWorld.SayCOMM sStr, ConsoleID
+    basWorld.SayCOMM sStr
     Yield
 End Sub
 

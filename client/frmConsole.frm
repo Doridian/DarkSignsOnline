@@ -1003,7 +1003,7 @@ End Sub
 
 Public Sub KeepOnline()
     If Authorized = True Then
-        RunPage "z_online.php?get=1", ActiveConsole
+        RunPage "z_online.php?get=1&version=" & EncodeURLParameter(VersionStr()), ActiveConsole
     End If
 End Sub
 
@@ -1338,25 +1338,25 @@ Private Sub sockIRC_DataArrival(ByVal bytesTotal As Long)
     Dim ArrivedData$
     sockIRC.GetData ArrivedData$, vbString
 
-    Dim temp$
+    Dim Temp$
     For X& = 1 To bytesTotal    'get every byte we received, but only one at a time
-        temp$ = Mid(ArrivedData$, X, 1)
-        If temp$ = Chr$(10) Then    'if we received a newline character (this is the end of the message)
+        Temp$ = Mid(ArrivedData$, X, 1)
+        If Temp$ = Chr$(10) Then    'if we received a newline character (this is the end of the message)
             processCommand  'process the entire command
             Data$ = ""      'clear the data$
         'if we received a newline character or a carriage return, dont add them to the message
-        ElseIf temp$ <> Chr$(13) Then
-            Data$ = Data$ + temp$
+        ElseIf Temp$ <> Chr$(13) Then
+            Data$ = Data$ + Temp$
         End If
     Next
 End Sub
-Private Sub IRCTxtList(newText As String)
+Private Sub IRCTxtList(NewText As String)
     Dim i As Integer
     
     For i = 48 To 0 Step -1
         ircMsgs(i + 1) = ircMsgs(i)
     Next
-    ircMsgs(0) = newText
+    ircMsgs(0) = NewText
     curMsg = -1
     'MsgBox newText
 End Sub

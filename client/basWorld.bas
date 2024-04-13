@@ -101,7 +101,7 @@ Public Function myPassword() As String
     myPassword = RegLoad("myPasswordDev", "")
 End Function
 
-Public Sub SayCOMM(s As String, Optional ByVal ConsoleID As Integer)
+Public Sub SayCOMM(s As String)
     'send a message to the comm
     
     Dim n As Integer
@@ -243,6 +243,9 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
         Case "0001" 'it's the user list
             LoadUserList s, ConsoleID
 
+        Case "0002" ' saycomm
+            SayCOMM s
+
         ' FILE LIBRARY
         Case "4300" 'file library upload complete
             frmLibrary.lStatus.Caption = s
@@ -320,7 +323,7 @@ Public Sub SayCommMultiLines(ByVal s As String, ConsoleID As Integer)
 
     Dim n As Long
     For n = 0 To UBound(sA)
-        SayCOMM sA(n), ConsoleID
+        SayCOMM sA(n)
     Next n
 End Sub
 
@@ -367,7 +370,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal ConsoleID As Integer)
         tmpS = frmConsole.ListOfUsers.List(n)
         If Trim(UsersOnline) <> "" Then
             If InStr(i(UsersOnline), ":" & i(tmpS)) = 0 Then
-                SayCOMM "User " & Trim(tmpS) & " has signed in.", ConsoleID
+                SayCOMM "User " & Trim(tmpS) & " has signed in."
             End If
         End If
     Next n
@@ -381,7 +384,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal ConsoleID As Integer)
         tmpS = Trim(sSplit(n))
         If Len(tmpS) > 2 Then
             If InStr(i(s), ":" & i(tmpS) & ":") = 0 Then
-                SayCOMM "User " & Trim(tmpS) & " has signed out.", ConsoleID
+                SayCOMM "User " & Trim(tmpS) & " has signed out."
             End If
         End If
     Next n
