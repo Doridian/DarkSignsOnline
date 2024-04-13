@@ -95,23 +95,22 @@ ScriptCancelled:
 ScriptEnd:
     Run_Script_Code = G.ScriptGetOutput()
     G.CleanupScriptTasks
-    New_Console_Line ConsoleID
     cPath(ConsoleID) = OldPath
 End Function
 
-Public Function Run_Script(ByVal Filename As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean) As String
+Public Function Run_Script(ByVal FileName As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean) As String
     If ScriptParameters(0) = "" Then
-        ScriptParameters(0) = Filename
+        ScriptParameters(0) = FileName
     End If
     
     DoEvents
 
     Dim ShortFileName As String
     'file name should be from local dir, i.e: /system/startup.ds
-    ShortFileName = Filename
+    ShortFileName = FileName
 
     Dim tmpAll As String
-    tmpAll = GetFile(Filename)
+    tmpAll = GetFile(FileName)
     Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, ErrorHandling, RedirectOutput, DisableOutput)
 End Function
 

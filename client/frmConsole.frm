@@ -620,7 +620,7 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     If Shift = 2 And KeyCode = vbKeyC Then
         'cancel the running script
         CancelScript(ActiveConsole) = True
-        New_Console_Line ActiveConsole
+        New_Console_Line_InProgress ActiveConsole
         Exit Sub
     End If
     
@@ -638,7 +638,7 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     
     If ConsolePaused(ActiveConsole) = True Then
         ConsolePaused(ActiveConsole) = False
-        New_Console_Line ActiveConsole
+        New_Console_Line_InProgress ActiveConsole
         Exit Sub
     End If
     
@@ -663,36 +663,26 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
            End If
            Exit Sub
         End If
-    Else
-        If KeyCode = vbKeyUp Or KeyCode = vbKeyDown Then
-            Dim tmpS As String, tmpInputString As String
-            If InStr(Console(ActiveConsole, 1).Caption, ">") > 0 Then
-                tmpS = Mid(Console(ActiveConsole, 1).Caption, InStr(Console(ActiveConsole, 1).Caption, ">") + 1, Len(Console(ActiveConsole, 1).Caption))
-                tmpInputString = Mid(Console(ActiveConsole, 1).Caption, 1, InStr(Console(ActiveConsole, 1).Caption, ">") + 1)
-            Else
-                tmpS = Console(ActiveConsole, 1).Caption
-                tmpInputString = ""
-            End If
-            tmpS = Trim(Replace(tmpS, "_", ""))
-            'don't exit sub here
-        End If
-    
-        If KeyCode = vbKeyDown Then
-            If RecentCommandsIndex(ActiveConsole) <= 0 Then Exit Sub
-            RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) - 1
-            Console(ActiveConsole, 1).Caption = tmpInputString & RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole)) & "_"
-            QueueConsoleRender
-            Exit Sub
-        End If
-        If KeyCode = vbKeyUp Then
-            If RecentCommandsIndex(ActiveConsole) >= 99 Then Exit Sub
-            If Trim(RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole) + 1)) = "" Then Exit Sub
-            RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) + 1
-            If RecentCommandsIndex(ActiveConsole) = 1 Then RecentCommands(ActiveConsole, 0) = tmpS
-            Console(ActiveConsole, 1).Caption = tmpInputString & RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole)) & "_"
-            QueueConsoleRender
-            Exit Sub
-        End If
+    ElseIf KeyCode = vbKeyDown Then
+        If RecentCommandsIndex(ActiveConsole) <= 0 Then Exit Sub
+        RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) - 1
+
+        CurrentPromptInput(ActiveConsole) = RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole))
+        MoveUnderscoreToEnd ActiveConsole
+        RefreshCommandLinePrompt ActiveConsole
+        QueueConsoleRender
+        Exit Sub
+    ElseIf KeyCode = vbKeyUp Then
+        If RecentCommandsIndex(ActiveConsole) >= 99 Then Exit Sub
+        If Trim(RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole) + 1)) = "" Then Exit Sub
+        RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) + 1
+        If RecentCommandsIndex(ActiveConsole) = 1 Then RecentCommands(ActiveConsole, 0) = CurrentPromptInput(ActiveConsole)
+
+        CurrentPromptInput(ActiveConsole) = RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole))
+        MoveUnderscoreToEnd ActiveConsole
+        RefreshCommandLinePrompt ActiveConsole
+        QueueConsoleRender
+        Exit Sub
     End If
 
     Add_Key KeyCode, Shift, ActiveConsole
@@ -1046,6 +1036,7 @@ Public Sub Start_Console(ByVal ConsoleID As Integer)
     Else
         Run_Script "/system/newconsole.ds", ConsoleID, EmptyParams, "BOOT", True, False, False
     End If
+    New_Console_Line ConsoleID
 End Sub
 
 Private Sub tmrPrintChat_Timer()

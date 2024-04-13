@@ -42,8 +42,15 @@ Public Type ConsoleLine
     DrawB As Long
 End Type
 
+Public CurrentPromptInput(1 To 4) As String
+Public LastPromptRendered(1 To 4) As String
+Public LastPathRendered(1 To 4) As String
+Public CurrentPromptCursorIndex(1 To 4) As Long
+
 Public RecentCommandsIndex(1 To 4) As Integer
 Public RecentCommands(1 To 4, 0 To 99) As String
+
+Public CurrentPromptVisible(1 To 4) As Boolean
 
 Public yDiv As Integer  'the amount of vertical space between each console line
 
@@ -68,27 +75,25 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal Conso
     If KeyCode = vbKeyRight Then MoveUnderscoreRight ConsoleID: Exit Sub
     
     If KeyCode = vbKeyReturn Then
-
+        Dim CommandStr As String
+        CommandStr = CurrentPromptInput(ConsoleID)
+        CurrentPromptInput(ConsoleID) = ""
         RecentCommandsIndex(ConsoleID) = 0
-        'kill the no longer required underscore
-        Console(ConsoleID, 1).Caption = Replace(Console(ConsoleID, 1).Caption, "_", "")
-        'save in recent typed commands
-        AddToRecentCommands Console(ConsoleID, 1).Caption
-        
+        AddToRecentCommands CommandStr
+
         'process the command, unless it is input
         If WaitingForInput(ConsoleID) = True Then
-            tmpS = Trim(Console(ConsoleID, 1).Caption)
-            If InStr(tmpS, ">") > 0 Then tmpS = Mid(tmpS, InStr(tmpS, ">") + 1, Len(tmpS))
-            WaitingForInputReturn(ConsoleID) = Trim(tmpS)
             cPath(ConsoleID) = cPath_tmp(ConsoleID)
+            WaitingForInputReturn(ConsoleID) = CommandStr
             WaitingForInput(ConsoleID) = False
-            Shift_Console_Lines ConsoleID
-            Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
-            Console(ConsoleID, 1) = Console_Line_Defaults
+            If CancelScript(ConsoleID) Then
+                New_Console_Line ConsoleID
+            Else
+                New_Console_Line_InProgress ConsoleID
+            End If
         Else
-            
-            Run_Command Console(ConsoleID, 1), ConsoleID, False
-            
+            Run_Command CommandStr, ConsoleID, False
+            New_Console_Line ConsoleID
         End If
 
         Exit Sub
@@ -128,7 +133,7 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal Conso
     'everything else
     Select Case KeyCode
         Case "192": If Shift = 1 Then Insert_Char "~", ConsoleID Else Insert_Char "`", ConsoleID
-        Case "189": If Shift = 1 Then Insert_Char "-", ConsoleID Else Insert_Char "-", ConsoleID
+        Case "189": If Shift = 1 Then Insert_Char "_", ConsoleID Else Insert_Char "-", ConsoleID
         Case "187": If Shift = 1 Then Insert_Char "+", ConsoleID Else Insert_Char "=", ConsoleID
         Case "219": If Shift = 1 Then Insert_Char "{", ConsoleID Else Insert_Char "[", ConsoleID
         Case "221": If Shift = 1 Then Insert_Char "}", ConsoleID Else Insert_Char "]", ConsoleID
@@ -193,7 +198,6 @@ End Sub
 
 
 Public Sub AddToRecentCommands(ByVal s As String)
-    If InStr(s, ">") > 0 Then s = Mid(s, InStr(s, ">") + 1, Len(s))
     If Trim(s) = "" Then Exit Sub
         
     If i(s) = RecentCommands(ActiveConsole, 1) Then GoTo SkipAddingIt
@@ -211,82 +215,89 @@ SkipAddingIt:
     RecentCommandsIndex(ActiveConsole) = 0
 End Sub
 
+Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer, Optional ByVal HideUnderscoreRenderLast As Boolean)
+    If Not CurrentPromptVisible(ConsoleID) Then
+        Exit Sub
+    End If
+    Console(ConsoleID, 1) = Console_Line_Defaults
+
+    Dim PromptFull As String
+    
+    If HideUnderscoreRenderLast Then
+        Console(ConsoleID, 1).Caption = LastPathRendered(ConsoleID) & "> " & LastPromptRendered(ConsoleID)
+        Exit Sub
+    End If
+
+    LastPathRendered(ConsoleID) = cPath(ConsoleID)
+    PromptFull = CurrentPromptInput(ConsoleID)
+    LastPromptRendered(ConsoleID) = PromptFull
+
+    Dim CursorIdx As Long
+    CursorIdx = CurrentPromptCursorIndex(ConsoleID)
+    If CursorIdx > Len(PromptFull) Then
+        CursorIdx = Len(PromptFull)
+        CurrentPromptCursorIndex(ConsoleID) = CursorIdx
+    End If
+
+    Dim PreUnderscore As String
+    Dim PostUnderscore As String
+    If CursorIdx < 1 Then
+        PreUnderscore = ""
+        PostUnderscore = PromptFull
+    Else
+        PreUnderscore = Left(PromptFull, CursorIdx)
+        PostUnderscore = Mid(PromptFull, CursorIdx + 1)
+    End If
+
+    Console(ConsoleID, 1).Caption = LastPathRendered(ConsoleID) & "> " & PreUnderscore & "_" & PostUnderscore
+End Sub
+
 Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
-    Dim part1 As String, part2 As String, s As String
-    
-    s = Console(ConsoleID, 1).Caption
-    If Right(s, 1) = "_" Then Exit Sub
-    
-    If InStr(s, "_") = 0 Then Exit Sub
-    part1 = Mid(s, 1, InStr(s, "_") + 1)
-    part2 = Mid(s, InStr(s, "_") + 2, Len(s))
-    
-    s = Replace(part1, "_", "") & "_" & part2
-    
+    CurrentPromptCursorIndex(ConsoleID) = CurrentPromptCursorIndex(ConsoleID) + 1
+    If CurrentPromptCursorIndex(ConsoleID) > Len(CurrentPromptInput(ConsoleID)) Then
+        CurrentPromptCursorIndex(ConsoleID) = Len(CurrentPromptInput(ConsoleID))
+    End If
 
-    'If InStr(s, "_") < Len(Console_Prompt(True)) Then Exit Sub
-    
-    Console(ConsoleID, 1).Caption = s
-
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MoveUnderscoreToHome(ByVal ConsoleID As Integer)
-    Dim s As String
-    s = Console(ConsoleID, 1).Caption
-    If InStr(s, "_") = 0 Then Exit Sub
-    
-
-    s = Console_Prompt(False, ConsoleID) & "_" & Trim(Replace(Mid(s, Len(Console_Prompt(False, ConsoleID)), 999), "_", ""))
-
-    
-    Console(ConsoleID, 1).Caption = s
-
+    CurrentPromptCursorIndex(ConsoleID) = 0
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MoveUnderscoreToEnd(ByVal ConsoleID As Integer)
-    Dim s As String
-    s = Console(ConsoleID, 1).Caption
-    
-    s = Replace(s, "_", "") & "_"
-
-    Console(ConsoleID, 1).Caption = s
-
+    CurrentPromptCursorIndex(ConsoleID) = Len(CurrentPromptInput(ConsoleID))
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MoveUnderscoreLeft(ByVal ConsoleID As Integer)
-    Dim part1 As String, part2 As String, s As String
-    
-    s = Console(ConsoleID, 1).Caption
-    If InStr(s, "_") = 0 Then Exit Sub
-    part1 = Mid(s, 1, InStr(s, "_") - 2)
-    part2 = Mid(s, InStr(s, "_") - 1, Len(s))
-    
-    s = part1 & "_" & Replace(part2, "_", "")
-    
-    If InStr(s, "_") < Len(Console_Prompt(True, ConsoleID)) Then Exit Sub
-    
-    Console(ConsoleID, 1).Caption = s
+    CurrentPromptCursorIndex(ConsoleID) = CurrentPromptCursorIndex(ConsoleID) - 1
+    If CurrentPromptCursorIndex(ConsoleID) < 0 Then
+        CurrentPromptCursorIndex(ConsoleID) = 0
+    End If
 
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub Insert_Char(ByVal sChar As String, ByVal ConsoleID As Integer)
     Dim tmpS As String
     
-    tmpS = Replace(Console(ConsoleID, 1).Caption, "_", sChar + "_")
-    
-    
-    Console(ConsoleID, 1).Caption = tmpS
+    CurrentPromptInput(ConsoleID) = CurrentPromptInput(ConsoleID) & sChar
+    MoveUnderscoreRight ConsoleID
 
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub New_Console_Line_InProgress(ByVal ConsoleID As Integer)
     Shift_Console_Lines ConsoleID
-    
+
+    CurrentPromptVisible(ConsoleID) = False
     Console(ConsoleID, 1) = Console_Line_Defaults
     Console(ConsoleID, 1).Caption = " "
 
@@ -295,29 +306,24 @@ End Sub
 
 Public Sub New_Console_Line(ByVal ConsoleID As Integer)
     Shift_Console_Lines ConsoleID
-    
-    Console(ConsoleID, 1) = Console_Line_Defaults
-    'add the standard prompt if required
-    Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
+
+    CurrentPromptVisible(ConsoleID) = True
+    CurrentPromptInput(ConsoleID) = ""
+    RefreshCommandLinePrompt ConsoleID
 
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     Dim n As Integer
+
+    If CurrentPromptVisible(ConsoleID) Then
+        RefreshCommandLinePrompt ConsoleID, True
+    End If
     For n = 299 To 2 Step -1
         Console(ConsoleID, n) = Console(ConsoleID, n - 1)
     Next n
-    
-    '--------------------------------------------------
-    ' if the line is just something like "/> _" , it should be blanked
-    If InStr(Console(ConsoleID, 2).Caption, ">") > 0 Then
-        If Trim(Mid(Console(ConsoleID, 2).Caption, InStr(Console(ConsoleID, 2).Caption, ">") + 1, 99)) = "_" Then
-            Console(ConsoleID, 2).Caption = ""
-        End If
-    End If
-    '--------------------------------------------------
-    
+
     frmConsole.QueueConsoleRender
 End Sub
 
@@ -331,52 +337,36 @@ Public Sub Shift_Console_Lines_Reverse(ByVal ConsoleID As Integer)
 End Sub
 
 Public Sub RemLastKey(ByVal ConsoleID As Integer)
-    'backspace
-    Dim tmpS As String
-    tmpS = Console(ConsoleID, 1).Caption
+    Dim SelectionIndex As Long
+    SelectionIndex = CurrentPromptCursorIndex(ConsoleID)
+    If SelectionIndex <= 0 Then
+        Exit Sub
+    End If
     
-    'tmpS = Remove_Property_Space(tmpS) 'this was causing the backspace error
-    
-    
-    If InStr(tmpS, "_") = 0 Then Exit Sub 'no underscore found = error -> exit
-    
-    Dim part1 As String, part2 As String
-    part1 = Mid(tmpS, 1, InStr(tmpS, "_") - 2)
-    part2 = Mid(tmpS, InStr(tmpS, "_") + 1, Len(tmpS))
-    
+    Dim Prompt As String
+    Prompt = CurrentPromptInput(ConsoleID)
+    Prompt = Left(Prompt, SelectionIndex - 1) & Mid(Prompt, SelectionIndex + 1)
+    CurrentPromptInput(ConsoleID) = Prompt
+    MoveUnderscoreLeft ConsoleID
 
-    tmpS = part1 & "_" & part2
-    
-    If Len(part1) < Len(Console_Prompt(False, ConsoleID)) Then Exit Sub
-    
-    
-    Console(ConsoleID, 1).Caption = tmpS
-
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub RemNextKey(ByVal ConsoleID As Integer)
-    'backspace
-    Dim tmpS As String
-    tmpS = Console(ConsoleID, 1).Caption
-    If InStr(tmpS, "_") = 0 Then Exit Sub 'no underscore found = error -> exit
-    
-    Dim part1 As String, part2 As String
-    part1 = Mid(tmpS, 1, InStr(tmpS, "_") - 1)
-    part2 = Mid(tmpS, InStr(tmpS, "_") + 2, Len(tmpS))
-    
+    Dim Prompt As String
+    Prompt = CurrentPromptInput(ConsoleID)
 
+    Dim SelectionIndex As Long
+    SelectionIndex = CurrentPromptCursorIndex(ConsoleID)
+    If SelectionIndex >= Len(Prompt) Then
+        Exit Sub
+    End If
+    
+    Prompt = Left(Prompt, SelectionIndex) & Mid(Prompt, SelectionIndex + 2)
+    CurrentPromptInput(ConsoleID) = Prompt
 
-    tmpS = part1 & "_" & part2
-    
-    
-    'it's regular input, don't allow it to backspace beyond the input string
-    If Len(part1) < Len(Console_Prompt(False, ConsoleID)) Then Exit Sub
-
-    
-    
-    Console(ConsoleID, 1).Caption = tmpS
-
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
@@ -385,8 +375,9 @@ Public Sub Reset_Console(ByVal ConsoleID As Integer)
     For n = 1 To 299
         Console(ConsoleID, n) = Console_Line_Defaults
     Next n
-    
-    Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
+
+    CurrentPromptInput(ConsoleID) = ""
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
@@ -562,14 +553,6 @@ Public Function Console_FontName(ByVal consoleIndex As Integer, ByVal ConsoleID 
     End If
 End Function
 
-Public Function Console_Prompt(ByVal includeUnderscore As Boolean, ByVal ConsoleID As Integer) As String
-    'get the console prompt that asks the user to enter information
-    Dim ext As String
-    If includeUnderscore = True Then ext = "_" Else ext = ""
-    
-    Console_Prompt = cPath(ConsoleID) & ">" & " " & ext
-End Function
-
 Public Function Console_Line_Defaults() As ConsoleLine
     Console_Line_Defaults.Caption = ""
     Console_Line_Defaults.FontBold = RegLoad("Default_FontBold", "True")
@@ -658,7 +641,7 @@ SkipPropertySpaceNow:
     
     If withNewLineAfter = True Then
         'go to the next line
-        New_Console_Line ConsoleID
+        New_Console_Line_InProgress ConsoleID
     Else
         Console(ConsoleID, 2) = Console(ConsoleID, 1)
     End If
