@@ -285,11 +285,11 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
                 For n = 0 To UBound(emails) - 1 Step 1
                     emails(n) = "1" & Chr(7) & Trim(emails(n))
                 Next n
-                AppendFileUnsafe App.Path & "/mail.dat", Join(emails, vbNewLine)
+                AppendFileUnsafe App.Path & "/mail.dat", Join(emails, vbNewLine) & vbNewLine
                 frmDSOMail.reloadInbox
             End If
-            
-            frmDSOMail.StatusBar1.SimpleText = "Current emails: ?" & vbTab & "New emails: " & numEmails
+
+            frmDSOMail.StatusBar1.SimpleText = "Current emails: " & frmDSOMail.inbox.ListItems.Count & vbTab & "New emails: " & numEmails
         Case "7002" ' Send msg.s
             If s = "success" Then
                 frmDSOMailSend.EnableAll
