@@ -46,6 +46,8 @@ Public Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal
        
 Public Declare Function StrFormatByteSize Lib "shlwapi" Alias "StrFormatByteSizeA" (ByVal dw As Long, ByVal pszBuf As String, ByRef cchBuf As Long) As String
 
+Private SettingsCollection As New Collection
+
 Public Function GetFile(ByVal fn As String) As String
     
     'fn = Replace(fn, "/", "\")
@@ -299,12 +301,28 @@ zxc:
     Close #FF
 End Sub
 
-Public Sub RegSave(sCat As String, sVal As String)
-    SaveSetting App.Title, "Settings", i(sCat), sVal
+Public Sub RegSave(ByVal sCat As String, ByVal sVal As String)
+    sCat = i(sCat)
+    sVal = Trim(sVal)
+
+    On Error Resume Next
+    SettingsCollection.Remove sCat
+    On Error GoTo 0
+    SettingsCollection.Add sVal, sCat
+    SaveSetting App.Title, "Settings", sCat, sVal
 End Sub
 
-Public Function RegLoad(sCat As String, sDefault As String) As String
-    RegLoad = Trim(GetSetting(App.Title, "Settings", i(sCat), sDefault))
+Public Function RegLoad(ByVal sCat As String, ByVal sDefault As String) As String
+    sCat = i(sCat)
+    sDefault = Trim(sDefault)
+
+    On Error GoTo NoSuchItem
+    RegLoad = SettingsCollection.Item(sCat)
+    Exit Function
+
+NoSuchItem:
+    RegLoad = GetSetting(App.Title, "Settings", sCat, sDefault)
+    SettingsCollection.Add RegLoad, sCat
 End Function
 
 Public Function ReverseString(s As String) As String
