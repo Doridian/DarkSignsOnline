@@ -856,32 +856,43 @@ Public Sub PAUSE(Optional ByVal Prompt As String = "")
     Yield
 End Sub
 
-Public Sub LOGIN()
+Public Sub LOGIN(Optional ByVal Silent As Boolean = False)
     AssertLocalOnly
+
+    Dim PrintOutput As Boolean
+    PrintOutput = (Not PrivDisableOutput) And (Not PrivRedirectOutput) And (Not Silent)
 
     While LoginInProgress
         Yield
     Wend
 
     If basWorld.Authorized = True Then
-        SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
+        If PrintOutput Then
+            SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
+        End If
         Exit Sub
     End If
 
     Dim isBad As Boolean
     isBad = False
     If myUsername = "" Then
-        SayRaw ConsoleID, "{14, orange,  center}Your username is not set - type: USERNAME = ""[username]"" to set it."
+        If PrintOutput Then
+            SayRaw ConsoleID, "{14, orange,  center}Your username is not set - type: USERNAME = ""[username]"" to set it."
+        End If
         isBad = True
     End If
     If myPassword = "" Then
-        SayRaw ConsoleID, "{14, orange, center}Your password is not set - type: PASSWORD = ""[password]"" to set it."
+        If PrintOutput Then
+            SayRaw ConsoleID, "{14, orange, center}Your password is not set - type: PASSWORD = ""[password]"" to set it."
+        End If
         isBad = True
     End If
 
     If isBad = True Then
-        SayRaw ConsoleID, "Warning - You are not logged in!{16 center underline}"
-        SayRaw ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
+        If PrintOutput Then
+            SayRaw ConsoleID, "Warning - You are not logged in!{16 center underline}"
+            SayRaw ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
+        End If
         RaiseMiscError "Username and/or password not set"
     End If
 
