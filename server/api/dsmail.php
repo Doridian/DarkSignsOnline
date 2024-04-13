@@ -19,7 +19,7 @@ if ($action === 'inbox')
 	$result = $stmt->get_result();
 	while ($mail = $result->fetch_assoc())
 	{
-		echo 'X_'.$mail['id'].chr(7).$mail['from_user'].chr(7).$mail['subject'].chr(7).$mail['message'].chr(7).$mail['time']."\n";
+		echo 'X_'.$mail['id'].chr(7).$mail['from_user'].chr(7).$mail['subject'].chr(7).$mail['message'].chr(7).$mail['time']."\r\n";
 	}
 	exit;
 }
@@ -32,7 +32,7 @@ if ($action === 'inbox')
 	$result = $stmt->get_result();
 	while ($mail = $result->fetch_assoc())
 	{
-		echo 'X_'.$mail['id'].chr(7).$mail['to_user'].chr(7).$mail['subject'].chr(7).$mail['message'].chr(7).$mail['time']."\n";
+		echo 'X_'.$mail['id'].chr(7).$mail['to_user'].chr(7).$mail['subject'].chr(7).$mail['message'].chr(7).$mail['time']."\r\n";
 	}
 	exit;
 }*/
