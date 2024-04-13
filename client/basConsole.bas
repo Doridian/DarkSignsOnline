@@ -528,7 +528,7 @@ Public Function Console_FontSize(ByVal consoleIndex As Integer, ByVal ConsoleID 
     
     'if not specified, get the defaul
     If Console_FontSize = "" Then
-        Console_FontSize = RegLoad("Default_FontSize", "10")
+        Console_FontSize = Console_Line_Defaults.FontSize
         Exit Function
     End If
     
@@ -544,9 +544,9 @@ Public Function Console_FontColor(ByVal consoleIndex As Integer, ByVal ConsoleID
     
     If Console_FontColor = 0 Then
         'if no color is specified, make it white
-        Console_FontColor = RegLoad("Default_FontColor", RGB(255, 255, 255))
+        Console_FontColor = Console_Line_Defaults.FontColor
     End If
-    
+
 End Function
 
 Public Function Console_FontName(ByVal consoleIndex As Integer, ByVal ConsoleID As Integer) As String
@@ -558,9 +558,8 @@ Public Function Console_FontName(ByVal consoleIndex As Integer, ByVal ConsoleID 
         Console_FontName = Trim(Console_FontName)
         Exit Function
     Else
-        Console_FontName = RegLoad("Default_FontName", "Verdana")
+        Console_FontName = Console_Line_Defaults.FontName
     End If
-    
 End Function
 
 Public Function Console_Prompt(ByVal includeUnderscore As Boolean, ByVal ConsoleID As Integer) As String
@@ -786,7 +785,7 @@ Public Function Has_Property_Space(ByVal s As String) As Boolean
 End Function
 
 Public Function propertySpace_Name(ByVal s As String) As String
-    propertySpace_Name = RegLoad("Default_FontName", "Verdana")
+    propertySpace_Name = Console_Line_Defaults.FontName
     s = i(s)
     
     If InStr(s, "arial") > 0 Then propertySpace_Name = "Arial"
@@ -930,7 +929,7 @@ Public Function propertySpace_Color(ByVal s As String) As Long
         End If
     End If
     
-    If propertySpace_Color = 777 Then propertySpace_Color = RegLoad("Default_FontColor", RGB(255, 255, 255))
+    If propertySpace_Color = 777 Then propertySpace_Color = Console_Line_Defaults.FontColor
 End Function
 
 Public Function propertySpace_Size(ByVal s As String) As String
@@ -946,8 +945,8 @@ Public Function propertySpace_Size(ByVal s As String) As String
     Next n
     
 
-    If propertySpace_Size = 777 Then propertySpace_Size = RegLoad("Default_FontSize", "10")
-    
+    If propertySpace_Size = 777 Then propertySpace_Size = Console_Line_Defaults.FontSize
+
     If propertySpace_Size < 8 Then propertySpace_Size = 8
     If propertySpace_Size > Max_Font_Size Then propertySpace_Size = Max_Font_Size
 End Function
