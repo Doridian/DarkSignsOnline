@@ -19,7 +19,7 @@ if ($action === 'inbox')
 	$result = $stmt->get_result();
 	while ($mail = $result->fetch_assoc())
 	{
-		echo 'X_'.$mail['id'].':--:'.$mail['from_user'].':--:'.dso_b64_encode($mail['subject']).':--:'.dso_b64_encode($mail['message']).':--:'.$mail['time']."\r\n";
+		echo 'X_'.$mail['id'].':--:'.$mail['from_user'].':--:'.dso_b64_encode($mail['subject']).':--:'.dso_b64_encode($mail['message']).':--:'.date('d.m.Y H:i:s', $mail['time'])."\r\n";
 	}
 	exit;
 }
