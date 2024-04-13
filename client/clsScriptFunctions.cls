@@ -1371,6 +1371,15 @@ Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
     End If
 End Sub
 
+Public Sub Include(ByVal Script As String)
+    AssertLocalOnly
+
+    Dim ScriptData As String
+    ScriptData = GetFile(ResolvePath(Script))
+
+    SControl.AddCode ScriptData
+End Sub
+
 Public Sub RunForward(ByVal Script As String)
     AssertLocalOnly
 
@@ -1505,6 +1514,9 @@ Public Sub RunCode(ParamArray XArr() As Variant)
     RunCodeA Script, SParamArr
 End Sub
 
+Public Sub IncludeCode(ByVal Code As String)
+    SControl.AddCode Code
+End Sub
 
 ' RUN CODE FROM DSO DOMAIN
 
