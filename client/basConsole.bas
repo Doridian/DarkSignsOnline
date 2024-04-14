@@ -649,12 +649,9 @@ End Function
 Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional ByVal OverwriteLineIndex As Long = 0)
     If ConsoleID > 4 Then Exit Function
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
-    
-    Dim ShiftLines As Boolean
-    ShiftLines = False
+
     If OverwriteLineIndex >= 0 Then
         OverwriteLineIndex = 1
-        ShiftLines = True
     Else
         OverwriteLineIndex = (OverwriteLineIndex * -1) + 1
     End If
@@ -685,10 +682,10 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
     Console(ConsoleID, OverwriteLineIndex).PreSpace = True
     Console(ConsoleID, OverwriteLineIndex).Caption = Remove_Property_Space(s)
 
-    If ShiftLines Then
+    If OverwriteLineIndex = 1 Then
         New_Console_Line_InProgress ConsoleID
         'put the current line back at the next line
-        Console(ConsoleID, OverwriteLineIndex) = tmpLine
+        Console(ConsoleID, 1) = tmpLine
     End If
 
     frmConsole.QueueConsoleRender
