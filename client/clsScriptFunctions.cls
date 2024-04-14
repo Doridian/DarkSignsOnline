@@ -35,7 +35,6 @@ Private PrivRedirectOutput As Boolean
 Private PrivOutput As String
 Private PrivServerDomain As String
 Private PrivServerPort As Long
-Private PrivCWD As String
 
 Private PendingCustomDownloads() As Long
 
@@ -76,13 +75,13 @@ End Property
 Public Property Get CWD() As String
     AssertLocalOnly
 
-    CWD = PrivCWD
+    CWD = cPath(PrivConsoleID)
 End Property
 
 Public Property Let CWD(ByVal NewValue As String)
     AssertLocalOnly
 
-    PrivCWD = ResolvePath(CWD)
+    cPath(PrivConsoleID) = ResolvePath(CWD)
 End Property
 
 Public Property Let ExternalEditor(ByVal NewValue As Boolean)
@@ -238,7 +237,7 @@ ExitGetASCII:
     Yield
 End Function
 
-Public Function Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewAllowUnAbort As Boolean, NewCWD As String)
+Public Function Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewAllowUnAbort As Boolean)
     If IsConfigured Then
         Exit Function
     End If
@@ -254,7 +253,6 @@ Public Function Configure(NewConsoleID As Integer, NewScriptFrom As String, NewI
     PrivServerDomain = NewServerDomain
     PrivServerPort = NewServerPort
     PrivAllowUnAbort = NewAllowUnAbort
-    PrivCWD = NewCWD
 End Function
 
 Public Function Cls()
@@ -379,7 +377,7 @@ End Function
 Public Function CD(ByVal DIR As String)
     AssertLocalOnly
 
-    PrivCWD = ResolvePath(DIR)
+    cPath(PrivConsoleID) = ResolvePath(DIR)
     Yield
 End Function
 
@@ -1380,7 +1378,7 @@ Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOu
 
     SParamArr(0) = Script
     Yield
-    RawRunCaptureA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, RedirectOutput, DisableOutput, PrivCWD)
+    RawRunCaptureA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, RedirectOutput, DisableOutput)
     Yield
 End Function
 
@@ -1488,7 +1486,7 @@ Private Function RawRunCaptureCodeA(ByVal RedirectOutput As Boolean, ByVal Disab
 
     SParamArr(0) = "inline://"
     Yield
-    RawRunCaptureCodeA = Run_Script_Code(Code, PrivConsoleID, SParamArr, "RunCode", FileKey, PrivServerDomain, PrivServerPort, False, RedirectOutput, DisableOutput, PrivCWD)
+    RawRunCaptureCodeA = Run_Script_Code(Code, PrivConsoleID, SParamArr, "RunCode", FileKey, PrivServerDomain, PrivServerPort, False, RedirectOutput, DisableOutput)
     Yield
 End Function
 
@@ -1679,7 +1677,7 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     Dim DomScript As String
     DomScript = "dso://" & strDomain & ":" & strPort
     DomainConnectParams(0) = DomScript
-    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput, PrivCWD)
+    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput)
 
     Yield
 End Function

@@ -756,7 +756,8 @@ Private Sub Form_Load()
     
 
     Me.Move 0, 0, Screen.Width, Screen.Height
-
+    
+    cPath(1) = "/home": cPath(2) = "/home": cPath(3) = "/home": cPath(4) = "/home"
     Start_Comm
     
     Stats.Move 0, 0, Me.Width + 120
@@ -1034,9 +1035,9 @@ Public Sub Start_Console(ByVal ConsoleID As Integer)
     EmptyParams(0) = ""
     If ConsoleID = 1 Then
         'run the primary startup script
-        Run_Script "/system/startup.ds", ConsoleID, EmptyParams, "BOOT", True, False, False, "/home"
+        Run_Script "/system/startup.ds", ConsoleID, EmptyParams, "BOOT", True, False, False
     Else
-        Run_Script "/system/newconsole.ds", ConsoleID, EmptyParams, "BOOT", True, False, False, "/home"
+        Run_Script "/system/newconsole.ds", ConsoleID, EmptyParams, "BOOT", True, False, False
     End If
     New_Console_Line ConsoleID
 End Sub

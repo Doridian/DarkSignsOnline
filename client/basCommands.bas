@@ -7,10 +7,6 @@ Private scrConsole(1 To 4) As ScriptControl
 Private scrConsoleContext(1 To 4) As clsScriptFunctions
 Private scrConsoleDScript(1 To 4) As Boolean
 
-Public Function GetConsoleCWD(ByVal ConsoleID As Integer) As String
-    GetConsoleCWD = scrConsoleContext(ConsoleID).CWD
-End Function
-
 Public Sub InitBasCommands()
     Dim X As Integer
     For X = 1 To 4
@@ -23,7 +19,7 @@ Public Sub InitBasCommands()
         Dim CLIArguments(0 To 0) As Variant
         CLIArguments(0) = "/dev/tty" & X
         Set scrConsoleContext(X) = New clsScriptFunctions
-        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False, True, "/home"
+        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False, True
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
 
@@ -49,22 +45,19 @@ Public Function SafePath(ByVal Path As String, Optional ByVal Prefix As String =
 End Function
 
 Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As String
-    Dim CWD As String
-    CWD = GetConsoleCWD(ConsoleID)
-
     If Path = "" Then
         If ConsoleID = 0 Then
             ResolvePath = ""
             Exit Function
         End If
-        ResolvePath = CWD
+        ResolvePath = cPath(ConsoleID)
         Exit Function
     End If
 
     If Left(Path, 1) = "/" Or Left(Path, 1) = "\" Or ConsoleID = 0 Then
         ResolvePath = Path
     Else
-        ResolvePath = CWD & "/" & Path
+        ResolvePath = cPath(ConsoleID) & "/" & Path
     End If
 
     ResolvePath = Replace(ResolvePath, "\", "/")
@@ -758,7 +751,7 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
         Shift_Console_Lines ConsoleID
         Dim EmptyArguments(0 To 0) As Variant
         EmptyArguments(0) = ""
-        Run_Script EditorRunFile, ConsoleID, EmptyArguments, "CONSOLE", True, False, False, GetConsoleCWD(ConsoleID)
+        Run_Script EditorRunFile, ConsoleID, EmptyArguments, "CONSOLE", True, False, False
     End If
     
     
