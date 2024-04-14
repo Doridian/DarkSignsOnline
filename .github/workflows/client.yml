@@ -106,7 +106,7 @@ jobs:
 
         Remove-Item -Force ".\client\dist" -Recurse -ErrorAction Continue
         mkdir ".\client\dist"
-        Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\" -Wait -PassThru
+        Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\build.log" -Wait -PassThru
         Get-Content .\logs\build.log
         if(![System.IO.File]::Exists(".\client\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Build failure?", $path))
