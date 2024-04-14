@@ -18,6 +18,7 @@ Private Base64 As New clsBase64
 
 Public Type ConsoleLine
     Caption As String
+    PreSpace As Boolean
     
     FontColor As Long
     FontName As String
@@ -217,6 +218,7 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
         Exit Sub
     End If
     Console(ConsoleID, 1) = Console_Line_Defaults
+    Console(ConsoleID, 1).PreSpace = False
 
     Dim PromptFull As String
     PromptFull = CurrentPromptInput(ConsoleID)
@@ -476,14 +478,14 @@ DontDraw:
             frmConsole.FontName = Console_FontName(n, ActiveConsole)
             frmConsole.ForeColor = Console_FontColor(n, ActiveConsole)
             
-            tmpS = Console(ActiveConsole, n).Caption
+            tmpS = Trim(Console(ActiveConsole, n).Caption)
 
             Dim HideLine As Boolean
             HideLine = False
             If Console(ActiveConsole, n).Flash = True And Flash = True Then HideLine = True
             If Console(ActiveConsole, n).FlashFast = True And FlashFast = True Then HideLine = True
             If Console(ActiveConsole, n).FlashSlow = True And FlashSlow = True Then HideLine = True
-            If Trim(tmpS) = "-" Or Trim(tmpS) = PreSpace & "-" Then HideLine = True
+            If tmpS = "" Or tmpS = "-" Then HideLine = True
             If HideLine Then
                 frmConsole.Print "  "
                 GoTo NextOne
@@ -505,22 +507,22 @@ DontDraw:
             isAligned = False
             
             If Console(ActiveConsole, n).Center = True Then
-                frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize: frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName: frmConsole.lfont.Caption = Trim(Replace(Console(ActiveConsole, n).Caption, PreSpace, ""))
+                frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize: frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName: frmConsole.lfont.Caption = Trim(Console(ActiveConsole, n).Caption)
                 frmConsole.CurrentX = (frmConsole.Width / 2) - (frmConsole.lfont.Width / 2)
                 isAligned = True
             End If
             If Console(ActiveConsole, n).Right = True Then
-                frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize: frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName: frmConsole.lfont.Caption = Replace(Console(ActiveConsole, n).Caption, PreSpace, "")
+                frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize: frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName: frmConsole.lfont.Caption = Console(ActiveConsole, n).Caption
                 frmConsole.CurrentX = (frmConsole.Width) - (frmConsole.lfont.Width) - ConsoleXSpacing
                 isAligned = True
             End If
             
             If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
-
-            If InStr(tmpS, PreSpace) > 0 Then
+            
+            If Console(ActiveConsole, n).PreSpace Then
                 If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
-                tmpS = Replace(tmpS, PreSpace, "")
             End If
+
             frmConsole.Print tmpS
 NextOne:
     Loop Until printHeight < 0 Or n >= 299
@@ -619,9 +621,7 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional w
     Dim tmpLine As ConsoleLine, propertySpace As String
     
     tmpLine = Console(ConsoleID, 1)
-
-    s = PreSpace & s
- 
+    Console(ConsoleID, 1).PreSpace = True
     If SkipPropertySpace = 1 Then
         Console(ConsoleID, 1).Caption = s
         GoTo SkipPropertySpaceNow
