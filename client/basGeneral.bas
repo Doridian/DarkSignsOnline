@@ -37,7 +37,6 @@ Public Flash As Boolean
 Public LoadingSpinner As Integer
 Public Const LoadingSpinnerAnim = "/-\|"
 
-Public cPath(1 To 4) As String
 Public cPrompt(1 To 4) As String
 
 Public EditorFile_Short As String

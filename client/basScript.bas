@@ -15,16 +15,13 @@ Public WaitingForInputReturn(1 To 4) As String
 Public CancelScript(1 To 4) As Boolean
 
 
-Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ScriptFrom As String, FileKey As String, ServerDomain As String, ServerPort As Long, ErrorHandling As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean) As String
+Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ScriptFrom As String, FileKey As String, ServerDomain As String, ServerPort As Long, ErrorHandling As Boolean, RedirectOutput As Boolean, DisableOutput As Boolean, ByVal InCWD As String) As String
     If ConsoleID < 1 Then
         ConsoleID = 1
     End If
     If ConsoleID > 4 Then
         ConsoleID = 4
     End If
-    Dim OldPath As String
-    OldPath = cPath(ConsoleID)
-
     CancelScript(ConsoleID) = False
 
     Dim s As New ScriptControl
@@ -35,7 +32,7 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False
+    G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False, InCWD
     s.AddObject "DSO", G, True
 
     tmpAll = ParseCommandLineOptional(tmpAll, ServerPort <= 0)
@@ -95,10 +92,9 @@ ScriptCancelled:
 ScriptEnd:
     Run_Script_Code = G.ScriptGetOutput()
     G.CleanupScriptTasks
-    cPath(ConsoleID) = OldPath
 End Function
 
-Public Function Run_Script(ByVal FileName As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean) As String
+Public Function Run_Script(ByVal FileName As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal InCWD As String) As String
     If ScriptParameters(0) = "" Then
         ScriptParameters(0) = FileName
     End If
@@ -111,7 +107,7 @@ Public Function Run_Script(ByVal FileName As String, ByVal ConsoleID As Integer,
 
     Dim tmpAll As String
     tmpAll = GetFile(FileName)
-    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, ErrorHandling, RedirectOutput, DisableOutput)
+    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, ErrorHandling, RedirectOutput, DisableOutput, InCWD)
 End Function
 
 

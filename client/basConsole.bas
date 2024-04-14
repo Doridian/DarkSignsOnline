@@ -8,8 +8,6 @@ Public ConsoleHistory(1 To 4, 1 To 9999) As ConsoleLine
 Public Console(1 To 4, 0 To 299) As ConsoleLine
 Public ConsoleScrollInt(1 To 4) As Integer
 
-Public scrConsoleContext(1 To 4) As clsScriptFunctions
-
 Public ConsolePaused(1 To 4) As Boolean
 
 Public ConsoleWaitingOnRemote(1 To 4) As Boolean
@@ -247,7 +245,7 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
     If WaitingForInput(ConsoleID) Then
         PreSplit = Remove_Property_Space(cPrompt(ConsoleID))
     Else
-        PreSplit = cPath(ConsoleID) & ">"
+        PreSplit = GetConsoleCWD(ConsoleID) & ">"
     End If
 
     Console(ConsoleID, 1).Caption = PreSplit & " " & PreUnderscore & ConsoleCursorChar & PostUnderscore
