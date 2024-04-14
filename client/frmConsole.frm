@@ -757,7 +757,7 @@ Private Sub Form_Load()
 
     Me.Move 0, 0, Screen.Width, Screen.Height
     
-    cPath(1) = "/home": cPath(2) = "/home": cPath(3) = "/home": cPath(4) = "/home"
+    cPath(1) = "/": cPath(2) = "/": cPath(3) = "/": cPath(4) = "/": cPath(5) = "/"
     Start_Comm
     
     Stats.Move 0, 0, Me.Width + 120
