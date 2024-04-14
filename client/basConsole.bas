@@ -440,109 +440,109 @@ Public Sub Print_Console()
 
         '--------------- DRAW ------------------------------------------
         '--------------- DRAW ------------------------------------------
-            If Console(ActiveConsole, n).DrawEnabled = True Then
-                tmpY = frmConsole.CurrentY
-                tmpY2 = tmpY - (yDiv / 2)
-                
-                frmConsole.CurrentY = tmpY
-                
-                If i(Console(ActiveConsole, n).DrawMode) = "solid" Then
-                        'draw it all in one, much faster
-                        frmConsole.Line _
-                        (((frmConsole.Width / DrawDividerWidth) * 0), tmpY2)- _
-                        ((frmConsole.Width / DrawDividerWidth) * _
-                        (DrawDividerWidth), _
-                        (tmpY2 + FontHeight)), _
-                        Console(ActiveConsole, n).DrawColors(1), BF
-                Else
-                    For n2 = 1 To DrawDividerWidth
-                        frmConsole.Line _
-                        (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
-                        ((frmConsole.Width / DrawDividerWidth) * _
-                        (n2), _
-                        (tmpY2 + FontHeight)), _
-                        Console(ActiveConsole, n).DrawColors(n2), BF
-                    Next n2
-                End If
+        If Console(ActiveConsole, n).DrawEnabled = True Then
+            tmpY = frmConsole.CurrentY
+            tmpY2 = tmpY - (yDiv / 2)
             
-                frmConsole.CurrentY = tmpY
-            End If
-DontDraw:
-            '--------------- DRAW ------------------------------------------
-            '--------------- DRAW ------------------------------------------
-
-            frmConsole.FontBold = Console(ActiveConsole, n).FontBold
-            frmConsole.FontItalic = Console(ActiveConsole, n).FontItalic
-            frmConsole.FontUnderline = Console(ActiveConsole, n).FontUnderline
-            frmConsole.FontStrikethru = Console(ActiveConsole, n).FontStrikethru
-
-            frmConsole.FontSize = Console_FontSize(n, ActiveConsole)
+            frmConsole.CurrentY = tmpY
             
-            frmConsole.FontName = Console_FontName(n, ActiveConsole)
-            frmConsole.ForeColor = Console_FontColor(n, ActiveConsole)
-            
-            tmpS = Trim(Console(ActiveConsole, n).Caption)
-
-            Dim HideLine As Boolean
-            HideLine = False
-            If Console(ActiveConsole, n).Flash = True And Flash = True Then HideLine = True
-            If Console(ActiveConsole, n).FlashFast = True And FlashFast = True Then HideLine = True
-            If Console(ActiveConsole, n).FlashSlow = True And FlashSlow = True Then HideLine = True
-            If tmpS = "" Or tmpS = "-" Then HideLine = True
-            If HideLine Then
-                frmConsole.Print "  "
-                GoTo NextOne
-            End If
-
-            frmConsole.CurrentX = ConsoleXSpacing
-
-            'make underscore flash
-            Dim InsertCursorAt As Long
-            If n = 1 Then
-                InsertCursorAt = InStr(tmpS, Chr(7))
+            If i(Console(ActiveConsole, n).DrawMode) = "solid" Then
+                    'draw it all in one, much faster
+                    frmConsole.Line _
+                    (((frmConsole.Width / DrawDividerWidth) * 0), tmpY2)- _
+                    ((frmConsole.Width / DrawDividerWidth) * _
+                    (DrawDividerWidth), _
+                    (tmpY2 + FontHeight)), _
+                    Console(ActiveConsole, n).DrawColors(1), BF
             Else
-                InsertCursorAt = -1
+                For n2 = 1 To DrawDividerWidth
+                    frmConsole.Line _
+                    (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
+                    ((frmConsole.Width / DrawDividerWidth) * _
+                    (n2), _
+                    (tmpY2 + FontHeight)), _
+                    Console(ActiveConsole, n).DrawColors(n2), BF
+                Next n2
             End If
-            tmpS = Replace(tmpS, Chr(7), "")
+        
+            frmConsole.CurrentY = tmpY
+        End If
+DontDraw:
+        '--------------- DRAW ------------------------------------------
+        '--------------- DRAW ------------------------------------------
 
-            If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
+        frmConsole.FontBold = Console(ActiveConsole, n).FontBold
+        frmConsole.FontItalic = Console(ActiveConsole, n).FontItalic
+        frmConsole.FontUnderline = Console(ActiveConsole, n).FontUnderline
+        frmConsole.FontStrikethru = Console(ActiveConsole, n).FontStrikethru
 
-            isAligned = False
-            
-            frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize
-            frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName
-            frmConsole.lfont.Caption = tmpS
-            If Console(ActiveConsole, n).Center = True Then
-                frmConsole.CurrentX = (frmConsole.Width / 2) - (frmConsole.lfont.Width / 2)
-                isAligned = True
-            End If
-            If Console(ActiveConsole, n).Right = True Then
-                frmConsole.CurrentX = (frmConsole.Width) - (frmConsole.lfont.Width) - ConsoleXSpacing
-                isAligned = True
-            End If
-            
-            If Console(ActiveConsole, n).PreSpace Then
-                If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
-            End If
-            
-            If InsertCursorAt > 0 And Flash Then
-                Dim OldX As Long
-                Dim OldY As Long
-                OldX = frmConsole.CurrentX
-                OldY = frmConsole.CurrentY
-            
-                Dim BarX As Long
-                Dim BarY As Long
-                frmConsole.lfont.Caption = Left(tmpS, InsertCursorAt - 1)
-                BarX = frmConsole.CurrentX + frmConsole.lfont.Width
-                BarY = frmConsole.CurrentY
-                frmConsole.Line (BarX, BarY)-(BarX, BarY + FontHeight), Console(ActiveConsole, n).FontColor
-                
-                frmConsole.CurrentX = OldX
-                frmConsole.CurrentY = OldY
-            End If
+        frmConsole.FontSize = Console_FontSize(n, ActiveConsole)
+        
+        frmConsole.FontName = Console_FontName(n, ActiveConsole)
+        frmConsole.ForeColor = Console_FontColor(n, ActiveConsole)
+        
+        tmpS = Trim(Console(ActiveConsole, n).Caption)
 
-            frmConsole.Print tmpS
+        Dim HideLine As Boolean
+        HideLine = False
+        If Console(ActiveConsole, n).Flash = True And Flash = True Then HideLine = True
+        If Console(ActiveConsole, n).FlashFast = True And FlashFast = True Then HideLine = True
+        If Console(ActiveConsole, n).FlashSlow = True And FlashSlow = True Then HideLine = True
+        If tmpS = "" Or tmpS = "-" Then HideLine = True
+        If HideLine Then
+            frmConsole.Print "  "
+            GoTo NextOne
+        End If
+
+        frmConsole.CurrentX = ConsoleXSpacing
+
+        'make underscore flash
+        Dim InsertCursorAt As Long
+        If n = 1 Then
+            InsertCursorAt = InStr(tmpS, Chr(7))
+        Else
+            InsertCursorAt = -1
+        End If
+        tmpS = Replace(tmpS, Chr(7), "")
+
+        If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
+
+        isAligned = False
+        
+        frmConsole.lfont.FontSize = Console_FontName(n, ActiveConsole)
+        frmConsole.lfont.FontName = Console_FontSize(n, ActiveConsole)
+        frmConsole.lfont.Caption = tmpS
+        If Console(ActiveConsole, n).Center = True Then
+            frmConsole.CurrentX = (frmConsole.Width / 2) - (frmConsole.lfont.Width / 2)
+            isAligned = True
+        End If
+        If Console(ActiveConsole, n).Right = True Then
+            frmConsole.CurrentX = (frmConsole.Width) - (frmConsole.lfont.Width) - ConsoleXSpacing
+            isAligned = True
+        End If
+        
+        If Console(ActiveConsole, n).PreSpace Then
+            If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
+        End If
+        
+        If InsertCursorAt > 0 And Flash Then
+            Dim OldX As Long
+            Dim OldY As Long
+            OldX = frmConsole.CurrentX
+            OldY = frmConsole.CurrentY
+        
+            Dim BarX As Long
+            Dim BarY As Long
+            frmConsole.lfont.Caption = Left(tmpS, InsertCursorAt - 1)
+            BarX = frmConsole.CurrentX + frmConsole.lfont.Width
+            BarY = frmConsole.CurrentY
+            frmConsole.Line (BarX, BarY)-(BarX, BarY + FontHeight), Console(ActiveConsole, n).FontColor
+            
+            frmConsole.CurrentX = OldX
+            frmConsole.CurrentY = OldY
+        End If
+
+        frmConsole.Print tmpS
 NextOne:
     Loop Until printHeight < 0 Or n >= 299
 ExitLoop:
@@ -666,13 +666,6 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional w
     Console(ConsoleID, 1).Caption = Remove_Property_Space(s)
 
 SkipPropertySpaceNow:
-    'don't allow multiple lines!
-    If InStr(Console(ConsoleID, 1).Caption, vbCr) > 0 Then
-        'this prevents each say line from being more than one line, stops corruption in console
-        Console(ConsoleID, 1).Caption = Mid(Console(ConsoleID, 1).Caption, 1, InStr(Console(ConsoleID, 1).Caption, vbCr) - 1)
-        Console(ConsoleID, 1).Caption = Console(ConsoleID, 1).Caption  '& "   --- only the first line is shown ---"
-    End If
-    
     If withNewLineAfter = True Then
         'go to the next line
         New_Console_Line_InProgress ConsoleID
