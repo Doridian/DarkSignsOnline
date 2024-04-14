@@ -176,16 +176,23 @@ Public Function ReadLine(ByVal Prompt As String) As String
         Exit Function
     End If
 
-    cPath_tmp(ConsoleID) = cPath(ConsoleID)
-    cPath(ConsoleID) = Prompt
+    cPrompt(ConsoleID) = Prompt
+    CurrentPromptInput(ConsoleID) = ""
     WaitingForInput(ConsoleID) = True
     
     New_Console_Line ConsoleID
 
     While WaitingForInput(ConsoleID)
-        Yield
+        If Not YieldSafe() Then GoTo ReadLineExit
     Wend
     ReadLine = WaitingForInputReturn(ConsoleID)
+    Exit Function
+
+ReadLineExit:
+    ReadLine = ""
+    CurrentPromptInput(ConsoleID) = ""
+    WaitingForInput(ConsoleID) = False
+    Yield
 End Function
 
 Public Function GetKey() As Long

@@ -81,7 +81,6 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal Conso
 
         'process the command, unless it is input
         If WaitingForInput(ConsoleID) = True Then
-            cPath(ConsoleID) = cPath_tmp(ConsoleID)
             WaitingForInputReturn(ConsoleID) = CommandStr
             WaitingForInput(ConsoleID) = False
             If CancelScript(ConsoleID) Then
@@ -238,8 +237,15 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
         PreUnderscore = Left(PromptFull, CursorIdx)
         PostUnderscore = Mid(PromptFull, CursorIdx + 1)
     End If
+    
+    Dim PreSplit As String
+    If WaitingForInput(ConsoleID) Then
+        PreSplit = cPrompt(ConsoleID)
+    Else
+        PreSplit = cPath(ConsoleID)
+    End If
 
-    Console(ConsoleID, 1).Caption = cPath(ConsoleID) & "> " & PreUnderscore & Chr(7) & PostUnderscore
+    Console(ConsoleID, 1).Caption = PreSplit & "> " & PreUnderscore & Chr(7) & PostUnderscore
 End Sub
 
 Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
