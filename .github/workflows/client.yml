@@ -73,7 +73,7 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
 
-        Start-Process -FilePath "regsvr32.exe" -ArgumentList "/s","/i",".\client\libs\compile-only\mssdtfmt.dll" -Wait -PassThru
+        Start-Process -FilePath "regsvr32.exe" -ArgumentList "/i",".\client\libs\compile-only\mssdtfmt.dll" -PassThru
 
         mkdir ".\logs"
         mkdir "C:\vb6"
