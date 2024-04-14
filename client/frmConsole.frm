@@ -620,7 +620,10 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     If Shift = 2 And KeyCode = vbKeyC Then
         'cancel the running script
         CancelScript(ActiveConsole) = True
-        New_Console_Line ActiveConsole
+        CurrentPromptInput(ActiveConsole) = ""
+        RefreshCommandLinePrompt ActiveConsole
+        QueueConsoleRender
+        'New_Console_Line_InProgress ActiveConsole
         Exit Sub
     End If
     
@@ -638,7 +641,7 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     
     If ConsolePaused(ActiveConsole) = True Then
         ConsolePaused(ActiveConsole) = False
-        New_Console_Line ActiveConsole
+        New_Console_Line_InProgress ActiveConsole
         Exit Sub
     End If
     
@@ -663,36 +666,26 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
            End If
            Exit Sub
         End If
-    Else
-        If KeyCode = vbKeyUp Or KeyCode = vbKeyDown Then
-            Dim tmpS As String, tmpInputString As String
-            If InStr(Console(ActiveConsole, 1).Caption, ">") > 0 Then
-                tmpS = Mid(Console(ActiveConsole, 1).Caption, InStr(Console(ActiveConsole, 1).Caption, ">") + 1, Len(Console(ActiveConsole, 1).Caption))
-                tmpInputString = Mid(Console(ActiveConsole, 1).Caption, 1, InStr(Console(ActiveConsole, 1).Caption, ">") + 1)
-            Else
-                tmpS = Console(ActiveConsole, 1).Caption
-                tmpInputString = ""
-            End If
-            tmpS = Trim(Replace(tmpS, "_", ""))
-            'don't exit sub here
-        End If
-    
-        If KeyCode = vbKeyDown Then
-            If RecentCommandsIndex(ActiveConsole) <= 0 Then Exit Sub
-            RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) - 1
-            Console(ActiveConsole, 1).Caption = tmpInputString & RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole)) & "_"
-            QueueConsoleRender
-            Exit Sub
-        End If
-        If KeyCode = vbKeyUp Then
-            If RecentCommandsIndex(ActiveConsole) >= 99 Then Exit Sub
-            If Trim(RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole) + 1)) = "" Then Exit Sub
-            RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) + 1
-            If RecentCommandsIndex(ActiveConsole) = 1 Then RecentCommands(ActiveConsole, 0) = tmpS
-            Console(ActiveConsole, 1).Caption = tmpInputString & RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole)) & "_"
-            QueueConsoleRender
-            Exit Sub
-        End If
+    ElseIf KeyCode = vbKeyDown Then
+        If RecentCommandsIndex(ActiveConsole) <= 0 Then Exit Sub
+        RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) - 1
+
+        CurrentPromptInput(ActiveConsole) = RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole))
+        MoveUnderscoreToEnd ActiveConsole
+        RefreshCommandLinePrompt ActiveConsole
+        QueueConsoleRender
+        Exit Sub
+    ElseIf KeyCode = vbKeyUp Then
+        If RecentCommandsIndex(ActiveConsole) >= 99 Then Exit Sub
+        If Trim(RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole) + 1)) = "" Then Exit Sub
+        RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) + 1
+        If RecentCommandsIndex(ActiveConsole) = 1 Then RecentCommands(ActiveConsole, 0) = CurrentPromptInput(ActiveConsole)
+
+        CurrentPromptInput(ActiveConsole) = RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole))
+        MoveUnderscoreToEnd ActiveConsole
+        RefreshCommandLinePrompt ActiveConsole
+        QueueConsoleRender
+        Exit Sub
     End If
 
     Add_Key KeyCode, Shift, ActiveConsole
@@ -1003,7 +996,7 @@ End Sub
 
 Public Sub KeepOnline()
     If Authorized = True Then
-        RunPage "z_online.php?get=1", ActiveConsole
+        RunPage "z_online.php?get=1&version=" & EncodeURLParameter(VersionStr()), ActiveConsole
     End If
 End Sub
 
@@ -1046,6 +1039,7 @@ Public Sub Start_Console(ByVal ConsoleID As Integer)
     Else
         Run_Script "/system/newconsole.ds", ConsoleID, EmptyParams, "BOOT", True, False, False
     End If
+    New_Console_Line ConsoleID
 End Sub
 
 Private Sub tmrPrintChat_Timer()
@@ -1338,25 +1332,25 @@ Private Sub sockIRC_DataArrival(ByVal bytesTotal As Long)
     Dim ArrivedData$
     sockIRC.GetData ArrivedData$, vbString
 
-    Dim temp$
+    Dim Temp$
     For X& = 1 To bytesTotal    'get every byte we received, but only one at a time
-        temp$ = Mid(ArrivedData$, X, 1)
-        If temp$ = Chr$(10) Then    'if we received a newline character (this is the end of the message)
+        Temp$ = Mid(ArrivedData$, X, 1)
+        If Temp$ = Chr$(10) Then    'if we received a newline character (this is the end of the message)
             processCommand  'process the entire command
             Data$ = ""      'clear the data$
         'if we received a newline character or a carriage return, dont add them to the message
-        ElseIf temp$ <> Chr$(13) Then
-            Data$ = Data$ + temp$
+        ElseIf Temp$ <> Chr$(13) Then
+            Data$ = Data$ + Temp$
         End If
     Next
 End Sub
-Private Sub IRCTxtList(newText As String)
+Private Sub IRCTxtList(NewText As String)
     Dim i As Integer
     
     For i = 48 To 0 Step -1
         ircMsgs(i + 1) = ircMsgs(i)
     Next
-    ircMsgs(0) = newText
+    ircMsgs(0) = NewText
     curMsg = -1
     'MsgBox newText
 End Sub

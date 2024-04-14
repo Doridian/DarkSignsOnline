@@ -3,12 +3,7 @@
 $rewrite_done = true;
 require_once('function.php');
 
-$returnwith = (string)(int)$_REQUEST['returnwith'];
-if ($returnwith === '0') {
-	$returnwith = '2000';
-}
-
-echo $returnwith;
+print_returnwith('2000', -1);
 
 $getfile = $_REQUEST['getfile'];
 if (!empty($getfile)){
@@ -44,7 +39,7 @@ if (!empty($getforremoval)){
     $res = $stmt->get_result();
 
     while($row = $res->fetch_array()) {
-        echo $row['id'] . ': ' . $row['title'] . '(version ' . $row['version'] . ') ' . date('d.m.Y', $row['createtime'])  . ':--:';
+        echo dso_b64_encode($row['id'] . ': ' . $row['title'] . '(version ' . $row['version'] . ') ' . date('d.m.Y', $row['createtime'])) . ':--:';
     }
 
     exit;
@@ -58,7 +53,7 @@ if (!empty($getcategory)){
     $res = $stmt->get_result();
     while($row = $res->fetch_array()) {
         $time = $row['createtime'];
-        echo $row['id'].":--:".$row['title'].":--:".$row['version'].":--:".$row['filesize'].":--:".idToUser($row['owner']).":--:".$row['filename'].":--:".$row['description'].":--:".date('d.m.Y', $time).":--:".date('H:i:s', $time).":--:--:";
+        echo $row['id'].':--:'.dso_b64_encode($row['title']).':--:'.dso_b64_encode($row['version']).':--:'.$row['filesize'].':--:'.idToUser($row['owner']).':--:'.$row['filename'].':--:'.dso_b64_encode($row['description']).':--:'.date('d.m.Y', $time).':--:'.date('H:i:s', $time).':--:--:';
     }
     exit;
 }

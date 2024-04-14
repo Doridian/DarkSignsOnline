@@ -1,7 +1,5 @@
 Option Explicit
-Dim props, propsforexamples
-props = "{green 12 underline}"
-propsforexamples = "{lgreen 12}"
+Include "/system/commands/help/_util.ds"
 
 Say props & "Command: SAYCOMM text"
 Say propsforexamples & "Example #1: SAYCOMM Connected to server"

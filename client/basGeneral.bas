@@ -38,7 +38,7 @@ Public LoadingSpinner As Integer
 Public Const LoadingSpinnerAnim = "/-\|"
 
 Public cPath(1 To 5) As String
-Public cPath_tmp(1 To 4) As String
+Public cPrompt(1 To 5) As String
 
 Public EditorFile_Short As String
 Public EditorFile_Long As String
@@ -59,14 +59,24 @@ Public Function VersionStr() As String
     End If
 End Function
 
+Public Function FileLenUnsafe(ByVal FileName As String) As Long
+    GetAttr FileName
+    
+    Dim Handle As Long
+    Handle = FreeFile
+    Open FileName$ For Binary Access Read As #Handle
+        FileLenUnsafe = LOF(Handle)
+    Close #Handle
+End Function
+
 Public Function GetFileUnsafe(ByVal FileName As String) As String
     GetAttr FileName
 
     Dim Handle As Long
     Handle = FreeFile
     Open FileName$ For Binary Access Read As #Handle
-    GetFileUnsafe = Space$(LOF(Handle))
-    Get #Handle, , GetFileUnsafe
+        GetFileUnsafe = Space$(LOF(Handle))
+        Get #Handle, , GetFileUnsafe
     Close #Handle
 End Function
 
@@ -78,15 +88,32 @@ Public Function WriteFileUnsafe(ByVal FileName As String, ByVal Contents As Stri
     Dim Handle As Long
     Handle = FreeFile
     Open FileName$ For Binary Access Write As #Handle
-    Put #Handle, , Contents
+        Put #Handle, , Contents
     Close #Handle
 End Function
 
-Function WriteFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+Public Function AppendFileUnsafe(ByVal FileName As String, ByVal Contents As String)
+    Dim Handle As Long
+    Handle = FreeFile
+    Open FileName For Binary Access Write As #Handle
+        Seek #Handle, LOF(Handle) + 1
+        Put #Handle, , Contents
+    Close #Handle
+End Function
+
+Public Function WriteFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
     WriteFileUnsafe SafePath(FileName, Prefix), Contents
 End Function
 
-Function GetFile(ByVal FileName As String, Optional ByVal Prefix As String = "") As String
+Public Function AppendFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+    AppendFileUnsafe SafePath(FileName, Prefix), Contents
+End Function
+
+Public Function FileLen(ByVal FileName As String, Optional ByVal Prefix As String = "") As Long
+    FileLen = FileLenUnsafe(SafePath(FileName, Prefix))
+End Function
+
+Public Function GetFile(ByVal FileName As String, Optional ByVal Prefix As String = "") As String
     GetFile = GetFileUnsafe(SafePath(FileName, Prefix))
 End Function
 
@@ -112,7 +139,7 @@ End Function
 Public Function FileExists(s As String) As Boolean
     On Error GoTo zxc
     Dim n As Long
-    n = FileLen(SafePath(s))
+    n = basGeneral.FileLen(s)
     FileExists = True
     Exit Function
 zxc:
@@ -139,6 +166,9 @@ Public Sub RegSave(ByVal sCat As String, ByVal sVal As String)
     sCat = i(sCat)
     sVal = Trim(sVal)
 
+    On Error Resume Next
+    SettingsCollection.Remove sCat
+    On Error GoTo 0
     SettingsCollection.Add sVal, sCat
     SaveSetting App.Title, "Settings", sCat, sVal
 End Sub

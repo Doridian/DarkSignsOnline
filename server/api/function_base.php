@@ -7,12 +7,12 @@ if ($ver < 1) {
 
 function print_returnwith($def = '2000', $max_version = 1) {
 	global $ver;
-	if ($ver > $max_version) {
+	if ($ver > $max_version && $max_version >= 0) {
 		return;
 	}
 
 	$returnwith = (string)(int)$_GET['returnwith'];
-	if (trim($returnwith) == '0') {
+	if (trim($returnwith) === '0' || empty($returnwith)) {
 		$returnwith = $def;
 	}
 	echo $returnwith;

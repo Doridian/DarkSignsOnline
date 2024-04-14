@@ -238,13 +238,13 @@ function userToId($username) {
 }
 
 $BASE64_DSO_ENCODE = array(
-	'+' => '_',
-	'/' => '.',
+	'+' => '-',
+	'/' => '_',
 	'=' => '',
 );
 $BASE64_DSO_DECODE = array(
-	'_' => '+',
-	'.' => '/',
+	'-' => '+',
+	'_' => '/',
 );
 
 function dso_b64_decode($str) {

@@ -3,11 +3,7 @@
 $rewrite_done = true;
 require_once('function.php');
 
-$returnwith = (string)(int)$_REQUEST['returnwith'];
-if ($returnwith === '0') {
-	$returnwith = '7000';
-}
-echo $returnwith;
+print_returnwith('7000', -1);
 
 $action = $_REQUEST['action'];
 if ($action === 'inbox')
@@ -19,7 +15,7 @@ if ($action === 'inbox')
 	$result = $stmt->get_result();
 	while ($mail = $result->fetch_assoc())
 	{
-		echo 'X_'.$mail['id'].chr(7).$mail['from_user'].chr(7).$mail['subject'].chr(7).$mail['message'].chr(7).$mail['time']."\n";
+		echo 'X_'.$mail['id'].':--:'.$mail['from_user'].':--:'.dso_b64_encode($mail['subject']).':--:'.dso_b64_encode($mail['message']).':--:'.date('d.m.Y H:i:s', $mail['time'])."\r\n";
 	}
 	exit;
 }
@@ -32,7 +28,7 @@ if ($action === 'inbox')
 	$result = $stmt->get_result();
 	while ($mail = $result->fetch_assoc())
 	{
-		echo 'X_'.$mail['id'].chr(7).$mail['to_user'].chr(7).$mail['subject'].chr(7).$mail['message'].chr(7).$mail['time']."\n";
+		echo 'X_'.$mail['id'].':--:'.$mail['to_user'].':--:'.dso_b64_encode($mail['subject']).':--:'.dso_b64_encode($mail['message']).':--:'.$mail['time']."\r\n";
 	}
 	exit;
 }*/
@@ -58,8 +54,6 @@ else if ($action === 'send')
 		array_push($nameID, $tmpID);
 	}
 
-	$sub = preg_replace("[^a-zA-Z0-9., \-]", "", $_REQUEST['subject']);
-	$msg = preg_replace("[^a-zA-Z0-9., ".chr(6)."\-]", "", $_REQUEST['message']);
 	$time = time();
 
 	foreach ($nameID AS $id)

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Mar 20, 2024 at 07:39 AM
+-- Generation Time: Apr 13, 2024 at 08:05 PM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 7.4.33
 
@@ -58,7 +58,8 @@ CREATE TABLE `domain_scripts` (
   `port` int(11) NOT NULL,
   `code` longtext NOT NULL,
   `ip` varchar(255) NOT NULL,
-  `time` int(11) NOT NULL
+  `time` int(11) NOT NULL,
+  `ver` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -74,6 +75,27 @@ CREATE TABLE `dsmail` (
   `subject` varchar(4096) NOT NULL,
   `message` longtext NOT NULL,
   `time` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `file_database`
+--
+
+CREATE TABLE `file_database` (
+  `id` int(11) NOT NULL,
+  `owner` int(11) NOT NULL,
+  `filename` varchar(255) NOT NULL,
+  `version` varchar(255) NOT NULL,
+  `title` longtext NOT NULL,
+  `description` longtext NOT NULL,
+  `createtime` int(11) NOT NULL,
+  `ip` varchar(255) NOT NULL,
+  `deleted` tinyint(1) NOT NULL,
+  `category` varchar(255) NOT NULL,
+  `ver` int(11) NOT NULL,
+  `filedata` longtext NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -102,6 +124,21 @@ CREATE TABLE `subdomain` (
   `hostid` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   `ip` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `textspace`
+--
+
+CREATE TABLE `textspace` (
+  `id` int(11) NOT NULL,
+  `chan` int(11) NOT NULL,
+  `owner` int(11) NOT NULL,
+  `lastupdate` int(11) NOT NULL,
+  `text` longtext NOT NULL,
+  `deleted` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -166,7 +203,7 @@ ALTER TABLE `domain_files`
 -- Indexes for table `domain_scripts`
 --
 ALTER TABLE `domain_scripts`
-  ADD UNIQUE KEY `id_port` (`domain_id`,`port`),
+  ADD UNIQUE KEY `id_port_ver` (`domain_id`,`port`,`ver`) USING BTREE,
   ADD KEY `id` (`domain_id`);
 
 --
@@ -176,6 +213,17 @@ ALTER TABLE `dsmail`
   ADD PRIMARY KEY (`id`),
   ADD KEY `to_user` (`to_user`),
   ADD KEY `from_user` (`from_user`);
+
+--
+-- Indexes for table `file_database`
+--
+ALTER TABLE `file_database`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `filename_version_ver` (`filename`,`version`,`ver`) USING BTREE,
+  ADD KEY `owner` (`owner`),
+  ADD KEY `deleted` (`deleted`),
+  ADD KEY `category` (`category`),
+  ADD KEY `ver` (`ver`);
 
 --
 -- Indexes for table `iptable`
@@ -193,6 +241,15 @@ ALTER TABLE `subdomain`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `hostid_name` (`hostid`,`name`),
   ADD KEY `hostid` (`hostid`);
+
+--
+-- Indexes for table `textspace`
+--
+ALTER TABLE `textspace`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `owner` (`owner`),
+  ADD KEY `chan` (`chan`),
+  ADD KEY `deleted` (`deleted`);
 
 --
 -- Indexes for table `transactions`
@@ -228,9 +285,21 @@ ALTER TABLE `dsmail`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `file_database`
+--
+ALTER TABLE `file_database`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `iptable`
 --
 ALTER TABLE `iptable`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `textspace`
+--
+ALTER TABLE `textspace`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --

@@ -149,7 +149,7 @@ Private Sub Class_Initialize()
    
    ReDim Base64Reverse(255)
    
-   Base64Lookup = StrConv("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.", vbFromUnicode)
+   Base64Lookup = StrConv("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", vbFromUnicode)
    
    For l = 0 To 63
       Base64Reverse(Base64Lookup(l)) = l

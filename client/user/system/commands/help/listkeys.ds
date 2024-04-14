@@ -1,7 +1,5 @@
 Option Explicit
-Dim props, propsforexamples
-props = "{green 12 underline}"
-propsforexamples = "{lgreen 12}"
+Include "/system/commands/help/_util.ds"
 
 Say props & "Command: LISTKEYS"
 Say "{lgrey}Display the available shortcut keys and their actions in the console."

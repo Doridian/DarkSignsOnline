@@ -33,6 +33,8 @@ End Type
 
 Private ProcessQueue(1 To 30) As ProcessQueueEntry
 
+Public LoginInProgress As Boolean
+
 
 Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Long, Optional NoAuth As Boolean)
     If Not NoAuth And InStr(i(sUrl), "auth.php") = 0 And Not Authorized Then
@@ -101,7 +103,7 @@ Public Function myPassword() As String
     myPassword = RegLoad("myPasswordDev", "")
 End Function
 
-Public Sub SayCOMM(s As String, Optional ByVal ConsoleID As Integer)
+Public Sub SayCOMM(s As String)
     'send a message to the comm
     
     Dim n As Integer
@@ -170,17 +172,7 @@ Public Sub OnLoginSuccess()
     SayCOMM "You have been authorized as " & myUsername & "."
     SayCOMM "Welcome to the Dark Signs Network!"
     SayCOMM "Dark Signs Online - Version " & VersionStr()
-    
-    Dim EmptyParams(0 To 0) As Variant
-    EmptyParams(0) = ""
-    Run_Script "/system/login-1.ds", 1, EmptyParams, "BOOT", True, False, False
-    EmptyParams(0) = ""
-    Run_Script "/system/login-2.ds", 2, EmptyParams, "BOOT", True, False, False
-    EmptyParams(0) = ""
-    Run_Script "/system/login-3.ds", 3, EmptyParams, "BOOT", True, False, False
-    EmptyParams(0) = ""
-    Run_Script "/system/login-4.ds", 4, EmptyParams, "BOOT", True, False, False
-    
+
     If frmConsole.getConnected Then
         frmConsole.Send "QUIT :darksignsonline.com, Dark Signs Online"    'send the quit message
         frmConsole.lstUsers.Clear  'clear the list entries
@@ -243,6 +235,9 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
         Case "0001" 'it's the user list
             LoadUserList s, ConsoleID
 
+        Case "0002" ' saycomm
+            SayCOMM s
+
         ' FILE LIBRARY
         Case "4300" 'file library upload complete
             frmLibrary.lStatus.Caption = s
@@ -274,7 +269,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
         Case "7001" 'mail inbox
             frmDSOMail.EnableAll
             Dim emails() As String
-            emails = Split(s, vbNewLine)
+            emails = Split(s, vbCrLf)
             Dim numEmails As Long
             numEmails = UBound(emails)
             
@@ -283,13 +278,13 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
             Else
                 Dim n As Long
                 For n = 0 To UBound(emails) - 1 Step 1
-                    emails(n) = "1" & Chr(7) & Trim(emails(n))
+                    emails(n) = "1:--:" & Trim(emails(n))
                 Next n
-                'AppendFile App.Path & "/mail.dat", Join(emails, vbNewLine)
+                AppendFileUnsafe App.Path & "/mail.dat", Join(emails, vbCrLf) & vbCrLf
                 frmDSOMail.reloadInbox
             End If
-            
-            frmDSOMail.StatusBar1.SimpleText = "Current emails: ?" & vbTab & "New emails: " & numEmails
+
+            frmDSOMail.StatusBar1.SimpleText = "Current emails: " & frmDSOMail.inbox.ListItems.Count & vbTab & "New emails: " & numEmails
         Case "7002" ' Send msg.s
             If s = "success" Then
                 frmDSOMailSend.EnableAll
@@ -303,7 +298,7 @@ Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
                 frmDSOMailSend.EnableAll
                 frmDSOMailSend.btnSend.Caption = "Send"
                 frmDSOMailSend.Enabled = True
-                MsgBox "Mail failed to send." & vbNewLine & s
+                MsgBox "Mail failed to send." & vbCrLf & s
             End If
 
         Case Else
@@ -320,7 +315,7 @@ Public Sub SayCommMultiLines(ByVal s As String, ConsoleID As Integer)
 
     Dim n As Long
     For n = 0 To UBound(sA)
-        SayCOMM sA(n), ConsoleID
+        SayCOMM sA(n)
     Next n
 End Sub
 
@@ -367,7 +362,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal ConsoleID As Integer)
         tmpS = frmConsole.ListOfUsers.List(n)
         If Trim(UsersOnline) <> "" Then
             If InStr(i(UsersOnline), ":" & i(tmpS)) = 0 Then
-                SayCOMM "User " & Trim(tmpS) & " has signed in.", ConsoleID
+                SayCOMM "User " & Trim(tmpS) & " has signed in."
             End If
         End If
     Next n
@@ -381,7 +376,7 @@ Public Sub LoadUserList(ByVal s As String, ByVal ConsoleID As Integer)
         tmpS = Trim(sSplit(n))
         If Len(tmpS) > 2 Then
             If InStr(i(s), ":" & i(tmpS) & ":") = 0 Then
-                SayCOMM "User " & Trim(tmpS) & " has signed out.", ConsoleID
+                SayCOMM "User " & Trim(tmpS) & " has signed out."
             End If
         End If
     Next n
@@ -395,7 +390,7 @@ Public Function EncodeURLParameter( _
     Optional ByVal SpacePlus As Boolean = True) As String
     
     Dim cchEscaped As Long
-    Dim hResult As Long
+    Dim HResult As Long
     
     If Url = "" Then
         EncodeURLParameter = ""
@@ -410,13 +405,13 @@ Public Function EncodeURLParameter( _
     cchEscaped = Len(Url)
     
     EncodeURLParameter = String$(cchEscaped, 0)
-    hResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
-    If hResult = E_POINTER Then
+    HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+    If HResult = E_POINTER Then
         EncodeURLParameter = String$(cchEscaped, 0)
-        hResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+        HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
     End If
 
-    If hResult <> S_OK Then
+    If HResult <> S_OK Then
         Err.Raise Err.LastDllError, "URLUtility.URLEncode", _
                   "System error"
     End If

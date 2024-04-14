@@ -73,14 +73,14 @@ Private Sub btnReply_Click()
    'MsgBox "Reply"
    frmDSOMailSend.msgTo = Me.msgTo
    frmDSOMailSend.msgSubject = "Re: " & Me.msgSubject
-   frmDSOMailSend.msgBody = vbNewLine & vbNewLine & vbNewLine & "#From " & Me.msgTo & vbNewLine & "# Subject " & Me.msgSubject & vbNewLine & "#"
+   frmDSOMailSend.msgBody = vbCrLf & vbCrLf & vbCrLf & "#From " & Me.msgTo & vbCrLf & "# Subject " & Me.msgSubject & vbCrLf & "#"
    
    Dim AllResults() As String
-   AllResults = Split(Me.msgBody, vbNewLine)
+   AllResults = Split(Me.msgBody, vbCrLf)
    
    Dim n As Long
    For n = 0 To UBound(AllResults) Step 1
-        frmDSOMailSend.msgBody = frmDSOMailSend.msgBody & vbNewLine & "#" & AllResults(n)
+        frmDSOMailSend.msgBody = frmDSOMailSend.msgBody & vbCrLf & "#" & AllResults(n)
    Next n
    
    frmDSOMailSend.Caption = "Reply - " & Me.msgSubject

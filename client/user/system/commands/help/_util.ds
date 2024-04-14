@@ -1,0 +1,5 @@
+Option Explicit
+
+Dim props, propsforexamples
+props = "{green 12 underline}"
+propsforexamples = "{lgreen 12}"

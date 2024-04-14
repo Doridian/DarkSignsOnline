@@ -81,52 +81,37 @@ End Function
 
 Public Sub reloadInbox()
     inbox.ListItems.Clear
-    
+
     Dim tmpFile As String
+    On Error GoTo NoEntries
     tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
-    
+    On Error GoTo 0
+
     Dim AllResults() As String
-    AllResults = Split(tmpFile, vbNewLine)
-    
+    AllResults = Split(tmpFile, vbCrLf)
+
     Dim SubResults() As String
-    
-    
-    
-    'MsgBox UBound(AllResults)
+
     Dim n As Long
     Dim Key As String
-    
+
     For n = 0 To UBound(AllResults) Step 1
-        SubResults = Split(AllResults(n), Chr(7))
-        'MsgBox UBound(SubResults)
-        'MsgBox SubResults(0)
-        'MsgBox SubResults(1)
-        'MsgBox SubResults(2)
-        'MsgBox SubResults(3)
-        'MsgBox SubResults(4)
-        
+        SubResults = Split(AllResults(n), ":--:")
         If UBound(SubResults) = 5 Then
-            'If keyExists(SubResults(0)) = False Then
-                Key = SubResults(1)
-                inbox.ListItems.Add , Key, SubResults(2)
-                inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(3)
-                inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(5)
-                
-                If SubResults(0) = "1" Then
-                    inbox.ListItems(inbox.ListItems.Count).Bold = True
-                    inbox.ListItems(inbox.ListItems.Count).ListSubItems(1).Bold = True
-                    inbox.ListItems(inbox.ListItems.Count).ListSubItems(2).Bold = True
-                End If
-            'End If
+            Key = SubResults(1)
+            inbox.ListItems.Add , Key, SubResults(2)
+            inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , DecodeBase64Str(SubResults(3))
+            inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(5)
             
-            'key = "X_" & SubResults(0)
-            'key = SubResults(0)
-            'inbox.ListItems.Add , key, SubResults(1)
-            'inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(2)
-            'inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(4)
+            If SubResults(0) = "1" Then
+                inbox.ListItems(inbox.ListItems.Count).Bold = True
+                inbox.ListItems(inbox.ListItems.Count).ListSubItems(1).Bold = True
+                inbox.ListItems(inbox.ListItems.Count).ListSubItems(2).Bold = True
+            End If
         End If
-        
     Next n
+
+NoEntries:
 End Sub
 
 Private Sub btnRefresh_Click()
@@ -134,14 +119,17 @@ Private Sub btnRefresh_Click()
     DisableAll
     StatusBar1.SimpleText = "Checking emails..."
     Dim last As String
-    
+    last = ""
+
     Dim tmpFile As String
+    On Error GoTo NoEntries
     tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    On Error GoTo 0
     
     Dim AllResults() As String
-    AllResults = Split(tmpFile, vbNewLine)
+    AllResults = Split(tmpFile, vbCrLf)
     For n = UBound(AllResults) To 0 Step -1
-        SubResults = Split(AllResults(n), Chr(7))
+        SubResults = Split(AllResults(n), ":--:")
         'Mid(inbox.SelectedItem.key, 3)
         
         If UBound(SubResults) > 2 Then
@@ -153,7 +141,8 @@ Private Sub btnRefresh_Click()
         End If
     Next n
     
-    
+
+NoEntries:
     If last = "" Then
         last = "0"
     End If
@@ -202,46 +191,51 @@ Private Sub Form_Load()
 End Sub
 
 Private Sub inbox_DblClick()
-    'MsgBox Mid(inbox.SelectedItem.key, 3)
-    'MsgBox inbox.SelectedItem.Index
-    'MsgBox inbox.ListItems(inbox.SelectedItem.Index).key
+    Dim SelectedIndex As Long
+    SelectedIndex = 0
+    On Error Resume Next
+    SelectedIndex = inbox.SelectedItem.Index
+    On Error GoTo 0
     
-    ').Text
-    frmDSOMailRead.msgTo.Text = inbox.ListItems(inbox.SelectedItem.Index).Text
-    frmDSOMailRead.msgSubject.Text = inbox.ListItems(inbox.SelectedItem.Index).ListSubItems(1).Text
+    If SelectedIndex <= 0 Then
+        Exit Sub
+    End If
+
+    frmDSOMailRead.msgTo.Text = inbox.ListItems(SelectedIndex).Text
+    frmDSOMailRead.msgSubject.Text = inbox.ListItems(SelectedIndex).ListSubItems(1).Text
     frmDSOMailRead.msgBody.Text = "ERROR LOADING MESSAGE BODY"
     
     inbox.ListItems(inbox.SelectedItem.Index).Bold = False
     inbox.ListItems(inbox.SelectedItem.Index).ListSubItems(1).Bold = False
     inbox.ListItems(inbox.SelectedItem.Index).ListSubItems(2).Bold = False
-            
-    
+
     Dim tmpFile As String
+    tmpFile = ""
+    On Error Resume Next
     tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    On Error GoTo 0
     
     Dim AllResults() As String
-    AllResults = Split(tmpFile, vbNewLine)
+    AllResults = Split(tmpFile, vbCrLf)
     
     Dim SubResults() As String
     Dim n As Long
     Dim Key As String
-    Key = inbox.ListItems(inbox.SelectedItem.Index).Key
+    Key = inbox.ListItems(SelectedIndex).Key
     
     For n = 0 To UBound(AllResults) Step 1
-        SubResults = Split(AllResults(n), Chr(7))
+        SubResults = Split(AllResults(n), ":--:")
        
         If UBound(SubResults) = 5 Then
             If SubResults(1) = Key Then
-                frmDSOMailRead.msgBody.Text = SubResults(4)
+                frmDSOMailRead.msgBody.Text = DecodeBase64Str(SubResults(4))
                 n = UBound(AllResults)
             End If
         End If
     Next n
-    
-    frmDSOMailRead.msgBody.Text = Replace(frmDSOMailRead.msgBody.Text, Chr(6), vbNewLine)
-    
-    If inbox.ListItems(inbox.SelectedItem.Index).Bold = True Then
-        markAsRead (Key)
+
+    If inbox.ListItems(SelectedIndex).Bold = True Then
+        markAsRead Key
     End If
     
     frmDSOMailRead.Show vbModal
@@ -249,12 +243,14 @@ End Sub
 
 Private Sub markAsRead(k As String)
     Dim tmpFile As String
+    On Error GoTo NoResults
     tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    On Error GoTo 0
     
     Dim AllResults() As String
-    AllResults = Split(tmpFile, vbNewLine)
+    AllResults = Split(tmpFile, vbCrLf)
     For n = UBound(AllResults) To 0 Step -1
-        SubResults = Split(AllResults(n), Chr(7))
+        SubResults = Split(AllResults(n), ":--:")
         'Mid(inbox.SelectedItem.key, 3)
         
         If UBound(SubResults) > 2 Then
@@ -267,7 +263,9 @@ Private Sub markAsRead(k As String)
         End If
     Next n
     
-    WriteFileUnsafe App.Path & "/mail.dat", Join(AllResults, vbNewLine)
+    WriteFileUnsafe App.Path & "/mail.dat", Join(AllResults, vbCrLf)
+    
+NoResults:
 End Sub
 
 Private Sub inbox_ColumnClick(ByVal ColumnHeader As LvwColumnHeader)

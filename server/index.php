@@ -1,6 +1,17 @@
 <?php require('_top.php'); ?>
 <span class="style5"><br />- News - <br /><br />
 
+  <strong>April 13th 2024</strong><br /><span class="style9">
+    Added a serverside notification system to the client.<br />
+    Currently, this is used to notify clients of available updates.<br />
+    But it might be used for other important system notifications.<br />
+    Needless to say, if you played the game, please update your versions now :)</span><br /><br />
+
+  <strong>April 13th 2024</strong><br /><span class="style9">
+    Fixed the Script Library and DSMail.<br />
+    This concludes work on the API and client (for now)<br />
+    Just need to update the wiki now...</span><br /><br />
+
   <strong>April 11th 2024</strong><br /><span class="style9">
     I am now at a point where I think I am fully happy with where the client is.<br />
     Only need to fix DSMail and the Script Library<br />

@@ -18,13 +18,14 @@ Private Base64 As New clsBase64
 
 Public Type ConsoleLine
     Caption As String
+    PreSpace As Boolean
     
     FontColor As Long
     FontName As String
     FontSize As String
     FontBold As Boolean
     FontItalic As Boolean
-    FontStrikeThru As Boolean
+    FontStrikethru As Boolean
     FontUnderline As Boolean
 
     Flash As Boolean
@@ -42,8 +43,13 @@ Public Type ConsoleLine
     DrawB As Long
 End Type
 
+Public CurrentPromptInput(1 To 4) As String
+Public CurrentPromptCursorIndex(1 To 4) As Long
+
 Public RecentCommandsIndex(1 To 4) As Integer
 Public RecentCommands(1 To 4, 0 To 99) As String
+
+Public CurrentPromptVisible(1 To 4) As Boolean
 
 Public yDiv As Integer  'the amount of vertical space between each console line
 
@@ -53,6 +59,9 @@ Public Const PreSpace = "-->" 'this will indent the text
 Public Const ConsoleXSpacing = 360
 Public Const ConsoleXSpacingIndent = 960
 
+Public Property Get ConsoleCursorChar() As String
+    ConsoleCursorChar = Chr(7)
+End Property
 
 Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal ConsoleID As Integer)
     If frmConsole.ChatBox.Visible = True Then Exit Sub
@@ -68,27 +77,24 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal Conso
     If KeyCode = vbKeyRight Then MoveUnderscoreRight ConsoleID: Exit Sub
     
     If KeyCode = vbKeyReturn Then
-
+        Dim CommandStr As String
+        CommandStr = CurrentPromptInput(ConsoleID)
+        CurrentPromptInput(ConsoleID) = ""
         RecentCommandsIndex(ConsoleID) = 0
-        'kill the no longer required underscore
-        Console(ConsoleID, 1).Caption = Replace(Console(ConsoleID, 1).Caption, "_", "")
-        'save in recent typed commands
-        AddToRecentCommands Console(ConsoleID, 1).Caption
-        
+        AddToRecentCommands CommandStr
+
         'process the command, unless it is input
         If WaitingForInput(ConsoleID) = True Then
-            tmpS = Trim(Console(ConsoleID, 1).Caption)
-            If InStr(tmpS, ">") > 0 Then tmpS = Mid(tmpS, InStr(tmpS, ">") + 1, Len(tmpS))
-            WaitingForInputReturn(ConsoleID) = Trim(tmpS)
-            cPath(ConsoleID) = cPath_tmp(ConsoleID)
+            WaitingForInputReturn(ConsoleID) = CommandStr
             WaitingForInput(ConsoleID) = False
-            Shift_Console_Lines ConsoleID
-            Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
-            Console(ConsoleID, 1) = Console_Line_Defaults
+            If CancelScript(ConsoleID) Then
+                New_Console_Line ConsoleID
+            Else
+                New_Console_Line_InProgress ConsoleID
+            End If
         Else
-            
-            Run_Command Console(ConsoleID, 1), ConsoleID, False
-            
+            Run_Command CommandStr, ConsoleID, False
+            New_Console_Line ConsoleID
         End If
 
         Exit Sub
@@ -128,7 +134,7 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal Conso
     'everything else
     Select Case KeyCode
         Case "192": If Shift = 1 Then Insert_Char "~", ConsoleID Else Insert_Char "`", ConsoleID
-        Case "189": If Shift = 1 Then Insert_Char "-", ConsoleID Else Insert_Char "-", ConsoleID
+        Case "189": If Shift = 1 Then Insert_Char "_", ConsoleID Else Insert_Char "-", ConsoleID
         Case "187": If Shift = 1 Then Insert_Char "+", ConsoleID Else Insert_Char "=", ConsoleID
         Case "219": If Shift = 1 Then Insert_Char "{", ConsoleID Else Insert_Char "[", ConsoleID
         Case "221": If Shift = 1 Then Insert_Char "}", ConsoleID Else Insert_Char "]", ConsoleID
@@ -193,7 +199,6 @@ End Sub
 
 
 Public Sub AddToRecentCommands(ByVal s As String)
-    If InStr(s, ">") > 0 Then s = Mid(s, InStr(s, ">") + 1, Len(s))
     If Trim(s) = "" Then Exit Sub
         
     If i(s) = RecentCommands(ActiveConsole, 1) Then GoTo SkipAddingIt
@@ -211,82 +216,103 @@ SkipAddingIt:
     RecentCommandsIndex(ActiveConsole) = 0
 End Sub
 
+Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
+    If Not CurrentPromptVisible(ConsoleID) Then
+        Exit Sub
+    End If
+    Console(ConsoleID, 1) = Console_Line_Defaults
+    Console(ConsoleID, 1).PreSpace = False
+
+    Dim PromptFull As String
+    PromptFull = CurrentPromptInput(ConsoleID)
+
+    Dim CursorIdx As Long
+    CursorIdx = CurrentPromptCursorIndex(ConsoleID)
+    If CursorIdx > Len(PromptFull) Then
+        CursorIdx = Len(PromptFull)
+        CurrentPromptCursorIndex(ConsoleID) = CursorIdx
+    End If
+
+    Dim PreUnderscore As String
+    Dim PostUnderscore As String
+    If CursorIdx < 1 Then
+        PreUnderscore = ""
+        PostUnderscore = PromptFull
+    Else
+        PreUnderscore = Left(PromptFull, CursorIdx)
+        PostUnderscore = Mid(PromptFull, CursorIdx + 1)
+    End If
+    
+    Dim PreSplit As String
+    If WaitingForInput(ConsoleID) Then
+        PreSplit = cPrompt(ConsoleID)
+    Else
+        PreSplit = cPath(ConsoleID) & ">"
+    End If
+
+    Console(ConsoleID, 1).Caption = PreSplit & " " & PreUnderscore & ConsoleCursorChar & PostUnderscore
+End Sub
+
 Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
-    Dim part1 As String, part2 As String, s As String
-    
-    s = Console(ConsoleID, 1).Caption
-    If Right(s, 1) = "_" Then Exit Sub
-    
-    If InStr(s, "_") = 0 Then Exit Sub
-    part1 = Mid(s, 1, InStr(s, "_") + 1)
-    part2 = Mid(s, InStr(s, "_") + 2, Len(s))
-    
-    s = Replace(part1, "_", "") & "_" & part2
-    
+    CurrentPromptCursorIndex(ConsoleID) = CurrentPromptCursorIndex(ConsoleID) + 1
+    If CurrentPromptCursorIndex(ConsoleID) > Len(CurrentPromptInput(ConsoleID)) Then
+        CurrentPromptCursorIndex(ConsoleID) = Len(CurrentPromptInput(ConsoleID))
+    End If
 
-    'If InStr(s, "_") < Len(Console_Prompt(True)) Then Exit Sub
-    
-    Console(ConsoleID, 1).Caption = s
-
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MoveUnderscoreToHome(ByVal ConsoleID As Integer)
-    Dim s As String
-    s = Console(ConsoleID, 1).Caption
-    If InStr(s, "_") = 0 Then Exit Sub
-    
-
-    s = Console_Prompt(False, ConsoleID) & "_" & Trim(Replace(Mid(s, Len(Console_Prompt(False, ConsoleID)), 999), "_", ""))
-
-    
-    Console(ConsoleID, 1).Caption = s
-
+    CurrentPromptCursorIndex(ConsoleID) = 0
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MoveUnderscoreToEnd(ByVal ConsoleID As Integer)
-    Dim s As String
-    s = Console(ConsoleID, 1).Caption
-    
-    s = Replace(s, "_", "") & "_"
-
-    Console(ConsoleID, 1).Caption = s
-
+    CurrentPromptCursorIndex(ConsoleID) = Len(CurrentPromptInput(ConsoleID))
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MoveUnderscoreLeft(ByVal ConsoleID As Integer)
-    Dim part1 As String, part2 As String, s As String
-    
-    s = Console(ConsoleID, 1).Caption
-    If InStr(s, "_") = 0 Then Exit Sub
-    part1 = Mid(s, 1, InStr(s, "_") - 2)
-    part2 = Mid(s, InStr(s, "_") - 1, Len(s))
-    
-    s = part1 & "_" & Replace(part2, "_", "")
-    
-    If InStr(s, "_") < Len(Console_Prompt(True, ConsoleID)) Then Exit Sub
-    
-    Console(ConsoleID, 1).Caption = s
+    CurrentPromptCursorIndex(ConsoleID) = CurrentPromptCursorIndex(ConsoleID) - 1
+    If CurrentPromptCursorIndex(ConsoleID) < 0 Then
+        CurrentPromptCursorIndex(ConsoleID) = 0
+    End If
 
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub Insert_Char(ByVal sChar As String, ByVal ConsoleID As Integer)
-    Dim tmpS As String
-    
-    tmpS = Replace(Console(ConsoleID, 1).Caption, "_", sChar + "_")
-    
-    
-    Console(ConsoleID, 1).Caption = tmpS
+    Dim Prompt As String
+    Prompt = CurrentPromptInput(ConsoleID)
 
+    Dim SelectionIndex As Long
+    SelectionIndex = CurrentPromptCursorIndex(ConsoleID)
+    If SelectionIndex <= 0 Then
+        CurrentPromptInput(ConsoleID) = sChar & Prompt
+        MoveUnderscoreRight ConsoleID
+        Exit Sub
+    End If
+    
+    If SelectionIndex > Len(Prompt) Then
+        SelectionIndex = Len(Prompt)
+    End If
+
+    Prompt = Left(Prompt, SelectionIndex) & sChar & Mid(Prompt, SelectionIndex + 1)
+    CurrentPromptInput(ConsoleID) = Prompt
+    MoveUnderscoreRight ConsoleID
+
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub New_Console_Line_InProgress(ByVal ConsoleID As Integer)
     Shift_Console_Lines ConsoleID
-    
+
+    CurrentPromptVisible(ConsoleID) = False
     Console(ConsoleID, 1) = Console_Line_Defaults
     Console(ConsoleID, 1).Caption = " "
 
@@ -295,29 +321,24 @@ End Sub
 
 Public Sub New_Console_Line(ByVal ConsoleID As Integer)
     Shift_Console_Lines ConsoleID
-    
-    Console(ConsoleID, 1) = Console_Line_Defaults
-    'add the standard prompt if required
-    Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
+
+    CurrentPromptVisible(ConsoleID) = True
+    CurrentPromptInput(ConsoleID) = ""
+    RefreshCommandLinePrompt ConsoleID
 
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     Dim n As Integer
+
+    If CurrentPromptVisible(ConsoleID) Then
+        Console(ConsoleID, 1).Caption = Replace(Console(ConsoleID, 1).Caption, ConsoleCursorChar, "")
+    End If
     For n = 299 To 2 Step -1
         Console(ConsoleID, n) = Console(ConsoleID, n - 1)
     Next n
-    
-    '--------------------------------------------------
-    ' if the line is just something like "/> _" , it should be blanked
-    If InStr(Console(ConsoleID, 2).Caption, ">") > 0 Then
-        If Trim(Mid(Console(ConsoleID, 2).Caption, InStr(Console(ConsoleID, 2).Caption, ">") + 1, 99)) = "_" Then
-            Console(ConsoleID, 2).Caption = ""
-        End If
-    End If
-    '--------------------------------------------------
-    
+
     frmConsole.QueueConsoleRender
 End Sub
 
@@ -331,52 +352,36 @@ Public Sub Shift_Console_Lines_Reverse(ByVal ConsoleID As Integer)
 End Sub
 
 Public Sub RemLastKey(ByVal ConsoleID As Integer)
-    'backspace
-    Dim tmpS As String
-    tmpS = Console(ConsoleID, 1).Caption
+    Dim SelectionIndex As Long
+    SelectionIndex = CurrentPromptCursorIndex(ConsoleID)
+    If SelectionIndex <= 0 Then
+        Exit Sub
+    End If
     
-    'tmpS = Remove_Property_Space(tmpS) 'this was causing the backspace error
-    
-    
-    If InStr(tmpS, "_") = 0 Then Exit Sub 'no underscore found = error -> exit
-    
-    Dim part1 As String, part2 As String
-    part1 = Mid(tmpS, 1, InStr(tmpS, "_") - 2)
-    part2 = Mid(tmpS, InStr(tmpS, "_") + 1, Len(tmpS))
-    
+    Dim Prompt As String
+    Prompt = CurrentPromptInput(ConsoleID)
+    Prompt = Left(Prompt, SelectionIndex - 1) & Mid(Prompt, SelectionIndex + 1)
+    CurrentPromptInput(ConsoleID) = Prompt
+    MoveUnderscoreLeft ConsoleID
 
-    tmpS = part1 & "_" & part2
-    
-    If Len(part1) < Len(Console_Prompt(False, ConsoleID)) Then Exit Sub
-    
-    
-    Console(ConsoleID, 1).Caption = tmpS
-
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub RemNextKey(ByVal ConsoleID As Integer)
-    'backspace
-    Dim tmpS As String
-    tmpS = Console(ConsoleID, 1).Caption
-    If InStr(tmpS, "_") = 0 Then Exit Sub 'no underscore found = error -> exit
-    
-    Dim part1 As String, part2 As String
-    part1 = Mid(tmpS, 1, InStr(tmpS, "_") - 1)
-    part2 = Mid(tmpS, InStr(tmpS, "_") + 2, Len(tmpS))
-    
+    Dim Prompt As String
+    Prompt = CurrentPromptInput(ConsoleID)
 
+    Dim SelectionIndex As Long
+    SelectionIndex = CurrentPromptCursorIndex(ConsoleID)
+    If SelectionIndex >= Len(Prompt) Then
+        Exit Sub
+    End If
+    
+    Prompt = Left(Prompt, SelectionIndex) & Mid(Prompt, SelectionIndex + 2)
+    CurrentPromptInput(ConsoleID) = Prompt
 
-    tmpS = part1 & "_" & part2
-    
-    
-    'it's regular input, don't allow it to backspace beyond the input string
-    If Len(part1) < Len(Console_Prompt(False, ConsoleID)) Then Exit Sub
-
-    
-    
-    Console(ConsoleID, 1).Caption = tmpS
-
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
@@ -385,8 +390,9 @@ Public Sub Reset_Console(ByVal ConsoleID As Integer)
     For n = 1 To 299
         Console(ConsoleID, n) = Console_Line_Defaults
     Next n
-    
-    Console(ConsoleID, 1).Caption = Console_Prompt(True, ConsoleID)
+
+    CurrentPromptInput(ConsoleID) = ""
+    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
@@ -401,7 +407,7 @@ Public Sub Print_Console()
 
     Dim addOn As Long, propertySpace As String
     addOn = ConsoleScrollInt(ActiveConsole) * 2400
-    printHeight = frmConsole.Height - 840 + addOn 'Font_Height(Console_FontName(1), Console_FontSize(1)) - ConsoleXSpacing
+    printHeight = frmConsole.Height - 840 + addOn
     frmConsole.CurrentY = printHeight
 
     If ConsoleWaitingOnRemote(ActiveConsole) Then
@@ -431,91 +437,127 @@ Public Sub Print_Console()
             End If
         End If
 
-        printHeight = printHeight - Font_Height(Console_FontName(n, ActiveConsole), Console_FontSize(n, ActiveConsole))
+        Dim FontHeight As Long
+        FontHeight = Font_Height(Console_FontName(n, ActiveConsole), Console_FontSize(n, ActiveConsole))
+
+        printHeight = printHeight - FontHeight
 
         frmConsole.CurrentY = printHeight
 
         '--------------- DRAW ------------------------------------------
         '--------------- DRAW ------------------------------------------
-            If Console(ActiveConsole, n).DrawEnabled = True Then
-                tmpY = frmConsole.CurrentY
-                tmpY2 = tmpY - (yDiv / 2)
-                
-                frmConsole.CurrentY = tmpY
-                
-                If i(Console(ActiveConsole, n).DrawMode) = "solid" Then
-                        'draw it all in one, much faster
-                        frmConsole.Line _
-                        (((frmConsole.Width / DrawDividerWidth) * 0), tmpY2)- _
-                        ((frmConsole.Width / DrawDividerWidth) * _
-                        (DrawDividerWidth), _
-                        (tmpY2 + Font_Height(Console_FontName(n, ActiveConsole), Console_FontSize(n, ActiveConsole)))), _
-                        Console(ActiveConsole, n).DrawColors(1), BF
-                Else
-                    For n2 = 1 To DrawDividerWidth
-                        frmConsole.Line _
-                        (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
-                        ((frmConsole.Width / DrawDividerWidth) * _
-                        (n2), _
-                        (tmpY2 + Font_Height(Console_FontName(n, ActiveConsole), Console_FontSize(n, ActiveConsole)))), _
-                        Console(ActiveConsole, n).DrawColors(n2), BF
-                    Next n2
-                End If
+        If Console(ActiveConsole, n).DrawEnabled = True Then
+            tmpY = frmConsole.CurrentY
+            tmpY2 = tmpY - (yDiv / 2)
             
-                frmConsole.CurrentY = tmpY
+            frmConsole.CurrentY = tmpY
+            
+            If i(Console(ActiveConsole, n).DrawMode) = "solid" Then
+                    'draw it all in one, much faster
+                    frmConsole.Line _
+                    (((frmConsole.Width / DrawDividerWidth) * 0), tmpY2)- _
+                    ((frmConsole.Width / DrawDividerWidth) * _
+                    (DrawDividerWidth), _
+                    (tmpY2 + FontHeight)), _
+                    Console(ActiveConsole, n).DrawColors(1), BF
+            Else
+                For n2 = 1 To DrawDividerWidth
+                    frmConsole.Line _
+                    (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
+                    ((frmConsole.Width / DrawDividerWidth) * _
+                    (n2), _
+                    (tmpY2 + FontHeight)), _
+                    Console(ActiveConsole, n).DrawColors(n2), BF
+                Next n2
             End If
+        
+            frmConsole.CurrentY = tmpY
+        End If
 DontDraw:
-            '--------------- DRAW ------------------------------------------
-            '--------------- DRAW ------------------------------------------
+        '--------------- DRAW ------------------------------------------
+        '--------------- DRAW ------------------------------------------
 
-            frmConsole.FontBold = Console(ActiveConsole, n).FontBold
-            frmConsole.FontItalic = Console(ActiveConsole, n).FontItalic
-            frmConsole.FontUnderline = Console(ActiveConsole, n).FontUnderline
-            frmConsole.FontStrikeThru = Console(ActiveConsole, n).FontStrikeThru
+        frmConsole.FontBold = Console(ActiveConsole, n).FontBold
+        frmConsole.FontItalic = Console(ActiveConsole, n).FontItalic
+        frmConsole.FontUnderline = Console(ActiveConsole, n).FontUnderline
+        frmConsole.FontStrikethru = Console(ActiveConsole, n).FontStrikethru
 
-            frmConsole.FontSize = Console_FontSize(n, ActiveConsole)
-            
-            frmConsole.FontName = Console_FontName(n, ActiveConsole)
-            frmConsole.ForeColor = Console_FontColor(n, ActiveConsole)
-            
-            tmpS = Console(ActiveConsole, n).Caption
+        frmConsole.FontSize = Console_FontSize(n, ActiveConsole)
+        
+        frmConsole.FontName = Console_FontName(n, ActiveConsole)
+        frmConsole.ForeColor = Console_FontColor(n, ActiveConsole)
+        
+        tmpS = Trim(Console(ActiveConsole, n).Caption)
 
-            Dim HideLine As Boolean
-            HideLine = False
-            If Console(ActiveConsole, n).Flash = True And Flash = True Then HideLine = True
-            If Console(ActiveConsole, n).FlashFast = True And FlashFast = True Then HideLine = True
-            If Console(ActiveConsole, n).FlashSlow = True And FlashSlow = True Then HideLine = True
-            If Trim(tmpS) = "-" Or Trim(tmpS) = PreSpace & "-" Then HideLine = True
-            If HideLine Then
-                frmConsole.Print "  "
-                GoTo NextOne
+        Dim HideLine As Boolean
+        HideLine = False
+        If Console(ActiveConsole, n).Flash = True And Flash = True Then HideLine = True
+        If Console(ActiveConsole, n).FlashFast = True And FlashFast = True Then HideLine = True
+        If Console(ActiveConsole, n).FlashSlow = True And FlashSlow = True Then HideLine = True
+        If tmpS = "" Or tmpS = "-" Then HideLine = True
+        If HideLine Then
+            frmConsole.Print "  "
+            GoTo NextOne
+        End If
+
+        frmConsole.CurrentX = ConsoleXSpacing
+
+        'make underscore flash
+        Dim InsertCursorsAt() As Long
+        ReDim InsertCursorsAt(0 To 0)
+        Dim CurCursorPos As Long
+        CurCursorPos = 1
+        While CurCursorPos > 0
+            CurCursorPos = InStr(CurCursorPos, tmpS, ConsoleCursorChar)
+            If CurCursorPos > 0 Then
+                ReDim Preserve InsertCursorsAt(0 To UBound(InsertCursorsAt) + 1)
+                InsertCursorsAt(UBound(InsertCursorsAt)) = CurCursorPos
+                CurCursorPos = CurCursorPos + 1
             End If
+        Wend
+        tmpS = Replace(tmpS, ConsoleCursorChar, "")
 
-            frmConsole.CurrentX = ConsoleXSpacing
+        If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
 
-            'make underscore flash
-            If n = 1 And Flash = True Then If Right(tmpS, 1) = "_" Then tmpS = Replace(tmpS, "_", " ")
-            
-            isAligned = False
-            
-            If Console(ActiveConsole, n).Center = True Then
-                frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize: frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName: frmConsole.lfont.Caption = Trim(Replace(Console(ActiveConsole, n).Caption, PreSpace, ""))
-                frmConsole.CurrentX = (frmConsole.Width / 2) - (frmConsole.lfont.Width / 2)
-                isAligned = True
-            End If
-            If Console(ActiveConsole, n).Right = True Then
-                frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize: frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName: frmConsole.lfont.Caption = Replace(Console(ActiveConsole, n).Caption, PreSpace, "")
-                frmConsole.CurrentX = (frmConsole.Width) - (frmConsole.lfont.Width) - ConsoleXSpacing
-                isAligned = True
-            End If
-            
-            If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
+        isAligned = False
+        
+        frmConsole.lfont.FontSize = Console_FontName(n, ActiveConsole)
+        frmConsole.lfont.FontName = Console_FontSize(n, ActiveConsole)
+        frmConsole.lfont.Caption = tmpS
+        If Console(ActiveConsole, n).Center = True Then
+            frmConsole.CurrentX = (frmConsole.Width / 2) - (frmConsole.lfont.Width / 2)
+            isAligned = True
+        End If
+        If Console(ActiveConsole, n).Right = True Then
+            frmConsole.CurrentX = (frmConsole.Width) - (frmConsole.lfont.Width) - ConsoleXSpacing
+            isAligned = True
+        End If
+        
+        If Console(ActiveConsole, n).PreSpace Then
+            If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
+        End If
+        
+        If UBound(InsertCursorsAt) > 0 And Flash Then
+            Dim OldX As Long
+            Dim OldY As Long
+            OldX = frmConsole.CurrentX
+            OldY = frmConsole.CurrentY
+        
+            Dim BarX As Long
+            Dim BarY As Long
+            BarY = frmConsole.CurrentY
+            Dim X As Long
+            For X = 1 To UBound(InsertCursorsAt)
+                frmConsole.lfont.Caption = Left(tmpS, InsertCursorsAt(X) - 1)
+                BarX = OldX + frmConsole.lfont.Width
+                frmConsole.Line (BarX, BarY)-(BarX, BarY + FontHeight), Console(ActiveConsole, n).FontColor
+            Next
 
-            If InStr(tmpS, PreSpace) > 0 Then
-                If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
-                tmpS = Replace(tmpS, PreSpace, "")
-            End If
-            frmConsole.Print tmpS
+            frmConsole.CurrentX = OldX
+            frmConsole.CurrentY = OldY
+        End If
+
+        frmConsole.Print tmpS
 NextOne:
     Loop Until printHeight < 0 Or n >= 299
 ExitLoop:
@@ -528,7 +570,7 @@ Public Function Console_FontSize(ByVal consoleIndex As Integer, ByVal ConsoleID 
     
     'if not specified, get the defaul
     If Console_FontSize = "" Then
-        Console_FontSize = RegLoad("Default_FontSize", "10")
+        Console_FontSize = Console_Line_Defaults.FontSize
         Exit Function
     End If
     
@@ -544,9 +586,9 @@ Public Function Console_FontColor(ByVal consoleIndex As Integer, ByVal ConsoleID
     
     If Console_FontColor = 0 Then
         'if no color is specified, make it white
-        Console_FontColor = RegLoad("Default_FontColor", RGB(255, 255, 255))
+        Console_FontColor = Console_Line_Defaults.FontColor
     End If
-    
+
 End Function
 
 Public Function Console_FontName(ByVal consoleIndex As Integer, ByVal ConsoleID As Integer) As String
@@ -558,17 +600,8 @@ Public Function Console_FontName(ByVal consoleIndex As Integer, ByVal ConsoleID 
         Console_FontName = Trim(Console_FontName)
         Exit Function
     Else
-        Console_FontName = RegLoad("Default_FontName", "Verdana")
+        Console_FontName = Console_Line_Defaults.FontName
     End If
-    
-End Function
-
-Public Function Console_Prompt(ByVal includeUnderscore As Boolean, ByVal ConsoleID As Integer) As String
-    'get the console prompt that asks the user to enter information
-    Dim ext As String
-    If includeUnderscore = True Then ext = "_" Else ext = ""
-    
-    Console_Prompt = cPath(ConsoleID) & ">" & " " & ext
 End Function
 
 Public Function Console_Line_Defaults() As ConsoleLine
@@ -613,9 +646,15 @@ Public Function StripAfterNewline(ByVal s As String) As String
     End If
 End Function
 
-Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional withNewLineAfter As Boolean = True, Optional SkipPropertySpace As Integer)
+Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional ByVal OverwriteLineIndex As Long = 0)
     If ConsoleID > 4 Then Exit Function
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
+
+    If OverwriteLineIndex >= 0 Then
+        OverwriteLineIndex = 1
+    Else
+        OverwriteLineIndex = (OverwriteLineIndex * -1) + 1
+    End If
 
     s = StripAfterNewline(s)
 
@@ -623,23 +662,16 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional w
     
     tmpLine = Console(ConsoleID, 1)
 
-    s = PreSpace & s
- 
-    If SkipPropertySpace = 1 Then
-        Console(ConsoleID, 1).Caption = s
-        GoTo SkipPropertySpaceNow
-    End If
-
     If Has_Property_Space(s) = True Then
         propertySpace = i(Get_Property_Space(s)) & " "
         propertySpace = Replace(propertySpace, ",", " ")
-        Console(ConsoleID, 1).FontColor = propertySpace_Color(propertySpace)
-        Console(ConsoleID, 1).FontSize = propertySpace_Size(propertySpace)
-        Console(ConsoleID, 1).FontName = propertySpace_Name(propertySpace)
-        Console(ConsoleID, 1).FontBold = propertySpace_Bold(propertySpace)
-        Console(ConsoleID, 1).FontItalic = propertySpace_Italic(propertySpace)
-        Console(ConsoleID, 1).FontUnderline = propertySpace_Underline(propertySpace)
-        Console(ConsoleID, 1).FontStrikeThru = propertySpace_Strikethru(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontColor = propertySpace_Color(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontSize = propertySpace_Size(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontName = propertySpace_Name(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontBold = propertySpace_Bold(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontItalic = propertySpace_Italic(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontUnderline = propertySpace_Underline(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontStrikethru = propertySpace_Strikethru(propertySpace)
         If InStr(propertySpace, "flash ") > 0 Then Console(ConsoleID, 1).Flash = True Else Console(ConsoleID, 1).Flash = False
         If InStr(propertySpace, "flashfast ") > 0 Then Console(ConsoleID, 1).FlashFast = True Else Console(ConsoleID, 1).FlashFast = False
         If InStr(propertySpace, "flashslow ") > 0 Then Console(ConsoleID, 1).FlashSlow = True Else Console(ConsoleID, 1).FlashSlow = False
@@ -647,25 +679,14 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional w
         If InStr(propertySpace, "right ") > 0 Then Console(ConsoleID, 1).Right = True Else Console(ConsoleID, 1).Right = False
     End If
 
-    Console(ConsoleID, 1).Caption = Remove_Property_Space(s)
+    Console(ConsoleID, OverwriteLineIndex).PreSpace = True
+    Console(ConsoleID, OverwriteLineIndex).Caption = Remove_Property_Space(s)
 
-SkipPropertySpaceNow:
-    'don't allow multiple lines!
-    If InStr(Console(ConsoleID, 1).Caption, vbCr) > 0 Then
-        'this prevents each say line from being more than one line, stops corruption in console
-        Console(ConsoleID, 1).Caption = Mid(Console(ConsoleID, 1).Caption, 1, InStr(Console(ConsoleID, 1).Caption, vbCr) - 1)
-        Console(ConsoleID, 1).Caption = Console(ConsoleID, 1).Caption  '& "   --- only the first line is shown ---"
+    If OverwriteLineIndex = 1 Then
+        New_Console_Line_InProgress ConsoleID
+        'put the current line back at the next line
+        Console(ConsoleID, 1) = tmpLine
     End If
-    
-    If withNewLineAfter = True Then
-        'go to the next line
-        New_Console_Line ConsoleID
-    Else
-        Console(ConsoleID, 2) = Console(ConsoleID, 1)
-    End If
-
-    'put the current line back at the next line
-    Console(ConsoleID, 1) = tmpLine
 
     frmConsole.QueueConsoleRender
     DoEvents
@@ -681,7 +702,7 @@ Public Function Load_Property_Space(ByVal propertySpace As String, sCaption As S
     Load_Property_Space.FontBold = propertySpace_Bold(propertySpace)
     Load_Property_Space.FontItalic = propertySpace_Italic(propertySpace)
     Load_Property_Space.FontUnderline = propertySpace_Underline(propertySpace)
-    Load_Property_Space.FontStrikeThru = propertySpace_Strikethru(propertySpace)
+    Load_Property_Space.FontStrikethru = propertySpace_Strikethru(propertySpace)
     If InStr(propertySpace, "flash ") > 0 Then Load_Property_Space.Flash = True Else Load_Property_Space.Flash = False
     If InStr(propertySpace, "flashfast ") > 0 Then Load_Property_Space.FlashFast = True Else Load_Property_Space.FlashFast = False
     If InStr(propertySpace, "flashslow ") > 0 Then Load_Property_Space.FlashSlow = True Else Load_Property_Space.FlashSlow = False
@@ -786,7 +807,7 @@ Public Function Has_Property_Space(ByVal s As String) As Boolean
 End Function
 
 Public Function propertySpace_Name(ByVal s As String) As String
-    propertySpace_Name = RegLoad("Default_FontName", "Verdana")
+    propertySpace_Name = Console_Line_Defaults.FontName
     s = i(s)
     
     If InStr(s, "arial") > 0 Then propertySpace_Name = "Arial"
@@ -930,7 +951,7 @@ Public Function propertySpace_Color(ByVal s As String) As Long
         End If
     End If
     
-    If propertySpace_Color = 777 Then propertySpace_Color = RegLoad("Default_FontColor", RGB(255, 255, 255))
+    If propertySpace_Color = 777 Then propertySpace_Color = Console_Line_Defaults.FontColor
 End Function
 
 Public Function propertySpace_Size(ByVal s As String) As String
@@ -946,25 +967,33 @@ Public Function propertySpace_Size(ByVal s As String) As String
     Next n
     
 
-    If propertySpace_Size = 777 Then propertySpace_Size = RegLoad("Default_FontSize", "10")
-    
+    If propertySpace_Size = 777 Then propertySpace_Size = Console_Line_Defaults.FontSize
+
     If propertySpace_Size < 8 Then propertySpace_Size = 8
     If propertySpace_Size > Max_Font_Size Then propertySpace_Size = Max_Font_Size
 End Function
 
-Public Function EncodeBase64(ByRef arrData() As Byte) As String
+Public Function EncodeBase64Bytes(ByRef arrData() As Byte) As String
     If LBound(arrData) = UBound(arrData) Then
-        EncodeBase64 = ""
+        EncodeBase64Bytes = ""
         Exit Function
     End If
-    EncodeBase64 = Base64.EncodeByteArray(arrData)
+    EncodeBase64Bytes = Base64.EncodeByteArray(arrData)
 End Function
 
-Public Function DecodeBase64(ByVal strData As String) As Byte()
+Public Function EncodeBase64Str(ByVal strData As String) As String
+    EncodeBase64Str = EncodeBase64Bytes(StrConv(strData, vbFromUnicode))
+End Function
+
+Public Function DecodeBase64Bytes(ByVal strData As String) As Byte()
     If Len(strData) = 0 Then
         Dim EmptyData(0 To 0) As Byte
-        DecodeBase64 = EmptyData
+        DecodeBase64Bytes = EmptyData
         Exit Function
     End If
-    DecodeBase64 = Base64.DecodeToByteArray(strData)
+    DecodeBase64Bytes = Base64.DecodeToByteArray(strData)
+End Function
+
+Public Function DecodeBase64Str(ByVal strData As String) As String
+    DecodeBase64Str = StrConv(DecodeBase64Bytes(strData), vbUnicode)
 End Function

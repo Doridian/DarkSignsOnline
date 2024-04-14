@@ -104,6 +104,10 @@ Public Property Get IsOutputRedirected() As Boolean
     IsOutputRedirected = PrivRedirectOutput
 End Property
 
+Public Property Get ConsoleCursorChar() As Long
+    ConsoleCursorChar = basConsole.ConsoleCursorChar
+End Property
+
 Public Property Get ConsoleID() As String
     ConsoleID = PrivConsoleID
 End Property
@@ -176,16 +180,23 @@ Public Function ReadLine(ByVal Prompt As String) As String
         Exit Function
     End If
 
-    cPath_tmp(ConsoleID) = cPath(ConsoleID)
-    cPath(ConsoleID) = Prompt
+    cPrompt(ConsoleID) = Prompt
+    CurrentPromptInput(ConsoleID) = ""
     WaitingForInput(ConsoleID) = True
     
     New_Console_Line ConsoleID
 
     While WaitingForInput(ConsoleID)
-        Yield
+        If Not YieldSafe() Then GoTo ReadLineExit
     Wend
     ReadLine = WaitingForInputReturn(ConsoleID)
+    Exit Function
+
+ReadLineExit:
+    ReadLine = ""
+    CurrentPromptInput(ConsoleID) = ""
+    WaitingForInput(ConsoleID) = False
+    Yield
 End Function
 
 Public Function GetKey() As Long
@@ -196,9 +207,15 @@ Public Function GetKey() As Long
 
     GetKeyWaiting(ConsoleID) = -1
     While GetKeyWaiting(ConsoleID) = -1
-        Yield
+        If Not YieldSafe() Then GoTo ExitGetKey
     Wend
     GetKey = GetKeyWaiting(ConsoleID)
+    Exit Function
+
+ExitGetKey:
+    GetKeyWaiting(ConsoleID) = 0
+    GetKey = 0
+    Yield
 End Function
 
 Public Function GetASCII() As Long
@@ -209,9 +226,15 @@ Public Function GetASCII() As Long
 
     GetAsciiWaiting(ConsoleID) = -1
     While GetAsciiWaiting(ConsoleID) = -1
-        Yield
+        If Not YieldSafe() Then GoTo ExitGetASCII
     Wend
     GetASCII = GetAsciiWaiting(ConsoleID)
+    Exit Function
+
+ExitGetASCII:
+    GetAsciiWaiting(ConsoleID) = 0
+    GetASCII = 0
+    Yield
 End Function
 
 Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewAllowUnAbort As Boolean)
@@ -318,10 +341,12 @@ Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal
     AddCustomDownload ResIndex
 
     RunPage Url, PrivConsoleID, UsePost, PostData, ResIndex, NoAuth
-    Yield
+    If NoAuth Then
+        Yield
+    End If
 End Function
 
-Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
+Public Function WAITFOR(ByVal ResIndex As Long, Optional ByVal NoYield As Boolean = False) As clsHttpResponse
     ConsoleWaitingOnRemote(PrivConsoleID) = True
     frmConsole.QueueConsoleRender
     
@@ -344,7 +369,9 @@ Public Function WAITFOR(ByVal ResIndex As Long) As clsHttpResponse
 WaitForExit:
     ConsoleWaitingOnRemote(PrivConsoleID) = False
     frmConsole.QueueConsoleRender
-    Yield
+    If Not NoYield Then
+        Yield
+    End If
 End Function
 
 Public Sub CD(ByVal DIR As String)
@@ -360,7 +387,7 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     Dim Res() As Variant
 
     Dim Attr As Long
-    Dim Filename As String
+    Dim FileName As String
     Dim IsFirst As Boolean
     IsFirst = True
 
@@ -376,8 +403,8 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     
     Path = Path & "/"
     
-    Filename = FileSystem.DIR(Path, vbNormal + vbDirectory)
-    While Filename <> ""
+    FileName = FileSystem.DIR(Path, vbNormal + vbDirectory)
+    While FileName <> ""
         If IsFirst Then
             ReDim Res(0 To 0)
             IsFirst = False
@@ -385,13 +412,13 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
             ReDim Preserve Res(0 To UBound(Res) + 1)
         End If
 
-        Attr = GetAttr(Path & Filename)
+        Attr = GetAttr(Path & FileName)
         If (Attr And vbDirectory) = vbDirectory Then
-            Filename = Filename & "/"
+            FileName = FileName & "/"
         End If
         
-        Res(UBound(Res)) = Filename
-        Filename = FileSystem.DIR()
+        Res(UBound(Res)) = FileName
+        FileName = FileSystem.DIR()
     Wend
 
     If IsFirst Then
@@ -423,7 +450,7 @@ Public Sub EDIT(ByVal File As String)
     Yield
 End Sub
 
-Public Sub SayLine(ByVal s As String)
+Public Sub SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
     If s = "" Then
         Yield
         Exit Sub
@@ -442,7 +469,7 @@ Public Sub SayLine(ByVal s As String)
         Exit Sub
     End If
     Yield
-    basConsole.SayRaw PrivConsoleID, s, False
+    basConsole.SayRaw PrivConsoleID, s, YPos
     Yield
 End Sub
 
@@ -617,7 +644,7 @@ Public Sub SayCOMM(ParamArray Params() As Variant)
     If sStr = "" Then
         Exit Sub
     End If
-    basWorld.SayCOMM sStr, ConsoleID
+    basWorld.SayCOMM sStr
     Yield
 End Sub
 
@@ -674,6 +701,13 @@ Private Sub RaiseMiscError(ByVal Desc As String)
 End Sub
 
 Public Function TextWidth(ByVal FontName As String, ByVal FontSize As String, ByVal Text As String) As Long
+    If FontName = "" Then
+        FontName = basConsole.Console_Line_Defaults.FontName
+    End If
+    If FontSize = "" Then
+        FontSize = basConsole.Console_Line_Defaults.FontSize
+    End If
+
     frmConsole.lfont.FontName = FontName
     frmConsole.lfont.FontSize = FontSize
     frmConsole.lfont.Caption = Text
@@ -681,11 +715,21 @@ Public Function TextWidth(ByVal FontName As String, ByVal FontSize As String, By
 End Function
 
 Public Function TextHeight(ByVal FontName As String, ByVal FontSize As String) As Long
+    If FontName = "" Then
+        FontName = basConsole.Console_Line_Defaults.FontName
+    End If
+    If FontSize = "" Then
+        FontSize = basConsole.Console_Line_Defaults.FontSize
+    End If
     TextHeight = Font_Height(FontName, FontSize)
 End Function
 
 Public Function ConsoleWidth() As Long
     ConsoleWidth = frmConsole.Width - (ConsoleXSpacing * 2)
+End Function
+
+Public Function FormatKB(ToConvert As Long) As String
+    FormatKB = basGeneral.FormatKB(ToConvert)
 End Function
 
 Public Sub Overwrite(ByVal File As String, ByVal Content As String)
@@ -696,17 +740,15 @@ End Sub
 
 Public Sub Append(ByVal File As String, ByVal Content As String)
     AssertLocalOnly
-    
-    Dim FF As Long
-    FF = FreeFile
 
-    File = ResolvePath(File)
-    
-    Open SafePath(File) For Binary Access Write As #FF
-        Seek #FF, LOF(FF) + 1
-        Put #FF, , Content
-    Close #FF
+    AppendFile ResolvePath(File), Content
 End Sub
+
+Public Function FileLen(ByVal File As String) As Long
+    AssertLocalOnly
+
+    FileLen = basGeneral.FileLen(ResolvePath(File))
+End Function
 
 Public Sub Del(ByVal File As String)
     AssertLocalOnly
@@ -837,43 +879,60 @@ Public Sub PAUSE(Optional ByVal Prompt As String = "")
     Yield
 End Sub
 
-Public Sub LOGIN()
+Public Sub LOGIN(Optional ByVal Silent As Boolean = False)
     AssertLocalOnly
-    
-    Dim isBad As Boolean
-    isBad = False
+
+    Dim PrintOutput As Boolean
+    PrintOutput = (Not PrivDisableOutput) And (Not PrivRedirectOutput) And (Not Silent)
+
+    While LoginInProgress
+        Yield
+    Wend
 
     If basWorld.Authorized = True Then
-        SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
+        If PrintOutput Then
+            SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
+        End If
         Exit Sub
     End If
 
+    Dim isBad As Boolean
+    isBad = False
     If myUsername = "" Then
-        SayRaw ConsoleID, "{14, orange,  center}Your username is not set - type: USERNAME = ""[username]"" to set it."
+        If PrintOutput Then
+            SayRaw ConsoleID, "{14, orange,  center}Your username is not set - type: USERNAME = ""[username]"" to set it."
+        End If
         isBad = True
     End If
     If myPassword = "" Then
-        SayRaw ConsoleID, "{14, orange, center}Your password is not set - type: PASSWORD = ""[password]"" to set it."
+        If PrintOutput Then
+            SayRaw ConsoleID, "{14, orange, center}Your password is not set - type: PASSWORD = ""[password]"" to set it."
+        End If
         isBad = True
     End If
 
     If isBad = True Then
-        SayRaw ConsoleID, "Warning - You are not logged in!{16 center underline}"
-        SayRaw ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
+        If PrintOutput Then
+            SayRaw ConsoleID, "Warning - You are not logged in!{16 center underline}"
+            SayRaw ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
+        End If
         RaiseMiscError "Username and/or password not set"
     End If
 
+    LoginInProgress = True
     SayCOMM "Logging in..."
 
     Dim ResIndex As Long
     ResIndex = DoDownloadAPI("auth.php", True, "")
     Dim ResObj As clsHttpResponse
-    Set ResObj = WAITFOR(ResIndex)
+    Set ResObj = WAITFOR(ResIndex, True)
 
     If ResObj.IsSuccess() Then
         OnLoginSuccess
+        LoginInProgress = False
     Else
         OnLoginFailure
+        LoginInProgress = False
         RaiseMiscError "Login failed"
     End If
 
@@ -969,17 +1028,16 @@ Public Function GetIP(ByVal Domain As String) As String
     GetIP = DomainRequest.Response
 End Function
 
-Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As String)
+Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileName As String)
     AssertLocalOnly
     
     Yield
 
     Dim sFileData As String
-    sFileData = GetFile(ResolvePath(Filename))
+    sFileData = GetFile(ResolvePath(FileName))
 
     Dim tempStrA As String
-
-    tempStrA = EncodeBase64(StrConv(sFileData, vbFromUnicode))
+    tempStrA = EncodeBase64Str(sFileData)
 
     Dim PostData As String
     PostData = "port=" & EncodeURLParameter(Port) & _
@@ -995,7 +1053,7 @@ Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As 
     Yield
 End Sub
 
-Public Sub DOWNLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename As String)
+Public Sub DOWNLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileName As String)
     AssertLocalOnly
     
     Yield
@@ -1010,7 +1068,7 @@ Public Sub DOWNLOAD(ByVal Domain As String, ByVal Port As Long, ByVal Filename A
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
 
-    WriteFile ResolvePath(Filename), DomainRequest.Response
+    WriteFile ResolvePath(FileName), DomainRequest.Response
 
     Yield
 End Sub
@@ -1115,28 +1173,28 @@ Private Function DomainFilesystemHelper(ByVal Domain As String, ByVal PostData A
     DomainFilesystemHelper = DomainRequest.Response
 End Function
 
-Public Sub RemoteWrite(ByVal Domain As String, ByVal Filename As String, ByVal Contents As String)
+Public Sub RemoteWrite(ByVal Domain As String, ByVal FileName As String, ByVal Contents As String)
     AssertLocalOnly
 
-    DomainFilesystemHelper Domain, "write=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
+    DomainFilesystemHelper Domain, "write=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents)
 End Sub
 
-Public Sub RemoteAppend(ByVal Domain As String, ByVal Filename As String, ByVal Contents As String)
+Public Sub RemoteAppend(ByVal Domain As String, ByVal FileName As String, ByVal Contents As String)
     AssertLocalOnly
 
-    DomainFilesystemHelper Domain, "append=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
+    DomainFilesystemHelper Domain, "append=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents)
 End Sub
 
-Public Sub RemoteSafeAppend(ByVal Domain As String, ByVal Filename As String, ByVal Line As String)
+Public Sub RemoteSafeAppend(ByVal Domain As String, ByVal FileName As String, ByVal Line As String)
     AssertLocalOnly
 
-    DomainFilesystemHelper Domain, "safeappend=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Line)
+    DomainFilesystemHelper Domain, "safeappend=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Line)
 End Sub
 
-Public Sub RemoteDelete(ByVal Domain As String, ByVal Filename As String)
+Public Sub RemoteDelete(ByVal Domain As String, ByVal FileName As String)
     AssertLocalOnly
     
-    DomainFilesystemHelper Domain, "delete=" & EncodeURLParameter(Filename)
+    DomainFilesystemHelper Domain, "delete=" & EncodeURLParameter(FileName)
 End Sub
 
 Public Function RemoteDir(ByVal Domain As String) As Variant()
@@ -1145,34 +1203,34 @@ Public Function RemoteDir(ByVal Domain As String) As Variant()
     RemoteDir = Split(DomainFilesystemHelper(Domain, "dir=/"), vbCrLf)
 End Function
 
-Public Function RemoteView(ByVal Domain As String, ByVal Filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+Public Function RemoteView(ByVal Domain As String, ByVal FileName As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     AssertLocalOnly
     
-    RemoteView = DomainFilesystemHelper(Domain, "fileserver=" & EncodeURLParameter(Filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
+    RemoteView = DomainFilesystemHelper(Domain, "fileserver=" & EncodeURLParameter(FileName) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
 End Function
 
-Public Sub ServerWrite(ByVal Filename As String, ByVal Contents As String)
+Public Sub ServerWrite(ByVal FileName As String, ByVal Contents As String)
     AssertRemoteOnly
 
-    DomainFilesystemHelper ServerDomain, "write=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
+    DomainFilesystemHelper ServerDomain, "write=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents)
 End Sub
 
-Public Sub ServerAppend(ByVal Filename As String, ByVal Contents As String)
+Public Sub ServerAppend(ByVal FileName As String, ByVal Contents As String)
     AssertRemoteOnly
 
-    DomainFilesystemHelper ServerDomain, "append=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Contents)
+    DomainFilesystemHelper ServerDomain, "append=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents)
 End Sub
 
-Public Sub ServerSafeAppend(ByVal Filename As String, ByVal Line As String)
+Public Sub ServerSafeAppend(ByVal FileName As String, ByVal Line As String)
     AssertRemoteOnly
 
-    DomainFilesystemHelper ServerDomain, "safeappend=" & EncodeURLParameter(Filename) & "&filedata=" & EncodeURLParameter(Line)
+    DomainFilesystemHelper ServerDomain, "safeappend=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Line)
 End Sub
 
-Public Sub ServerDelete(ByVal Filename As String)
+Public Sub ServerDelete(ByVal FileName As String)
     AssertRemoteOnly
     
-    DomainFilesystemHelper ServerDomain, "delete=" & EncodeURLParameter(Filename)
+    DomainFilesystemHelper ServerDomain, "delete=" & EncodeURLParameter(FileName)
 End Sub
 
 Public Function ServerDir() As Variant()
@@ -1181,14 +1239,14 @@ Public Function ServerDir() As Variant()
     ServerDir = Split(DomainFilesystemHelper(ServerDomain, "dir=/"), vbCrLf)
 End Function
 
-Public Function ServerView(ByVal Filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+Public Function ServerView(ByVal FileName As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     AssertRemoteOnly
     
-    ServerView = DomainFilesystemHelper(ServerDomain, "fileserver=" & EncodeURLParameter(Filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
+    ServerView = DomainFilesystemHelper(ServerDomain, "fileserver=" & EncodeURLParameter(FileName) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
 End Function
 
-Public Function FileServer(ByVal Filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
-    FileServer = ServerView(Filename, StartLine, MaxLines)
+Public Function FileServer(ByVal FileName As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    FileServer = ServerView(FileName, StartLine, MaxLines)
 End Function
 
 Public Function MyDomains() As String
@@ -1357,6 +1415,21 @@ Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
     End If
 End Sub
 
+Public Sub IncludeCommand(ByVal Script As String)
+    AssertLocalOnly
+
+    Include ResolveCommand(Script)
+End Sub
+
+Public Sub Include(ByVal Script As String)
+    AssertLocalOnly
+
+    Dim ScriptData As String
+    ScriptData = GetFile(ResolvePath(Script))
+
+    SControl.AddCode ScriptData
+End Sub
+
 Public Sub Run(ParamArray XArr() As Variant)
     If UBound(XArr) < 0 Then
         RaiseMiscError "Run needs at least one parameter (the script)"
@@ -1471,6 +1544,9 @@ Public Sub RunCode(ParamArray XArr() As Variant)
     RunCodeA Script, SParamArr
 End Sub
 
+Public Sub IncludeCode(ByVal Code As String)
+    SControl.AddCode Code
+End Sub
 
 ' RUN CODE FROM DSO DOMAIN
 
@@ -1595,10 +1671,8 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     Dim strFileKey As String
     strFileKey = DomainSplit(2)
 
-    Dim b64decoded() As Byte
     Dim strCode As String
-    b64decoded = basConsole.DecodeBase64(DomainSplit(3))
-    strCode = StrConv(b64decoded, vbUnicode)
+    strCode = DecodeBase64Str(DomainSplit(3))
 
     Dim DomScript As String
     DomScript = "dso://" & strDomain & ":" & strPort
@@ -1606,5 +1680,38 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput)
 
     Yield
+End Function
+
+' Encoding helpers
+Public Function EncodeBase64Bytes(arrData As Variant) As String
+    Dim typedArrData() As Byte
+    Dim X As Long
+
+    ReDim typedArrData(LBound(arrData) To UBound(arrData))
+    For X = LBound(arrData) To UBound(arrData)
+        typedArrData(X) = arrData(X)
+    Next
+    EncodeBase64Bytes = basConsole.EncodeBase64Bytes(typedArrData)
+End Function
+
+Public Function EncodeBase64Str(ByVal strData As String) As String
+    EncodeBase64Str = basConsole.EncodeBase64Str(strData)
+End Function
+
+Public Function DecodeBase64Bytes(ByVal strData As String) As Variant()
+    Dim Res() As Byte
+    Dim ResVar() As Variant
+    Dim X As Long
+
+    Res = basConsole.DecodeBase64Bytes(strData)
+    ReDim ResVar(LBound(Res) To UBound(Res))
+    For X = LBound(Res) To UBound(Res)
+        ResVar(X) = Res(X)
+    Next
+    DecodeBase64Bytes = ResVar
+End Function
+
+Public Function DecodeBase64Str(ByVal strData As String) As String
+    DecodeBase64Str = basConsole.DecodeBase64Str(strData)
 End Function
 

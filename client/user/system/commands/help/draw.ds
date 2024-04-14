@@ -1,7 +1,5 @@
 Option Explicit
-Dim props, propsforexamples
-props = "{green 12 underline}"
-propsforexamples = "{lgreen 12}"
+Include "/system/commands/help/_util.ds"
 
 Say props & "Command: DRAW -y Red(0-255) Green(0-255) Blue(0-255) mode"
 Say propsforexamples & "Example #1: DRAW -1 142 200 11 fadeout"

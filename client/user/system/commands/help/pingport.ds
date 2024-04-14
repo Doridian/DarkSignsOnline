@@ -1,7 +1,5 @@
 Option Explicit
-Dim props, propsforexamples
-props = "{green 12 underline}"
-propsforexamples = "{lgreen 12}"
+Include "/system/commands/help/_util.ds"
 
 Say props & "Command: PINGPORT domain-or-ip-server 80"
 Say propsforexamples & "Example #1: PINGPORT birds.com 80"
