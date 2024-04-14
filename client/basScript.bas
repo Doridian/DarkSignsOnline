@@ -22,8 +22,6 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
     If ConsoleID > 4 Then
         ConsoleID = 4
     End If
-    Dim OldPath As String
-    OldPath = cPath(ConsoleID)
 
     CancelScript(ConsoleID) = False
 
@@ -95,7 +93,6 @@ ScriptCancelled:
 ScriptEnd:
     Run_Script_Code = G.ScriptGetOutput()
     G.CleanupScriptTasks
-    cPath(ConsoleID) = OldPath
 End Function
 
 Public Function Run_Script(ByVal FileName As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean) As String
