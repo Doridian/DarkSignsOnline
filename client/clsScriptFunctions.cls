@@ -144,7 +144,7 @@ Private Sub Class_Initialize()
     PrivOutput = ""
 End Sub
 
-Public Sub CleanupScriptTasks()
+Public Function CleanupScriptTasks()
     If UBound(PendingCustomDownloads) > 0 Then
         Dim X As Long
         For X = 1 To UBound(PendingCustomDownloads)
@@ -157,18 +157,18 @@ Public Sub CleanupScriptTasks()
     GetAsciiWaiting(ConsoleID) = 0
     WaitingForInput(ConsoleID) = False
     WaitingForInputReturn(ConsoleID) = ""
-End Sub
+End Function
 
-Public Sub UnAbort()
+Public Function UnAbort()
     If PrivAllowUnAbort Then
         Aborted = False
     End If
-End Sub
+End Function
 
-Public Sub Quit()
+Public Function Quit()
     Aborted = True
     Err.Raise vbObjectError + 9002, , "Script exited"
-End Sub
+End Function
 
 Public Function ScriptGetOutput() As String
     ScriptGetOutput = PrivOutput
@@ -237,9 +237,9 @@ ExitGetASCII:
     Yield
 End Function
 
-Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewAllowUnAbort As Boolean)
+Public Function Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewAllowUnAbort As Boolean)
     If IsConfigured Then
-        Exit Sub
+        Exit Function
     End If
     IsConfigured = True
     PrivConsoleID = NewConsoleID
@@ -253,15 +253,15 @@ Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLII
     PrivServerDomain = NewServerDomain
     PrivServerPort = NewServerPort
     PrivAllowUnAbort = NewAllowUnAbort
-End Sub
+End Function
 
-Public Sub Cls()
+Public Function Cls()
     Clear
-End Sub
+End Function
 
-Public Sub Delete(ByVal File As String)
+Public Function Delete(ByVal File As String)
     Del File
-End Sub
+End Function
 
 Private Sub AddCustomDownload(ByVal ResIndex As Long)
     ReDim Preserve PendingCustomDownloads(0 To UBound(PendingCustomDownloads) + 1)
@@ -374,12 +374,12 @@ WaitForExit:
     End If
 End Function
 
-Public Sub CD(ByVal DIR As String)
+Public Function CD(ByVal DIR As String)
     AssertLocalOnly
 
     cPath(PrivConsoleID) = ResolvePath(DIR)
     Yield
-End Sub
+End Function
 
 Public Function ReadDir(ByVal RawPath As String) As Variant()
     AssertLocalOnly
@@ -432,28 +432,28 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     Yield
 End Function
 
-Public Sub RESTART()
+Public Function RESTART()
     If PrivDisableOutput Then
         Yield
-        Exit Sub
+        Exit Function
     End If
 
     frmConsole.Start_Console PrivConsoleID
     Yield
-End Sub
+End Function
 
-Public Sub EDIT(ByVal File As String)
+Public Function EDIT(ByVal File As String)
     AssertLocalOnly
 
     Yield
     EditFile ResolvePath(File), PrivConsoleID
     Yield
-End Sub
+End Function
 
-Public Sub SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
+Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
     If s = "" Then
         Yield
-        Exit Sub
+        Exit Function
     End If
 
     If PrivRedirectOutput Then
@@ -466,37 +466,37 @@ Public Sub SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
     End If
     If PrivDisableOutput Then
         Yield
-        Exit Sub
+        Exit Function
     End If
     Yield
     basConsole.SayRaw PrivConsoleID, s, YPos
     Yield
-End Sub
+End Function
 
-Public Sub PrintVar(ParamArray Param() As Variant)
+Public Function PrintVar(ParamArray Param() As Variant)
     If UBound(Param) < 0 Then
         Say "No arguments to print{orange}"
-        Exit Sub
+        Exit Function
     End If
 
     If LBound(Param) = UBound(Param) And VarType(Param(UBound(Param))) = vbString Then
         Say Param(UBound(Param))
-        Exit Sub
+        Exit Function
     End If
 
     Dim X As Long
     For X = LBound(Param) To UBound(Param)
         PrintVarInt Param(X), "", "ArgV(" & X & ") ", 0
     Next X
-End Sub
+End Function
 
-Public Sub PrintVarSingleIfSet(Param As Variant)
+Public Function PrintVarSingleIfSet(Param As Variant)
     If VarType(Param) = vbEmpty Then
-        Exit Sub
+        Exit Function
     End If
 
     PrintVar Param
-End Sub
+End Function
 
 Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As String, ByVal Depth As String)
     Dim TypeName As String
@@ -581,11 +581,11 @@ Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As
     Yield
 End Sub
 
-Public Sub LineUp()
+Public Function LineUp()
     Say "-"
-End Sub
+End Function
 
-Public Sub Say(ParamArray Params() As Variant)
+Public Function Say(ParamArray Params() As Variant)
     Dim X As Long
     Dim sStr As String
     Dim XV As String
@@ -601,7 +601,7 @@ Public Sub Say(ParamArray Params() As Variant)
 
     If sStr = "" Then
         Yield
-        Exit Sub
+        Exit Function
     End If
 
     If PrivRedirectOutput Then
@@ -614,7 +614,7 @@ Public Sub Say(ParamArray Params() As Variant)
     End If
     If PrivDisableOutput Then
         Yield
-        Exit Sub
+        Exit Function
     End If
 
     Dim ScriptOutSplit() As String
@@ -624,9 +624,9 @@ Public Sub Say(ParamArray Params() As Variant)
         basConsole.SayRaw PrivConsoleID, ScriptOutSplit(X)
         Yield
     Next
-End Sub
+End Function
 
-Public Sub SayCOMM(ParamArray Params() As Variant)
+Public Function SayCOMM(ParamArray Params() As Variant)
     Dim X As Long
     Dim sStr As String
     Dim XV As String
@@ -642,13 +642,13 @@ Public Sub SayCOMM(ParamArray Params() As Variant)
 
     Yield
     If sStr = "" Then
-        Exit Sub
+        Exit Function
     End If
     basWorld.SayCOMM sStr
     Yield
-End Sub
+End Function
 
-Public Sub CLIParse(ByVal Src As String, ByVal Dest As String)
+Public Function CLIParse(ByVal Src As String, ByVal Dest As String)
     AssertLocalOnly
 
     Dim SrcStr As String
@@ -658,7 +658,7 @@ Public Sub CLIParse(ByVal Src As String, ByVal Dest As String)
     DestStr = ParseCommandLineOptional(SrcStr)
 
     WriteFile ResolvePath(Dest), DestStr
-End Sub
+End Function
 
 Public Function ResolveCommand(ByVal Command As String) As String
     ResolveCommand = basCommands.ResolveCommand(PrivConsoleID, Command)
@@ -732,17 +732,17 @@ Public Function FormatKB(ToConvert As Long) As String
     FormatKB = basGeneral.FormatKB(ToConvert)
 End Function
 
-Public Sub Overwrite(ByVal File As String, ByVal Content As String)
+Public Function Overwrite(ByVal File As String, ByVal Content As String)
     AssertLocalOnly
 
     basGeneral.WriteFile ResolvePath(File), Content
-End Sub
+End Function
 
-Public Sub Append(ByVal File As String, ByVal Content As String)
+Public Function Append(ByVal File As String, ByVal Content As String)
     AssertLocalOnly
 
     AppendFile ResolvePath(File), Content
-End Sub
+End Function
 
 Public Function FileLen(ByVal File As String) As Long
     AssertLocalOnly
@@ -750,15 +750,15 @@ Public Function FileLen(ByVal File As String) As Long
     FileLen = basGeneral.FileLen(ResolvePath(File))
 End Function
 
-Public Sub Del(ByVal File As String)
+Public Function Del(ByVal File As String)
     AssertLocalOnly
 
     Yield
     File = ResolvePath(File)
     Kill SafePath(File)
-End Sub
+End Function
 
-Public Sub Copy(ByVal Source As String, ByVal Destination As String)
+Public Function Copy(ByVal Source As String, ByVal Destination As String)
     AssertLocalOnly
     
     Yield
@@ -766,13 +766,13 @@ Public Sub Copy(ByVal Source As String, ByVal Destination As String)
     Destination = ResolvePath(Destination)
     
     FileCopy SafePath(Source), SafePath(Destination)
-End Sub
+End Function
 
-Public Sub Rename(ByVal Source As String, ByVal Destination As String)
+Public Function Rename(ByVal Source As String, ByVal Destination As String)
     Move Source, Destination
-End Sub
+End Function
 
-Public Sub Move(ByVal Source As String, ByVal Destination As String)
+Public Function Move(ByVal Source As String, ByVal Destination As String)
     AssertLocalOnly
     
     Yield
@@ -780,25 +780,25 @@ Public Sub Move(ByVal Source As String, ByVal Destination As String)
     Destination = ResolvePath(Destination)
 
     Name SafePath(Source) As SafePath(Destination)
-End Sub
+End Function
 
-Public Sub MD(ByVal NewDir As String)
+Public Function MD(ByVal NewDir As String)
     AssertLocalOnly
 
     Yield
     NewDir = ResolvePath(NewDir)
 
     MkDir SafePath(NewDir)
-End Sub
+End Function
 
-Public Sub RD(ByVal OldDir As String)
+Public Function RD(ByVal OldDir As String)
     AssertLocalOnly
 
     Yield
     OldDir = ResolvePath(OldDir)
 
     RmDir SafePath(OldDir)
-End Sub
+End Function
 
 Public Function Cat(ByVal File As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     Cat = Display(File, StartLine, MaxLines)
@@ -844,42 +844,42 @@ AbortPrintDisplayLoop:
     Close #FF
 End Function
 
-Public Sub MUSIC(ByVal Command As String)
+Public Function MUSIC(ByVal Command As String)
     AssertLocalOnly
 
     Yield
     MusicCommand Command
     Yield
-End Sub
+End Function
 
-Public Sub MAIL()
+Public Function MAIL()
     AssertLocalOnly
 
     Yield
     frmDSOMail.Show vbModal
     Yield
-End Sub
+End Function
 
-Public Sub yDiv(ByVal setValue As Integer)
+Public Function yDiv(ByVal setValue As Integer)
     Yield
     If PrivDisableOutput Then
-        Exit Sub
+        Exit Function
     End If
 
     SetYDiv setValue
-End Sub
+End Function
 
-Public Sub PAUSE(Optional ByVal Prompt As String = "")
+Public Function PAUSE(Optional ByVal Prompt As String = "")
     Yield
     If PrivDisableOutput Then
-        Exit Sub
+        Exit Function
     End If
 
     PauseConsole Prompt, PrivConsoleID
     Yield
-End Sub
+End Function
 
-Public Sub LOGIN(Optional ByVal Silent As Boolean = False)
+Public Function LOGIN(Optional ByVal Silent As Boolean = False)
     AssertLocalOnly
 
     Dim PrintOutput As Boolean
@@ -893,7 +893,7 @@ Public Sub LOGIN(Optional ByVal Silent As Boolean = False)
         If PrintOutput Then
             SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
         End If
-        Exit Sub
+        Exit Function
     End If
 
     Dim isBad As Boolean
@@ -939,9 +939,9 @@ Public Sub LOGIN(Optional ByVal Silent As Boolean = False)
     ResObj.RaiseForStatus
 
     Yield
-End Sub
+End Function
 
-Public Sub LOGOUT()
+Public Function LOGOUT()
     AssertLocalOnly
 
     basWorld.Authorized = False
@@ -958,7 +958,7 @@ Public Sub LOGOUT()
     End If
 
     Yield
-End Sub
+End Function
 
 Public Function Stats(ByVal setValue As Integer) As String
     Yield
@@ -1028,7 +1028,7 @@ Public Function GetIP(ByVal Domain As String) As String
     GetIP = DomainRequest.Response
 End Function
 
-Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileName As String)
+Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileName As String)
     AssertLocalOnly
     
     Yield
@@ -1051,9 +1051,9 @@ Public Sub UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileName As 
     DomainRequest.RaiseForStatus
 
     Yield
-End Sub
+End Function
 
-Public Sub DOWNLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileName As String)
+Public Function DOWNLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileName As String)
     AssertLocalOnly
     
     Yield
@@ -1071,9 +1071,9 @@ Public Sub DOWNLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileName A
     WriteFile ResolvePath(FileName), DomainRequest.Response
 
     Yield
-End Sub
+End Function
 
-Public Sub Unregister(ByVal Domain As String)
+Public Function Unregister(ByVal Domain As String)
     AssertLocalOnly
     
     Yield
@@ -1085,9 +1085,9 @@ Public Sub Unregister(ByVal Domain As String)
     DomainRequest.RaiseForStatus
 
     Yield
-End Sub
+End Function
 
-Public Sub Register(ByVal Domain As String)
+Public Function Register(ByVal Domain As String)
     AssertLocalOnly
 
     Yield
@@ -1099,7 +1099,7 @@ Public Sub Register(ByVal Domain As String)
     DomainRequest.RaiseForStatus
 
     Yield
-End Sub
+End Function
 
 Public Function RegisterPrices() As String
     AssertLocalOnly
@@ -1116,7 +1116,7 @@ Public Function RegisterPrices() As String
     RegisterPrices = DomainRequest.Response
 End Function
 
-Public Sub ClosePort(ByVal Domain As String, ByVal Port As Long)
+Public Function ClosePort(ByVal Domain As String, ByVal Port As Long)
     AssertLocalOnly
     
     Yield
@@ -1132,7 +1132,7 @@ Public Sub ClosePort(ByVal Domain As String, ByVal Port As Long)
     DomainRequest.RaiseForStatus
 
     Yield
-End Sub
+End Function
 
 Private Function MyDomainsHelper(ByVal DomainType As String) As String
     AssertLocalOnly
@@ -1173,29 +1173,29 @@ Private Function DomainFilesystemHelper(ByVal Domain As String, ByVal PostData A
     DomainFilesystemHelper = DomainRequest.Response
 End Function
 
-Public Sub RemoteWrite(ByVal Domain As String, ByVal FileName As String, ByVal Contents As String)
+Public Function RemoteWrite(ByVal Domain As String, ByVal FileName As String, ByVal Contents As String)
     AssertLocalOnly
 
     DomainFilesystemHelper Domain, "write=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents)
-End Sub
+End Function
 
-Public Sub RemoteAppend(ByVal Domain As String, ByVal FileName As String, ByVal Contents As String)
+Public Function RemoteAppend(ByVal Domain As String, ByVal FileName As String, ByVal Contents As String)
     AssertLocalOnly
 
     DomainFilesystemHelper Domain, "append=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents)
-End Sub
+End Function
 
-Public Sub RemoteSafeAppend(ByVal Domain As String, ByVal FileName As String, ByVal Line As String)
+Public Function RemoteSafeAppend(ByVal Domain As String, ByVal FileName As String, ByVal Line As String)
     AssertLocalOnly
 
     DomainFilesystemHelper Domain, "safeappend=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Line)
-End Sub
+End Function
 
-Public Sub RemoteDelete(ByVal Domain As String, ByVal FileName As String)
+Public Function RemoteDelete(ByVal Domain As String, ByVal FileName As String)
     AssertLocalOnly
     
     DomainFilesystemHelper Domain, "delete=" & EncodeURLParameter(FileName)
-End Sub
+End Function
 
 Public Function RemoteDir(ByVal Domain As String) As Variant()
     AssertLocalOnly
@@ -1209,29 +1209,29 @@ Public Function RemoteView(ByVal Domain As String, ByVal FileName As String, Opt
     RemoteView = DomainFilesystemHelper(Domain, "fileserver=" & EncodeURLParameter(FileName) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
 End Function
 
-Public Sub ServerWrite(ByVal FileName As String, ByVal Contents As String)
+Public Function ServerWrite(ByVal FileName As String, ByVal Contents As String)
     AssertRemoteOnly
 
     DomainFilesystemHelper ServerDomain, "write=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents)
-End Sub
+End Function
 
-Public Sub ServerAppend(ByVal FileName As String, ByVal Contents As String)
+Public Function ServerAppend(ByVal FileName As String, ByVal Contents As String)
     AssertRemoteOnly
 
     DomainFilesystemHelper ServerDomain, "append=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents)
-End Sub
+End Function
 
-Public Sub ServerSafeAppend(ByVal FileName As String, ByVal Line As String)
+Public Function ServerSafeAppend(ByVal FileName As String, ByVal Line As String)
     AssertRemoteOnly
 
     DomainFilesystemHelper ServerDomain, "safeappend=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Line)
-End Sub
+End Function
 
-Public Sub ServerDelete(ByVal FileName As String)
+Public Function ServerDelete(ByVal FileName As String)
     AssertRemoteOnly
     
     DomainFilesystemHelper ServerDomain, "delete=" & EncodeURLParameter(FileName)
-End Sub
+End Function
 
 Public Function ServerDir() As Variant()
     AssertRemoteOnly
@@ -1306,24 +1306,24 @@ Public Function Transfer(ByVal Target As String, ByVal Amount As Long, ByVal Des
     Transfer = TransferRequest.Response
 End Function
 
-Public Sub Wait(ByVal Milliseconds As Long)
+Public Function Wait(ByVal Milliseconds As Long)
     Dim EndTime As Long
     EndTime = GetTickCount() + Milliseconds
     
     While GetTickCount() < EndTime
         Yield
     Wend
-End Sub
+End Function
 
-Public Sub Clear()
+Public Function Clear()
     If PrivDisableOutput Then
         Yield
-        Exit Sub
+        Exit Function
     End If
 
     ClearConsole PrivConsoleID
     Yield
-End Sub
+End Function
 
 Public Function ArgC() As Long
     Yield
@@ -1351,11 +1351,11 @@ Private Function YieldSafe() As Boolean
     DoEvents
 End Function
 
-Public Sub Yield()
+Public Function Yield()
     If Not YieldSafe() Then
         Err.Raise vbObjectError + 9001, , "Script canceled"
     End If
-End Sub
+End Function
 
 
 ' RUN CODE FROM FILE
@@ -1407,30 +1407,30 @@ Public Function Capture(ParamArray XArr() As Variant) As String
     Capture = CaptureA(Script, SParamArr)
 End Function
 
-Public Sub RunA(ByVal Script As String, Optional XArr As Variant)
+Public Function RunA(ByVal Script As String, Optional XArr As Variant)
     Dim Output As String
     Output = RawRunCaptureA(PrivDisableOutput And PrivRedirectOutput, PrivDisableOutput, Script, XArr)
     If PrivDisableOutput And PrivRedirectOutput Then
         Say Output
     End If
-End Sub
+End Function
 
-Public Sub IncludeCommand(ByVal Script As String)
+Public Function IncludeCommand(ByVal Script As String)
     AssertLocalOnly
 
     Include ResolveCommand(Script)
-End Sub
+End Function
 
-Public Sub Include(ByVal Script As String)
+Public Function Include(ByVal Script As String)
     AssertLocalOnly
 
     Dim ScriptData As String
     ScriptData = GetFile(ResolvePath(Script))
 
     SControl.AddCode ScriptData
-End Sub
+End Function
 
-Public Sub Run(ParamArray XArr() As Variant)
+Public Function Run(ParamArray XArr() As Variant)
     If UBound(XArr) < 0 Then
         RaiseMiscError "Run needs at least one parameter (the script)"
     End If
@@ -1439,7 +1439,7 @@ Public Sub Run(ParamArray XArr() As Variant)
     Script = XArr(0)
     If UBound(XArr) = 0 Then
         RunA Script
-        Exit Sub
+        Exit Function
     End If
 
     Dim X As Long
@@ -1449,23 +1449,23 @@ Public Sub Run(ParamArray XArr() As Variant)
         SParamArr(X) = XArr(X + 1)
     Next
     RunA Script, SParamArr
-End Sub
+End Function
 
 ' IRC
 
-Public Sub ChatSend(ByVal Msg As String)
+Public Function ChatSend(ByVal Msg As String)
     AssertLocalOnly
 
     Yield
     frmConsole.ChatSend Msg
-End Sub
+End Function
 
-Public Sub ChatView(ByVal Enabled As Boolean)
+Public Function ChatView(ByVal Enabled As Boolean)
     AssertLocalOnly
 
     Yield
     frmConsole.ChatView Enabled
-End Sub
+End Function
 
 
 ' RUN CODE FROM STRING
@@ -1515,15 +1515,15 @@ Public Function CaptureCode(ParamArray XArr() As Variant) As String
     CaptureCode = CaptureCodeA(Script, SParamArr)
 End Function
 
-Public Sub RunCodeA(ByVal Code As String, Optional XArr As Variant)
+Public Function RunCodeA(ByVal Code As String, Optional XArr As Variant)
     Dim Output As String
     Output = RawRunCaptureCodeA(PrivDisableOutput And PrivRedirectOutput, PrivDisableOutput, Code, XArr)
     If PrivDisableOutput And PrivRedirectOutput Then
         Say Output
     End If
-End Sub
+End Function
 
-Public Sub RunCode(ParamArray XArr() As Variant)
+Public Function RunCode(ParamArray XArr() As Variant)
     If UBound(XArr) < 0 Then
         RaiseMiscError "RunCode needs at least one parameter (the code)"
     End If
@@ -1532,7 +1532,7 @@ Public Sub RunCode(ParamArray XArr() As Variant)
     Script = XArr(0)
     If UBound(XArr) = 0 Then
         RunCodeA Script
-        Exit Sub
+        Exit Function
     End If
 
     Dim X As Long
@@ -1542,11 +1542,11 @@ Public Sub RunCode(ParamArray XArr() As Variant)
         SParamArr(X) = XArr(X + 1)
     Next
     RunCodeA Script, SParamArr
-End Sub
+End Function
 
-Public Sub IncludeCode(ByVal Code As String)
+Public Function IncludeCode(ByVal Code As String)
     SControl.AddCode Code
-End Sub
+End Function
 
 ' RUN CODE FROM DSO DOMAIN
 
@@ -1578,7 +1578,7 @@ Public Function FetchA(ByVal Domain As String, ByVal Port As Long, Optional Para
     FetchA = ConnectRaw(False, True, True, Domain, Port, Params)
 End Function
 
-Public Sub Connect(ParamArray Params() As Variant)
+Public Function Connect(ParamArray Params() As Variant)
     If UBound(Params) < 1 Then
         RaiseMiscError "Connect needs at least two parameters (domain and port)"
     End If
@@ -1606,16 +1606,16 @@ HandleRes:
     If PrivRedirectOutput And PrivDisableOutput Then
         Say Res
     End If
-End Sub
+End Function
 
 ' Params is an array
-Public Sub ConnectA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant)
+Public Function ConnectA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant)
     Dim Res As String
     Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port, Params)
     If PrivRedirectOutput And PrivDisableOutput Then
         Say Res
     End If
-End Sub
+End Function
 
 Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
     Yield
