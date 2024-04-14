@@ -245,7 +245,7 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
     
     Dim PreSplit As String
     If WaitingForInput(ConsoleID) Then
-        PreSplit = cPrompt(ConsoleID)
+        PreSplit = Remove_Property_Space(cPrompt(ConsoleID))
     Else
         PreSplit = cPath(ConsoleID) & ">"
     End If
@@ -435,13 +435,10 @@ Public Sub Print_Console()
         End If
 
         'does a new property space need to be set?
-        If InStr(Console(ActiveConsole, n).Caption, "{") > 0 And WaitingForInput(ActiveConsole) = True Then
-            If Has_Property_Space(Console(ActiveConsole, n).Caption) = True Then
-                propertySpace = Get_Property_Space(Console(ActiveConsole, n).Caption)
+        If n = 1 And WaitingForInput(ActiveConsole) = True Then
+            If Has_Property_Space(cPrompt(ActiveConsole)) = True Then
+                propertySpace = Get_Property_Space(cPrompt(ActiveConsole))
                 Console(ActiveConsole, n) = Load_Property_Space(propertySpace, Console(ActiveConsole, n).Caption)
-                
-                Console(ActiveConsole, n).Caption = Remove_Property_Space(Console(ActiveConsole, n).Caption)
-                cPath(ActiveConsole) = Remove_Property_Space(cPath(ActiveConsole))
             End If
         End If
 
