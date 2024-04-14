@@ -549,15 +549,13 @@ DontDraw:
             Dim OldY As Long
             OldX = frmConsole.CurrentX
             OldY = frmConsole.CurrentY
-        
+
             Dim BarX As Long
-            Dim BarY As Long
-            BarY = frmConsole.CurrentY
             Dim X As Long
             For X = 1 To UBound(InsertCursorsAt)
                 frmConsole.lfont.Caption = Left(tmpS, InsertCursorsAt(X) - 1)
                 BarX = OldX + frmConsole.lfont.Width
-                frmConsole.Line (BarX, BarY)-(BarX, BarY + CursorHeight), Console(ActiveConsole, n).FontColor
+                frmConsole.Line (BarX, OldY)-(BarX, OldY + CursorHeight), Console(ActiveConsole, n).FontColor
             Next
 
             frmConsole.CurrentX = OldX
