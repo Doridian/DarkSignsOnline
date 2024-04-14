@@ -162,13 +162,13 @@ if (!empty($safeappend)) {
 		$filedata = substr($filedata, 0, $idx);
 	}
 
-	$filedata = $file['contents'];
-	if (!empty($filedata) && substr($filedata, -2) !== "\r\n") {
-		$filedata .= "\r\n";
+	$contents = $file['contents'];
+	if (!empty($contents) && substr($contents, -2) !== "\r\n") {
+		$contents .= "\r\n";
 	}
 
-	$filedata = $filedata . $user['name'] . ':' . $filedata . "\r\n";
-	write_file($file['id'], $append, $filedata);
+	$contents = $contents . $user['name'] . ':' . $filedata . "\r\n";
+	write_file($file['id'], $safeappend, $contents);
 	exit;
 }
 
