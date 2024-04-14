@@ -59,6 +59,9 @@ Public Const PreSpace = "-->" 'this will indent the text
 Public Const ConsoleXSpacing = 360
 Public Const ConsoleXSpacingIndent = 960
 
+Public Property Get ConsoleCursorChar() As String
+    ConsoleCursorChar = Chr(7)
+End Property
 
 Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal ConsoleID As Integer)
     If frmConsole.ChatBox.Visible = True Then Exit Sub
@@ -247,7 +250,7 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
         PreSplit = cPath(ConsoleID) & ">"
     End If
 
-    Console(ConsoleID, 1).Caption = PreSplit & " " & PreUnderscore & Chr(7) & PostUnderscore
+    Console(ConsoleID, 1).Caption = PreSplit & " " & PreUnderscore & ConsoleCursorChar & PostUnderscore
 End Sub
 
 Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
@@ -330,7 +333,7 @@ Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     Dim n As Integer
 
     If CurrentPromptVisible(ConsoleID) Then
-        Console(ConsoleID, 1).Caption = Replace(Console(ConsoleID, 1).Caption, Chr(7), "")
+        Console(ConsoleID, 1).Caption = Replace(Console(ConsoleID, 1).Caption, ConsoleCursorChar, "")
     End If
     For n = 299 To 2 Step -1
         Console(ConsoleID, n) = Console(ConsoleID, n - 1)
@@ -505,14 +508,14 @@ DontDraw:
         Dim CurCursorPos As Long
         CurCursorPos = 1
         While CurCursorPos > 0
-            CurCursorPos = InStr(CurCursorPos, tmpS, Chr(7))
+            CurCursorPos = InStr(CurCursorPos, tmpS, ConsoleCursorChar)
             If CurCursorPos > 0 Then
                 ReDim Preserve InsertCursorsAt(0 To UBound(InsertCursorsAt) + 1)
                 InsertCursorsAt(UBound(InsertCursorsAt)) = CurCursorPos
                 CurCursorPos = CurCursorPos + 1
             End If
         Wend
-        tmpS = Replace(tmpS, Chr(7), "")
+        tmpS = Replace(tmpS, ConsoleCursorChar, "")
 
         If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
 
@@ -643,31 +646,35 @@ Public Function StripAfterNewline(ByVal s As String) As String
     End If
 End Function
 
-Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional withNewLineAfter As Boolean = True, Optional SkipPropertySpace As Integer)
+Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional ByVal OverwriteLineIndex As Long = 0)
     If ConsoleID > 4 Then Exit Function
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
+    
+    Dim ShiftLines As Boolean
+    ShiftLines = False
+    If OverwriteLineIndex >= 0 Then
+        OverwriteLineIndex = 1
+        ShiftLines = True
+    Else
+        OverwriteLineIndex = (OverwriteLineIndex * -1) + 1
+    End If
 
     s = StripAfterNewline(s)
 
     Dim tmpLine As ConsoleLine, propertySpace As String
     
     tmpLine = Console(ConsoleID, 1)
-    Console(ConsoleID, 1).PreSpace = True
-    If SkipPropertySpace = 1 Then
-        Console(ConsoleID, 1).Caption = s
-        GoTo SkipPropertySpaceNow
-    End If
 
     If Has_Property_Space(s) = True Then
         propertySpace = i(Get_Property_Space(s)) & " "
         propertySpace = Replace(propertySpace, ",", " ")
-        Console(ConsoleID, 1).FontColor = propertySpace_Color(propertySpace)
-        Console(ConsoleID, 1).FontSize = propertySpace_Size(propertySpace)
-        Console(ConsoleID, 1).FontName = propertySpace_Name(propertySpace)
-        Console(ConsoleID, 1).FontBold = propertySpace_Bold(propertySpace)
-        Console(ConsoleID, 1).FontItalic = propertySpace_Italic(propertySpace)
-        Console(ConsoleID, 1).FontUnderline = propertySpace_Underline(propertySpace)
-        Console(ConsoleID, 1).FontStrikethru = propertySpace_Strikethru(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontColor = propertySpace_Color(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontSize = propertySpace_Size(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontName = propertySpace_Name(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontBold = propertySpace_Bold(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontItalic = propertySpace_Italic(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontUnderline = propertySpace_Underline(propertySpace)
+        Console(ConsoleID, OverwriteLineIndex).FontStrikethru = propertySpace_Strikethru(propertySpace)
         If InStr(propertySpace, "flash ") > 0 Then Console(ConsoleID, 1).Flash = True Else Console(ConsoleID, 1).Flash = False
         If InStr(propertySpace, "flashfast ") > 0 Then Console(ConsoleID, 1).FlashFast = True Else Console(ConsoleID, 1).FlashFast = False
         If InStr(propertySpace, "flashslow ") > 0 Then Console(ConsoleID, 1).FlashSlow = True Else Console(ConsoleID, 1).FlashSlow = False
@@ -675,18 +682,14 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional w
         If InStr(propertySpace, "right ") > 0 Then Console(ConsoleID, 1).Right = True Else Console(ConsoleID, 1).Right = False
     End If
 
-    Console(ConsoleID, 1).Caption = Remove_Property_Space(s)
+    Console(ConsoleID, OverwriteLineIndex).PreSpace = True
+    Console(ConsoleID, OverwriteLineIndex).Caption = Remove_Property_Space(s)
 
-SkipPropertySpaceNow:
-    If withNewLineAfter = True Then
-        'go to the next line
+    If ShiftLines Then
         New_Console_Line_InProgress ConsoleID
-    Else
-        Console(ConsoleID, 2) = Console(ConsoleID, 1)
+        'put the current line back at the next line
+        Console(ConsoleID, OverwriteLineIndex) = tmpLine
     End If
-
-    'put the current line back at the next line
-    Console(ConsoleID, 1) = tmpLine
 
     frmConsole.QueueConsoleRender
     DoEvents

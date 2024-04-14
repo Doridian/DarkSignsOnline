@@ -104,6 +104,10 @@ Public Property Get IsOutputRedirected() As Boolean
     IsOutputRedirected = PrivRedirectOutput
 End Property
 
+Public Property Get ConsoleCursorChar() As Long
+    ConsoleCursorChar = basConsole.ConsoleCursorChar
+End Property
+
 Public Property Get ConsoleID() As String
     ConsoleID = PrivConsoleID
 End Property
@@ -446,7 +450,7 @@ Public Sub EDIT(ByVal File As String)
     Yield
 End Sub
 
-Public Sub SayLine(ByVal s As String)
+Public Sub SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
     If s = "" Then
         Yield
         Exit Sub
@@ -465,7 +469,7 @@ Public Sub SayLine(ByVal s As String)
         Exit Sub
     End If
     Yield
-    basConsole.SayRaw PrivConsoleID, s, False
+    basConsole.SayRaw PrivConsoleID, s, YPos
     Yield
 End Sub
 

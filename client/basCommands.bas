@@ -459,7 +459,11 @@ End Function
 Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String, ByVal ConsoleID As Integer)
     Dim sColor As String
     Dim sMode As String
-     
+    
+    If YPos >= 0 Then
+        Exit Sub
+    End If
+
     Dim yIndex As Integer, n As Integer
     yIndex = (YPos * -1) + 1
 
@@ -724,6 +728,11 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
         Exit Sub
     End If
 
+    If Not basGeneral.FileExists(s) Then
+        SayRaw ConsoleID, "{green}File Not Found, Creating: " & s
+        WriteFile s, ""
+    End If
+
     Dim ExternalEditor As Boolean
     ExternalEditor = RegLoad("externaleditor", False)
 
@@ -735,11 +744,6 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
 
     EditorFile_Short = GetShortName(s)
     EditorFile_Long = s
-
-    If Not basGeneral.FileExists(s) Then
-        SayRaw ConsoleID, "{green}File Not Found, Creating: " & s
-        WriteFile s, ""
-    End If
 
     frmEditor.Show vbModal
     
