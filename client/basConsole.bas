@@ -541,6 +541,10 @@ DontDraw:
         End If
         
         If UBound(InsertCursorsAt) > 0 And Flash Then
+            Dim CursorHeight As Long
+            frmConsole.lfont.Caption = "I"
+            CursorHeight = frmConsole.lfont.Height
+
             Dim OldX As Long
             Dim OldY As Long
             OldX = frmConsole.CurrentX
@@ -553,7 +557,7 @@ DontDraw:
             For X = 1 To UBound(InsertCursorsAt)
                 frmConsole.lfont.Caption = Left(tmpS, InsertCursorsAt(X) - 1)
                 BarX = OldX + frmConsole.lfont.Width
-                frmConsole.Line (BarX, BarY)-(BarX, BarY + FontHeight), Console(ActiveConsole, n).FontColor
+                frmConsole.Line (BarX, BarY)-(BarX, BarY + CursorHeight), Console(ActiveConsole, n).FontColor
             Next
 
             frmConsole.CurrentX = OldX
