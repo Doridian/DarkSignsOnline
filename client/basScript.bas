@@ -38,6 +38,7 @@ Public Function Run_Script_Code(tmpAll As String, ByVal ConsoleID As Integer, Sc
     G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False
     s.AddObject "DSO", G, True
 
+    tmpAll = DSODecryptScript(tmpAll)
     tmpAll = ParseCommandLineOptional(tmpAll, ServerPort <= 0)
 
     New_Console_Line_InProgress ConsoleID

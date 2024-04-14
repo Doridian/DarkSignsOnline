@@ -1028,13 +1028,10 @@ Public Function GetIP(ByVal Domain As String) As String
     GetIP = DomainRequest.Response
 End Function
 
-Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileName As String)
+Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal sFileData As String)
     AssertLocalOnly
     
     Yield
-
-    Dim sFileData As String
-    sFileData = GetFile(ResolvePath(FileName))
 
     Dim tempStrA As String
     tempStrA = EncodeBase64Str(sFileData)
@@ -1053,7 +1050,7 @@ Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileNam
     Yield
 End Function
 
-Public Function DOWNLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileName As String)
+Public Function DOWNLOAD(ByVal Domain As String, ByVal Port As Long) As String
     AssertLocalOnly
     
     Yield
@@ -1068,7 +1065,7 @@ Public Function DOWNLOAD(ByVal Domain As String, ByVal Port As Long, ByVal FileN
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
 
-    WriteFile ResolvePath(FileName), DomainRequest.Response
+    DOWNLOAD = DomainRequest.Response
 
     Yield
 End Function
@@ -1680,6 +1677,10 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput)
 
     Yield
+End Function
+
+Public Function ApplyScriptEncryption(ByVal Source As String) As String
+    ApplyScriptEncryption = DSOEncryptScript(Source)
 End Function
 
 ' Encoding helpers
