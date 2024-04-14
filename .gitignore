@@ -3,4 +3,8 @@
 /logs
 /client.zip
 /client/mail.dat
+/client/downloads/*.ds
+/client/home
+!/client/home/README.txt
+!/client/home/music/README.txt
 /server/LICENSE
