@@ -68,16 +68,15 @@ jobs:
     # Build process
     - name: Download VB6 from public sources and extract/install
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
-      timeout-minutes: 5
+      timeout-minutes: 1
       run: |
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
 
+        regsvr32 /i .\client\libs\compile-only\mssdtfmt.dll
+
         mkdir ".\logs"
         mkdir "C:\vb6"
-
-        Start-Process -FilePath ".\client\libs\compile-only\vbrun60sp6.exe" -Wait -PassThru
-        regsvr32 /s /i .\client\libs\compile-only\mssdtfmt.dll
 
         function Test-FileHash {
             param (
