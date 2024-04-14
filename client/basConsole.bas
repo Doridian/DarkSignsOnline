@@ -242,10 +242,10 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
     If WaitingForInput(ConsoleID) Then
         PreSplit = cPrompt(ConsoleID)
     Else
-        PreSplit = cPath(ConsoleID)
+        PreSplit = cPath(ConsoleID) & ">"
     End If
 
-    Console(ConsoleID, 1).Caption = PreSplit & "> " & PreUnderscore & Chr(7) & PostUnderscore
+    Console(ConsoleID, 1).Caption = PreSplit & " " & PreUnderscore & Chr(7) & PostUnderscore
 End Sub
 
 Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
