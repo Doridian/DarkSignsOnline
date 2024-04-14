@@ -410,6 +410,14 @@ Public Sub Print_Console()
     printHeight = frmConsole.Height - 840 + addOn
     frmConsole.CurrentY = printHeight
 
+    frmConsole.FontBold = Console_Line_Defaults.FontBold
+    frmConsole.FontItalic = Console_Line_Defaults.FontItalic
+    frmConsole.FontUnderline = Console_Line_Defaults.FontUnderline
+    frmConsole.FontStrikethru = Console_Line_Defaults.FontStrikethru
+    frmConsole.FontSize = Console_Line_Defaults.FontSize
+    frmConsole.FontName = Console_Line_Defaults.FontName
+    frmConsole.ForeColor = Console_Line_Defaults.FontColor
+
     If ConsoleWaitingOnRemote(ActiveConsole) Then
         frmConsole.CurrentX = ConsoleXSpacing
         If LoadingSpinner < 1 Then
@@ -436,6 +444,16 @@ Public Sub Print_Console()
                 cPath(ActiveConsole) = Remove_Property_Space(cPath(ActiveConsole))
             End If
         End If
+
+        frmConsole.FontBold = Console(ActiveConsole, n).FontBold
+        frmConsole.FontItalic = Console(ActiveConsole, n).FontItalic
+        frmConsole.FontUnderline = Console(ActiveConsole, n).FontUnderline
+        frmConsole.FontStrikethru = Console(ActiveConsole, n).FontStrikethru
+
+        frmConsole.FontSize = Console_FontSize(n, ActiveConsole)
+        
+        frmConsole.FontName = Console_FontName(n, ActiveConsole)
+        frmConsole.ForeColor = Console_FontColor(n, ActiveConsole)
 
         Dim FontHeight As Long
         FontHeight = Font_Height(Console_FontName(n, ActiveConsole), Console_FontSize(n, ActiveConsole))
@@ -476,16 +494,6 @@ Public Sub Print_Console()
 DontDraw:
         '--------------- DRAW ------------------------------------------
         '--------------- DRAW ------------------------------------------
-
-        frmConsole.FontBold = Console(ActiveConsole, n).FontBold
-        frmConsole.FontItalic = Console(ActiveConsole, n).FontItalic
-        frmConsole.FontUnderline = Console(ActiveConsole, n).FontUnderline
-        frmConsole.FontStrikethru = Console(ActiveConsole, n).FontStrikethru
-
-        frmConsole.FontSize = Console_FontSize(n, ActiveConsole)
-        
-        frmConsole.FontName = Console_FontName(n, ActiveConsole)
-        frmConsole.ForeColor = Console_FontColor(n, ActiveConsole)
         
         tmpS = Trim(Console(ActiveConsole, n).Caption)
 
