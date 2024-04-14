@@ -329,6 +329,9 @@ End Sub
 Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     Dim n As Integer
 
+    If CurrentPromptVisible(ConsoleID) Then
+        Console(ConsoleID, 1).Caption = Replace(Console(ConsoleID, 1).Caption, Chr(7), "")
+    End If
     For n = 299 To 2 Step -1
         Console(ConsoleID, n) = Console(ConsoleID, n - 1)
     Next n
@@ -499,18 +502,16 @@ DontDraw:
         'make underscore flash
         Dim InsertCursorsAt() As Long
         ReDim InsertCursorsAt(0 To 0)
-        If n = 1 Then
-            Dim CurCursorPos As Long
-            CurCursorPos = 1
-            While CurCursorPos > 0
-                CurCursorPos = InStr(CurCursorPos, tmpS, Chr(7))
-                If CurCursorPos > 0 Then
-                    ReDim Preserve InsertCursorsAt(0 To UBound(InsertCursorsAt) + 1)
-                    InsertCursorsAt(UBound(InsertCursorsAt)) = CurCursorPos
-                    CurCursorPos = CurCursorPos + 1
-                End If
-            Wend
-        End If
+        Dim CurCursorPos As Long
+        CurCursorPos = 1
+        While CurCursorPos > 0
+            CurCursorPos = InStr(CurCursorPos, tmpS, Chr(7))
+            If CurCursorPos > 0 Then
+                ReDim Preserve InsertCursorsAt(0 To UBound(InsertCursorsAt) + 1)
+                InsertCursorsAt(UBound(InsertCursorsAt)) = CurCursorPos
+                CurCursorPos = CurCursorPos + 1
+            End If
+        Wend
         tmpS = Replace(tmpS, Chr(7), "")
 
         If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
