@@ -3,8 +3,11 @@
 /logs
 /client.zip
 /client/mail.dat
-/client/downloads/*.ds
-/client/home
-!/client/home/README.txt
-!/client/home/music/README.txt
+/client/user/downloads
+!/client/user/downloads/README.txt
+/client/user/temp
+!/client/user/temp/README.txt
+/client/user/home
+!/client/user/home/README.txt
+!/client/user/home/music/README.txt
 /server/LICENSE
