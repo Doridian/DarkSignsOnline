@@ -65,8 +65,11 @@ Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As
         ResolvePath = Replace(ResolvePath, "//", "/")
     Wend
 
+    Dim IsRelative As Boolean
+    IsRelative = True
     If Left(ResolvePath, 1) = "/" Then
         ResolvePath = Mid(ResolvePath, 2)
+        IsRelative = False
     End If
 
     Dim ResolvePathSplit() As String
@@ -80,12 +83,10 @@ Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As
     Dim CurPath As String
     For X = LBound(ResolvePathSplit) To UBound(ResolvePathSplit)
         CurPath = ResolvePathSplit(X)
-        If CurPath = "." Or CurPath = "" Then
+        If CurPath = "" Or CurPath = "." Then
             ' Don't do anything!
-        ElseIf CurPath = ".." Then
-            If UBound(ResolvePathSplitCut) > 0 Then
-                ReDim Preserve ResolvePathSplitCut(0 To UBound(ResolvePathSplitCut) - 1)
-            End If
+        ElseIf CurPath = ".." And UBound(ResolvePathSplitCut) > 0 Then
+            ReDim Preserve ResolvePathSplitCut(0 To UBound(ResolvePathSplitCut) - 1)
         Else
             ReDim Preserve ResolvePathSplitCut(0 To UBound(ResolvePathSplitCut) + 1)
             ResolvePathSplitCut(UBound(ResolvePathSplitCut)) = CurPath
@@ -97,7 +98,11 @@ Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As
         Exit Function
     End If
 
-    ResolvePathSplitCut(0) = ""
+    If IsRelative Then
+        ResolvePathSplitCut(0) = "."
+    Else
+        ResolvePathSplitCut(0) = ""
+    End If
     ResolvePath = Join(ResolvePathSplitCut, "/")
 End Function
 
