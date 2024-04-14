@@ -92,15 +92,13 @@ jobs:
         Test-FileHash -FilePath "C:\vb6\vb6_portable.exe" -ExpectedHash "11A56534505DC393BF367CD2ABB7C59036BF0C5D82444A4E26D0E77BB6717ACB"
         Invoke-WebRequest -Uri "https://altushost-swe.dl.sourceforge.net/project/vb6extendedruntime/Visual%20Basic%206.0%20Runtime%20Plus%202.2.zip" -OutFile "C:\vb6\vb6runtime.zip"
         Test-FileHash -FilePath "C:\vb6\vb6runtime.zip" -ExpectedHash "FAF15554ED7FDB20CE638BBA6126AEA4D921D1F1EA66FDD291DCD158B2D2030A"
-        Invoke-WebRequest -Uri "https://web.archive.org/web/20240312210818id_/https://raw.githubusercontent.com/ericsqxd/mapx_new/master/reg" -OutFile "C:\vb6\vb6.reg"
-        Test-FileHash -FilePath "C:\vb6\vb6.reg" -ExpectedHash "774BCD3E2C876F907C4E131288B8D5A93CA7DFD8E9929A25BFBEB5EC314BBE95"
 
         C:
         cd "C:\vb6"
         & "C:\Program Files\7-Zip\7z.exe" x "C:\vb6\vb6_portable.exe"
         & "C:\Program Files\7-Zip\7z.exe" x "C:\vb6\vb6runtime.zip"
         Start-Process -FilePath "C:\vb6\VB6 Runtime Plus 2.2.exe" -ArgumentList "/silent" -Wait -PassThru
-        reg import "C:\vb6\vb6.reg"
+        reg import "C:\vb6\AutoPlay\Docs\VbPortable6.reg"
     - name: Build client
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       timeout-minutes: 1
