@@ -401,7 +401,7 @@ Public Sub Print_Console()
 
     Dim addOn As Long, propertySpace As String
     addOn = ConsoleScrollInt(ActiveConsole) * 2400
-    printHeight = frmConsole.Height - 840 + addOn 'Font_Height(Console_FontName(1), Console_FontSize(1)) - ConsoleXSpacing
+    printHeight = frmConsole.Height - 840 + addOn
     frmConsole.CurrentY = printHeight
 
     If ConsoleWaitingOnRemote(ActiveConsole) Then
@@ -431,7 +431,10 @@ Public Sub Print_Console()
             End If
         End If
 
-        printHeight = printHeight - Font_Height(Console_FontName(n, ActiveConsole), Console_FontSize(n, ActiveConsole))
+        Dim FontHeight As Long
+        FontHeight = Font_Height(Console_FontName(n, ActiveConsole), Console_FontSize(n, ActiveConsole))
+
+        printHeight = printHeight - FontHeight
 
         frmConsole.CurrentY = printHeight
 
@@ -449,7 +452,7 @@ Public Sub Print_Console()
                         (((frmConsole.Width / DrawDividerWidth) * 0), tmpY2)- _
                         ((frmConsole.Width / DrawDividerWidth) * _
                         (DrawDividerWidth), _
-                        (tmpY2 + Font_Height(Console_FontName(n, ActiveConsole), Console_FontSize(n, ActiveConsole)))), _
+                        (tmpY2 + FontHeight)), _
                         Console(ActiveConsole, n).DrawColors(1), BF
                 Else
                     For n2 = 1 To DrawDividerWidth
@@ -457,7 +460,7 @@ Public Sub Print_Console()
                         (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
                         ((frmConsole.Width / DrawDividerWidth) * _
                         (n2), _
-                        (tmpY2 + Font_Height(Console_FontName(n, ActiveConsole), Console_FontSize(n, ActiveConsole)))), _
+                        (tmpY2 + FontHeight)), _
                         Console(ActiveConsole, n).DrawColors(n2), BF
                     Next n2
                 End If
@@ -494,33 +497,49 @@ DontDraw:
             frmConsole.CurrentX = ConsoleXSpacing
 
             'make underscore flash
+            Dim InsertCursorAt As Long
             If n = 1 Then
-                If Flash = True Then
-                    tmpS = Replace(tmpS, Chr(7), " ")
-                Else
-                    tmpS = Replace(tmpS, Chr(7), "_")
-                End If
+                InsertCursorAt = InStr(tmpS, Chr(7))
             Else
-                tmpS = Replace(tmpS, Chr(7), "")
+                InsertCursorAt = -1
             End If
+            tmpS = Replace(tmpS, Chr(7), "")
+
+            If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
 
             isAligned = False
             
+            frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize
+            frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName
+            frmConsole.lfont.Caption = tmpS
             If Console(ActiveConsole, n).Center = True Then
-                frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize: frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName: frmConsole.lfont.Caption = Trim(Console(ActiveConsole, n).Caption)
                 frmConsole.CurrentX = (frmConsole.Width / 2) - (frmConsole.lfont.Width / 2)
                 isAligned = True
             End If
             If Console(ActiveConsole, n).Right = True Then
-                frmConsole.lfont.FontSize = Console(ActiveConsole, n).FontSize: frmConsole.lfont.FontName = Console(ActiveConsole, n).FontName: frmConsole.lfont.Caption = Console(ActiveConsole, n).Caption
                 frmConsole.CurrentX = (frmConsole.Width) - (frmConsole.lfont.Width) - ConsoleXSpacing
                 isAligned = True
             End If
             
-            If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
-            
             If Console(ActiveConsole, n).PreSpace Then
                 If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
+            End If
+            
+            If InsertCursorAt > 0 And Flash Then
+                Dim OldX As Long
+                Dim OldY As Long
+                OldX = frmConsole.CurrentX
+                OldY = frmConsole.CurrentY
+            
+                Dim BarX As Long
+                Dim BarY As Long
+                frmConsole.lfont.Caption = Left(tmpS, InsertCursorAt - 1)
+                BarX = frmConsole.CurrentX + frmConsole.lfont.Width
+                BarY = frmConsole.CurrentY
+                frmConsole.Line (BarX, BarY)-(BarX, BarY + FontHeight), Console(ActiveConsole, n).FontColor
+                
+                frmConsole.CurrentX = OldX
+                frmConsole.CurrentY = OldY
             End If
 
             frmConsole.Print tmpS
