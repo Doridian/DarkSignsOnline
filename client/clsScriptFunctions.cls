@@ -203,9 +203,15 @@ Public Function GetKey() As Long
 
     GetKeyWaiting(ConsoleID) = -1
     While GetKeyWaiting(ConsoleID) = -1
-        Yield
+        If Not YieldSafe() Then GoTo ExitGetKey
     Wend
     GetKey = GetKeyWaiting(ConsoleID)
+    Exit Function
+
+ExitGetKey:
+    GetKeyWaiting(ConsoleID) = 0
+    GetKey = 0
+    Yield
 End Function
 
 Public Function GetASCII() As Long
@@ -216,9 +222,15 @@ Public Function GetASCII() As Long
 
     GetAsciiWaiting(ConsoleID) = -1
     While GetAsciiWaiting(ConsoleID) = -1
-        Yield
+        If Not YieldSafe() Then GoTo ExitGetASCII
     Wend
     GetASCII = GetAsciiWaiting(ConsoleID)
+    Exit Function
+
+ExitGetASCII:
+    GetAsciiWaiting(ConsoleID) = 0
+    GetASCII = 0
+    Yield
 End Function
 
 Public Sub Configure(NewConsoleID As Integer, NewScriptFrom As String, NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, NewFileKey As String, NewServerDomain As String, NewServerPort As Long, NewRedirect As Boolean, NewDisableOutput As Boolean, NewAllowUnAbort As Boolean)
