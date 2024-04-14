@@ -497,11 +497,19 @@ DontDraw:
         frmConsole.CurrentX = ConsoleXSpacing
 
         'make underscore flash
-        Dim InsertCursorAt As Long
+        Dim InsertCursorsAt() As Long
+        ReDim InsertCursorsAt(0 To 0)
         If n = 1 Then
-            InsertCursorAt = InStr(tmpS, Chr(7))
-        Else
-            InsertCursorAt = -1
+            Dim CurCursorPos As Long
+            CurCursorPos = 1
+            While CurCursorPos > 0
+                CurCursorPos = InStr(CurCursorPos, tmpS, Chr(7))
+                If CurCursorPos > 0 Then
+                    ReDim Preserve InsertCursorsAt(0 To UBound(InsertCursorsAt) + 1)
+                    InsertCursorsAt(UBound(InsertCursorsAt)) = CurCursorPos
+                    CurCursorPos = CurCursorPos + 1
+                End If
+            Wend
         End If
         tmpS = Replace(tmpS, Chr(7), "")
 
@@ -525,7 +533,7 @@ DontDraw:
             If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
         End If
         
-        If InsertCursorAt > 0 And Flash Then
+        If UBound(InsertCursorsAt) > 0 And Flash Then
             Dim OldX As Long
             Dim OldY As Long
             OldX = frmConsole.CurrentX
@@ -533,11 +541,14 @@ DontDraw:
         
             Dim BarX As Long
             Dim BarY As Long
-            frmConsole.lfont.Caption = Left(tmpS, InsertCursorAt - 1)
-            BarX = frmConsole.CurrentX + frmConsole.lfont.Width
             BarY = frmConsole.CurrentY
-            frmConsole.Line (BarX, BarY)-(BarX, BarY + FontHeight), Console(ActiveConsole, n).FontColor
-            
+            Dim X As Long
+            For X = 1 To UBound(InsertCursorsAt)
+                frmConsole.lfont.Caption = Left(tmpS, InsertCursorsAt(X) - 1)
+                BarX = OldX + frmConsole.lfont.Width
+                frmConsole.Line (BarX, BarY)-(BarX, BarY + FontHeight), Console(ActiveConsole, n).FontColor
+            Next
+
             frmConsole.CurrentX = OldX
             frmConsole.CurrentY = OldY
         End If
