@@ -142,7 +142,7 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal Conso
         Case "186": If Shift = 1 Then Insert_Char ":", ConsoleID Else Insert_Char ";", ConsoleID
         Case "222": If Shift = 1 Then Insert_Char Chr(34), ConsoleID Else Insert_Char "'", ConsoleID
         Case "188": If Shift = 1 Then Insert_Char "<", ConsoleID Else Insert_Char ",", ConsoleID
-        Case "190": If Shift = 1 Then Insert_Char ".", ConsoleID Else Insert_Char ".", ConsoleID
+        Case "190": If Shift = 1 Then Insert_Char ">", ConsoleID Else Insert_Char ".", ConsoleID
         Case "191": If Shift = 1 Then Insert_Char "?", ConsoleID Else Insert_Char "/", ConsoleID
         'numpad below
         Case "110": Insert_Char ".", ConsoleID
