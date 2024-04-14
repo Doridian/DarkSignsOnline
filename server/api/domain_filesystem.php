@@ -167,7 +167,7 @@ if (!empty($safeappend)) {
 		$contents .= "\r\n";
 	}
 
-	$contents = $contents . $user['name'] . ':' . $filedata . "\r\n";
+	$contents = $contents . $user['username'] . ':' . $filedata . "\r\n";
 	write_file($file['id'], $safeappend, $contents);
 	exit;
 }
