@@ -76,6 +76,8 @@ jobs:
         mkdir ".\logs"
         mkdir "C:\vb6"
 
+        regsvr32 /s /i .\client\libs\compile-only\mssdtfmt.dll
+
         function Test-FileHash {
             param (
                 $FilePath,
