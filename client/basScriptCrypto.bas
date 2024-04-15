@@ -32,7 +32,7 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
     Else
         tmpK2 = StrConv(ScriptKey, vbFromUnicode)
     End If
-    CryptoVer = "2"
+    CryptoVer = "3"
 
     Y = UBound(tmpK) + 1
     Z = UBound(tmpK2) + 1
