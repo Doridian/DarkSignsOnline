@@ -50,7 +50,18 @@ Public Function DSODecryptScript(ByVal Source As String) As String
         Exit Function
     End If
 
-    DSODecryptScript = DSOSingleDecrypt(Mid(Source, 25))
+    Dim Lines() As String
+    Lines = Split(Mid(Source, 25), vbCrLf)
+    Dim X As Long, Line As String
+    For X = LBound(Lines) To UBound(Lines)
+        Line = Lines(X)
+        If Trim(Line) = "" Then
+            Lines(X) = ""
+        Else
+            Lines(X) = DSOSingleDecrypt(Line)
+        End If
+    Next
+    DSODecryptScript = Join(Lines, vbCrLf)
 End Function
 
 Public Function DSOCompileScript(ByVal Source As String, Optional ByVal AllowCommands As Boolean = True) As String
