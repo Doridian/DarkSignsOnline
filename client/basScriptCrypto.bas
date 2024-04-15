@@ -3,32 +3,50 @@ Option Explicit
 
 Private Function DSOSingleEncrypt(ByVal tmpS As String) As String
     If tmpS = "" Then
-        DSOSingleEncrypt = "X"
+        DSOSingleEncrypt = ""
         Exit Function
     End If
-    Dim tmpB() As Byte
-    Dim X As Long
-    tmpB = StrConv(tmpS, vbFromUnicode)
-    For X = LBound(tmpB) To UBound(tmpB)
-        tmpB(X) = tmpB(X) Xor 42
+
+    Dim tmpB() As Byte, tmpK() As Byte
+    Dim X As Long, Y As Long
+
+    ReDim tmpK(0 To 31)
+    For X = 0 To 31
+        tmpK(X) = Int((Rnd * 254) + 1)
     Next
-    DSOSingleEncrypt = "1" & EncodeBase64Bytes(tmpB)
+
+    tmpB = StrConv(tmpS, vbFromUnicode)
+    Y = UBound(tmpK) + 1
+    For X = 0 To UBound(tmpB)
+        tmpB(X) = tmpB(X) Xor (42 Xor tmpK(LBound(tmpK) + (X Mod Y)))
+    Next
+    DSOSingleEncrypt = "2" & EncodeBase64Bytes(tmpK) & ":" & EncodeBase64Bytes(tmpB)
 End Function
 
 Private Function DSOSingleDecrypt(ByVal tmpS As String) As String
     Dim CryptoVer As String
     CryptoVer = Left(tmpS, 1)
     tmpS = Mid(tmpS, 2)
-    Dim tmpB() As Byte
-    Dim X As Long
+    Dim tmpSA() As String
+    Dim tmpB() As Byte, tmpK() As Byte
+    Dim X As Long, Y As Long
 
     Select Case CryptoVer
         Case "0":
             DSOSingleDecrypt = DecodeBase64Str(tmpS)
         Case "1":
             tmpB = DecodeBase64Bytes(tmpS)
-            For X = LBound(tmpB) To UBound(tmpB)
+            For X = 0 To UBound(tmpB)
                 tmpB(X) = tmpB(X) Xor 42
+            Next
+            DSOSingleDecrypt = StrConv(tmpB, vbUnicode)
+        Case "2":
+            tmpSA = Split(tmpS, ":")
+            tmpK = DecodeBase64Bytes(tmpSA(0))
+            tmpB = DecodeBase64Bytes(tmpSA(1))
+            Y = UBound(tmpK) + 1
+            For X = 0 To UBound(tmpB)
+                tmpB(X) = tmpB(X) Xor (42 Xor tmpK(X Mod Y))
             Next
             DSOSingleDecrypt = StrConv(tmpB, vbUnicode)
         Case "N":
