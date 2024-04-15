@@ -29,11 +29,10 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
     If ScriptKey = "" Then
         ReDim tmpK2(-1 To -1)
         tmpK2(-1) = 0
-        CryptoVer = "2"
     Else
         tmpK2 = StrConv(ScriptKey, vbFromUnicode)
-        CryptoVer = "3"
     End If
+    CryptoVer = "2"
 
     Y = UBound(tmpK) + 1
     Z = UBound(tmpK2) + 1
@@ -147,7 +146,7 @@ End Function
 
 Public Function DSOCompileScript(ByVal Source As String, ByVal ScriptKey As String, Optional ByVal AllowCommands As Boolean = True) As String
     Dim ParsedSource As String
-    ParsedSource = DSODecryptScript(Source, ScriptKey)
+    ParsedSource = DSODecryptScript(Source, "")
 
     'Line by line encryption is bad...
     'Dim Lines() As String
