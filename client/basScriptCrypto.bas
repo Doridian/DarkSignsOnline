@@ -2,9 +2,10 @@ Attribute VB_Name = "basScriptCrypto"
 Option Explicit
 
 Public Const EncryptedHeader = "Option DSciptCompiled" & vbCrLf
+Public Const EncryptedCanary = "Option DSciptCompiledLoaded" & vbCrLf
 Public Const EncryptedLineLen = 140
 
-Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As String) As String
+Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As String, ByVal NoWrap As Boolean) As String
     If tmpS = "" Then
         DSOSingleEncrypt = "X"
         Exit Function
@@ -47,10 +48,12 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
     tmpS = EncodeBase64Bytes(tmpK) & ":" & EncodeBase64Bytes(tmpB2)
 
     DSOSingleEncrypt = ""
-    While Len(tmpS) > EncryptedLineLen
-        DSOSingleEncrypt = DSOSingleEncrypt & "_" & Mid(tmpS, 1, EncryptedLineLen) & vbCrLf
-        tmpS = Mid(tmpS, EncryptedLineLen + 1)
-    Wend
+    If Not NoWrap Then
+        While Len(tmpS) > EncryptedLineLen
+            DSOSingleEncrypt = DSOSingleEncrypt & "_" & Mid(tmpS, 1, EncryptedLineLen) & vbCrLf
+            tmpS = Mid(tmpS, EncryptedLineLen + 1)
+        Wend
+    End If
     DSOSingleEncrypt = DSOSingleEncrypt & CryptoVer & tmpS
 End Function
 
@@ -114,9 +117,15 @@ Public Function DSODecryptScript(ByVal Source As String, ByVal ScriptKey As Stri
     Dim Lines() As String
     Lines = Split(Mid(Source, Len(EncryptedHeader) + 1), vbCrLf)
     Dim X As Long, Line As String, LastLine As String
+    LastLine = Lines(LBound(Lines))
+    Output = DSOSingleDecrypt(Left(LastLine, 1), Mid(LastLine, 2), ScriptKey)
+    If Output <> EncryptedCanary Then
+        Err.Raise vbObjectError + 9878, , "Failed to parse header ofcompiled script"
+    End If
+
     LastLine = ""
     Output = ""
-    For X = LBound(Lines) To UBound(Lines)
+    For X = LBound(Lines) + 1 To UBound(Lines)
         Line = Lines(X)
         If Trim(Line) <> "" Then
             LastLine = LastLine & Mid(Line, 2)
@@ -154,8 +163,7 @@ Public Function DSOCompileScript(ByVal Source As String, ByVal ScriptKey As Stri
     'Next
     'ParsedSource = Join(Lines, vbCrLf)
 
-    ParsedSource = DSOSingleEncrypt(ParsedSource, ScriptKey)
-
-    DSOCompileScript = EncryptedHeader & ParsedSource & vbCrLf
+    ParsedSource = DSOSingleEncrypt(ParsedSource, ScriptKey, True)
+    DSOCompileScript = EncryptedHeader & DSOSingleEncrypt(EncryptedCanary, ScriptKey, False) & vbCrLf & ParsedSource & vbCrLf
 End Function
 
