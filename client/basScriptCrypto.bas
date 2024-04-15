@@ -45,7 +45,7 @@ Private Function DSOSingleDecrypt(ByVal tmpS As String) As String
 End Function
 
 Public Function DSODecryptScript(ByVal Source As String) As String
-    If UCase(Left(Source, 17)) <> "OPTION COMPILED" & vbCrLf Then
+    If UCase(Left(Source, 24)) <> "OPTION DSCRIPTCOMPILED" & vbCrLf Then
         DSODecryptScript = Source
         Exit Function
     End If
@@ -80,6 +80,6 @@ Public Function DSOCompileScript(ByVal Source As String, Optional ByVal AllowCom
         End If
     Next
 
-    DSOCompileScript = "Option Compiled" & vbCrLf & Join(Lines, vbCrLf)
+    DSOCompileScript = "Option DScriptCompiled" & vbCrLf & Join(Lines, vbCrLf)
 End Function
 
