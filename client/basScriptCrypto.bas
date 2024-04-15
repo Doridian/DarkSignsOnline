@@ -56,7 +56,7 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As Strin
     Dim tmpB() As Byte, tmpB2() As Byte, tmpK() As Byte, tmpK2() As Byte
     Dim X As Long, Y As Long, Z As Long
 
-    If ScriptKey = "" Or CryptoVer = "2" Then
+    If ScriptKey = "" Then
         ReDim tmpK2(0 To 0)
         tmpK2(0) = 0
     Else
@@ -79,7 +79,10 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As Strin
             Y = UBound(tmpK) + 1
             Z = UBound(tmpK2) + 1
             For X = 0 To UBound(tmpB2)
-                tmpB2(X) = tmpB2(X) Xor 42 Xor tmpK(X Mod Y) Xor tmpK2(X Mod Z)
+                tmpB2(X) = tmpB2(X) Xor 42 Xor tmpK(X Mod Y)
+                If CryptoVer = "3" Then
+                     tmpB2(X) = tmpB2(X) Xor tmpK2(X Mod Z)
+                End If
             Next
             If Not ZstdDecompress(tmpB2, tmpB) Then
                 Err.Raise vbObjectError + 9223, , "ZSTD decompression error"
