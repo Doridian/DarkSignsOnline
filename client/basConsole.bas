@@ -989,11 +989,15 @@ Public Function EncodeBase64Bytes(ByRef arrData() As Byte) As String
 End Function
 
 Public Function EncodeBase64Str(ByVal strData As String) As String
+    If strData = "" Then
+        EncodeBase64Str = ""
+        Exit Function
+    End If
     EncodeBase64Str = EncodeBase64Bytes(StrConv(strData, vbFromUnicode))
 End Function
 
 Public Function DecodeBase64Bytes(ByVal strData As String) As Byte()
-    If Len(strData) = 0 Then
+    If strData = "" Then
         Dim EmptyData(0 To 0) As Byte
         DecodeBase64Bytes = EmptyData
         Exit Function
@@ -1002,5 +1006,9 @@ Public Function DecodeBase64Bytes(ByVal strData As String) As Byte()
 End Function
 
 Public Function DecodeBase64Str(ByVal strData As String) As String
+    If strData = "" Then
+        DecodeBase64Str = ""
+        Exit Function
+    End If
     DecodeBase64Str = StrConv(DecodeBase64Bytes(strData), vbUnicode)
 End Function

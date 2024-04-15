@@ -2,7 +2,11 @@ Attribute VB_Name = "basScriptCrypto"
 Option Explicit
 
 Public Function DSOSingleEncrypt(ByVal tmpS As String) As String
-    DSOSingleEncrypt = "0" & EncodeBase64Str(tmpS)
+    If tmpS = "" Then
+        DSOSingleEncrypt = "X"
+        Exit Function
+    End If
+    DSOSingleEncrypt = "N" & tmpS
 End Function
 
 Public Function DSOSingleDecrypt(ByVal tmpS As String) As String
@@ -14,6 +18,9 @@ Public Function DSOSingleDecrypt(ByVal tmpS As String) As String
             DSOSingleDecrypt = DecodeBase64Str(tmpS)
         Case "N":
             DSOSingleDecrypt = tmpS
+        Case "X":
+            ' Empty part
+            DSOSingleDecrypt = ""
         Case "H":
             ' Do nothing, header!
             DSOSingleDecrypt = ""
@@ -23,10 +30,7 @@ Public Function DSOSingleDecrypt(ByVal tmpS As String) As String
 End Function
 
 Public Function DSODecryptScript(ByVal Source As String) As String
-    If UCase(Left(Source, 6)) = "^ALL" & vbCrLf Then
-        Source = Mid(Source, 7)
-    End If
-    If UCase(Left(Source, 3)) <> "^^H" Then
+    If UCase(Left(Source, 17)) <> "OPTION COMPILED" & vbCrLf Then
         DSODecryptScript = Source
         Exit Function
     End If
@@ -34,14 +38,15 @@ Public Function DSODecryptScript(ByVal Source As String) As String
     Dim Lines() As String
     Lines = Split(Source, vbCrLf)
     Dim X As Long, Line As String
-    For X = LBound(Lines) To UBound(Lines)
+    For X = LBound(Lines) + 1 To UBound(Lines)
         Line = Lines(X)
-        If Left(Line, 2) = "^^" Then
-            Lines(X) = DSOSingleDecrypt(Mid(Line, 3))
-        ElseIf Left(Line, 1) = "^" Then
-            Lines(X) = Mid(Line, 2)
+        If Trim(Line) = "" Then
+            Lines(X) = ""
+        Else
+            Lines(X) = DSOSingleDecrypt(Line)
         End If
     Next
+    Lines(0) = "'" & Lines(0)
     DSODecryptScript = Join(Lines, vbCrLf)
 End Function
 
@@ -50,12 +55,22 @@ Public Function DSOCompileScript(ByVal Source As String, Optional ByVal AllowCom
         Err.Raise vbObjectError + 9344, , "Cannot compile already-compiled script"
         Exit Function
     End If
-    Dim DefaultEncrypt As Boolean
-    DefaultEncrypt = False
-    If UCase(Left(Source, 6)) = "^ALL" & vbCrLf Then
-        DefaultEncrypt = True
-        Source = Mid(Source, 7)
-    End If
-    DSOCompileScript = "^^HCompiled" & vbCrLf & ParseCommandLineOptional(Source, AllowCommands, True, DefaultEncrypt)
+
+    Dim ParsedSource As String
+    ParsedSource = ParseCommandLineOptional(Source, AllowCommands, True)
+
+    Dim Lines() As String
+    Lines = Split(ParsedSource, vbCrLf)
+    Dim X As Long, Line As String
+    For X = LBound(Lines) To UBound(Lines)
+        Line = Lines(X)
+        If Trim(Line) = "" Then
+            Lines(X) = ""
+        Else
+            Lines(X) = DSOSingleEncrypt(Line)
+        End If
+    Next
+
+    DSOCompileScript = "Option Compiled" & vbCrLf & Join(Lines, vbCrLf)
 End Function
 
