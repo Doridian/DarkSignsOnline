@@ -51,7 +51,7 @@ Public Function DSODecryptScript(ByVal Source As String) As String
     End If
 
     Dim Lines() As String
-    Lines = Split(Mid(Source, 18), vbCrLf)
+    Lines = Split(Mid(Source, 25), vbCrLf)
     Dim X As Long, Line As String
     For X = LBound(Lines) To UBound(Lines)
         Line = Lines(X)
