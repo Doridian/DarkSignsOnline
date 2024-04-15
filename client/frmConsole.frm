@@ -739,6 +739,7 @@ Public Sub setConnected(Value As Boolean)
 End Sub
 
 Private Sub Form_Load()
+    basCompression.ZstdInit
     basCommands.InitBasCommands
 
     Dim X As Integer
