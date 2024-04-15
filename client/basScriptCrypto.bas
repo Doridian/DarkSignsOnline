@@ -6,7 +6,7 @@ Public Function DSOSingleEncrypt(ByVal tmpS As String) As String
         DSOSingleEncrypt = "X"
         Exit Function
     End If
-    DSOSingleEncrypt = "N" & tmpS
+    DSOSingleEncrypt = "0" & EncodeBase64Str(tmpS)
 End Function
 
 Public Function DSOSingleDecrypt(ByVal tmpS As String) As String
@@ -51,10 +51,7 @@ Public Function DSODecryptScript(ByVal Source As String) As String
 End Function
 
 Public Function DSOCompileScript(ByVal Source As String, Optional ByVal AllowCommands As Boolean = True) As String
-    If UCase(Left(Source, 3)) = "^^H" Then
-        Err.Raise vbObjectError + 9344, , "Cannot compile already-compiled script"
-        Exit Function
-    End If
+    Source = DSODecryptScript(Source)
 
     Dim ParsedSource As String
     ParsedSource = ParseCommandLineOptional(Source, AllowCommands, True)
