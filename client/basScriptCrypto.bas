@@ -26,8 +26,8 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
         tmpK(X) = Int((Rnd * 254) + 1)
     Next
     If ScriptKey = "" Then
-        ReDim tmpK2(0 To 0)
-        tmpK2(0) = 0
+        ReDim tmpK2(-1 To -1)
+        tmpK2(-1) = 0
         CryptoVer = "2"
     Else
         tmpK2 = StrConv(ScriptKey, vbFromUnicode)
@@ -37,7 +37,10 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
     Y = UBound(tmpK) + 1
     Z = UBound(tmpK2) + 1
     For X = 0 To UBound(tmpB2)
-        tmpB2(X) = tmpB2(X) Xor 42 Xor tmpK(X Mod Y) Xor tmpK2(X Mod Z)
+        tmpB2(X) = tmpB2(X) Xor 42 Xor tmpK(X Mod Y)
+        If Z > 0 Then
+             tmpB2(X) = tmpB2(X) Xor tmpK2(X Mod Z)
+        End If
     Next
     ' END encrypt
 
@@ -57,8 +60,8 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As Strin
     Dim X As Long, Y As Long, Z As Long
 
     If ScriptKey = "" Then
-        ReDim tmpK2(0 To 0)
-        tmpK2(0) = 0
+        ReDim tmpK2(-1 To -1)
+        tmpK2(-1) = 0
     Else
         tmpK2 = StrConv(ScriptKey, vbFromUnicode)
     End If
@@ -80,7 +83,7 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As Strin
             Z = UBound(tmpK2) + 1
             For X = 0 To UBound(tmpB2)
                 tmpB2(X) = tmpB2(X) Xor 42 Xor tmpK(X Mod Y)
-                If CryptoVer = "3" Then
+                If Z > 0 Then
                      tmpB2(X) = tmpB2(X) Xor tmpK2(X Mod Z)
                 End If
             Next
