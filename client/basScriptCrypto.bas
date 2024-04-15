@@ -51,10 +51,8 @@ Public Function DSODecryptScript(ByVal Source As String) As String
 End Function
 
 Public Function DSOCompileScript(ByVal Source As String, Optional ByVal AllowCommands As Boolean = True) As String
-    Source = DSODecryptScript(Source)
-
     Dim ParsedSource As String
-    ParsedSource = ParseCommandLineOptional(Source, AllowCommands, True)
+    ParsedSource = DSODecryptScript(Source)
 
     Dim Lines() As String
     Lines = Split(ParsedSource, vbCrLf)
