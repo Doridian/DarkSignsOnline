@@ -2,4 +2,4 @@ Option Explicit
 
 Dim Contents
 Contents = Display(ArgV(3))
-Upload ArgV(1), ArgV(2), ApplyScriptEncryption(Contents)
+Upload ArgV(1), ArgV(2), CompileScript(Contents, False)

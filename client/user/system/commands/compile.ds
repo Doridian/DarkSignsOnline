@@ -2,5 +2,5 @@ Option Explicit
 
 Dim Contents
 Contents = Display(ArgV(1))
-Contents = ApplyScriptEncryption(Contents)
+Contents = CompileScript(Contents)
 Overwrite ArgV(2), Contents

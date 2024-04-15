@@ -12,6 +12,8 @@ Public Function DSOSingleDecrypt(ByVal tmpS As String) As String
     Select Case CryptoVer
         Case "0":
             DSOSingleDecrypt = DecodeBase64Str(tmpS)
+        Case "N":
+            DSOSingleDecrypt = tmpS
         Case Else:
             Err.Raise vbObjectError + 9343, , "Invalid crypto method " & CryptoVer
     End Select
@@ -46,3 +48,8 @@ Public Function DSOEncryptScript(ByVal Source As String) As String
     Next
     DSOEncryptScript = Join(Lines, vbCrLf)
 End Function
+
+Public Function DSOCompileScript(ByVal Source As String, Optional ByVal AllowCommands As Boolean = True) As String
+    DSOCompileScript = ParseCommandLineOptional(Source, AllowCommands, True)
+End Function
+

@@ -1679,8 +1679,8 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     Yield
 End Function
 
-Public Function ApplyScriptEncryption(ByVal Source As String) As String
-    ApplyScriptEncryption = DSOEncryptScript(Source)
+Public Function CompileScript(ByVal Source As String, Optional ByVal AllowCommands As Boolean = True) As String
+    CompileScript = DSOCompileScript(Source, AllowCommands)
 End Function
 
 ' Encoding helpers

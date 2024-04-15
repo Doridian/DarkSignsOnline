@@ -147,7 +147,7 @@ Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer, Op
     Dim RunStr As String
     Dim OptionDScript As Boolean
     OptionDScript = scrConsoleDScript(ConsoleID)
-    RunStr = ParseCommandLine(tmpS, OptionDScript, True)
+    RunStr = ParseCommandLine(tmpS, OptionDScript, True, False)
     scrConsoleDScript(ConsoleID) = OptionDScript
 
     scrConsole(ConsoleID).AddCode RunStr
@@ -200,13 +200,13 @@ ScriptEnd:
     scrConsoleContext(ConsoleID).CleanupScriptTasks
 End Function
 
-Public Function ParseCommandLineOptional(ByVal tmpS As String, Optional ByVal AllowCommands As Boolean = True) As String
+Public Function ParseCommandLineOptional(ByVal tmpS As String, Optional ByVal AllowCommands As Boolean = True, Optional ByVal ForCompile As Boolean = False) As String
     Dim OptionDScript As Boolean
     OptionDScript = False
-    ParseCommandLineOptional = ParseCommandLine(tmpS, OptionDScript, AllowCommands)
+    ParseCommandLineOptional = ParseCommandLine(tmpS, OptionDScript, AllowCommands, ForCompile)
 End Function
 
-Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByVal AllowCommands As Boolean) As String
+Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByVal AllowCommands As Boolean, ByVal ForCompile As Boolean) As String
     Dim OptionExplicit As Boolean
     OptionExplicit = True
     Dim RestStart As Long
@@ -214,7 +214,7 @@ Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Bo
     ParseCommandLine = ""
     While RestStart > 0
         tmpS = Mid(tmpS, RestStart)
-        ParseCommandLine = ParseCommandLine & ParseCommandLineInt(tmpS, RestStart, OptionExplicit, OptionDScript, AllowCommands)
+        ParseCommandLine = ParseCommandLine & ParseCommandLineInt(tmpS, RestStart, OptionExplicit, OptionDScript, AllowCommands, ForCompile)
     Wend
 
     If OptionExplicit Then
@@ -222,7 +222,7 @@ Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Bo
     End If
 End Function
 
-Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Long, ByRef OptionExplicit As Boolean, ByRef OptionDScript As Boolean, ByVal AllowCommands As Boolean) As String
+Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Long, ByRef OptionExplicit As Boolean, ByRef OptionDScript As Boolean, ByVal AllowCommands As Boolean, ByVal ForCompile As Boolean) As String
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
     ReDim CLIArgs(0 To 0)
@@ -240,6 +240,13 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Lo
     RestStart = -1
     NextInQuotes = ""
     InjectYield = False
+    
+    Dim DoEncrypt As Boolean
+    DoEncrypt = False
+    If Left(tmpS, 1) = "^" Then
+        tmpS = Mid(tmpS, 2)
+        DoEncrypt = True
+    End If
 
     Dim X As Long
     For X = 1 To Len(tmpS)
@@ -448,15 +455,21 @@ NotASimpleCommandButWithOE:
     End If
 
 RunSplitCommand:
-    If InjectYield Then
+    If InjectYield And Not ForCompile Then
         ParseCommandLineInt = ParseCommandLineInt & " : Yield : "
     End If
 
     If RestStart < 0 Then
+        GoTo EndCommandEncrypt
         Exit Function
     End If
 
     ParseCommandLineInt = ParseCommandLineInt & RestSplit
+    
+EndCommandEncrypt:
+    If DoEncrypt And ForCompile Then
+        ParseCommandLineInt = "^^" & DSOSingleEncrypt(Trim(ParseCommandLineInt)) & vbCrLf
+    End If
 End Function
 
 ' -y r g b mode
