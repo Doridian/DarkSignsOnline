@@ -1,4 +1,4 @@
-Attribute VB_Name = "Common"
+Attribute VB_Name = "baseVBCCRCommon"
 Option Explicit
 #If (VBA7 = 0) Then
 Private Enum LongPtr
