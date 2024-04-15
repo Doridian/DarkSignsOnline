@@ -20,4 +20,4 @@ SAY "You can EDIT this startup script file by typing: EDIT system\startup.ds{lgr
 SAY "-"
 SAYcomm "Welcome to Dark Signs Delta."
 LOGIN 
-SAY Run("/system/newconsole.ds")
+Include "/system/newconsole.ds"
