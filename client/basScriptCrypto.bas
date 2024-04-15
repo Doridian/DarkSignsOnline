@@ -14,14 +14,21 @@ Public Function DSOSingleDecrypt(ByVal tmpS As String) As String
             DSOSingleDecrypt = DecodeBase64Str(tmpS)
         Case "N":
             DSOSingleDecrypt = tmpS
+        Case "H":
+            ' Do nothing, header!
+            DSOSingleDecrypt = ""
         Case Else:
             Err.Raise vbObjectError + 9343, , "Invalid crypto method " & CryptoVer
     End Select
 End Function
 
 Public Function DSODecryptScript(ByVal Source As String) As String
-    If LCase(Left(Source, 6)) = "^all" & vbCrLf Then
+    If UCase(Left(Source, 6)) = "^ALL" & vbCrLf Then
         Source = Mid(Source, 7)
+    End If
+    If UCase(Left(Source, 3)) <> "^^H" Then
+        DSODecryptScript = Source
+        Exit Function
     End If
 
     Dim Lines() As String
@@ -39,12 +46,16 @@ Public Function DSODecryptScript(ByVal Source As String) As String
 End Function
 
 Public Function DSOCompileScript(ByVal Source As String, Optional ByVal AllowCommands As Boolean = True) As String
+    If UCase(Left(Source, 3)) = "^^H" Then
+        Err.Raise vbObjectError + 9344, , "Cannot compile already-compiled script"
+        Exit Function
+    End If
     Dim DefaultEncrypt As Boolean
     DefaultEncrypt = False
-    If LCase(Left(Source, 6)) = "^all" & vbCrLf Then
+    If UCase(Left(Source, 6)) = "^ALL" & vbCrLf Then
         DefaultEncrypt = True
         Source = Mid(Source, 7)
     End If
-    DSOCompileScript = ParseCommandLineOptional(Source, AllowCommands, True, DefaultEncrypt)
+    DSOCompileScript = "^^HCompiled" & vbCrLf & ParseCommandLineOptional(Source, AllowCommands, True, DefaultEncrypt)
 End Function
 
