@@ -1,6 +1,19 @@
 <?php require('_top.php'); ?>
 <span class="style5"><br />- News - <br /><br />
 
+  <strong>April 15th 2024</strong><br /><span class="style9">
+    Re-added script compilation / "encryption", just because.<br />
+    If you find ANY content related to the old DSO, let me know.<br />
+    Screenshots, old code, anything. I've done my best collecting everything I could find.<br />
+    Just contact me either of these:<br />
+    GitHub Issues:
+    <a href="https://github.com/Doridian/DarkSignsOnline">github.com/Doridian/DarkSignsOnline</a><br />
+    E-Mail:
+    <a href="mailto:doridian@darksignsonline.com">doridian@darksignsonline.com</a><br />
+    Fedi / Mastodon / ActivityPub:
+    <a href="https://furry.engineer/@Doridian">@furry.engineer@Doridian</a></span><br /><br />
+    </span><br /><br />
+
   <strong>April 13th 2024</strong><br /><span class="style9">
     Added a serverside notification system to the client.<br />
     Currently, this is used to notify clients of available updates.<br />
