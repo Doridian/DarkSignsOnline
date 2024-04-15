@@ -12,7 +12,6 @@
     <a href="mailto:doridian@darksignsonline.com">doridian@darksignsonline.com</a><br />
     Fedi / Mastodon / ActivityPub:
     <a href="https://furry.engineer/@Doridian">@furry.engineer@Doridian</a></span><br /><br />
-    </span><br /><br />
 
   <strong>April 13th 2024</strong><br /><span class="style9">
     Added a serverside notification system to the client.<br />
