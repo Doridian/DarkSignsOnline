@@ -3,7 +3,7 @@ Option Explicit
 
 Private Function DSOSingleEncrypt(ByVal tmpS As String) As String
     If tmpS = "" Then
-        DSOSingleEncrypt = ""
+        DSOSingleEncrypt = "X"
         Exit Function
     End If
 
@@ -86,6 +86,22 @@ Public Function DSOCompileScript(ByVal Source As String, Optional ByVal AllowCom
     Dim ParsedSource As String
     ParsedSource = DSODecryptScript(Source)
 
-    DSOCompileScript = "Option DScriptCompiled" & vbCrLf & DSOSingleEncrypt(ParsedSource)
+    'Line by line encryption is bad...
+    'Dim Lines() As String
+    'Lines = Split(ParsedSource, vbCrLf)
+    'Dim X As Long, Line As String
+    'For X = LBound(Lines) To UBound(Lines)
+    '    Line = Lines(X)
+    '    If Trim(Line) = "" Then
+    '        Lines(X) = ""
+    '    Else
+    '        Lines(X) = DSOSingleEncrypt(Line)
+    '    End If
+    'Next
+    'ParsedSource = Join(Lines, vbCrLf)
+
+    ParsedSource = DSOSingleEncrypt(ParsedSource)
+
+    DSOCompileScript = "Option DSciptCompiled" & vbCrLf & ParsedSource
 End Function
 
