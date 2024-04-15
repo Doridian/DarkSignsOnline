@@ -1,6 +1,6 @@
 Option Explicit
 
-Dim Contents
-Contents = Display(ArgV(1))
-Contents = CompileScript(Contents)
-Overwrite ArgV(2), Contents
+Dim strContents, strCompiled
+strContents = Display(ArgV(1))
+strCompiled = CompileScript(strContents)
+Overwrite ArgV(2), strCompiled

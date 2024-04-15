@@ -1376,7 +1376,7 @@ Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOu
 
     SParamArr(0) = Script
     Yield
-    RawRunCaptureA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, RedirectOutput, DisableOutput)
+    RawRunCaptureA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, RedirectOutput, DisableOutput, "")
     Yield
 End Function
 
@@ -1484,7 +1484,7 @@ Private Function RawRunCaptureCodeA(ByVal RedirectOutput As Boolean, ByVal Disab
 
     SParamArr(0) = "inline://"
     Yield
-    RawRunCaptureCodeA = Run_Script_Code(Code, PrivConsoleID, SParamArr, "RunCode", FileKey, PrivServerDomain, PrivServerPort, False, RedirectOutput, DisableOutput)
+    RawRunCaptureCodeA = Run_Script_Code(Code, PrivConsoleID, SParamArr, "RunCode", FileKey, PrivServerDomain, PrivServerPort, False, RedirectOutput, DisableOutput, "")
     Yield
 End Function
 
@@ -1675,13 +1675,13 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     Dim DomScript As String
     DomScript = "dso://" & strDomain & ":" & strPort
     DomainConnectParams(0) = DomScript
-    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput)
+    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput, DomScript)
 
     Yield
 End Function
 
-Public Function CompileScript(ByVal Source As String, Optional ByVal AllowCommands As Boolean = True) As String
-    CompileScript = DSOCompileScript(Source, AllowCommands)
+Public Function CompileScript(ByVal Source As String, Optional ByVal FileKey As String = "", Optional ByVal AllowCommands As Boolean = True) As String
+    CompileScript = DSOCompileScript(Source, FileKey, AllowCommands)
 End Function
 
 ' Encoding helpers

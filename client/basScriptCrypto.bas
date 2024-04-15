@@ -4,15 +4,15 @@ Option Explicit
 Public Const EncryptedHeader = "Option DSciptCompiled" & vbCrLf
 Public Const EncryptedLineLen = 140
 
-Private Function DSOSingleEncrypt(ByVal tmpS As String) As String
+Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As String) As String
     If tmpS = "" Then
         DSOSingleEncrypt = "X"
         Exit Function
     End If
 
     Dim CryptoVer As String
-    Dim tmpB() As Byte, tmpB2() As Byte, tmpK() As Byte
-    Dim X As Long, Y As Long
+    Dim tmpB() As Byte, tmpB2() As Byte, tmpK() As Byte, tmpK2() As Byte
+    Dim X As Long, Y As Long, Z As Long
 
     tmpB = StrConv(tmpS, vbFromUnicode)
     If Not ZstdCompress(tmpB, tmpB2) Then
@@ -25,10 +25,19 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String) As String
     For X = 0 To 31
         tmpK(X) = Int((Rnd * 254) + 1)
     Next
-    CryptoVer = "2"
+    If ScriptKey = "" Then
+        ReDim tmpK2(0 To 0)
+        tmpK2(0) = 0
+        CryptoVer = "2"
+    Else
+        tmpK2 = StrConv(ScriptKey, vbFromUnicode)
+        CryptoVer = "3"
+    End If
+
     Y = UBound(tmpK) + 1
+    Z = UBound(tmpK2) + 1
     For X = 0 To UBound(tmpB2)
-        tmpB2(X) = tmpB2(X) Xor (42 Xor tmpK(LBound(tmpK) + (X Mod Y)))
+        tmpB2(X) = tmpB2(X) Xor 42 Xor tmpK(X Mod Y) Xor tmpK2(X Mod Z)
     Next
     ' END encrypt
 
@@ -42,10 +51,17 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String) As String
     DSOSingleEncrypt = DSOSingleEncrypt & CryptoVer & tmpS
 End Function
 
-Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As String) As String
+Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As String, ByVal ScriptKey As String) As String
     Dim tmpSA() As String
-    Dim tmpB() As Byte, tmpB2() As Byte, tmpK() As Byte
-    Dim X As Long, Y As Long
+    Dim tmpB() As Byte, tmpB2() As Byte, tmpK() As Byte, tmpK2() As Byte
+    Dim X As Long, Y As Long, Z As Long
+
+    If ScriptKey = "" Or CryptoVer = "2" Then
+        ReDim tmpK2(0 To 0)
+        tmpK2(0) = 0
+    Else
+        tmpK2 = StrConv(ScriptKey, vbFromUnicode)
+    End If
 
     Select Case CryptoVer
         Case "0":
@@ -56,13 +72,14 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As Strin
                 tmpB(X) = tmpB(X) Xor 42
             Next
             DSOSingleDecrypt = StrConv(tmpB, vbUnicode)
-        Case "2":
+        Case "2", "3":
             tmpSA = Split(tmpS, ":")
             tmpK = DecodeBase64Bytes(tmpSA(0))
             tmpB2 = DecodeBase64Bytes(tmpSA(1))
             Y = UBound(tmpK) + 1
+            Z = UBound(tmpK2) + 1
             For X = 0 To UBound(tmpB2)
-                tmpB2(X) = tmpB2(X) Xor (42 Xor tmpK(X Mod Y))
+                tmpB2(X) = tmpB2(X) Xor 42 Xor tmpK(X Mod Y) Xor tmpK2(X Mod Z)
             Next
             If Not ZstdDecompress(tmpB2, tmpB) Then
                 Err.Raise vbObjectError + 9223, , "ZSTD decompression error"
@@ -81,7 +98,7 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As Strin
     End Select
 End Function
 
-Public Function DSODecryptScript(ByVal Source As String) As String
+Public Function DSODecryptScript(ByVal Source As String, ByVal ScriptKey As String) As String
     If UCase(Left(Source, Len(EncryptedHeader))) <> UCase(EncryptedHeader) Then
         DSODecryptScript = Source
         Exit Function
@@ -104,7 +121,7 @@ Public Function DSODecryptScript(ByVal Source As String) As String
                 If Output <> "" Then
                     Output = Output & vbCrLf
                 End If
-                Output = Output & DSOSingleDecrypt(Left(Line, 1), LastLine)
+                Output = Output & DSOSingleDecrypt(Left(Line, 1), LastLine, ScriptKey)
             End If
             LastLine = ""
         End If
@@ -113,9 +130,9 @@ Public Function DSODecryptScript(ByVal Source As String) As String
     DSODecryptScript = Output
 End Function
 
-Public Function DSOCompileScript(ByVal Source As String, Optional ByVal AllowCommands As Boolean = True) As String
+Public Function DSOCompileScript(ByVal Source As String, ByVal ScriptKey As String, Optional ByVal AllowCommands As Boolean = True) As String
     Dim ParsedSource As String
-    ParsedSource = DSODecryptScript(Source)
+    ParsedSource = DSODecryptScript(Source, ScriptKey)
 
     'Line by line encryption is bad...
     'Dim Lines() As String
@@ -131,8 +148,8 @@ Public Function DSOCompileScript(ByVal Source As String, Optional ByVal AllowCom
     'Next
     'ParsedSource = Join(Lines, vbCrLf)
 
-    ParsedSource = DSOSingleEncrypt(ParsedSource)
+    ParsedSource = DSOSingleEncrypt(ParsedSource, ScriptKey)
 
-    DSOCompileScript = EncryptedHeader & ParsedSource
+    DSOCompileScript = EncryptedHeader & ParsedSource & vbCrLf
 End Function
 
