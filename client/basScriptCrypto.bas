@@ -146,20 +146,6 @@ Public Function DSOCompileScript(ByVal Source As String, ByVal ScriptKey As Stri
     Dim ParsedSource As String
     ParsedSource = DSODecryptScript(Source, "")
 
-    'Line by line encryption is bad...
-    'Dim Lines() As String
-    'Lines = Split(ParsedSource, vbCrLf)
-    'Dim X As Long, Line As String
-    'For X = LBound(Lines) To UBound(Lines)
-    '    Line = Lines(X)
-    '    If Trim(Line) = "" Then
-    '        Lines(X) = ""
-    '    Else
-    '        Lines(X) = DSOSingleEncrypt(Line)
-    '    End If
-    'Next
-    'ParsedSource = Join(Lines, vbCrLf)
-
     ParsedSource = DSOSingleEncrypt(ParsedSource, ScriptKey, True)
     DSOCompileScript = EncryptedHeader & DSOSingleEncrypt(EncryptedCanary, ScriptKey, False) & vbCrLf & ParsedSource & vbCrLf
 End Function
