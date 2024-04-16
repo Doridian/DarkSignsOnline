@@ -4,6 +4,7 @@ Option Explicit
 Public Const EncryptedHeader = "Option DSciptCompiled" & vbCrLf
 Public Const EncryptedCanary = "Option DSciptCompiledLoaded" & vbCrLf
 Public Const EncryptedLineLen = 140
+Private Const EncryptedDefaultKey = "DSO$S3cur3_K3y!!111"
 
 Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As String, ByVal NoWrap As Boolean) As String
     If tmpS = "" Then
@@ -12,39 +13,32 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
     End If
 
     Dim CryptoVer As String
-    Dim tmpB() As Byte, tmpB2() As Byte, tmpK() As Byte, tmpK2() As Byte
-    Dim X As Long, Y As Long, Z As Long
+    Dim bRaw() As Byte, bProcessed() As Byte, bSalt() As Byte, bPass() As Byte
+    Dim X As Long
 
-    tmpB = StrConv(tmpS, vbFromUnicode)
-    If Not ZstdCompress(tmpB, tmpB2) Then
+    bRaw = StrConv(tmpS, vbFromUnicode)
+    If Not ZstdCompress(bRaw, bProcessed) Then
         tmpS = "X"
         Exit Function
     End If
 
     ' BEGIN encrypt
-    ReDim tmpK(0 To 31)
-    For X = 0 To 31
-        tmpK(X) = Int((Rnd * 254) + 1)
-    Next
+    CryptoVer = "4"
     If ScriptKey = "" Then
-        ReDim tmpK2(-1 To -1)
-        tmpK2(-1) = 0
-    Else
-        tmpK2 = StrConv(ScriptKey, vbFromUnicode)
+        ScriptKey = EncryptedDefaultKey
     End If
-    CryptoVer = "3"
+    bSalt = AesGenSalt()
+    bPass = StrConv(ScriptKey & vbNullString, vbFromUnicode)
 
-    Y = UBound(tmpK) + 1
-    Z = UBound(tmpK2) + 1
-    For X = 0 To UBound(tmpB2)
-        tmpB2(X) = tmpB2(X) Xor 42 Xor tmpK(X Mod Y)
-        If Z > 0 Then
-             tmpB2(X) = tmpB2(X) Xor tmpK2(X Mod Z)
-        End If
-    Next
     ' END encrypt
-
-    tmpS = EncodeBase64Bytes(tmpK) & ":" & EncodeBase64Bytes(tmpB2)
+    Dim bUnused() As Byte
+    Dim bHMAC() As Byte
+    ReDim bHMAC(0 To HMAC_HASH_LEN - 1)
+    bHMAC(0) = 1 ' encrypt-then-mac
+    If Not AesCryptArray(bProcessed, bPass, bSalt, bUnused, Hmac:=bHMAC) Then
+        Err.Raise vbObjectError + 9090, , "AES engine failure"
+    End If
+    tmpS = EncodeBase64Bytes(bSalt) & ":" & EncodeBase64Bytes(bHMAC) & ":" & EncodeBase64Bytes(bProcessed)
 
     DSOSingleEncrypt = ""
     If Not NoWrap Then
@@ -56,29 +50,32 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
     DSOSingleEncrypt = DSOSingleEncrypt & CryptoVer & tmpS
 End Function
 
-Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As String, ByVal ScriptKey As String) As String
-    Dim tmpSA() As String
-    Dim tmpB() As Byte, tmpB2() As Byte, tmpK() As Byte, tmpK2() As Byte
-    Dim X As Long, Y As Long, Z As Long
-
-    If ScriptKey = "" Then
-        ReDim tmpK2(-1 To -1)
-        tmpK2(-1) = 0
-    Else
-        tmpK2 = StrConv(ScriptKey, vbFromUnicode)
-    End If
+Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As String, ByVal ScriptKey As String) As String
+    Dim X As Long
 
     Select Case CryptoVer
         Case "0":
-            DSOSingleDecrypt = DecodeBase64Str(tmpS)
+            DSOSingleDecrypt = DecodeBase64Str(InputStr)
         Case "1":
-            tmpB = DecodeBase64Bytes(tmpS)
-            For X = 0 To UBound(tmpB)
-                tmpB(X) = tmpB(X) Xor 42
+            Dim xorCDec() As Byte
+            xorCDec = DecodeBase64Bytes(InputStr)
+            For X = 0 To UBound(xorCDec)
+                xorCDec(X) = xorCDec(X) Xor 42
             Next
-            DSOSingleDecrypt = StrConv(tmpB, vbUnicode)
+            DSOSingleDecrypt = StrConv(xorCDec, vbUnicode)
         Case "2", "3":
-            tmpSA = Split(tmpS, ":")
+            Dim tmpSA() As String
+            Dim tmpB() As Byte, tmpB2() As Byte, tmpK() As Byte, tmpK2() As Byte
+            Dim Y As Long, Z As Long
+
+            If ScriptKey = "" Then
+                ReDim tmpK2(-1 To -1)
+                tmpK2(-1) = 0
+            Else
+                tmpK2 = StrConv(ScriptKey, vbFromUnicode)
+            End If
+
+            tmpSA = Split(InputStr, ":")
             tmpK = DecodeBase64Bytes(tmpSA(0))
             tmpB2 = DecodeBase64Bytes(tmpSA(1))
             Y = UBound(tmpK) + 1
@@ -93,8 +90,47 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As Strin
                 Err.Raise vbObjectError + 9223, , "ZSTD decompression error"
             End If
             DSOSingleDecrypt = StrConv(tmpB, vbUnicode)
+        Case "4":
+            Dim sSplit() As String, bSalt() As Byte, bHMAC() As Byte, bHMACOut() As Byte, bPass() As Byte, bRaw() As Byte, bDecompressed() As Byte
+            sSplit = Split(InputStr, ":")
+            bSalt = DecodeBase64Bytes(sSplit(0))
+            bHMAC = DecodeBase64Bytes(sSplit(1))
+            bRaw = DecodeBase64Bytes(sSplit(2))
+            If ScriptKey = "" Then
+                ScriptKey = EncryptedDefaultKey
+            End If
+            bPass = StrConv(ScriptKey & vbNullString, vbFromUnicode)
+
+            Dim bUnused() As Byte
+            ReDim bHMACOut(0 To HMAC_HASH_LEN - 1)
+            bHMACOut(0) = 0 ' hash then decrpyt
+            If Not AesCryptArray(bRaw, bPass, bSalt, bUnused, Hmac:=bHMACOut) Then
+                Err.Raise vbObjectError + 9090, , "AES engine failure"
+            End If
+            If UBound(bHMAC) <> UBound(bHMACOut) Or LBound(bHMAC) <> LBound(bHMACOut) Then
+                Err.Raise vbObjectError + 9091, , "HMAC size failure"
+            End If
+
+            Dim Differences As Integer, Sames As Integer
+            Sames = 0
+            Differences = 0
+            For X = LBound(bHMAC) To UBound(bHMAC)
+                If bHMAC(X) <> bHMACOut(X) Then
+                    Differences = Differences + 1
+                Else
+                    Sames = Sames + 1
+                End If
+            Next
+            If Differences <> 0 Or Sames <> (1 + (UBound(bHMAC) - LBound(bHMAC))) Then
+                Err.Raise vbObjectError + 9092, , "HMAC check failure"
+            End If
+
+            If Not ZstdDecompress(bRaw, bDecompressed) Then
+                Err.Raise vbObjectError + 9223, , "ZSTD decompression error"
+            End If
+            DSOSingleDecrypt = StrConv(bDecompressed, vbUnicode)
         Case "N":
-            DSOSingleDecrypt = tmpS
+            DSOSingleDecrypt = InputStr
         Case "X":
             ' Empty part
             DSOSingleDecrypt = ""
@@ -102,7 +138,7 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal tmpS As Strin
             ' Do nothing, header!
             DSOSingleDecrypt = ""
         Case Else:
-            Err.Raise vbObjectError + 9343, , "Invalid crypto line " & CryptoVer & tmpS
+            Err.Raise vbObjectError + 9343, , "Invalid crypto line " & CryptoVer & InputStr
     End Select
 End Function
 
