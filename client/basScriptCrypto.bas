@@ -54,42 +54,6 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As S
     Dim X As Long
 
     Select Case CryptoVer
-        Case "0":
-            DSOSingleDecrypt = DecodeBase64Str(InputStr)
-        Case "1":
-            Dim xorCDec() As Byte
-            xorCDec = DecodeBase64Bytes(InputStr)
-            For X = 0 To UBound(xorCDec)
-                xorCDec(X) = xorCDec(X) Xor 42
-            Next
-            DSOSingleDecrypt = StrConv(xorCDec, vbUnicode)
-        Case "2", "3":
-            Dim tmpSA() As String
-            Dim tmpB() As Byte, tmpB2() As Byte, tmpK() As Byte, tmpK2() As Byte
-            Dim Y As Long, Z As Long
-
-            If ScriptKey = "" Or CryptoVer = "2" Then
-                ReDim tmpK2(-1 To -1)
-                tmpK2(-1) = 0
-            Else
-                tmpK2 = StrConv(ScriptKey, vbFromUnicode)
-            End If
-
-            tmpSA = Split(InputStr, ":")
-            tmpK = DecodeBase64Bytes(tmpSA(0))
-            tmpB2 = DecodeBase64Bytes(tmpSA(1))
-            Y = UBound(tmpK) + 1
-            Z = UBound(tmpK2) + 1
-            For X = 0 To UBound(tmpB2)
-                tmpB2(X) = tmpB2(X) Xor 42 Xor tmpK(X Mod Y)
-                If Z > 0 Then
-                     tmpB2(X) = tmpB2(X) Xor tmpK2(X Mod Z)
-                End If
-            Next
-            If Not ZstdDecompress(tmpB2, tmpB) Then
-                Err.Raise vbObjectError + 9223, , "ZSTD decompression error"
-            End If
-            DSOSingleDecrypt = StrConv(tmpB, vbUnicode)
         Case "4":
             Dim sSplit() As String, bSalt() As Byte, bHMAC() As Byte, bHMACOut() As Byte, bPass() As Byte, bRaw() As Byte, bDecompressed() As Byte
             sSplit = Split(InputStr, ":")
@@ -129,8 +93,6 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As S
                 Err.Raise vbObjectError + 9223, , "ZSTD decompression error"
             End If
             DSOSingleDecrypt = StrConv(bDecompressed, vbUnicode)
-        Case "N":
-            DSOSingleDecrypt = InputStr
         Case "X":
             ' Empty part
             DSOSingleDecrypt = ""
