@@ -173,33 +173,6 @@ jobs:
         files: client.zip
         fail_on_unmatched_files: true
     #  Always/Failure handlers
-    - name: Take failure screenshot
-      if: failure()
-      run: |
-        $Script:showWindowAsync = Add-Type -MemberDefinition @"
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
-        "@ -Name "Win32ShowWindowAsync" -Namespace Win32Functions -PassThru
-        $null = $showWindowAsync::ShowWindowAsync((Get-Process -Id $pid).MainWindowHandle, 2)
-        Add-Type -AssemblyName System.Windows.Forms,System.Drawing
-        $screens = [Windows.Forms.Screen]::AllScreens
-        $top    = ($screens.Bounds.Top    | Measure-Object -Minimum).Minimum
-        $left   = ($screens.Bounds.Left   | Measure-Object -Minimum).Minimum
-        $right  = ($screens.Bounds.Right  | Measure-Object -Maximum).Maximum
-        $bottom = ($screens.Bounds.Bottom | Measure-Object -Maximum).Maximum
-        $bounds   = [Drawing.Rectangle]::FromLTRB($left, $top, $right, $bottom)
-        $bmp      = New-Object System.Drawing.Bitmap ([int]$bounds.width), ([int]$bounds.height)
-        $graphics = [Drawing.Graphics]::FromImage($bmp)
-        $graphics.CopyFromScreen($bounds.Location, [Drawing.Point]::Empty, $bounds.size)
-        $bmp.Save(".\desktop.png")
-        $graphics.Dispose()
-        $bmp.Dispose()
-    - name: Upload failure screenshot  
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-         name: desktop.png
-         path: desktop.png
     - name: Upload build logs
       if: always()
       uses: actions/upload-artifact@v4
