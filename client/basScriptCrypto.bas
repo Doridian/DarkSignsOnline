@@ -68,7 +68,7 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As S
             Dim tmpB() As Byte, tmpB2() As Byte, tmpK() As Byte, tmpK2() As Byte
             Dim Y As Long, Z As Long
 
-            If ScriptKey = "" Then
+            If ScriptKey = "" Or CryptoVer = "2" Then
                 ReDim tmpK2(-1 To -1)
                 tmpK2(-1) = 0
             Else
