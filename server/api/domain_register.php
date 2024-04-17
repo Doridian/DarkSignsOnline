@@ -100,7 +100,6 @@ if (sizeof($domain) == 4 && validIP($d)) {
 			} else {
 				die_error('Registration of ' . $d . ' has been DECLINED by the Dark Signs Bank.newlineCheck your bank account for further details.', 402);
 			}
-
 		}
 	} else {
 		die_error('Invalid domain extension.');
@@ -147,7 +146,6 @@ if (sizeof($domain) == 4 && validIP($d)) {
 			} else {
 				die_error('Registration of ' . $d . ' has been DECLINED by the Dark Signs Bank.newlineCheck your bank account for further details.', 402);
 			}
-
 		}
 	} else {
 		die_error('Invalid domain extension.');
