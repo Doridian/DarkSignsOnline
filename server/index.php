@@ -5,7 +5,7 @@
     Re-added script compilation / "encryption", just because.<br />
     If you find ANY content related to the old DSO, let me know.<br />
     Screenshots, old code, anything. I've done my best collecting everything I could find.<br />
-    Just contact me either of these:<br />
+    Just contact me via either of these:<br />
     GitHub Issues:
     <a href="https://github.com/Doridian/DarkSignsOnline">github.com/Doridian/DarkSignsOnline</a><br />
     E-Mail:
