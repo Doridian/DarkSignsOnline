@@ -54,14 +54,17 @@ if (sizeof($domain) == 4 && validIP($d)) {
 	if ($dprice > $user['cash']) {
 		die_error('Insufficient balance. Try again when you have more money.', 402);
 	} else {
-		if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3], $dprice)) {
+		$db->begin_transaction();
+		if (transaction($uid, BANK_USER_ID, 'IP Registration: ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3], $dprice)) {
 			$keycode = make_keycode();
 			$timestamp = time();
 			$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, time, keycode) VALUES (?, ?, 'IP', ?, ?)");
 			$stmt->bind_param('isis', $uid, $ipdom, $timestamp, $keycode);
 			$stmt->execute();
+			$db->commit();
 			die('Registration complete for ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3] . ', you have been charged $' . $dprice . '.');
 		} else {
+			$db->rollback();
 			die_error('Registration of ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3] . ' has been DECLINED by the Dark Signs Bank.newlineCheck your bank account for further details.', 402);
 		}
 	}
@@ -76,32 +79,16 @@ if (sizeof($domain) == 4 && validIP($d)) {
 		if ($dprice > $user['cash']) {
 			die_error('Insufficient balance. Try again when you have more money.', 402);
 		} else {
+			$db->begin_transaction();
 			if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $d, $dprice)) {
-				// Generate IP
-				$randomip;
-				if (!empty($fixedip)) {
-					$randomip = $fixedip;
-				} else {
-					$res;
-					$stmt = $db->prepare("SELECT * FROM iptable WHERE ip=?");
-					do {
-						$randomip = rand(1, 254) . "." . rand(0, 255) . "." . rand(0, 255) . "." . rand(0, 255);
-						$stmt->bind_param('s', $randomip);
-						$stmt->execute();
-						$res = $stmt->get_result();
-					} while ($res->num_rows != 0);
-				}
-
-				$keycode = make_keycode();
-				$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, time, keycode) VALUES (?, ?, 'DOMAIN', ?, ?)");
-				$stmt->bind_param('isis', $uid, $randomip, $timestamp, $keycode);
-				$stmt->execute();
-				$id = $db->insert_id;
+				$id = makeNewIP('DOMAIN', $fixedip);
 				$stmt = $db->prepare("INSERT INTO domain (id, name, ext) VALUES (?, ?, ?)");
 				$stmt->bind_param('iss', $id, $domain[0], $domain[1]);
 				$stmt->execute();
+				$db->commit();
 				die('Registration complete for ' . $d . ', you have been charged $' . $dprice);
 			} else {
+				$db->rollback();
 				die_error('Registration of ' . $d . ' has been DECLINED by the Dark Signs Bank.newlineCheck your bank account for further details.', 402);
 			}
 		}
@@ -123,33 +110,16 @@ if (sizeof($domain) == 4 && validIP($d)) {
 	} else if ($dprice > $user['cash']) {
 		die_error('Insufficient balance. Try again when you have more money.', 402);
 	} else {
-		if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $d, $dprice)) {
-			// Generate IP
-			$randomip;
-			if (!empty($fixedip)) {
-				$randomip = $fixedip;
-			} else {
-				$res;
-				$stmt = $db->prepare("SELECT * FROM iptable WHERE ip=?");
-				do {
-					$randomip = rand(1, 254) . "." . rand(0, 255) . "." . rand(0, 255) . "." . rand(0, 255);
-					$stmt->bind_param('s', $randomip);
-					$stmt->execute();
-					$res = $stmt->get_result();
-				} while ($res->num_rows != 0);
-			}
-
-			$keycode = make_keycode();
-			$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, time, keycode) VALUES (?, ?, 'SUBDOMAIN', ?, ?)");
-			$stmt->bind_param('isis', $uid, $randomip, $timestamp, $keycode);
-			$stmt->execute();
-			$id = $db->insert_id;
+		$db->begin_transaction();
+		if (transaction($uid, BANK_USER_ID, 'Subdomain Registration: ' . $d, $dprice)) {
+			$id = makeNewIP('SUBDOMAIN', $fixedip);
 			$stmt = $db->prepare("INSERT INTO subdomain (id, hostid, name) VALUES (?, ?, ?)");
 			$stmt->bind_param('iss', $id, $dInfoRoot[0], $host);
 			$stmt->execute();
-
+			$db->commit();
 			die('Registration complete for ' . $d . ', you have been charged $' . $dprice);
 		} else {
+			$db->rollback();
 			die_error('Registration of ' . $d . ' has been DECLINED by the Dark Signs Bank.newlineCheck your bank account for further details.', 402);
 		}
 	}
