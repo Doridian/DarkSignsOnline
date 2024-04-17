@@ -1,6 +1,5 @@
 <?php
 
-$rewrite_done = true;
 require_once('function.php');
 
 $version = strtolower(trim($_REQUEST['version']));

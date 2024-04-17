@@ -1,7 +1,5 @@
 <?php
 
-$rewrite_done = true;
-
 $htmltitle = 'Create a new account';
 require('_top.php');
 require_once('api/function_base.php');

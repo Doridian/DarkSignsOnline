@@ -4,7 +4,6 @@
 //NOTE - when modifying this script, consider that you may need to modify domain_download.php as well!!!
 //----------------------------------------------------------------------------------------------------------
 
-$rewrite_done = true;
 require_once("function.php");
 global $db;
 

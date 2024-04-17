@@ -1,6 +1,5 @@
 <?php
 
-$rewrite_done = true;
 include_once('function.php');
 global $db;
 

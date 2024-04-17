@@ -1,6 +1,5 @@
 <?
 
-$rewrite_done = true;
 require_once('function.php');
 
 print_returnwith('2000', -1);

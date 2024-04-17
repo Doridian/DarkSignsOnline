@@ -1,9 +1,7 @@
 <?php
-if (!isset($rewrite_done)) {
-	die('9999Not rewritten yet');
-}
 
 require_once('function_base.php');
+
 header('Content-Type: text/plain');
 
 function login_failure($code) {
