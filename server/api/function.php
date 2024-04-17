@@ -62,14 +62,19 @@ function getDomainInfo($domain)
 		$stmt->bind_param('s', $ipdom);
 		$stmt->execute();
 		$result = $stmt->get_result();
-	} else if (sizeof($domain) == 2) {
+	} else if (sizeof($domain) === 2) {
 		$stmt = $db->prepare("SELECT d.id, ipt.owner, ipt.keycode, ipt.ip, ipt.time FROM domain d, iptable ipt WHERE d.name=? AND d.ext=? AND d.id=ipt.id");
 		$stmt->bind_param('ss', $domain[0], $domain[1]);
 		$stmt->execute();
 		$result = $stmt->get_result();
 	} else if (sizeof($domain) > 2) {
 		$stmt = $db->prepare("SELECT s.id, ipt.owner, ipt.keycode, ipt.ip, ipt.time FROM subdomain s, iptable ipt, domain d WHERE d.name=? AND d.ext=? AND d.id=s.hostid AND s.name=? AND s.id=ipt.id");
-		$stmt->bind_param('sss', $domain[1], $domain[2], $domain[0]);
+		
+		$ext = array_pop($domain);
+		$name = array_pop($domain);
+		$subname = implode('.', $domain);
+
+		$stmt->bind_param('sss', $name, $ext, $subname);
 		$stmt->execute();
 		$result = $stmt->get_result();
 	}

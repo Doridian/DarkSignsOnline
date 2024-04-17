@@ -108,10 +108,11 @@ if (sizeof($domain) == 4 && validIP($d)) {
 } else if (sizeof($domain) > 2) {
 	// Subdomain register.
 	$ext = array_pop($domain);
+	$name = array_pop($domain);
 	$host = implode('.', $domain);
 	$price = 20;
 	if ($ext == 'com' || $ext == 'net' || $ext == 'org' || $ext == 'edu' || $ext == 'mil' || $ext == 'gov' || $ext == 'dsn' || ($ext == 'usr' && $user['username'] == $domain[1])) {
-		$dInfoRoot = getDomainInfo($domain[sizeof($domain)-1] . '.' . $ext);
+		$dInfoRoot = getDomainInfo($name . '.' . $ext);
 		if ($dInfoRoot[1] != $user['id']) {
 			die_error($dInfoRoot[1] . '  ' . $user['id'] . '  You must be the owner of the full domain to register a sub domain.', 403);
 		} else if ($price > $user['cash']) {
