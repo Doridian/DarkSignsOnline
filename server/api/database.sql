@@ -30,8 +30,7 @@ SET time_zone = "+00:00";
 CREATE TABLE `domain` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `ext` varchar(255) NOT NULL,
-  `ip` varchar(255) NOT NULL
+  `ext` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -122,8 +121,7 @@ CREATE TABLE `iptable` (
 CREATE TABLE `subdomain` (
   `id` int(11) NOT NULL,
   `hostid` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `ip` varchar(255) NOT NULL
+  `name` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
