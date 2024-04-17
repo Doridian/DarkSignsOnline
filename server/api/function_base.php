@@ -28,6 +28,32 @@ function make_keycode($length = 16) {
 	return $keycode;
 }
 
+function makeNewIP($regtype, $fixedip = '', $userid = 0) {
+	global $db, $user, $timestamp;
+	// Generate IP
+	if (!empty($fixedip)) {
+		$randomip = $fixedip;
+	} else {
+		$stmt = $db->prepare("SELECT id FROM iptable WHERE ip = ?");
+		do {
+			$randomip = rand(1, 254) . "." . rand(0, 255) . "." . rand(0, 255) . "." . rand(0, 255);
+			$stmt->bind_param('s', $randomip);
+			$stmt->execute();
+			$res = $stmt->get_result();
+		} while ($res->num_rows != 0);
+	}
+
+	if ($userid <= 0) {
+		$userid = $user['id'];
+	}
+
+	$keycode = make_keycode();
+	$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, time, keycode) VALUES (?, ?, ?, ?, ?)");
+	$stmt->bind_param('issis', $userid, $randomip, $regtype, $timestamp, $keycode);
+	$stmt->execute();
+	return $db->insert_id;
+}
+
 function die_error($str, $code = 400) {
 	global $ver;
 	if ($ver > 1) {

@@ -120,11 +120,13 @@ if (isset($_POST['username'])) {
 
 	$password = password_hash($password, PASSWORD_DEFAULT);
 
+	$db->begin_transaction();
 	//check if email already exists
 	$stmt = $db->prepare("SELECT id from users where email=?");
 	$stmt->bind_param('s', $email);
 	$stmt->execute();
 	if ($stmt->get_result()->num_rows > 0) {
+		$db->rollback();
 		$email = htmlentities($email);
 		die("The email address <b>$email</b> already exists in the database. Please try again.");
 	}
@@ -133,6 +135,7 @@ if (isset($_POST['username'])) {
 	$stmt->bind_param('s', $username);
 	$stmt->execute();
 	if ($stmt->get_result()->num_rows > 0) {
+		$db->rollback();
 		$username = htmlentities($username);
 		die("The username <b>$username</b> already exists in the database. Please try again.");
 	}
@@ -145,6 +148,7 @@ if (isset($_POST['username'])) {
 
 	$stmt = $db->prepare('INSERT INTO users (username, password, email, createtime, ip, lastseen, dobday, dobmonth, dobyear, emailverifycode, active, cash) VALUES (?,?,?,?,?,?,?,?,?,?,0,200)');
 	if (!$stmt) {
+		$db->rollback();
 		die("Error: " . $db->error);
 	}
 	$stmt->bind_param('sssisiiiis', $username, $password, $email, $timestamp, $aip, $timestamp, $dobday, $dobmonth, $dobyear, $vercode);
@@ -152,24 +156,12 @@ if (isset($_POST['username'])) {
 	$res = $stmt->get_result();
 	$userid = $db->insert_id;
 
-	$randomip;
-	$res;
-	$stmt = $db->prepare('SELECT * FROM iptable WHERE ip=?');
-	do {
-		$randomip = rand(1, 254) . "." . rand(0, 255) . "." . rand(0, 255) . "." . rand(0, 255);
-		$stmt->bind_param('s', $randomip);
-		$stmt->execute();
-		$res = $stmt->get_result();
-	} while ($res->num_rows != 0);
+	$id = makeNewIP('DOMAIN', '', $userid);
+	$stmt = $db->prepare("INSERT INTO domain (id, name, ext) VALUES (?, ?, 'usr')");
+	$stmt->bind_param('is', $id, $username);
+	$stmt->execute();
 
-	$keycode = make_keycode();
-	$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, keycode, time) VALUES (?, ?, 'DOMAIN', ?, ?)");
-	$stmt->bind_param('issi', $userid, $randomip, $keycode, $timestamp);
-	$stmt->execute();
-	$id = $db->insert_id;
-	$stmt = $db->prepare("INSERT INTO domain (id, name, ext, ip) VALUES (?, ?, 'usr', ?)");
-	$stmt->bind_param('iss', $id, $username, $aip);
-	$stmt->execute();
+	$db->commit();
 
 	$headers = "From: Dark Signs Online <noreply@darksignsonline.com>\r\n";
 	mail($email, "$username, verify your Dark Signs Account", "Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\nhttps://darksignsonline.com/verify.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttps://darksignsonline.com/", $headers);
