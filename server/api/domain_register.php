@@ -16,6 +16,9 @@ $price['dsn'] = 12999;
 $uid = $user['id'];
 
 $fixedip = $_REQUEST['fixedip'];
+if (!empty($fixedip) && !validIP($fixedip)) {
+	die_error('Invalid fixed IP.');
+}
 
 print_returnwith();
 
