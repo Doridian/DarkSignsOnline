@@ -50,17 +50,17 @@ if (sizeof($domain) == 4 && validIP($d)) {
 	$domain[3] = intval($domain[3]);
 
 	// All good, register IP.
-	$price = 40; // static price for IP registrations.
-	if ($price > $user['cash']) {
+	$dprice = 40; // static price for IP registrations.
+	if ($dprice > $user['cash']) {
 		die_error('Insufficient balance. Try again when you have more money.', 402);
 	} else {
-		if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3], $price)) {
+		if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3], $dprice)) {
 			$keycode = make_keycode();
 			$timestamp = time();
 			$stmt = $db->prepare("INSERT INTO iptable (owner, ip, regtype, time, keycode) VALUES (?, ?, 'IP', ?, ?)");
 			$stmt->bind_param('isis', $uid, $ipdom, $timestamp, $keycode);
 			$stmt->execute();
-			die('Registration complete for ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3] . ', you have been charged $' . $price . '.');
+			die('Registration complete for ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3] . ', you have been charged $' . $dprice . '.');
 		} else {
 			die_error('Registration of ' . $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3] . ' has been DECLINED by the Dark Signs Bank.newlineCheck your bank account for further details.', 402);
 		}
@@ -69,11 +69,14 @@ if (sizeof($domain) == 4 && validIP($d)) {
 	// Normal domain register.
 	$ext = $domain[1];
 	if (!empty($price[$ext])) {
-		if ($price[$ext] > $user['cash']) {
+		$dprice = $price[$ext];
+		if (!empty($fixedip)) {
+			$dprice += 40;
+		}
+		if ($dprice > $user['cash']) {
 			die_error('Insufficient balance. Try again when you have more money.', 402);
 		} else {
-			//echo $user['name'];
-			if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $d, $price[$ext])) {
+			if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $d, $dprice)) {
 				// Generate IP
 				$randomip;
 				if (!empty($fixedip)) {
@@ -97,7 +100,7 @@ if (sizeof($domain) == 4 && validIP($d)) {
 				$stmt = $db->prepare("INSERT INTO domain (id, name, ext) VALUES (?, ?, ?)");
 				$stmt->bind_param('iss', $id, $domain[0], $domain[1]);
 				$stmt->execute();
-				die('Registration complete for ' . $d . ', you have been charged $' . $price[$ext]);
+				die('Registration complete for ' . $d . ', you have been charged $' . $dprice);
 			} else {
 				die_error('Registration of ' . $d . ' has been DECLINED by the Dark Signs Bank.newlineCheck your bank account for further details.', 402);
 			}
@@ -110,14 +113,17 @@ if (sizeof($domain) == 4 && validIP($d)) {
 	$ext = array_pop($domain);
 	$name = array_pop($domain);
 	$host = implode('.', $domain);
-	$price = 20;
 	$dInfoRoot = getDomainInfo($name . '.' . $ext);
+	$dprice = 20;
+	if (!empty($fixedip)) {
+		$dprice += 40;
+	}
 	if ($dInfoRoot[1] != $user['id']) {
 		die_error($dInfoRoot[1] . '  ' . $user['id'] . '  You must be the owner of the full domain to register a sub domain.', 403);
-	} else if ($price > $user['cash']) {
+	} else if ($dprice > $user['cash']) {
 		die_error('Insufficient balance. Try again when you have more money.', 402);
 	} else {
-		if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $d, $price)) {
+		if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $d, $dprice)) {
 			// Generate IP
 			$randomip;
 			if (!empty($fixedip)) {
@@ -142,7 +148,7 @@ if (sizeof($domain) == 4 && validIP($d)) {
 			$stmt->bind_param('iss', $id, $dInfoRoot[0], $host);
 			$stmt->execute();
 
-			die('Registration complete for ' . $d . ', you have been charged $' . $price);
+			die('Registration complete for ' . $d . ', you have been charged $' . $dprice);
 		} else {
 			die_error('Registration of ' . $d . ' has been DECLINED by the Dark Signs Bank.newlineCheck your bank account for further details.', 402);
 		}
