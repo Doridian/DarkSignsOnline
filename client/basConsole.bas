@@ -323,17 +323,10 @@ Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     If CurrentPromptVisible(ConsoleID) Then
         Console(ConsoleID, 1).Caption = Replace(Console(ConsoleID, 1).Caption, ConsoleCursorChar, "")
     End If
+    CurrentPromptVisible(ConsoleID) = False
+
     For n = 299 To 2 Step -1
         Console(ConsoleID, n) = Console(ConsoleID, n - 1)
-    Next n
-
-    frmConsole.QueueConsoleRender
-End Sub
-
-Public Sub Shift_Console_Lines_Reverse(ByVal ConsoleID As Integer)
-    Dim n As Integer
-    For n = 0 To 298
-        Console(ConsoleID, n) = Console(ConsoleID, n + 1)
     Next n
 
     frmConsole.QueueConsoleRender
@@ -647,6 +640,10 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
         OverwriteLineIndex = 1
     Else
         OverwriteLineIndex = (OverwriteLineIndex * -1)
+    End If
+
+    If OverwriteLineIndex = 1 Then ' No matter what we just killed the prompt
+        CurrentPromptVisible(ConsoleID) = False
     End If
 
     s = StripAfterNewline(s)
