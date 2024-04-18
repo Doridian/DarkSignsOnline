@@ -5,10 +5,10 @@ require_once('function.php');
 $getip = $_REQUEST['getip'];
 if (!empty($getip)) {
     $dInfo = getDomainInfo($getip);
-    if ($dInfo[0] <= 0) {
+    if ($dInfo === false) {
         die_error('not found', 404);
     }
-    die($dInfo[3]);
+    die($dInfo['ip']);
 }
 
 $getdomain = $_REQUEST['getdomain'];

@@ -9,7 +9,7 @@ if (empty($d)) {
 }
 
 $dInfo = getDomainInfo($d);
-if ($dInfo[0] <= 0) {;
+if ($dInfo === false) {
 	die_error('not found', 404);
 }
 

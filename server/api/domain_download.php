@@ -12,12 +12,12 @@ $filename = $_REQUEST['filename'];
 print_returnwith();
 
 $dInfo = getDomainInfo($d);
-if ($dInfo[0] <= 0) {
+if ($dInfo === false) {
 	die('Domain does not exist.');
 }
 
-$stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain=? AND port=? AND owner=? AND ver = ?');
-$stmt->bind_param('iiii', $dInfo[0], $port, $uid, $ver);
+$stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain=? AND port=? AND owner=? AND ver=?');
+$stmt->bind_param('iiii', $dInfo['id'], $port, $uid, $ver);
 $stmt->execute();
 $res = $stmt->get_result();
 $row = $res->fetch_assoc();

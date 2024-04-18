@@ -6,13 +6,12 @@ print_returnwith();
 
 $d = trim($_REQUEST['d']);
 $dInfo = getDomainInfo($d);
-
-if ($dInfo[0] <= 0) {
+if ($dInfo === false) {
 	die('not found');
 }
 
 $owner_id = $dInfo[1];
-$date_formatted = date('Y-m-d H:i:s', $dInfo[4]);
+$date_formatted = date('Y-m-d H:i:s', $dInfo['time']);
 $owner = idToUser($owner_id);
 
 echo "$d was created by $owner on $date_formatted";

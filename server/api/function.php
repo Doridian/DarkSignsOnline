@@ -54,45 +54,22 @@ function validIP($ip)
 function getDomainInfo($domain)
 {
 	global $db;
-	$domain = explode('.', $domain);
 
-	$result = null;
-
-	if (sizeof($domain) == 4 && validIP($domain)) {
-		$ipdom = $domain[0] . '.' . $domain[1] . '.' . $domain[2] . '.' . $domain[3];
-		$stmt = $db->prepare("SELECT id, owner, keycode, ip, time FROM iptable WHERE ip=?");
-		$stmt->bind_param('s', $ipdom);
-		$stmt->execute();
-		$result = $stmt->get_result();
-	} else if (sizeof($domain) === 2) {
-		$stmt = $db->prepare("SELECT d.id, ipt.owner, ipt.keycode, ipt.ip, ipt.time FROM domain d, iptable ipt WHERE d.name=? AND d.ext=? AND d.id=ipt.id");
-		$stmt->bind_param('ss', $domain[0], $domain[1]);
-		$stmt->execute();
-		$result = $stmt->get_result();
-	} else if (sizeof($domain) > 2) {
-		$stmt = $db->prepare("SELECT s.id, ipt.owner, ipt.keycode, ipt.ip, ipt.time FROM subdomain s, iptable ipt, domain d WHERE d.name=? AND d.ext=? AND d.id=s.hostid AND s.name=? AND s.id=ipt.id");
-		
-		$ext = array_pop($domain);
-		$name = array_pop($domain);
-		$subname = implode('.', $domain);
-
-		$stmt->bind_param('sss', $name, $ext, $subname);
-		$stmt->execute();
-		$result = $stmt->get_result();
+	$stmt = $db->prepare('SELECT id, owner, keycode, ip, time FROM domains WHERE ip=? OR host=?');
+	$stmt->bind_param('ss', $domain, $domain);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	if ($result->num_rows == 1) {
+		return $result->fetch_assoc();
 	}
-
-	if ($result && $result->num_rows == 1) {
-		return $result->fetch_row();
-	} else {
-		return array(-1, -1, '', '', 0);
-	}
+	return false;
 }
 
 function getIpDomain($ip)
 {
 	global $db;
 
-	$stmt = $db->prepare("SELECT ip, id, regtype FROM iptable WHERE ip=?");
+	$stmt = $db->prepare("SELECT ip, host FROM domains WHERE ip=?");
 	$stmt->bind_param('s', $ip);
 	$stmt->execute();
 	$result = $stmt->get_result();
@@ -101,51 +78,10 @@ function getIpDomain($ip)
 		return '';
 	}
 
-	switch ($row['regtype']) {
-		case 'DOMAIN':
-			$stmt = $db->prepare("SELECT name, ext FROM domain WHERE id=?");
-			$stmt->bind_param('i', $row['id']);
-			$stmt->execute();
-			$result = $stmt->get_result();
-			$row = $result->fetch_assoc();
-			return $row['name'] . '.' . $row['ext'];
-		case 'SUBDOMAIN':
-			$stmt = $db->prepare("SELECT sub.name AS sub_name, d.name AS d_name, d.ext AS d_ext FROM subdomain sub, domain d WHERE sub.id=? AND sub.hostid=d.id");
-			$stmt->bind_param('i', $row['id']);
-			$stmt->execute();
-			$result = $stmt->get_result();
-			$row = $result->fetch_assoc();
-			return $row['sub_name'] . '.' . $row['d_name'] . '.' . $row['d_ext'];
-		case 'IP':
-			return $row['ip'];
-	}
-}
-
-function domain_exists($domain, $ext)
-{
-	global $db;
-	$stmt = $db->prepare("SELECT id FROM domain WHERE name=? AND ext=?");
-	$stmt->bind_param('ss', $domain, $ext);
-	$stmt->execute();
-	$result = $stmt->get_result();
-	if ($result->num_rows == 1) {
-		return true;
+	if (empty($row['host'])) {
+		return $row['ip'];
 	} else {
-		return false;
-	}
-}
-
-function getDomainId($domain, $ext)
-{
-	global $db;
-	$stmt = $db->prepare("SELECT id FROM domain WHERE name=? AND ext=?");
-	$stmt->bind_param('ss', $domain, $ext);
-	$stmt->execute();
-	$result = $stmt->get_result();
-	if ($result->num_rows == 1) {
-		return $result->fetch_row()[0];
-	} else {
-		return -1;
+		return $row['host'];
 	}
 }
 

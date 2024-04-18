@@ -10,12 +10,12 @@ $port = (int)$_REQUEST['port'];
 
 $originaldomain = trim($d);
 $dInfo = getDomainInfo($d);
-if ($dInfo[0] <= 0) {
-	die ("Domain does not exist.");
+if ($dInfo === false) {
+	die("Domain does not exist.");
 }
 
 $stmt = $db->prepare("DELETE FROM domain_scripts WHERE domain=? AND port=? AND owner=? AND ver=?;");
-$stmt->bind_param('iiii', $dInfo[0], $port, $uid, $ver);
+$stmt->bind_param('iiii', $dInfo['id'], $port, $uid, $ver);
 $stmt->execute();
 
 if ($stmt->affected_rows) {

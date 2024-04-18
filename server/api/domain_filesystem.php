@@ -7,10 +7,14 @@
 require_once("function.php");
 global $db;
 
+print_returnwith();
+
 $d = trim($_REQUEST['d']);
 $dInfo = getDomainInfo($d);
 
-print_returnwith();
+if ($dInfo === false) {
+	die_error("Domain does not exist.");
+}
 
 function is_public_operation_allowed($fileheader, $opname) {
 	$fileheader = trim($fileheader);
@@ -43,7 +47,7 @@ function is_public_operation_allowed($fileheader, $opname) {
 
 function verify_keycode($filename, $opname, $require_owner = false) {
 	global $db, $d, $dInfo, $user;
-	$is_owner = $user['id'] === $dInfo[1];
+	$is_owner = $user['id'] === $dInfo['owner'];
 
 	if (!$is_owner && $require_owner) {
 		die_error("Error - ($filename) Not owner: " . strtoupper($d));
@@ -51,7 +55,7 @@ function verify_keycode($filename, $opname, $require_owner = false) {
 
 	if ($_REQUEST['is_local_script'] !== 'true' || !$is_owner) {
 		$keycode = $_REQUEST['keycode'];
-		if ($keycode !== $dInfo[2]) {
+		if ($keycode !== $dInfo['keycode']) {
 			die_error("Error - ($filename) Invalid Server Key: " . strtoupper($d));
 		}
 	}
@@ -61,7 +65,7 @@ function verify_keycode($filename, $opname, $require_owner = false) {
 	}
 
 	$stmt = $db->prepare('SELECT * FROM domain_files WHERE domain = ? AND filename = ?');
-	$stmt->bind_param('is', $dInfo[0], $filename);
+	$stmt->bind_param('is', $dInfo['id'], $filename);
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$row = $res->fetch_assoc();
@@ -93,7 +97,7 @@ function write_file($file_id, $filename, $contents) {
 		$stmt->bind_param('i', $file_id);
 	} else if ($file_id < 0) {
 		$stmt = $db->prepare('INSERT INTO domain_files (domain, filename, contents) VALUES (?, ?, ?)');
-		$stmt->bind_param('iss', $dInfo[0], $filename, $contents);
+		$stmt->bind_param('iss', $dInfo['id'], $filename, $contents);
 	} else {
 		$stmt = $db->prepare('UPDATE domain_files SET contents = ? WHERE id = ?');
 		$stmt->bind_param('si', $contents, $file_id);
@@ -184,7 +188,7 @@ if (!empty($dir)) {
 	verify_keycode('', 'dir', true);
 
 	$stmt = $db->prepare('SELECT filename FROM domain_files WHERE domain = ?');
-	$stmt->bind_param('is', $dInfo[0]);
+	$stmt->bind_param('is', $dInfo['id']);
 	$stmt->execute();
 	$res = $stmt->get_result();
 	while ($row = $res->fetch_assoc()) {

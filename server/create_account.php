@@ -154,10 +154,7 @@ if (isset($_POST['username'])) {
 	$res = $stmt->get_result();
 	$userid = $db->insert_id;
 
-	$id = makeNewIP('DOMAIN', '', $userid);
-	$stmt = $db->prepare("INSERT INTO domain (id, name, ext) VALUES (?, ?, 'usr')");
-	$stmt->bind_param('is', $id, $username);
-	$stmt->execute();
+	makeNewDomain('DOMAIN', '', $userid, $username . '.usr');
 
 	$db->commit();
 
