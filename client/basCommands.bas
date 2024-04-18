@@ -85,8 +85,10 @@ Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As
         CurPath = ResolvePathSplit(X)
         If CurPath = "" Or CurPath = "." Then
             ' Don't do anything!
-        ElseIf CurPath = ".." And UBound(ResolvePathSplitCut) > 0 Then
-            ReDim Preserve ResolvePathSplitCut(0 To UBound(ResolvePathSplitCut) - 1)
+        ElseIf CurPath = ".." Then
+            If UBound(ResolvePathSplitCut) > 0 Then
+                ReDim Preserve ResolvePathSplitCut(0 To UBound(ResolvePathSplitCut) - 1)
+            End If
         Else
             ReDim Preserve ResolvePathSplitCut(0 To UBound(ResolvePathSplitCut) + 1)
             ResolvePathSplitCut(UBound(ResolvePathSplitCut)) = CurPath

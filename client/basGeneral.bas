@@ -230,11 +230,9 @@ Public Function FormatKB(ByVal Amount As Long) _
 End Function
 
 Public Function DirExists(ByVal sDirName As String) As Boolean
-    sDirName = SafePath(sDirName)
-
     Dim Attrs As Long
     On Error GoTo NotADir
-    Attrs = GetAttr(sDirName)
+    Attrs = GetAttr(SafePath(sDirName))
     On Error GoTo 0
     
     If (Attrs And vbDirectory) = vbDirectory Then

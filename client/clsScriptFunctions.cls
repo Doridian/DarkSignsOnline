@@ -82,7 +82,16 @@ End Property
 Public Property Let CWD(ByVal NewValue As String)
     AssertLocalOnly
 
-    cPath(PrivConsoleID) = ResolvePath(CWD)
+    Dim RawDir As String
+    RawDir = ResolvePath(NewValue)
+
+    If Not DirExists(RawDir) Then
+        Err.Raise 53, , "File not found"
+        Exit Property
+    End If
+
+    cPath(PrivConsoleID) = RawDir
+    Yield
 End Property
 
 Public Property Let ExternalEditor(ByVal NewValue As Boolean)
@@ -376,18 +385,7 @@ WaitForExit:
 End Function
 
 Public Function CD(ByVal DIR As String)
-    AssertLocalOnly
-
-    Dim RawDir As String
-    RawDir = ResolvePath(DIR)
-    
-    If Not DirExists(RawDir) Then
-        Err.Raise 53, , "File not found"
-        Exit Function
-    End If
-
-    cPath(PrivConsoleID) = RawDir
-    Yield
+    CWD = DIR
 End Function
 
 Public Function ReadDir(ByVal RawPath As String) As Variant()
