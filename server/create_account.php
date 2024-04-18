@@ -154,7 +154,7 @@ if (isset($_POST['username'])) {
 	$res = $stmt->get_result();
 	$userid = $db->insert_id;
 
-	makeNewDomain('DOMAIN', '', $userid, $username . '.usr');
+	make_new_domain('DOMAIN', '', $userid, $username . '.usr');
 
 	$db->commit();
 

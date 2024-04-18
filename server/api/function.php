@@ -51,12 +51,24 @@ function validIP($ip)
 	}
 }
 
-function getDomainInfo($domain)
-{
+function getDomainInfo($domain) {
 	global $db;
 
 	$stmt = $db->prepare('SELECT id, owner, keycode, ip, time FROM domains WHERE ip=? OR host=?');
 	$stmt->bind_param('ss', $domain, $domain);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	if ($result->num_rows == 1) {
+		return $result->fetch_assoc();
+	}
+	return false;
+}
+
+function getDomainById($id) {
+	global $db;
+
+	$stmt = $db->prepare('SELECT id, owner, keycode, ip, time FROM domains WHERE id=?');
+	$stmt->bind_param('i', $id);
 	$stmt->execute();
 	$result = $stmt->get_result();
 	if ($result->num_rows == 1) {

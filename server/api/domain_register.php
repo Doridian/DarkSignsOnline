@@ -55,7 +55,7 @@ if (sizeof($domain) == 4 && validIP($d)) {
 	} else {
 		$db->begin_transaction();
 		if (transaction($uid, BANK_USER_ID, 'IP Registration: ' . $ipdom, $dprice)) {
-			makeNewDomain('IP', $ipdom, $uid, '');
+			make_new_domain('IP', $ipdom, $uid, '');
 			$db->commit();
 			die('Registration complete for ' . $ipdom . ', you have been charged $' . $dprice . '.');
 		} else {
@@ -76,7 +76,7 @@ if (sizeof($domain) == 4 && validIP($d)) {
 		} else {
 			$db->begin_transaction();
 			if (transaction($uid, BANK_USER_ID, 'Domain Registration: ' . $d, $dprice)) {
-				makeNewDomain('DOMAIN', $fixedip, $uid, $d);
+				make_new_domain('DOMAIN', $fixedip, $uid, $d);
 				$db->commit();
 				die('Registration complete for ' . $d . ', you have been charged $' . $dprice);
 			} else {
@@ -104,7 +104,7 @@ if (sizeof($domain) == 4 && validIP($d)) {
 	} else {
 		$db->begin_transaction();
 		if (transaction($uid, BANK_USER_ID, 'Subdomain Registration: ' . $d, $dprice)) {
-			makeNewDomain('SUBDOMAIN', $fixedip, $uid, $d, $dInfoRoot['id']);
+			make_new_domain('SUBDOMAIN', $fixedip, $uid, $d, $dInfoRoot['id']);
 			$db->commit();
 			die('Registration complete for ' . $d . ', you have been charged $' . $dprice);
 		} else {

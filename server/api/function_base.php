@@ -28,7 +28,7 @@ function make_keycode($length = 16) {
 	return $keycode;
 }
 
-function makeNewDomain($regtype, $fixedip = '', $userid = 0, $host = '', $parent = 0) {
+function make_new_domain($regtype, $fixedip = '', $userid = 0, $host = '', $parent = 0) {
 	global $db, $user;
 	$timestamp = time();
 	// Generate IP
