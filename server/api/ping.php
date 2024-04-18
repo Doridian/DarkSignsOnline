@@ -13,7 +13,7 @@ if($port === 0) {
 	die('1');
 }
 
-$stmt = $db->prepare('SELECT domain_id FROM domain_scripts WHERE domain_id=? AND port=? AND ver=?;');
+$stmt = $db->prepare('SELECT domain FROM domain_scripts WHERE domain=? AND port=? AND ver=?;');
 $stmt->bind_param('iii', $dInfo['id'], $port, $ver);
 $stmt->execute();
 $query = $stmt->get_result();

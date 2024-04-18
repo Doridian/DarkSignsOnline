@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 18, 2024 at 09:11 PM
+-- Generation Time: Apr 18, 2024 at 09:41 PM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 7.4.33
 
@@ -58,7 +58,8 @@ CREATE TABLE `domain_files` (
 --
 
 CREATE TABLE `domain_scripts` (
-  `domain_id` int(11) NOT NULL,
+  `id` int(11) NOT NULL,
+  `domain` int(11) NOT NULL,
   `port` int(11) NOT NULL,
   `code` longtext NOT NULL,
   `ip` varchar(255) NOT NULL,
@@ -176,14 +177,16 @@ ALTER TABLE `domains`
 --
 ALTER TABLE `domain_files`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `domain_filename` (`domain`,`filename`) USING HASH;
+  ADD UNIQUE KEY `domain_filename` (`domain`,`filename`) USING HASH,
+  ADD KEY `domain` (`domain`);
 
 --
 -- Indexes for table `domain_scripts`
 --
 ALTER TABLE `domain_scripts`
-  ADD UNIQUE KEY `id_port_ver` (`domain_id`,`port`,`ver`) USING BTREE,
-  ADD KEY `id` (`domain_id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `domain_port_ver` (`domain`,`port`,`ver`) USING BTREE,
+  ADD KEY `id` (`domain`);
 
 --
 -- Indexes for table `dsmail`
@@ -247,6 +250,12 @@ ALTER TABLE `domain_files`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `domain_scripts`
+--
+ALTER TABLE `domain_scripts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `dsmail`
 --
 ALTER TABLE `dsmail`
@@ -275,6 +284,55 @@ ALTER TABLE `transactions`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `domains`
+--
+ALTER TABLE `domains`
+  ADD CONSTRAINT `domains_ibfk_1` FOREIGN KEY (`owner`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `domains_ibfk_2` FOREIGN KEY (`parent`) REFERENCES `domains` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `domain_files`
+--
+ALTER TABLE `domain_files`
+  ADD CONSTRAINT `domain_files_ibfk_1` FOREIGN KEY (`domain`) REFERENCES `domains` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `domain_scripts`
+--
+ALTER TABLE `domain_scripts`
+  ADD CONSTRAINT `domain_scripts_ibfk_1` FOREIGN KEY (`domain`) REFERENCES `domains` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `dsmail`
+--
+ALTER TABLE `dsmail`
+  ADD CONSTRAINT `dsmail_ibfk_1` FOREIGN KEY (`from_user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `dsmail_ibfk_2` FOREIGN KEY (`to_user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `file_database`
+--
+ALTER TABLE `file_database`
+  ADD CONSTRAINT `file_database_ibfk_1` FOREIGN KEY (`owner`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `textspace`
+--
+ALTER TABLE `textspace`
+  ADD CONSTRAINT `textspace_ibfk_1` FOREIGN KEY (`owner`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `transactions`
+--
+ALTER TABLE `transactions`
+  ADD CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`toid`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`fromid`) REFERENCES `users` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

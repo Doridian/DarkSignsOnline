@@ -17,7 +17,7 @@ if ($dInfo === false) {
 	die_error('not found', 404);
 }
 
-$stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain_id = ? AND port = ? AND ver = ?;');
+$stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain = ? AND port = ? AND ver = ?;');
 $stmt->bind_param('iii', $dInfo['id'], $port, $ver);
 $stmt->execute();
 $exists = $stmt->get_result();

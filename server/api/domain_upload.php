@@ -24,7 +24,7 @@ if ($user['id'] !== $dInfo['owner']) {
 }
 
 $code = dso_b64_decode(line_endings_to_dos($_POST['filedata']));
-$stmt = $db->prepare('INSERT INTO domain_scripts (domain_id, port, code, ip, time, ver) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE code=?, ip=?, time=?;');
+$stmt = $db->prepare('INSERT INTO domain_scripts (domain, port, code, ip, time, ver) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE code=?, ip=?, time=?;');
 $time = time();
 $stmt->bind_param('iissiissi', $dInfo['id'], $port, $code, $_SERVER['REMOTE_ADDR'], $time, $ver, $code, $_SERVER['REMOTE_ADDR'], $time);
 $stmt->execute();
