@@ -655,9 +655,12 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
 
     Console(ConsoleID, OverwriteLineIndex) = Console_Line_Defaults
 
+    Console(ConsoleID, OverwriteLineIndex).PreSpace = True
+
     If Has_Property_Space(s) = True Then
         propertySpace = i(Get_Property_Space(s)) & " "
         propertySpace = Replace(propertySpace, ",", " ")
+        If InStr(propertySpace, "noprespace") > 0 Then Console(ConsoleID, OverwriteLineIndex).PreSpace = False
         Console(ConsoleID, OverwriteLineIndex).FontColor = propertySpace_Color(propertySpace)
         Console(ConsoleID, OverwriteLineIndex).FontSize = propertySpace_Size(propertySpace)
         Console(ConsoleID, OverwriteLineIndex).FontName = propertySpace_Name(propertySpace)
@@ -672,7 +675,6 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
         If InStr(propertySpace, "right ") > 0 Then Console(ConsoleID, 1).Right = True Else Console(ConsoleID, 1).Right = False
     End If
 
-    Console(ConsoleID, OverwriteLineIndex).PreSpace = True
     Console(ConsoleID, OverwriteLineIndex).Caption = Remove_Property_Space(s)
 
     frmConsole.QueueConsoleRender
@@ -683,6 +685,7 @@ Public Function Load_Property_Space(ByVal propertySpace As String, sCaption As S
     propertySpace = " " & Replace(propertySpace, ",", " ") & " "
     
     Load_Property_Space.Caption = sCaption
+    If InStr(propertySpace, "noprespace") > 0 Then Load_Property_Space.PreSpace = False
     Load_Property_Space.FontColor = propertySpace_Color(propertySpace)
     Load_Property_Space.FontSize = propertySpace_Size(propertySpace)
     Load_Property_Space.FontName = propertySpace_Name(propertySpace)
