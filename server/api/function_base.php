@@ -59,7 +59,7 @@ function makeNewDomain($regtype, $fixedip = '', $userid = 0, $host = '') {
 		$stmt->bind_param('isssis', $userid, $randomip, $host, $regtype, $timestamp, $keycode);
 	}
 
-	$stmt->execute();
+	$stmt->execute() or die_error($db->error);
 	return $db->insert_id;
 }
 
