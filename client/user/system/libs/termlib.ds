@@ -1,0 +1,27 @@
+Option Explicit
+
+Sub SaySlow(Delay, Str, Style)
+    Dim X
+    Style = "{" & Style & "}"
+    Say Left(Str, 1) & Style
+    For X = 2 To Len(Str)
+        Wait(Delay)
+        SayLine Mid(Str, 1, X) & Style
+    Next
+End Sub
+
+Function GetKeyWithPrompt()
+    Say "{noprespace}> " & Chr(7)
+    Dim Choice
+    Choice = GetKey()
+    SayLine "{noprespace}> " & Chr(Choice)
+    GetKeyWithPrompt = Choice
+End Function
+
+Function GetAsciiWithPrompt()
+    Say "{noprespace}> " & Chr(7)
+    Dim Choice
+    Choice = GetAscii()
+    SayLine "{noprespace}> " & Chr(Choice)
+    GetAsciiWithPrompt = Choice
+End Function
