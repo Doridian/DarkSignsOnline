@@ -323,7 +323,6 @@ Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     If CurrentPromptVisible(ConsoleID) Then
         Console(ConsoleID, 1).Caption = Replace(Console(ConsoleID, 1).Caption, ConsoleCursorChar, "")
     End If
-    CurrentPromptVisible(ConsoleID) = False
 
     For n = 299 To 2 Step -1
         Console(ConsoleID, n) = Console(ConsoleID, n - 1)
