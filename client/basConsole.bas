@@ -314,7 +314,7 @@ Public Sub New_Console_Line_InProgress(ByVal ConsoleID As Integer)
 
     CurrentPromptVisible(ConsoleID) = False
     Console(ConsoleID, 1) = Console_Line_Defaults
-    Console(ConsoleID, 1).Caption = " "
+    Console(ConsoleID, 1).Caption = ""
 
     frmConsole.QueueConsoleRender
 End Sub
@@ -430,10 +430,7 @@ Public Sub Print_Console()
     n = 0
     Do
         n = n + 1
-        If Trim(Console(ActiveConsole, n).Caption) = "" Then
-            GoTo NextOne
-        End If
-
+        
         'does a new property space need to be set?
         If n = 1 And WaitingForInput(ActiveConsole) = True Then
             If Has_Property_Space(cPrompt(ActiveConsole)) = True Then
@@ -499,7 +496,7 @@ DontDraw:
         If Console(ActiveConsole, n).Flash = True And Flash = True Then HideLine = True
         If Console(ActiveConsole, n).FlashFast = True And FlashFast = True Then HideLine = True
         If Console(ActiveConsole, n).FlashSlow = True And FlashSlow = True Then HideLine = True
-        If Trim(tmpS) = "" Or tmpS = "-" Then HideLine = True
+        If tmpS = "" Then HideLine = True
         If HideLine Then
             frmConsole.Print "  "
             GoTo NextOne

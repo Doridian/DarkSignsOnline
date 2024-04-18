@@ -591,7 +591,7 @@ Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As
 End Sub
 
 Public Function LineUp()
-    Say "-"
+    Say ""
 End Function
 
 Public Function Say(ParamArray Params() As Variant)
@@ -608,11 +608,6 @@ Public Function Say(ParamArray Params() As Variant)
         End If
     Next X
 
-    If sStr = "" Then
-        Yield
-        Exit Function
-    End If
-
     If PrivRedirectOutput Then
         If PrivOutput = "" Then
             PrivOutput = sStr
@@ -622,6 +617,13 @@ Public Function Say(ParamArray Params() As Variant)
         Yield
     End If
     If PrivDisableOutput Then
+        Yield
+        Exit Function
+    End If
+    
+    If sStr = "" Then
+        Yield
+        basConsole.SayRaw PrivConsoleID, ""
         Yield
         Exit Function
     End If

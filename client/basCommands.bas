@@ -717,13 +717,13 @@ Public Sub SetPassword(ByVal s As String, ByVal ConsoleID As Integer)
 End Sub
 
 Public Sub ClearConsole(ByVal ConsoleID As Integer)
-    Console(ConsoleID, 1).Caption = "-"
+    Console(ConsoleID, 1).Caption = ""
     
     Dim n As Integer
     
     For n = 1 To 29
         Shift_Console_Lines ConsoleID
-        Console(ConsoleID, 2).Caption = "-"
+        Console(ConsoleID, 2).Caption = ""
         Console(ConsoleID, 2).FontSize = 48
     Next n
 End Sub
