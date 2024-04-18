@@ -104,7 +104,7 @@ if (sizeof($domain) == 4 && validIP($d)) {
 	} else {
 		$db->begin_transaction();
 		if (transaction($uid, BANK_USER_ID, 'Subdomain Registration: ' . $d, $dprice)) {
-			makeNewDomain('SUBDOMAIN', $fixedip, $uid, $d);
+			makeNewDomain('SUBDOMAIN', $fixedip, $uid, $d, $dInfoRoot['id']);
 			$db->commit();
 			die('Registration complete for ' . $d . ', you have been charged $' . $dprice);
 		} else {
