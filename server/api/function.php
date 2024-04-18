@@ -35,6 +35,10 @@ function validIP($ip)
 {
 	global $db;
 	$domain = explode('.', $ip);
+	if (sizeof($domain) !== 4) {
+		return false;
+	}
+
 	$domain[0] = intval($domain[0]);
 	$domain[1] = intval($domain[1]);
 	$domain[2] = intval($domain[2]);
