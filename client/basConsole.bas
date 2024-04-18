@@ -89,8 +89,6 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal Conso
             WaitingForInput(ConsoleID) = False
             If CancelScript(ConsoleID) Then
                 New_Console_Line ConsoleID
-            Else
-                New_Console_Line_InProgress ConsoleID
             End If
         Else
             Run_Command CommandStr, ConsoleID, False
@@ -306,16 +304,6 @@ Public Sub Insert_Char(ByVal sChar As String, ByVal ConsoleID As Integer)
     MoveUnderscoreRight ConsoleID
 
     RefreshCommandLinePrompt ConsoleID
-    frmConsole.QueueConsoleRender
-End Sub
-
-Public Sub New_Console_Line_InProgress(ByVal ConsoleID As Integer)
-    Shift_Console_Lines ConsoleID
-
-    CurrentPromptVisible(ConsoleID) = False
-    Console(ConsoleID, 1) = Console_Line_Defaults
-    Console(ConsoleID, 1).Caption = ""
-
     frmConsole.QueueConsoleRender
 End Sub
 
@@ -655,16 +643,17 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
 
     If OverwriteLineIndex >= 0 Then
+        Shift_Console_Lines ConsoleID
         OverwriteLineIndex = 1
     Else
-        OverwriteLineIndex = (OverwriteLineIndex * -1) + 1
+        OverwriteLineIndex = (OverwriteLineIndex * -1)
     End If
 
     s = StripAfterNewline(s)
 
-    Dim tmpLine As ConsoleLine, propertySpace As String
-    
-    tmpLine = Console(ConsoleID, 1)
+    Dim propertySpace As String
+
+    Console(ConsoleID, OverwriteLineIndex) = Console_Line_Defaults
 
     If Has_Property_Space(s) = True Then
         propertySpace = i(Get_Property_Space(s)) & " "
@@ -685,12 +674,6 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
 
     Console(ConsoleID, OverwriteLineIndex).PreSpace = True
     Console(ConsoleID, OverwriteLineIndex).Caption = Remove_Property_Space(s)
-
-    If OverwriteLineIndex = 1 Then
-        New_Console_Line_InProgress ConsoleID
-        'put the current line back at the next line
-        Console(ConsoleID, 1) = tmpLine
-    End If
 
     frmConsole.QueueConsoleRender
     DoEvents

@@ -41,7 +41,6 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
     tmpAll = DSODecryptScript(tmpAll, ScriptKey)
     tmpAll = ParseCommandLineOptional(tmpAll, ServerPort <= 0)
 
-    New_Console_Line_InProgress ConsoleID
     On Error GoTo EvalError
     s.AddCode tmpAll
     On Error GoTo 0

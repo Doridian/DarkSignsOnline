@@ -623,7 +623,6 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
         CurrentPromptInput(ActiveConsole) = ""
         RefreshCommandLinePrompt ActiveConsole
         QueueConsoleRender
-        'New_Console_Line_InProgress ActiveConsole
         Exit Sub
     End If
     
@@ -641,7 +640,6 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     
     If ConsolePaused(ActiveConsole) = True Then
         ConsolePaused(ActiveConsole) = False
-        New_Console_Line_InProgress ActiveConsole
         Exit Sub
     End If
     

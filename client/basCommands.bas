@@ -137,7 +137,6 @@ Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer, Op
     End If
 
     CancelScript(ConsoleID) = False
-    New_Console_Line_InProgress ConsoleID
 
     scrConsoleContext(ConsoleID).UnAbort
     scrConsole(ConsoleID).Error.Clear
@@ -470,7 +469,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
     End If
 
     Dim yIndex As Integer, n As Integer
-    yIndex = (YPos * -1) + 1
+    yIndex = (YPos * -1)
 
     Console(ConsoleID, yIndex).DrawMode = Mode
     

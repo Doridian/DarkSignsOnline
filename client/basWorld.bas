@@ -390,7 +390,7 @@ Public Function EncodeURLParameter( _
     Optional ByVal SpacePlus As Boolean = True) As String
     
     Dim cchEscaped As Long
-    Dim HResult As Long
+    Dim hResult As Long
     
     If Url = "" Then
         EncodeURLParameter = ""
@@ -405,13 +405,13 @@ Public Function EncodeURLParameter( _
     cchEscaped = Len(Url)
     
     EncodeURLParameter = String$(cchEscaped, 0)
-    HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
-    If HResult = E_POINTER Then
+    hResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+    If hResult = E_POINTER Then
         EncodeURLParameter = String$(cchEscaped, 0)
-        HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+        hResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
     End If
 
-    If HResult <> S_OK Then
+    If hResult <> S_OK Then
         Err.Raise Err.LastDllError, "URLUtility.URLEncode", _
                   "System error"
     End If
