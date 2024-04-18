@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 13, 2024 at 08:05 PM
+-- Generation Time: Apr 18, 2024 at 09:11 PM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 7.4.33
 
@@ -24,13 +24,18 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `domain`
+-- Table structure for table `domains`
 --
 
-CREATE TABLE `domain` (
+CREATE TABLE `domains` (
   `id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `ext` varchar(255) NOT NULL
+  `owner` int(11) NOT NULL,
+  `ip` varchar(255) NOT NULL,
+  `host` varchar(255) DEFAULT NULL,
+  `regtype` enum('DOMAIN','IP','SUBDOMAIN') NOT NULL,
+  `time` int(11) NOT NULL,
+  `keycode` varchar(255) NOT NULL,
+  `parent` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -100,33 +105,6 @@ CREATE TABLE `file_database` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `iptable`
---
-
-CREATE TABLE `iptable` (
-  `id` int(11) NOT NULL,
-  `owner` int(11) NOT NULL,
-  `ip` varchar(255) NOT NULL,
-  `regtype` enum('DOMAIN','SUBDOMAIN','IP') NOT NULL DEFAULT 'DOMAIN',
-  `keycode` varchar(255) NOT NULL,
-  `time` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `subdomain`
---
-
-CREATE TABLE `subdomain` (
-  `id` int(11) NOT NULL,
-  `hostid` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `textspace`
 --
 
@@ -184,11 +162,14 @@ CREATE TABLE `users` (
 --
 
 --
--- Indexes for table `domain`
+-- Indexes for table `domains`
 --
-ALTER TABLE `domain`
+ALTER TABLE `domains`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name_ext` (`name`,`ext`);
+  ADD UNIQUE KEY `ip` (`ip`),
+  ADD UNIQUE KEY `host` (`host`),
+  ADD KEY `owner` (`owner`),
+  ADD KEY `parent` (`parent`);
 
 --
 -- Indexes for table `domain_files`
@@ -224,23 +205,6 @@ ALTER TABLE `file_database`
   ADD KEY `ver` (`ver`);
 
 --
--- Indexes for table `iptable`
---
-ALTER TABLE `iptable`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `ip` (`ip`),
-  ADD KEY `owner` (`owner`),
-  ADD KEY `regtype` (`regtype`);
-
---
--- Indexes for table `subdomain`
---
-ALTER TABLE `subdomain`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `hostid_name` (`hostid`,`name`),
-  ADD KEY `hostid` (`hostid`);
-
---
 -- Indexes for table `textspace`
 --
 ALTER TABLE `textspace`
@@ -271,6 +235,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `domains`
+--
+ALTER TABLE `domains`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `domain_files`
 --
 ALTER TABLE `domain_files`
@@ -286,12 +256,6 @@ ALTER TABLE `dsmail`
 -- AUTO_INCREMENT for table `file_database`
 --
 ALTER TABLE `file_database`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `iptable`
---
-ALTER TABLE `iptable`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
