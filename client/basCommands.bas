@@ -785,24 +785,29 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer)
 
     Dim propSpace As String
 
+    Dim strDefault As Boolean
+    strDefault = False
     If Trim(Kill_Property_Space(s)) = "" Then
         propSpace = "{" & Trim(Get_Property_Space(s)) & "}"
 
         If Len(propSpace) > 3 Then
-            s = propSpace & "Press any key to continue..."
+            s = propSpace & "Press any key to continue..." & Chr(7)
         Else
-            s = "Press any key to continue..."
+            s = "Press any key to continue..." & Chr(7)
         End If
-
+        strDefault = True
     End If
 
-    If Has_Property_Space(s) = True Then
-        SayRaw ConsoleID, s
-    Else
-        SayRaw ConsoleID, s & "{lblue 10}"
+    If Not Has_Property_Space(s) Then
+        s = s & "{lblue 10 noprespace}"
     End If
 
+    SayRaw ConsoleID, s
     Do
         DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
     Loop Until ConsolePaused(ConsoleID) = False
+
+    If strDefault Then
+        SayRaw ConsoleID, Replace(s, Chr(7), ""), -1
+    End If
 End Sub
