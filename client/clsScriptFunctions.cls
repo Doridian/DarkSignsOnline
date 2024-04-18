@@ -378,7 +378,15 @@ End Function
 Public Function CD(ByVal DIR As String)
     AssertLocalOnly
 
-    cPath(PrivConsoleID) = ResolvePath(DIR)
+    Dim RawDir As String
+    RawDir = ResolvePath(DIR)
+    
+    If Not DirExists(RawDir) Then
+        Err.Raise 53, , "File not found"
+        Exit Function
+    End If
+
+    cPath(PrivConsoleID) = RawDir
     Yield
 End Function
 
@@ -1413,12 +1421,6 @@ Public Function RunA(ByVal Script As String, Optional XArr As Variant)
     End If
 End Function
 
-Public Function IncludeCommand(ByVal Script As String)
-    AssertLocalOnly
-
-    Include ResolveCommand(Script)
-End Function
-
 Public Function Include(ByVal Script As String)
     AssertLocalOnly
 
@@ -1426,6 +1428,15 @@ Public Function Include(ByVal Script As String)
     ScriptData = GetFile(ResolvePath(Script))
 
     SControl.AddCode ScriptData
+End Function
+
+' This allows remote/domain calls on purpose!
+Public Function DLOpen(ByVal Library As String)
+    If InStr(Library, "/") > 0 Or InStr(Library, "\") > 0 Then
+        Exit Function
+    End If
+
+    Include "/system/libs/" & Library & ".ds"
 End Function
 
 Public Function Run(ParamArray XArr() As Variant)

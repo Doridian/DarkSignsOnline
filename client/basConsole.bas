@@ -491,15 +491,15 @@ Public Sub Print_Console()
 DontDraw:
         '--------------- DRAW ------------------------------------------
         '--------------- DRAW ------------------------------------------
-        
-        tmpS = Trim(Console(ActiveConsole, n).Caption)
+
+        tmpS = Console(ActiveConsole, n).Caption
 
         Dim HideLine As Boolean
         HideLine = False
         If Console(ActiveConsole, n).Flash = True And Flash = True Then HideLine = True
         If Console(ActiveConsole, n).FlashFast = True And FlashFast = True Then HideLine = True
         If Console(ActiveConsole, n).FlashSlow = True And FlashSlow = True Then HideLine = True
-        If tmpS = "" Or tmpS = "-" Then HideLine = True
+        If Trim(tmpS) = "" Or tmpS = "-" Then HideLine = True
         If HideLine Then
             frmConsole.Print "  "
             GoTo NextOne
