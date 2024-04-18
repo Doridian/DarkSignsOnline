@@ -29,12 +29,13 @@ function make_keycode($length = 16) {
 }
 
 function makeNewDomain($regtype, $fixedip = '', $userid = 0, $host = '') {
-	global $db, $user, $timestamp;
+	global $db, $user;
+	$timestamp = time();
 	// Generate IP
 	if (!empty($fixedip)) {
 		$randomip = $fixedip;
 	} else {
-		$stmt = $db->prepare("SELECT id FROM domains WHERE ip = ?");
+		$stmt = $db->prepare('SELECT id FROM domains WHERE ip = ?');
 		do {
 			$randomip = rand(1, 254) . "." . rand(0, 255) . "." . rand(0, 255) . "." . rand(0, 255);
 			$stmt->bind_param('s', $randomip);
@@ -47,14 +48,17 @@ function makeNewDomain($regtype, $fixedip = '', $userid = 0, $host = '') {
 		$userid = $user['id'];
 	}
 
+	$keycode = make_keycode();
+
 	$host = strtolower(trim($host));
 	if (empty($host)) {
-		$host = null;
+		$stmt = $db->prepare('INSERT INTO domains (owner, ip, host, regtype, time, keycode) VALUES (?, ?, NULL, ?, ?, ?)');
+		$stmt->bind_param('issis', $userid, $randomip, $regtype, $timestamp, $keycode);
+	} else {	
+		$stmt = $db->prepare('INSERT INTO domains (owner, ip, host, regtype, time, keycode) VALUES (?, ?, ?, ?, ?, ?)');
+		$stmt->bind_param('isssis', $userid, $randomip, $host, $regtype, $timestamp, $keycode);
 	}
 
-	$keycode = make_keycode();
-	$stmt = $db->prepare("INSERT INTO domains (owner, ip, host, regtype, time, keycode) VALUES (?, ?, ?, ?, ?, ?)");
-	$stmt->bind_param('isssis', $userid, $randomip, $host, $regtype, $timestamp, $keycode);
 	$stmt->execute();
 	return $db->insert_id;
 }
