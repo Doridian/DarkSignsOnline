@@ -661,6 +661,7 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
         propertySpace = i(Get_Property_Space(s)) & " "
         propertySpace = Replace(propertySpace, ",", " ")
         If InStr(propertySpace, "noprespace") > 0 Then Console(ConsoleID, OverwriteLineIndex).PreSpace = False
+        If InStr(propertySpace, "forceprespace") > 0 Then Console(ConsoleID, OverwriteLineIndex).PreSpace = True
         Console(ConsoleID, OverwriteLineIndex).FontColor = propertySpace_Color(propertySpace)
         Console(ConsoleID, OverwriteLineIndex).FontSize = propertySpace_Size(propertySpace)
         Console(ConsoleID, OverwriteLineIndex).FontName = propertySpace_Name(propertySpace)
@@ -683,9 +684,10 @@ End Function
 
 Public Function Load_Property_Space(ByVal propertySpace As String, sCaption As String) As ConsoleLine
     propertySpace = " " & Replace(propertySpace, ",", " ") & " "
-    
+
     Load_Property_Space.Caption = sCaption
     If InStr(propertySpace, "noprespace") > 0 Then Load_Property_Space.PreSpace = False
+    If InStr(propertySpace, "forceprespace") > 0 Then Load_Property_Space.PreSpace = True
     Load_Property_Space.FontColor = propertySpace_Color(propertySpace)
     Load_Property_Space.FontSize = propertySpace_Size(propertySpace)
     Load_Property_Space.FontName = propertySpace_Name(propertySpace)
