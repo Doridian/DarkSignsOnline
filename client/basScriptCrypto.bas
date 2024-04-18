@@ -23,10 +23,11 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
     End If
 
     ' BEGIN encrypt
-    CryptoVer = "4"
+    CryptoVer = "5"
     If ScriptKey = "" Then
-        ScriptKey = EncryptedDefaultKey
+        ScriptKey = "__NOKEY__"
     End If
+    ScriptKey = EncryptedDefaultKey & ScriptKey
     bSalt = AesGenSalt()
     bPass = StrConv(ScriptKey & vbNullString, vbFromUnicode)
 
@@ -54,15 +55,16 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As S
     Dim X As Long
 
     Select Case CryptoVer
-        Case "4":
+        Case "5":
             Dim sSplit() As String, bSalt() As Byte, bHMAC() As Byte, bHMACOut() As Byte, bPass() As Byte, bRaw() As Byte, bDecompressed() As Byte
             sSplit = Split(InputStr, ":")
             bSalt = DecodeBase64Bytes(sSplit(0))
             bHMAC = DecodeBase64Bytes(sSplit(1))
             bRaw = DecodeBase64Bytes(sSplit(2))
             If ScriptKey = "" Then
-                ScriptKey = EncryptedDefaultKey
+                ScriptKey = "__NOKEY__"
             End If
+            ScriptKey = EncryptedDefaultKey & ScriptKey
             bPass = StrConv(ScriptKey & vbNullString, vbFromUnicode)
 
             Dim bUnused() As Byte
