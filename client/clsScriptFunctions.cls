@@ -1088,6 +1088,9 @@ Public Function Unregister(ByVal Domain As String)
     DomainRequestIdx = DoDownloadAPI("domain_unregister.php", True, "d=" & EncodeURLParameter(Domain))
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
+
+    SayCOMM DomainRequest.Response
+
     DomainRequest.RaiseForStatus
 
     Yield
@@ -1102,6 +1105,9 @@ Public Function Register(ByVal Domain As String)
     DomainRequestIdx = DoDownloadAPI("domain_register.php", True, "d=" & EncodeURLParameter(Domain))
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
+
+    SayCOMM DomainRequest.Response
+
     DomainRequest.RaiseForStatus
 
     Yield
