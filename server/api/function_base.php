@@ -52,10 +52,10 @@ function makeNewDomain($regtype, $fixedip = '', $userid = 0, $host = '') {
 
 	$host = strtolower(trim($host));
 	if (empty($host)) {
-		$stmt = $db->prepare('INSERT INTO domains (owner, ip, host, regtype, time, keycode) VALUES (?, ?, NULL, ?, ?, ?)');
+		$stmt = $db->prepare('INSERT INTO domains (owner, ip, host, regtype, time, keycode) VALUES (?, ?, NULL, ?, ?, ?)') or die_error($db->error);
 		$stmt->bind_param('issis', $userid, $randomip, $regtype, $timestamp, $keycode);
 	} else {	
-		$stmt = $db->prepare('INSERT INTO domains (owner, ip, host, regtype, time, keycode) VALUES (?, ?, ?, ?, ?, ?)');
+		$stmt = $db->prepare('INSERT INTO domains (owner, ip, host, regtype, time, keycode) VALUES (?, ?, ?, ?, ?, ?)') or die_error($db->error);
 		$stmt->bind_param('isssis', $userid, $randomip, $host, $regtype, $timestamp, $keycode);
 	}
 
