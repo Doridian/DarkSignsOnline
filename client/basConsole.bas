@@ -320,17 +320,15 @@ End Sub
 Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     Dim n As Integer
 
-    Dim OldCaption As String
-    OldCaption = Console(ConsoleID, 1).Caption
-    If CurrentPromptVisible(ConsoleID) Then
-        Console(ConsoleID, 1).Caption = Replace(OldCaption, ConsoleCursorChar, "")
-    End If
-
     For n = 299 To 2 Step -1
         Console(ConsoleID, n) = Console(ConsoleID, n - 1)
     Next n
-    
-    Console(ConsoleID, 1).Caption = OldCaption
+
+    Console(ConsoleID, 1) = Console_Line_Defaults
+    If CurrentPromptVisible(ConsoleID) Then
+        Console(ConsoleID, 2).Caption = Replace(Console(ConsoleID, 2).Caption, ConsoleCursorChar, "")
+    End If
+    Console(ConsoleID, 1).Caption = ""
 
     frmConsole.QueueConsoleRender
 End Sub
