@@ -25,3 +25,20 @@ Function GetAsciiWithPrompt()
     SayLine "{{noprespace}}> " & Chr(Choice)
     GetAsciiWithPrompt = Choice
 End Function
+
+
+' Mission progress indicators
+Private Function GetMissionFile(MissionID)
+    MissionID = Replace(MissionID, "/", "_")
+    MissionID = Replace(MissionID, "\", "_")
+
+    GetMissionFile = "/system/missions/" & MissionID & ".ini"
+End Function
+
+Public Function SetMissionProgress(MissionID, Key, Value)
+    WriteINI GetMissionFile(MissionID), "progress", Key, Value
+End Function
+
+Public Function GetMissionProgress(MissionID, Key)
+    GetMissionProgress = ReadINI(GetMissionFile(MissionID), "progress", Key)
+End Function

@@ -39,9 +39,9 @@ Private PrivServerPort As Long
 
 Private PendingCustomDownloads() As Long
 
-Private Declare Function GetTickCount Lib "KERNEL32" () As Long
-Private Declare Function GetPrivateProfileString Lib "KERNEL32" Alias "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
-Private Declare Function WritePrivateProfileString Lib "KERNEL32" Alias "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpString As Any, ByVal lpFileName As String) As Long
+Private Declare Function GetTickCount Lib "kernel32" () As Long
+Private Declare Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
+Private Declare Function WritePrivateProfileString Lib "kernel32" Alias "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpString As Any, ByVal lpFileName As String) As Long
 
 Public Property Get UserName() As String
     UserName = myUsername
@@ -1742,22 +1742,14 @@ Public Function DecodeBase64Str(ByVal strData As String) As String
     DecodeBase64Str = basConsole.DecodeBase64Str(strData)
 End Function
 
-' Mission progress indicators
-Private Function GetMissionFile(ByVal MissionID As String) As String
-    MissionID = Replace(MissionID, "/", "_")
-    MissionID = Replace(MissionID, "\", "_")
-    
-    GetMissionFile = "/system/missions/" & MissionID & ".ini"
+Public Function WriteINI(ByVal File As String, ByVal Section As String, ByVal Key As String, ByVal Value As String)
+    WritePrivateProfileString Section, Key, Value, SafePath(ResolvePath(File))
 End Function
 
-Public Function SetMissionProgress(ByVal MissionID As String, ByVal Key As String, ByVal Value As String)
-    WritePrivateProfileString "progress", Key, Value, SafePath(GetMissionFile(MissionID))
-End Function
-
-Public Function GetMissionProgress(ByVal MissionID As String, ByVal Key As String)
+Public Function ReadINI(ByVal File As String, ByVal Section As String, ByVal Key As String) As String
     Dim Result As String * 4096
     Dim ResultLen As Long
-    ResultLen = GetPrivateProfileString("progress", Key, "", Result, 4096, SafePath(GetMissionFile(MissionID)))
-    GetMissionProgress = Left(Result, ResultLen)
+    ResultLen = GetPrivateProfileString(Section, Key, "", Result, 4096, SafePath(ResolvePath(File)))
+    ReadINI = Left(Result, ResultLen)
 End Function
 
