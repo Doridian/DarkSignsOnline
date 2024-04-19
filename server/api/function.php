@@ -54,7 +54,7 @@ function validIP($ip)
 function getDomainInfo($domain) {
 	global $db;
 
-	$stmt = $db->prepare('SELECT id, owner, keycode, ip, time FROM domains WHERE ip=? OR host=?');
+	$stmt = $db->prepare('SELECT id, owner, keycode, ip, host, time FROM domains WHERE ip=? OR host=?');
 	$stmt->bind_param('ss', $domain, $domain);
 	$stmt->execute();
 	$result = $stmt->get_result();
