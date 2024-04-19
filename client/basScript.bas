@@ -16,7 +16,7 @@ Public WaitingForInputReturn(1 To 4) As String
 Public CancelScript(1 To 4) As Boolean
 
 
-Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal FileKey As String, ByVal ServerDomain As String, ByVal ServerPort As Long, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal ScriptKey As String) As String
+Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal FileKey As String, ByVal ServerDomain As String, ByVal ServerPort As Long, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal ScriptKey As String, ByVal ScriptOwner As String) As String
     If ConsoleID < 1 Then
         ConsoleID = 1
     End If
@@ -36,7 +36,7 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False
+    G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False, ScriptOwner
     s.AddObject "DSO", G, True
 
     tmpAll = DSODecryptScript(tmpAll, ScriptKey)
@@ -112,7 +112,7 @@ Public Function Run_Script(ByVal FileName As String, ByVal ConsoleID As Integer,
 
     Dim tmpAll As String
     tmpAll = GetFile(FileName)
-    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, ErrorHandling, RedirectOutput, DisableOutput, ScriptKey)
+    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, ErrorHandling, RedirectOutput, DisableOutput, ScriptKey, "local")
 End Function
 
 

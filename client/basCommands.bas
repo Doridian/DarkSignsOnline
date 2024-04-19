@@ -19,7 +19,7 @@ Public Sub InitBasCommands()
         Dim CLIArguments(0 To 0) As Variant
         CLIArguments(0) = "/dev/tty" & X
         Set scrConsoleContext(X) = New clsScriptFunctions
-        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False, True
+        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False, True, ""
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
 

@@ -43,7 +43,7 @@ switch ($ver) {
 		if (empty($dHost)) {
 			$dHost = $dInfo['ip'];
 		}
-		echo $dHost . ':-:' . $port . ':-:' . $dInfo['keycode'] . ':-:' . dso_b64_encode($code_a[0]);
+		echo $dHost . ':-:' . $port . ':-:UID-' . $dInfo['owner'] . ':-:' . $dInfo['keycode'] . ':-:' . dso_b64_encode($code_a[0]);
 		break;
 	default:
 		die_error('not found', 400);
