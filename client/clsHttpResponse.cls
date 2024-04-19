@@ -24,7 +24,7 @@ Public Property Get Response() As Variant
         Case "bool_1":
             Response = (Trim(RawResponse) = "1")
         Case "lines":
-            Response = Split(RawResponse, vbCrLf)
+            Response = Split(Trim(RawResponse), vbCrLf)
         Case Else:
             Response = RawResponse
     End Select
