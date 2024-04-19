@@ -28,17 +28,29 @@ End Function
 
 
 ' Mission progress indicators
-Private Function GetMissionFile(MissionID)
+Function GetMissionFile(MissionID)
     MissionID = Replace(MissionID, "/", "_")
     MissionID = Replace(MissionID, "\", "_")
 
     GetMissionFile = "/system/missions/" & MissionID & ".ini"
 End Function
 
-Public Function SetMissionProgress(MissionID, Key, Value)
+Function SetMissionProgress(MissionID, Key, Value)
     WriteINI GetMissionFile(MissionID), "progress", Key, Value
 End Function
 
-Public Function GetMissionProgress(MissionID, Key)
+Function GetMissionProgress(MissionID, Key)
     GetMissionProgress = ReadINI(GetMissionFile(MissionID), "progress", Key)
+End Function
+
+Function ConsoleEscape(Str)
+    ConsoleEscape = Replace(Str, ConsoleInvisibleChar, "")
+    ConsoleEscape = Replace(ConsoleEscape, ConsoleCursorChar, "")
+    ConsoleEscape = Replace(ConsoleEscape, "{{", "{" & ConsoleInvisibleChar & "{")
+    ConsoleEscape = Replace(ConsoleEscape, "}}", "}" & ConsoleInvisibleChar & "}")
+End Function
+
+Function ConsoleUnescape(Str)
+    ConsoleUnescape = Replace(Str, ConsoleInvisibleChar, "")
+    ConsoleUnescape = Replace(ConsoleUnescape, ConsoleCursorChar, "")
 End Function
