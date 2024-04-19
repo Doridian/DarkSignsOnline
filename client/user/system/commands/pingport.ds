@@ -1,7 +1,7 @@
 Option Explicit
 
 Dim Result
-Result = PingPort(ArgV(1), ArgV(2))
+Result = WaitFor(PingPort(ArgV(1), ArgV(2)))
 
 If Result Then
     Say "{{green}}Port " & ArgV(2) & " is open on server " & ArgV(1) & "."

@@ -16,6 +16,7 @@ Option Explicit
 Public RawResponse As String
 Public Code As Integer
 Public ResponseType As String
+Public PreParsedResponse As Variant
 
 Public Property Get Response() As Variant
     RaiseForStatus
@@ -25,6 +26,8 @@ Public Property Get Response() As Variant
             Response = (Trim(Response) = "1")
         Case "lines":
             Response = Split(Response, vbCrLf)
+        Case "pre_parsed":
+            Response = PreParsedResponse
         Case Else:
             Response = Response
     End Select
@@ -41,5 +44,10 @@ Public Function RaiseForStatus()
 End Function
 
 Public Function ToString() As String
-    ToString = "[HTTP " & ResponseType & " " & Code & "] " & RawResponse
+Attribute ToString.VB_UserMemId = 0
+    If ResponseType = "pre_parsed" Then
+        ToString = "[HTTP PreParsed]"
+        Exit Function
+    End If
+    ToString = "[HTTP " & Code & "] " & RawResponse
 End Function

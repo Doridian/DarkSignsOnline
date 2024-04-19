@@ -364,11 +364,27 @@ Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal
     End If
 End Function
 
-Public Function WAITFOR(ByVal Req As clsHttpScriptRequest) As clsHttpResponse
+Public Function WAITFOR(ByVal Req As Variant) As clsHttpResponse
     Set WAITFOR = WaitFor_Internal(Req)
 End Function
 
-Private Function WaitFor_Internal(ByVal Req As clsHttpScriptRequest, Optional ByVal NoYield As Boolean = False) As clsHttpResponse
+Private Function WaitFor_Internal(ByVal Req As Variant, Optional ByVal NoYield As Boolean = False) As clsHttpResponse
+    If TypeOf Req Is clsHttpResponse Then
+        Set WaitFor_Internal = Req
+        Exit Function
+    End If
+
+    If Not (TypeOf Req Is clsHttpScriptRequest) Then
+        Dim ResFake As clsHttpResponse
+        Set ResFake = New clsHttpResponse
+        ResFake.Code = 266
+        ResFake.RawResponse = "PreParsed"
+        ResFake.ResponseType = "pre_parsed"
+        ResFake.PreParsedResponse = Req
+        Set WaitFor_Internal = ResFake
+        Exit Function
+    End If
+
     ConsoleWaitingOnRemote(PrivConsoleID) = True
     frmConsole.QueueConsoleRender
 

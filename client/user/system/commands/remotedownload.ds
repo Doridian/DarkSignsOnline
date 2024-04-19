@@ -1,5 +1,5 @@
 Option Explicit
 
 Dim Contents
-Contents = RemoteView(ArgV(1), ArgV(2))
+Contents = WaitFor(RemoteView(ArgV(1), ArgV(2)))
 Overwrite ArgV(3), Contents

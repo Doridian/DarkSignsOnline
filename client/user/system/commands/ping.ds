@@ -1,7 +1,7 @@
 Option Explicit
 
 Dim Result
-Result = Ping(ArgV(1))
+Result = WaitFor(Ping(ArgV(1)))
 
 If Result Then
     Say "{{green}}Server " & ArgV(1) & " is online."
