@@ -1691,6 +1691,10 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     Dim strFileKey As String
     strFileKey = DomainSplit(3)
 
+    If strOwner = "" Then
+        strOwner = "unknown"
+    End If
+
     Dim strCode As String
     strCode = DecodeBase64Str(DomainSplit(4))
 
