@@ -9,11 +9,11 @@ $type = strtoupper(trim($_GET['type']));
 switch ($type) {
 	case 'DOMAIN':
 	case 'IP':
-		$stmt = $db->prepare('SELECT name, ip FROM domains WHERE owner = ? AND regtype = ?');
+		$stmt = $db->prepare('SELECT host, ip FROM domains WHERE owner = ? AND regtype = ?');
 		$stmt->bind_param('is', $user['id'], $type);
 		$result = $stmt->get_result();
 		while ($loop = $result->fetch_assoc()) {
-			echo 'IP: ' . $loop['ip'] . '; Host: ' . $loop['name'] . "\r\n";
+			echo 'IP: ' . $loop['ip'] . '; Host: ' . $loop['host'] . "\r\n";
 		}
 		exit;
 	case 'SUBDOMAIN':
@@ -26,13 +26,13 @@ switch ($type) {
 			die('Permission denied.');
 		}
 
-		$stmt = $db->prepare('SELECT name FROM domains WHERE regtype = "SUBDOMAIN" AND parent = ?');
+		$stmt = $db->prepare('SELECT host, ip FROM domains WHERE regtype = "SUBDOMAIN" AND parent = ?');
 		$stmt->bind_param('i', $dInfo['id']);
 		$stmt->execute();
 		$result = $stmt->get_result();
 
 		while ($loop = $result->fetch_assoc()) {
-			echo 'IP: ' . $loop['ip'] . '; Host: ' . $loop['name'] . "\r\n";
+			echo 'IP: ' . $loop['ip'] . '; Host: ' . $loop['host'] . "\r\n";
 		}
 		exit;
 }

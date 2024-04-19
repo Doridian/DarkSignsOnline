@@ -404,10 +404,11 @@ Public Function WaitForRaw(ByVal Req As String) As Variant
 End Function
 
 Private Function WaitFor_Internal(ByVal ReqS As String, Optional ByVal NoYield As Boolean = False) As clsHttpResponse
+    Set WaitFor_Internal = Nothing
+
     Dim Req As Long
     Req = ParseReqIDStr(ReqS)
     If Req < 0 Then
-        Set WaitFor_Internal = Nothing
         Exit Function
     End If
 
@@ -547,7 +548,15 @@ Public Function PrintVar(ParamArray Param() As Variant)
     End If
 
     If LBound(Param) = UBound(Param) And VarType(Param(UBound(Param))) = vbString Then
-        Say Param(UBound(Param))
+        Dim StrParam As String
+        StrParam = Param(LBound(Param))
+        Dim PossibleReqIndex As Long
+        PossibleReqIndex = ParseReqIDStr(StrParam)
+        If PossibleReqIndex >= 0 Then
+            PrintVar WaitFor(StrParam)
+        Else
+            Say StrParam
+        End If
         Exit Function
     End If
 
