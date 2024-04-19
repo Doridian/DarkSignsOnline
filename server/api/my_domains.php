@@ -11,13 +11,7 @@ switch ($type) {
 	case 'IP':
 		$stmt = $db->prepare('SELECT host, ip FROM domains WHERE owner = ? AND regtype = ?');
 		$stmt->bind_param('is', $user['id'], $type);
-		$stmt->execute();
-		$result = $stmt->get_result();
-
-		while ($loop = $result->fetch_assoc()) {
-			echo 'IP: ' . $loop['ip'] . '; Host: ' . $loop['host'] . "\r\n";
-		}
-		exit;
+		break;
 	case 'SUBDOMAIN':
 		$domain = $_GET['domain'];
 		$dInfo = getDomainInfo($domain);
@@ -30,13 +24,14 @@ switch ($type) {
 
 		$stmt = $db->prepare('SELECT host, ip FROM domains WHERE regtype = "SUBDOMAIN" AND parent = ?');
 		$stmt->bind_param('i', $dInfo['id']);
-		$stmt->execute();
-		$result = $stmt->get_result();
-
-		while ($loop = $result->fetch_assoc()) {
-			echo 'IP: ' . $loop['ip'] . '; Host: ' . $loop['host'] . "\r\n";
-		}
-		exit;
+		break;
+	default:
+		die('Invalid type paramater.');
 }
 
-die('Invalid type paramater.');
+$stmt->execute();
+$result = $stmt->get_result();
+
+while ($loop = $result->fetch_assoc()) {
+	echo 'IP: ' . $loop['ip'] . '; Host: ' . $loop['host'] . "\r\n";
+}
