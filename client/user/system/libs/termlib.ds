@@ -37,6 +37,7 @@ End Function
 
 ' TODO: Synchronize mission from server first time it is read or written after client launch
 ' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
+' maybe use client launch time VS file modify time?
 Function SetMissionProgress(MissionID, Key, Value)
     WriteINI GetMissionFile(MissionID), "progress", Key, Value
 End Function
