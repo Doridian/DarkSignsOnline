@@ -114,8 +114,12 @@ Public Property Get IsOutputRedirected() As Boolean
     IsOutputRedirected = PrivRedirectOutput
 End Property
 
-Public Property Get ConsoleCursorChar() As Long
+Public Property Get ConsoleCursorChar() As String
     ConsoleCursorChar = basConsole.ConsoleCursorChar
+End Property
+
+Public Property Get ConsoleInvisibleChar() As String
+    ConsoleInvisibleChar = basConsole.ConsoleInvisibleChar
 End Property
 
 Public Property Get ConsoleID() As String

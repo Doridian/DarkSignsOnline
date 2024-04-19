@@ -55,12 +55,15 @@ Public yDiv As Integer  'the amount of vertical space between each console line
 
 Public Const DrawDividerWidth = 24
 Public Const Max_Font_Size = 144
-Public Const PreSpace = "-->" 'this will indent the text
 Public Const ConsoleXSpacing = 360
 Public Const ConsoleXSpacingIndent = 960
 
 Public Property Get ConsoleCursorChar() As String
     ConsoleCursorChar = Chr(7)
+End Property
+
+Public Property Get ConsoleInvisibleChar() As String
+    ConsoleInvisibleChar = Chr(6)
 End Property
 
 Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal ConsoleID As Integer)
@@ -486,17 +489,22 @@ DontDraw:
 
         frmConsole.CurrentX = ConsoleXSpacing
 
+        tmpS = Replace(tmpS, ConsoleInvisibleChar, "")
+
         'make underscore flash
         Dim InsertCursorsAt() As Long
         ReDim InsertCursorsAt(0 To 0)
         Dim CurCursorPos As Long
+        Dim CurCursorOffset As Long
         CurCursorPos = 1
+        CurCursorOffset = 0
         While CurCursorPos > 0
             CurCursorPos = InStr(CurCursorPos, tmpS, ConsoleCursorChar)
             If CurCursorPos > 0 Then
                 ReDim Preserve InsertCursorsAt(0 To UBound(InsertCursorsAt) + 1)
-                InsertCursorsAt(UBound(InsertCursorsAt)) = CurCursorPos
+                InsertCursorsAt(UBound(InsertCursorsAt)) = CurCursorPos - CurCursorOffset
                 CurCursorPos = CurCursorPos + 1
+                CurCursorOffset = CurCursorOffset + 1
             End If
         Wend
         tmpS = Replace(tmpS, ConsoleCursorChar, "")
@@ -728,7 +736,7 @@ Public Function Remove_Property_Space(ByVal s As String) As String
     Dim isOn As Boolean
     isOn = True
 
-    For n = 1 To Len(s) - 1
+    For n = 1 To Len(s)
         If Mid(s, n, 2) = "{{" Then
             isOn = False
             n = n + 1
@@ -748,7 +756,7 @@ Public Function Get_Property_Space(ByVal s As String) As String
     Dim isOn As Boolean
     isOn = False
 
-    For n = 1 To Len(s) - 1
+    For n = 1 To Len(s)
         If Mid(s, n, 2) = "}}" Then
             isOn = False
             n = n + 1
@@ -768,7 +776,7 @@ Public Function Kill_Property_Space(ByVal s As String) As String
     Dim isOn As Boolean
     isOn = False
 
-    For n = 1 To Len(s) - 1
+    For n = 1 To Len(s)
         If Mid(s, n, 2) = "{{" Then
             isOn = True
             n = n + 1
