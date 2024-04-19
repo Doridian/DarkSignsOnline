@@ -265,7 +265,3 @@ Public Function DirExists(ByVal sDirName As String) As Boolean
 NotADir:
     DirExists = False
 End Function
-
-
-' TODO: Servers need to be able to upload files to clients (with permission), and clients need to be able to upload files to servers
-' TODO: Function to hash a string (to compare mission files to their target without leaking them)

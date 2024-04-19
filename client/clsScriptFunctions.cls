@@ -1768,10 +1768,6 @@ Public Function GetMissionFile(ByVal MissionID As String)
     GetMissionFile = "/system/missions/" & MissionID & ".ini"
 End Function
 
-' TODO: Synchronize mission from server first time it is read or written after client launch
-' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
-' maybe use client launch time VS file modify time?
-
 Public Function GetMissionData(ByVal MissionID As String, ByVal Section As String, ByVal Key As String) As String
     GetMissionData = ReadINI_Internal(GetMissionFile(MissionID), Section, Key)
 End Function
@@ -1785,3 +1781,10 @@ Public Function TrimWithNewline(ByVal InputStr As String) As String
     TrimWithNewline = basGeneral.TrimWithNewline(InputStr)
     Yield
 End Function
+
+
+' TODO: Synchronize mission from server first time it is read or written after client launch
+' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
+' maybe use client launch time VS file modify time?
+' TODO: Servers need to be able to upload files to clients (with permission), and clients need to be able to upload files to servers
+' TODO: Function to hash a string (to compare mission files to their target without leaking them)
