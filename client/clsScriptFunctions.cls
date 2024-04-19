@@ -1674,25 +1674,22 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     Dim DomainSplit() As String
     DomainSplit = Split(DomainRequest.Response, ":-:")
     ' 0 = domain
-    ' 1 = ip
-    ' 2 = port
-    ' 3 = filekey
-    ' 4 = code
+    ' 1 = port
+    ' 2 = filekey
+    ' 3 = code
 
     Dim strDomain As String
     strDomain = DomainSplit(0)
-    Dim strIP As String
-    strIP = DomainSplit(1)
     Dim strPort As Long
-    strPort = Val(DomainSplit(2))
+    strPort = Val(DomainSplit(1))
     If strPort <= 0 Then
         strPort = 99999
     End If
     Dim strFileKey As String
-    strFileKey = DomainSplit(3)
+    strFileKey = DomainSplit(2)
 
     Dim strCode As String
-    strCode = DecodeBase64Str(DomainSplit(4))
+    strCode = DecodeBase64Str(DomainSplit(3))
 
     Dim DomScript As String
     DomScript = "dso://" & strDomain & ":" & strPort
