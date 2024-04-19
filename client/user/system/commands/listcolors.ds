@@ -1,7 +1,7 @@
 Option Explicit
 
 Sub ShowCol(ByVal Color)
-    Say Color & " (**" & Color & "**) {" & Color & " 8}"
+    Say Color & " (**" & Color & "**) {{" & Color & " 8}}"
 End Sub
 
 ShowCol "lred"

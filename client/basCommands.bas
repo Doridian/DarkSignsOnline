@@ -192,11 +192,11 @@ EvalError:
         ErrNumberStr = "(E#" & ErrNumber & ")"
     End If
     
-    SayRaw ConsoleID, "Error processing CLI input: " & ErrDescription & " " & ErrNumberStr & " " & ErrHelp & " {red}"
+    SayRaw ConsoleID, "Error processing CLI input: " & ErrDescription & " " & ErrNumberStr & " " & ErrHelp & "{{red}}"
     GoTo ScriptEnd
 
 ScriptCancelled:
-    SayRaw ConsoleID, "Script Stopped by User (CTRL + C){orange}"
+    SayRaw ConsoleID, "Script Stopped by User (CTRL + C){{orange}}"
 ScriptEnd:
     scrConsoleContext(ConsoleID).CleanupScriptTasks
 End Function
@@ -693,9 +693,9 @@ Public Sub SetUsername(ByVal s As String, ByVal ConsoleID As Integer)
     Else
         Password = "[hidden]"
     End If
-    SayRaw ConsoleID, "Your new details are shown below." & "{orange}"
-    SayRaw ConsoleID, "Username: " & myUsername() & "{orange 16}"
-    SayRaw ConsoleID, "Password: " & Password & "{orange 16}"
+    SayRaw ConsoleID, "Your new details are shown below." & "{{orange}}"
+    SayRaw ConsoleID, "Username: " & myUsername() & "{{orange 16}}"
+    SayRaw ConsoleID, "Password: " & Password & "{{orange 16}}"
 End Sub
 
 Public Sub SetPassword(ByVal s As String, ByVal ConsoleID As Integer)
@@ -712,9 +712,9 @@ Public Sub SetPassword(ByVal s As String, ByVal ConsoleID As Integer)
     Else
         Password = "[hidden]"
     End If
-    SayRaw ConsoleID, "Your new details are shown below." & "{orange}"
-    SayRaw ConsoleID, "Username: " & myUsername() & "{orange 16}"
-    SayRaw ConsoleID, "Password: " & Password & "{orange 16}"
+    SayRaw ConsoleID, "Your new details are shown below." & "{{orange}}"
+    SayRaw ConsoleID, "Username: " & myUsername() & "{{orange 16}}"
+    SayRaw ConsoleID, "Password: " & Password & "{{orange 16}}"
 End Sub
 
 Public Sub ClearConsole(ByVal ConsoleID As Integer)
@@ -735,7 +735,7 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
     End If
 
     If Not basGeneral.FileExists(s) Then
-        SayRaw ConsoleID, "{green}File Not Found, Creating: " & s
+        SayRaw ConsoleID, "{{green}}File Not Found, Creating: " & s
         WriteFile s, ""
     End If
 
@@ -743,7 +743,7 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
     ExternalEditor = RegLoad("externaleditor", False)
 
     If ExternalEditor Then
-        SayRaw ConsoleID, "{green}Opening external editor for " & s
+        SayRaw ConsoleID, "{{green}}Opening external editor for " & s
         frmConsole.OpenFileDefault s
         Exit Sub
     End If
@@ -779,7 +779,7 @@ Public Function GetShortName(ByVal s As String) As String
 End Function
 
 Public Function SayError(s As String, ByVal ConsoleID As Integer)
-    SayRaw ConsoleID, "Error - " & s & " {orange}"
+    SayRaw ConsoleID, "Error - " & s & " {{orange}}"
 End Function
 
 Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer)
@@ -790,7 +790,7 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer)
     Dim strDefault As Boolean
     strDefault = False
     If Trim(Kill_Property_Space(s)) = "" Then
-        propSpace = "{" & Trim(Get_Property_Space(s)) & "}"
+        propSpace = "{{" & Trim(Get_Property_Space(s)) & "}}"
 
         If Len(propSpace) > 3 Then
             s = propSpace & "Press any key to continue..." & Chr(7)
@@ -801,7 +801,7 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer)
     End If
 
     If Not Has_Property_Space(s) Then
-        s = s & "{lblue 10 noprespace}"
+        s = s & "{{lblue 10 noprespace}}"
     End If
 
     SayRaw ConsoleID, s

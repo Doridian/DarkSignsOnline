@@ -1,6 +1,6 @@
 Option Explicit
 
-Say "Yeah...{blue 18 georgia}"
-Say "it's pretty good...{blue 18 georgia center}"
-Say ":){blue 18 georgia right}"
-Say "w00t!{center blue 24 bold georgia}
+Say "Yeah...{{blue 18 georgia}}"
+Say "it's pretty good...{{blue 18 georgia center}}"
+Say ":){{blue 18 georgia right}}"
+Say "w00t!{{center blue 24 bold georgia}}"

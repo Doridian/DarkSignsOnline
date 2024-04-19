@@ -3,12 +3,12 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: DRAW -y Red(0-255) Green(0-255) Blue(0-255) mode"
 Say propsforexamples & "Example #1: DRAW -1 142 200 11 fadeout"
-Say "{lgrey}Print a background color stream to the console."
-Say "{lgrey}The first parameter, -y, defines the console line."
-Say "{lgrey}For example, -2 will draw to the second line up from the active line."
-Say "{lgrey}The Red, Green, and Blue must be values between 0 and 255."
-Say "{lorange}Available mode keywords: SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE."
-Say "{orange}To use custom colors, use the DRAWCUSTOM command."
+Say "{{lgrey}}Print a background color stream to the console."
+Say "{{lgrey}}The first parameter, -y, defines the console line."
+Say "{{lgrey}}For example, -2 will draw to the second line up from the active line."
+Say "{{lgrey}}The Red, Green, and Blue must be values between 0 and 255."
+Say "{{lorange}}Available mode keywords: SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE."
+Say "{{orange}}To use custom colors, use the DRAWCUSTOM command."
 
 
 

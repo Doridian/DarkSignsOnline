@@ -3,4 +3,4 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: LOOKUP domain"
 Say propsforexamples & "Example #1: LOOKUP website.com"
-Say "{lgrey}View information about the specified domain name."
+Say "{{lgrey}}View information about the specified domain name."

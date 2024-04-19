@@ -2,4 +2,4 @@ Option Explicit
 Include "/system/commands/help/_util.ds"
 
 Say props & "Command: TIME"
-Say "{lgrey}Display the current system time."
+Say "{{lgrey}}Display the current system time."

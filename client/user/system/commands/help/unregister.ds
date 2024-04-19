@@ -3,4 +3,4 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: UNREGISTER domain-name"
 Say propsforexamples & "Example #1: UNREGISTER myoldwebsite.com"
-Say "{lgrey}Unregister a domain name that you own on the Dark Signs Network."
+Say "{{lgrey}}Unregister a domain name that you own on the Dark Signs Network."

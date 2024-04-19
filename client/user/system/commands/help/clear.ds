@@ -2,4 +2,4 @@ Option Explicit
 Include "/system/commands/help/_util.ds"
 
 Say props & "Command: CLEAR"
-Say "{lgrey}Clear the console screen."
+Say "{{lgrey}}Clear the console screen."

@@ -3,5 +3,5 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: ME"
 Say propsforexamples & "Example #1: ME"
-Say "{lgrey}Do nothing at all!"
-Say "{lorange}This is a useless secret command."
+Say "{{lgrey}}Do nothing at all!"
+Say "{{lorange}}This is a useless secret command."

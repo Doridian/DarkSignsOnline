@@ -4,7 +4,7 @@ Dim Result
 Result = PingPort(ArgV(1), ArgV(2))
 
 If Result Then
-    Say "{green}Port " & ArgV(2) & " is open on server " & ArgV(1) & "."
+    Say "{{green}}Port " & ArgV(2) & " is open on server " & ArgV(1) & "."
 Else
-    Say "{red}Port " & ArgV(2) & " is closed on server " & ArgV(1) & "."
+    Say "{{red}}Port " & ArgV(2) & " is closed on server " & ArgV(1) & "."
 End If

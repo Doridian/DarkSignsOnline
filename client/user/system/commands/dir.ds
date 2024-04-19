@@ -62,7 +62,7 @@ Sub EndSaySubStr()
 End Sub
 
 If UBound(Dirs) > 0 Then
-	StartSaySubStr "{1yellow}"
+	StartSaySubStr "{{1yellow}}"
 	For X = 1 To UBound(Dirs)
 		SaySubStr "[" & UCase(Dirs(X)) & "]", "    "
 	Next
@@ -70,11 +70,11 @@ If UBound(Dirs) > 0 Then
 End If
 
 If UBound(Files) > 0 Then
-	StartSaySubStr "{}"
+	StartSaySubStr "{{}}"
 	For X = 1 To UBound(Files)
 		SaySubStr Files(X) & " (" & FormatKB(FileLen(LSArg & "/" & Files(X))) & ")", "    "
 	Next
 	EndSaySubStr
 End If
 
-Say UBound(Files) & " file(s) and " & UBound(Dirs) & " dir(s) found in " & ResolvePath(LSArg) & "{green 10}"
+Say UBound(Files) & " file(s) and " & UBound(Dirs) & " dir(s) found in " & ResolvePath(LSArg) & "{{green 10}}"

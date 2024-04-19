@@ -1,4 +1,4 @@
 Option Explicit
 
-Say "That's not a real command!{red impact 48 center nobold}"
-Say "What's wrong with you!?{red impact 48 center nobold}"
+Say "That's not a real command!{{red impact 48 center nobold}}"
+Say "What's wrong with you!?{{red impact 48 center nobold}}"

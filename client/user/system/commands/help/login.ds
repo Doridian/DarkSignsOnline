@@ -2,6 +2,6 @@ Option Explicit
 Include "/system/commands/help/_util.ds"
 
 Say props & "Command: LOGIN"
-Say "{lgrey}Attempt to log in to Dark Signs with your account username and password."
-Say "{lgrey}This is only necessary if your status is 'not logged in'."
-Say "{lorange}Use the USERNAME and PASSWORD commands to set or change your username or password."
+Say "{{lgrey}}Attempt to log in to Dark Signs with your account username and password."
+Say "{{lgrey}}This is only necessary if your status is 'not logged in'."
+Say "{{lorange}}Use the USERNAME and PASSWORD commands to set or change your username or password."

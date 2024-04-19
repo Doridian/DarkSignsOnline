@@ -3,4 +3,4 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: CD directory-name"
 Say propsforexamples & "Example #1: CD myfiles"
-Say "{lgrey}Change the active path to the specified directory."
+Say "{{lgrey}}Change the active path to the specified directory."

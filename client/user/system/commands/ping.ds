@@ -4,7 +4,7 @@ Dim Result
 Result = Ping(ArgV(1))
 
 If Result Then
-    Say "{green}Server " & ArgV(1) & " is online."
+    Say "{{green}}Server " & ArgV(1) & " is online."
 Else
-    Say "{red}Server " & ArgV(1) & " is offline."
+    Say "{{red}}Server " & ArgV(1) & " is offline."
 End If

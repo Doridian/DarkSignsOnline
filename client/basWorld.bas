@@ -38,8 +38,8 @@ Public LoginInProgress As Boolean
 
 Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Long, Optional NoAuth As Boolean)
     If Not NoAuth And InStr(i(sUrl), "auth.php") = 0 And Not Authorized Then
-        SayRaw ConsoleID, "You must be logged in to do that!{36 center orange impact nobold}"
-        SayRaw ConsoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{24 center white impact nobold}"
+        SayRaw ConsoleID, "You must be logged in to do that!{{36 center orange impact nobold}}"
+        SayRaw ConsoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{{24 center white impact nobold}}"
 
         If IsCustomDownload > 0 Then
             basWorld.Process "Not logged in", 401, sUrl, ConsoleID, IsCustomDownload
@@ -329,7 +329,7 @@ Public Sub SayRawMultiLines(ByVal s As String, ConsoleID As Integer)
         SayRaw ConsoleID, sA(n)
     Next n
 
-    SayRaw ConsoleID, "{12 green}Line(s) Found: " & Trim(UBound(sA) + 1)
+    SayRaw ConsoleID, "{{12 green}}Line(s) Found: " & Trim(UBound(sA) + 1)
 End Sub
 
 

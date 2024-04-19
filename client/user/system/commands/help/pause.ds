@@ -3,4 +3,4 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: PAUSE optional-msg"
 Say propsforexamples & "Example #1: PAUSE Press a key!"
-Say "{lgrey}Pause the console interface until the user presses a key."
+Say "{{lgrey}}Pause the console interface until the user presses a key."

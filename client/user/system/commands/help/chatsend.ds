@@ -3,6 +3,6 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: CHATSEND Message to be sent to the chat."
 Say propsforexamples & "Example #1: CHATSEND Hello World!"
-Say "{lgrey}A simple way to send messages to the chat from your console."
+Say "{{lgrey}}A simple way to send messages to the chat from your console."
 
 

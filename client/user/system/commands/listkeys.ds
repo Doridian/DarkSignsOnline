@@ -1,9 +1,9 @@
 Option Explicit
 
 Dim ss
-ss = "{gold}"
+ss = "{{gold}}"
 
-Say "Dark Signs Keyboard Actions{gold 14}"
+Say "Dark Signs Keyboard Actions{{gold 14}}"
 
 Say "Page Up: Scroll the console up." & ss
 Say "Page Down: Scroll the console down." & ss

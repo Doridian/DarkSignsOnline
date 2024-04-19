@@ -501,8 +501,6 @@ DontDraw:
         Wend
         tmpS = Replace(tmpS, ConsoleCursorChar, "")
 
-        If InStr(tmpS, "**") > 0 Then tmpS = Replace(tmpS, "(**", "{"): tmpS = Replace(tmpS, "**)", "}")
-
         isAligned = False
         
         frmConsole.lfont.FontSize = Console_FontName(n, ActiveConsole)
@@ -730,15 +728,17 @@ Public Function Remove_Property_Space(ByVal s As String) As String
     Dim isOn As Boolean
     isOn = True
 
-    For n = 1 To Len(s)
-        If Mid(s, n, 1) = "{" Then
+    For n = 1 To Len(s) - 1
+        If Mid(s, n, 2) = "{{" Then
             isOn = False
+            n = n + 1
         End If
         If isOn = True Then
             Remove_Property_Space = Remove_Property_Space & Mid(s, n, 1)
         End If
-        If Mid(s, n, 1) = "}" Then
+        If Mid(s, n, 2) = "}}" Then
             isOn = True
+            n = n + 1
         End If
     Next n
 End Function
@@ -748,15 +748,17 @@ Public Function Get_Property_Space(ByVal s As String) As String
     Dim isOn As Boolean
     isOn = False
 
-    For n = 1 To Len(s)
-        If Mid(s, n, 1) = "}" Then
+    For n = 1 To Len(s) - 1
+        If Mid(s, n, 2) = "}}" Then
             isOn = False
+            n = n + 1
         End If
         If isOn = True Then
             Get_Property_Space = Get_Property_Space & Mid(s, n, 1)
         End If
-        If Mid(s, n, 1) = "{" Then
+        If Mid(s, n, 2) = "{{" Then
             isOn = True
+            n = n + 1
         End If
     Next n
 End Function
@@ -766,31 +768,29 @@ Public Function Kill_Property_Space(ByVal s As String) As String
     Dim isOn As Boolean
     isOn = False
 
-    For n = 1 To Len(s)
-        If Mid(s, n, 1) = "{" Then
+    For n = 1 To Len(s) - 1
+        If Mid(s, n, 2) = "{{" Then
             isOn = True
+            n = n + 1
         End If
 
         If isOn = False Then
             Kill_Property_Space = Kill_Property_Space & Mid(s, n, 1)
         End If
         
-        If Mid(s, n, 1) = "}" Then
+        If Mid(s, n, 2) = "}}" Then
             isOn = False
+            n = n + 1
         End If
     Next n
-    
-    Kill_Property_Space = Replace(Kill_Property_Space, "{", "")
-    Kill_Property_Space = Replace(Kill_Property_Space, "}", "")
+
+    Kill_Property_Space = Replace(Kill_Property_Space, "{{", "")
+    Kill_Property_Space = Replace(Kill_Property_Space, "}}", "")
 End Function
 
 Public Function Has_Property_Space(ByVal s As String) As Boolean
-    If InStr(s, "{") > 0 And InStr(s, "}") > 0 Then
-        If InStr(s, "{") < InStr(s, "}") Then
-            Has_Property_Space = True
-        Else
-            Has_Property_Space = False
-        End If
+    If InStr(s, "{{") > 0 And InStr(s, "}}") > 0 Then
+        Has_Property_Space = True
     Else
         Has_Property_Space = False
     End If
@@ -946,7 +946,7 @@ End Function
 
 Public Function propertySpace_Size(ByVal s As String) As String
     propertySpace_Size = 777
-    s = Replace(s, "{", " "): s = Replace(s, "}", " ")
+    s = Replace(s, "{{", " "): s = Replace(s, "}}", " ")
     s = " " & i(Replace(s, ",", " ")) & " "
     
     Dim n As Integer

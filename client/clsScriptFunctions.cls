@@ -482,7 +482,7 @@ End Function
 
 Public Function PrintVar(ParamArray Param() As Variant)
     If UBound(Param) < 0 Then
-        Say "No arguments to print{orange}"
+        Say "No arguments to print{{orange}}"
         Exit Function
     End If
 
@@ -555,7 +555,7 @@ Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As
     If (VarType(Param) And vbArray) = vbArray Then
         Dim X As Long
         Dim XV As String
-        Say MainPrefix & "{yellow}Array of element type " & TypeName & " from " & LBound(Param) & " to " & UBound(Param)
+        Say MainPrefix & "{{yellow}}Array of element type " & TypeName & " from " & LBound(Param) & " to " & UBound(Param)
         Dim SubPrefix As String
         SubPrefix = "    " & Prefix
         For X = LBound(Param) To UBound(Param)
@@ -583,7 +583,7 @@ Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As
             StrParam = StrParam & " [...]"
         End If
 
-        Say MainPrefix & "{blue}Value of type " & TypeName & " = " & StrParam
+        Say MainPrefix & "{{blue}}Value of type " & TypeName & " = " & StrParam
     End If
     Yield
 End Sub
@@ -900,7 +900,7 @@ Public Function LOGIN(Optional ByVal Silent As Boolean = False)
 
     If basWorld.Authorized = True Then
         If PrintOutput Then
-            SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{green}"
+            SayRaw ConsoleID, "You are already logged in and authorized as " & myUsername & ".{{green}}"
         End If
         Exit Function
     End If
@@ -909,21 +909,21 @@ Public Function LOGIN(Optional ByVal Silent As Boolean = False)
     isBad = False
     If myUsername = "" Then
         If PrintOutput Then
-            SayRaw ConsoleID, "{14, orange,  center}Your username is not set - type: USERNAME = ""[username]"" to set it."
+            SayRaw ConsoleID, "{{14, orange,  center}}Your username is not set - type: USERNAME = ""[username]"" to set it."
         End If
         isBad = True
     End If
     If myPassword = "" Then
         If PrintOutput Then
-            SayRaw ConsoleID, "{14, orange, center}Your password is not set - type: PASSWORD = ""[password]"" to set it."
+            SayRaw ConsoleID, "{{14, orange, center}}Your password is not set - type: PASSWORD = ""[password]"" to set it."
         End If
         isBad = True
     End If
 
     If isBad = True Then
         If PrintOutput Then
-            SayRaw ConsoleID, "Warning - You are not logged in!{16 center underline}"
-            SayRaw ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{14 center}"
+            SayRaw ConsoleID, "Warning - You are not logged in!{{16 center underline}}"
+            SayRaw ConsoleID, "Once you have set your USERNAME and PASSWORD, type LOGIN.{{14 center}}"
         End If
         RaiseMiscError "Username and/or password not set"
     End If
@@ -1642,7 +1642,7 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     End If
 
     If Verbose Then
-        Say "{green}Connecting to " & UCase(Domain) & ":" & Port & "..."
+        Say "{{green}}Connecting to " & UCase(Domain) & ":" & Port & "..."
     End If
 
     Dim X As Long

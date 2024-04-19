@@ -3,5 +3,5 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: REMOTEWRITE domain file data here"
 Say propsforexamples & "Example #1: REMOTEWRITE matrix.com Hello World"
-Say "{lgrey}Write some data to a file on your domain name file system."
-Say "{lorange}You must own the domain, or have subowner privileges on the domain."
+Say "{{lgrey}}Write some data to a file on your domain name file system."
+Say "{{lorange}}You must own the domain, or have subowner privileges on the domain."

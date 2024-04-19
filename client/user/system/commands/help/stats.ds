@@ -2,5 +2,5 @@ Option Explicit
 Include "/system/commands/help/_util.ds"
 
 Say props & "Command: STATS"
-Say "{lgrey}Display active information about the Dark Signs Network."
-Say "{lorange}This information will be shown in the COMM window."
+Say "{{lgrey}}Display active information about the Dark Signs Network."
+Say "{{lorange}}This information will be shown in the COMM window."

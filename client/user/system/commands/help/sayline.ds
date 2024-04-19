@@ -3,5 +3,5 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: SAYLINE text (**optional-properties**)"
 Say propsforexamples & "Example #1: SAYLINE hello"
-Say "{lgrey}Same as the SAY command, except text will be printed on the same line, without moving down."
-Say "{lorange}Type HELP SAY for more information."
+Say "{{lgrey}}Same as the SAY command, except text will be printed on the same line, without moving down."
+Say "{{lorange}}Type HELP SAY for more information."

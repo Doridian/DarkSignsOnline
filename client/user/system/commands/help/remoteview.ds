@@ -3,6 +3,6 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: REMOTEVIEW domain filename"
 Say propsforexamples & "Example #1: REMOTEVIEW google.com userlist.log"
-Say "{lgrey}Display the specified remote file in the console."
-Say "{lorange}You must own the domain, or have subowner privileges on the domain."
+Say "{{lgrey}}Display the specified remote file in the console."
+Say "{{lorange}}You must own the domain, or have subowner privileges on the domain."
 

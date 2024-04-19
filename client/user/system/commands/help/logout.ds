@@ -2,5 +2,5 @@ Option Explicit
 Include "/system/commands/help/_util.ds"
 
 Say props & "Command: LOGOUT"
-Say "{lgrey}Log out of Dark Signs."
-Say "{lgrey}This can be helpful if you want to log in as another user, or if a rare error occurs."
+Say "{{lgrey}}Log out of Dark Signs."
+Say "{{lgrey}}This can be helpful if you want to log in as another user, or if a rare error occurs."

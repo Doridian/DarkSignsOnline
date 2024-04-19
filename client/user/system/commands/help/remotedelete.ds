@@ -3,5 +3,5 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: REMOTEDELETE domain filename"
 Say propsforexamples & "Example #1: REMOTEDELETE matrix.com myfile.ds"
-Say "{lgrey}Delete the specified file from the remote server."
-Say "{lorange}You must own the domain, or have subowner privileges on the domain."
+Say "{{lgrey}}Delete the specified file from the remote server."
+Say "{{lorange}}You must own the domain, or have subowner privileges on the domain."

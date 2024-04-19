@@ -3,5 +3,5 @@ Include "/system/commands/help/_util.ds"
 
 Say props & "Command: WAIT milliseconds"
 Say propsforexamples & "Example #1: WAIT 1000"
-Say "{lgrey}Pause the console for the specific amount of time (between 1 and 60000 ms)."
-Say "{lorange}1000 millisends is equal to 1 second."
+Say "{{lgrey}}Pause the console for the specific amount of time (between 1 and 60000 ms)."
+Say "{{lorange}}1000 millisends is equal to 1 second."

@@ -1,9 +1,9 @@
 Option Explicit
 
 Dim props, propsforexamples, propsforcommands
-props = "{green 12 underline}"
-propsforexamples = "{lgreen 12}"
-propsforcommands = "{lgrey 8}"
+props = "{{green 12 underline}}"
+propsforexamples = "{{lgreen 12}}"
+propsforcommands = "{{lgrey 8}}"
 
 Dim X
 
@@ -42,4 +42,4 @@ For X = 0 To UBound(HelpFiles)
 Next
 If Str <> "" Then Say propsforcommands & Str
 
-Say "{grey}For more specific help on a command, type: HELP [command]"
+Say "{{grey}}For more specific help on a command, type: HELP [command]"

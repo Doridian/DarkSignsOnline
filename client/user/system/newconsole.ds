@@ -1,2 +1,2 @@
-SAY "New Console #" & ConsoleID & " {gold 24 IMPACT NOBOLD center}"
+SAY "New Console #" & ConsoleID & " {{gold 24 IMPACT NOBOLD center}}"
 SAY "Welcome " & Username & "."
