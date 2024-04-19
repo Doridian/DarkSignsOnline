@@ -6,13 +6,13 @@ require_once('api/function_base.php');
 
 if (isset($_POST['username'])) {
 	$username = strtolower(trim($_POST['username']));
-	$password = trim($_POST['password']);
+	$password = $_POST['password'];
 	$email = trim($_POST['email']);
 	$dobday = trim($_POST['dobday']);
 	$dobmonth = trim($_POST['dobmonth']);
 	$dobyear = trim($_POST['dobyear']);
 
-	$username = str_replace(" ", "-", trim($username));
+	$username = str_replace(" ", "-", $username);
 
 	if (strstr($username, "_")) {
 		die("Error, please don't use invalid characters in your username.");
