@@ -6,6 +6,7 @@ Public DownloadInUse(1 To 99) As Boolean
 Public DownloadDone(1 To 99) As Boolean
 Public DownloadResults(1 To 99) As String
 Public DownloadCodes(1 To 99) As Integer
+Public DownloadResponseTypes(1 To 99) As String
 
 Public GetKeyWaiting(1 To 4) As Long
 Public GetAsciiWaiting(1 To 4) As Long
