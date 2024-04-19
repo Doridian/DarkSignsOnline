@@ -792,7 +792,7 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer)
     If Trim(Kill_Property_Space(s)) = "" Then
         propSpace = "{{" & Trim(Get_Property_Space(s)) & "}}"
 
-        If Len(propSpace) > 3 Then
+        If Len(propSpace) > 5 Then
             s = propSpace & "Press any key to continue..." & Chr(7)
         Else
             s = "Press any key to continue..." & Chr(7)
