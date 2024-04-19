@@ -16,6 +16,8 @@ Option Explicit
 Public ResIndex As Long
 Public RaiseForStatus As Boolean
 
+Public ResponseType As String
+
 Private Sub Class_Initialize()
     ' Nothing
 End Sub

@@ -13,8 +13,22 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Public Response As String
+Public RawResponse As String
 Public Code As Integer
+Public ResponseType As String
+
+Public Property Get Response() As Variant
+    RaiseForStatus
+
+    Select Case ResponseType
+        Case "bool_1":
+            Response = (Trim(Response) = "1")
+        Case "lines":
+            Response = Split(Response, vbCrLf)
+        Case Else:
+            Response = Response
+    End Select
+End Property
 
 Public Function IsSuccess() As Boolean
     IsSuccess = Code >= 200 And Code <= 299
@@ -27,7 +41,5 @@ Public Function RaiseForStatus()
 End Function
 
 Public Function ToString() As String
-Attribute ToString.VB_UserMemId = 0
-    ToString = "[HTTP " & Code & "] " & Response
+    ToString = "[HTTP " & ResponseType & " " & Code & "] " & RawResponse
 End Function
-
