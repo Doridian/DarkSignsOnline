@@ -11,7 +11,9 @@ switch ($type) {
 	case 'IP':
 		$stmt = $db->prepare('SELECT host, ip FROM domains WHERE owner = ? AND regtype = ?');
 		$stmt->bind_param('is', $user['id'], $type);
+		$stmt->execute();
 		$result = $stmt->get_result();
+
 		while ($loop = $result->fetch_assoc()) {
 			echo 'IP: ' . $loop['ip'] . '; Host: ' . $loop['host'] . "\r\n";
 		}

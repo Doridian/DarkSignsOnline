@@ -109,7 +109,7 @@ Private Sub HttpRequest_OnError(ByVal ErrorNumber As Long, ByVal ErrorDescriptio
     End If
     Done = True
     
-    ManageSockError "Socket error code " & ErrorNumber & " = " & ErrorDescription
+    ManageSockError "Socket error code " & ErrorNumber & " = " & ErrorDescription, True
 End Sub
 
 Private Function IsHTTPCodeRetry(Code As Long) As Boolean
@@ -131,8 +131,9 @@ Private Sub HttpRequest_OnResponseFinished()
     Done = True
 
     If IsHTTPCodeRetry(HttpRequest.Status) Then
-        ManageSockError "HTTP Status " & HttpRequest.Status
-        Exit Sub
+        If ManageSockError("HTTP Status " & HttpRequest.Status, False) Then
+            Exit Sub
+        End If
     End If
 
     basWorld.Process HttpRequest.ResponseText, HttpRequest.Status, Url, ConsoleID, IsCustomDownload
@@ -140,10 +141,10 @@ Private Sub HttpRequest_OnResponseFinished()
     SetDoneForever
 End Sub
 
-Private Sub ManageSockError(Reason As String)
+Private Function ManageSockError(ByVal Reason As String, ByVal AllowSetDoneForever As Boolean)
     If DoneForever Then
         SayCOMM "Request ManageSockError while DoneForever: " & Url
-        Exit Sub
+        Exit Function
     End If
 
     Dim AllowRetry As Boolean
@@ -153,6 +154,7 @@ Private Sub ManageSockError(Reason As String)
             AllowRetry = False
         End If
     End If
+    ManageSockError = AllowRetry
 
     'on error consider retrying
     If AllowRetry Then
@@ -169,7 +171,7 @@ Private Sub ManageSockError(Reason As String)
         SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry " & Trim(Str(Retries)) & " of " & Trim(Str(basWorld.MaxSockRetries)) & "."
    Else
         SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry count expired."
-        SetDoneForever
+        If AllowSetDoneForever Then SetDoneForever
    End If
-End Sub
+End Function
 

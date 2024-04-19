@@ -36,6 +36,6 @@ End Function
 
 Public Function RaiseForStatus()
     If Not IsSuccess() Then
-        Err.Raise vbObjectError + 6000 + Code, , "HTTP error " & Code & ": " & StripAfterNewline(Response)
+        Err.Raise vbObjectError + 6000 + Code, , "HTTP error " & Code & ": " & StripAfterNewline(RawResponse)
     End If
 End Function
