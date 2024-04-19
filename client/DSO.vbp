@@ -55,6 +55,7 @@ Module=baseVBCCRCommon; basVBCCRCommon.bas
 Module=basScriptCrypto; basScriptCrypto.bas
 Module=basCompression; basCompression.bas
 Module=basAesCtr; basAesCtr.bas
+Class=clsHttpScriptRequest; clsHttpScriptRequest.cls
 IconForm="frmConsole"
 Startup="frmConsole"
 HelpFile=""

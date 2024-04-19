@@ -25,3 +25,9 @@ Public Function RaiseForStatus()
         Err.Raise vbObjectError + 6000 + Code, , "HTTP error " & Code & ": " & StripAfterNewline(Response)
     End If
 End Function
+
+Public Function ToString() As String
+Attribute ToString.VB_UserMemId = 0
+    ToString = "[HTTP " & Code & "] " & Response
+End Function
+

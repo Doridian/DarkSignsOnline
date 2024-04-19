@@ -333,20 +333,22 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
     Next
 End Sub
 
-Private Function DoDownloadAPI(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String) As Long
-    DoDownloadAPI = DoDownload(API_Server & API_Path & Url, UsePost, PostData, False)
+Private Function DoDownloadAPI(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String) As clsHttpScriptRequest
+    Set DoDownloadAPI = DoDownload(API_Server & API_Path & Url, UsePost, PostData, False)
 End Function
 
-Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean) As Long
+Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean) As clsHttpScriptRequest
     Dim ResIndex As Long
-    DoDownload = 0
+    Set DoDownload = New clsHttpScriptRequest
+    DoDownload.RaiseForStatus = False
+    DoDownload.ResIndex = 0
     For ResIndex = 1 To 99
         If Not DownloadInUse(ResIndex) Then
-            DoDownload = ResIndex
+            DoDownload.ResIndex = ResIndex
             Exit For
         End If
     Next
-    If DoDownload <= 0 Then
+    If DoDownload.ResIndex <= 0 Then
         Err.Raise vbObjectError + 9100, , "No free download slots"
         Exit Function
     End If
@@ -362,25 +364,34 @@ Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal
     End If
 End Function
 
-Public Function WAITFOR(ByVal ResIndex As Long, Optional ByVal NoYield As Boolean = False) As clsHttpResponse
+Public Function WAITFOR(ByVal Awaitable As clsHttpScriptRequest) As clsHttpResponse
+    Set WAITFOR = WaitFor_Internal(Awaitable)
+End Function
+
+Private Function WaitFor_Internal(ByVal Awaitable As clsHttpScriptRequest, Optional ByVal NoYield As Boolean = False) As clsHttpResponse
     ConsoleWaitingOnRemote(PrivConsoleID) = True
     frmConsole.QueueConsoleRender
     
     If Not YieldSafe() Then GoTo WaitForExit
 
-    While Not DownloadDone(ResIndex)
+    While Not DownloadDone(Awaitable.ResIndex)
         If Not YieldSafe() Then GoTo WaitForExit
-        If Not HasPendingCustomDownload(ResIndex) Then GoTo WaitForExit
+        If Not HasPendingCustomDownload(Awaitable.ResIndex) Then GoTo WaitForExit
     Wend
 
     Dim Res As clsHttpResponse
     Set Res = New clsHttpResponse
-    Res.Code = DownloadCodes(ResIndex)
-    Res.Response = DownloadResults(ResIndex)
-    Set WAITFOR = Res
+    Res.Code = DownloadCodes(Awaitable.ResIndex)
+    Res.Response = DownloadResults(Awaitable.ResIndex)
+    
+    If Awaitable.RaiseForStatus Then
+        Res.RaiseForStatus
+    End If
 
-    DownloadInUse(ResIndex) = False
-    RemoveCustomDownload ResIndex
+    Set WaitFor_Internal = Res
+
+    DownloadInUse(Awaitable.ResIndex) = False
+    RemoveCustomDownload Awaitable.ResIndex
 
 WaitForExit:
     ConsoleWaitingOnRemote(PrivConsoleID) = False
@@ -602,8 +613,10 @@ Public Function Say(ParamArray Params() As Variant)
     Dim X As Long
     Dim sStr As String
     Dim XV As String
+    Dim CurParam As Variant
     For X = LBound(Params) To UBound(Params)
-        XV = "" & Params(X)
+        CurParam = Params(X)
+        XV = "" & CurParam
         If XV <> "" Then
             If sStr <> "" Then
                 sStr = sStr & " "
@@ -683,8 +696,8 @@ Public Function ResolvePath(ByVal Path As String) As String
     ResolvePath = basCommands.ResolvePath(PrivConsoleID, Path)
 End Function
 
-Public Function HttpRequest(ByVal Url As String, Optional ByVal PostData As String = "") As Integer
-     HttpRequest = DoDownload(Url, PostData <> "", PostData, True)
+Public Function HttpRequest(ByVal Url As String, Optional ByVal PostData As String = "") As clsHttpScriptRequest
+     Set HttpRequest = DoDownload(Url, PostData <> "", PostData, True)
 End Function
 
 Public Function URLEncode(ByVal Param As String) As String
@@ -937,10 +950,10 @@ Public Function LOGIN(Optional ByVal Silent As Boolean = False)
     LoginInProgress = True
     SayCOMM "Logging in..."
 
-    Dim ResIndex As Long
-    ResIndex = DoDownloadAPI("auth.php", True, "")
+    Dim ResIndex As clsHttpScriptRequest
+    Set ResIndex = DoDownloadAPI("auth.php", True, "")
     Dim ResObj As clsHttpResponse
-    Set ResObj = WAITFOR(ResIndex, True)
+    Set ResObj = WaitFor_Internal(ResIndex, True)
 
     If ResObj.IsSuccess() Then
         OnLoginSuccess
@@ -975,72 +988,43 @@ Public Function LOGOUT()
     Yield
 End Function
 
-Public Function Stats(ByVal setValue As Integer) As String
+Public Function Stats(ByVal setValue As Integer) As clsHttpScriptRequest
     Yield
-
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("get_user_stats.php", False, "")
-    Dim DomainRequest As clsHttpResponse
-    Set DomainRequest = WAITFOR(DomainRequestIdx)
-    DomainRequest.RaiseForStatus
-
+    Set Stats = DoDownloadAPI("get_user_stats.php", False, "")
+    Stats.RaiseForStatus = True
     Yield
-    Stats = DomainRequest.Response
 End Function
 
-Public Function Lookup(ByVal Domain As String) As String
+Public Function Lookup(ByVal Domain As String) As clsHttpScriptRequest
     Yield
-
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("lookup.php?d=" & EncodeURLParameter(Domain), False, "")
-    Dim DomainRequest As clsHttpResponse
-    Set DomainRequest = WAITFOR(DomainRequestIdx)
-    DomainRequest.RaiseForStatus
-
+    Set Lookup = DoDownloadAPI("lookup.php?d=" & EncodeURLParameter(Domain), False, "")
+    Lookup.RaiseForStatus = True
     Yield
-    Lookup = DomainRequest.Response
 End Function
 
-Public Function GetDomain(ByVal IP As String) As String
+Public Function GetDomain(ByVal IP As String) As clsHttpScriptRequest
     Yield
-
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_meta.php?getdomain=" & EncodeURLParameter(IP), False, "")
-    Dim DomainRequest As clsHttpResponse
-    Set DomainRequest = WAITFOR(DomainRequestIdx)
-    DomainRequest.RaiseForStatus
-
+    Set GetDomain = DoDownloadAPI("domain_meta.php?getdomain=" & EncodeURLParameter(IP), False, "")
+    GetDomain.RaiseForStatus = True
     Yield
-    GetDomain = DomainRequest.Response
 End Function
 
-Public Function PingPort(ByVal Domain As String, ByVal Port As Integer) As Boolean
+Public Function PingPort(ByVal Domain As String, ByVal Port As Integer) As clsHttpScriptRequest
     Yield
-
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("ping.php?domain=" & EncodeURLParameter(Domain) & "&port=" & EncodeURLParameter(Port), False, "")
-    Dim DomainRequest As clsHttpResponse
-    Set DomainRequest = WAITFOR(DomainRequestIdx)
-    DomainRequest.RaiseForStatus
-
+    Set PingPort = DoDownloadAPI("ping.php?domain=" & EncodeURLParameter(Domain) & "&port=" & EncodeURLParameter(Port), False, "")
+    PingPort.RaiseForStatus = True
     Yield
-    PingPort = Trim(DomainRequest.Response) = "1"
 End Function
 
-Public Function Ping(ByVal Domain As String) As Boolean
-    Ping = PingPort(Domain, 0)
+Public Function Ping(ByVal Domain As String) As clsHttpScriptRequest
+    Set Ping = PingPort(Domain, 0)
 End Function
 
-Public Function GetIP(ByVal Domain As String) As String
+Public Function GetIP(ByVal Domain As String) As clsHttpScriptRequest
     Yield
-
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_meta.php?getip=" & EncodeURLParameter(Domain), False, "")
-    Dim DomainRequest As clsHttpResponse
-    Set DomainRequest = WAITFOR(DomainRequestIdx)
-    DomainRequest.RaiseForStatus
-
-    GetIP = DomainRequest.Response
+    Set GetIP = DoDownloadAPI("domain_meta.php?getip=" & EncodeURLParameter(Domain), False, "")
+    GetIP.RaiseForStatus = True
+    Yield
 End Function
 
 Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal sFileData As String)
@@ -1048,7 +1032,10 @@ Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal sFileDa
     
     Yield
     
-    Domain = GetDomain(Domain)
+    Dim HttpResponse As clsHttpResponse
+    Set HttpResponse = WAITFOR(GetDomain(Domain))
+    HttpResponse.RaiseForStatus
+    Domain = HttpResponse.Response
 
     Dim tempStrA As String
     tempStrA = EncodeBase64Str(sFileData)
@@ -1058,8 +1045,8 @@ Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal sFileDa
     "&d=" & EncodeURLParameter(Domain) & _
     "&filedata=" & EncodeURLParameter(tempStrA)
 
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_upload.php", True, PostData)
+    Dim DomainRequestIdx As clsHttpScriptRequest
+    Set DomainRequestIdx = DoDownloadAPI("domain_upload.php", True, PostData)
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
@@ -1076,8 +1063,8 @@ Public Function DOWNLOAD(ByVal Domain As String, ByVal Port As Long) As String
     PostData = "port=" & EncodeURLParameter(Port) & _
     "&d=" & EncodeURLParameter(Domain)
 
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_download.php", True, PostData)
+    Dim DomainRequestIdx As clsHttpResponse
+    Set DomainRequestIdx = DoDownloadAPI("domain_download.php", True, PostData)
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
@@ -1092,8 +1079,8 @@ Public Function Unregister(ByVal Domain As String)
     
     Yield
 
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_unregister.php", True, "d=" & EncodeURLParameter(Domain))
+    Dim DomainRequestIdx As clsHttpScriptRequest
+    Set DomainRequestIdx = DoDownloadAPI("domain_unregister.php", True, "d=" & EncodeURLParameter(Domain))
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
 
@@ -1109,8 +1096,8 @@ Public Function Register(ByVal Domain As String)
 
     Yield
 
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_register.php", True, "d=" & EncodeURLParameter(Domain))
+    Dim DomainRequestIdx As clsHttpScriptRequest
+    Set DomainRequestIdx = DoDownloadAPI("domain_register.php", True, "d=" & EncodeURLParameter(Domain))
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
 
@@ -1126,8 +1113,8 @@ Public Function RegisterPrices() As String
 
     Yield
 
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_register.php?prices=true", False, "")
+    Dim DomainRequestIdx As clsHttpScriptRequest
+    Set DomainRequestIdx = DoDownloadAPI("domain_register.php?prices=true", False, "")
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
@@ -1145,8 +1132,8 @@ Public Function ClosePort(ByVal Domain As String, ByVal Port As Long)
     PostData = "port=" & EncodeURLParameter(Port) & _
     "&d=" & EncodeURLParameter(Domain)
 
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_close.php", True, PostData)
+    Dim DomainRequestIdx As clsHttpScriptRequest
+    Set DomainRequestIdx = DoDownloadAPI("domain_close.php", True, PostData)
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
@@ -1159,8 +1146,8 @@ Private Function MyDomainsHelper(ByVal DomainType As String) As String
     
     Yield
 
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("my_domains.php?type=" & EncodeURLParameter(DomainType), False, "")
+    Dim DomainRequestIdx As clsHttpScriptRequest
+    Set DomainRequestIdx = DoDownloadAPI("my_domains.php?type=" & EncodeURLParameter(DomainType), False, "")
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
@@ -1183,8 +1170,8 @@ Private Function DomainFilesystemHelper(ByVal Domain As String, ByVal PostData A
                                         "&d=" & EncodeURLParameter(Domain) & _
                                         "&" & PostData
 
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_filesystem.php", True, PostData)
+    Dim DomainRequestIdx As clsHttpScriptRequest
+    Set DomainRequestIdx = DoDownloadAPI("domain_filesystem.php", True, PostData)
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
     DomainRequest.RaiseForStatus
@@ -1315,8 +1302,8 @@ Public Function Transfer(ByVal Target As String, ByVal Amount As Long, ByVal Des
                 "&amount=" & EncodeURLParameter(Amount) & _
                 "&description=" & EncodeURLParameter(Description)
 
-    Dim TransferRequestIndex As Long
-    TransferRequestIndex = DoDownloadAPI("transfer.php", False, "")
+    Dim TransferRequestIndex As clsHttpScriptRequest
+    Set TransferRequestIndex = DoDownloadAPI("transfer.php", False, "")
     Dim TransferRequest As clsHttpResponse
     Set TransferRequest = WAITFOR(TransferRequestIndex)
     TransferRequest.RaiseForStatus
@@ -1662,8 +1649,8 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
         ReDim DomainConnectParams(0 To 0)
     End If
 
-    Dim DomainRequestIdx As Long
-    DomainRequestIdx = DoDownloadAPI("domain_connect.php?d=" & EncodeURLParameter(Domain) & _
+    Dim DomainRequestIdx As clsHttpScriptRequest
+    Set DomainRequestIdx = DoDownloadAPI("domain_connect.php?d=" & EncodeURLParameter(Domain) & _
             "&port=" & EncodeURLParameter(Port), True, "")
     Dim DomainRequest As clsHttpResponse
     Set DomainRequest = WAITFOR(DomainRequestIdx)
