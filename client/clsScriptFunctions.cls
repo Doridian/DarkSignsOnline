@@ -342,7 +342,7 @@ Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal
     DoDownload = ""
     For ResIndex = 1 To 99
         If Not DownloadInUse(ResIndex) Then
-            DoDownload = "HTTPRequest(" & ResIndex & ")"
+            DoDownload = "HTTPRequest" & ConsoleInvisibleChar & "(" & ResIndex & ")"
             Exit For
         End If
     Next
@@ -364,13 +364,13 @@ Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal
 End Function
 
 Private Function ParseReqIDStr(ByVal Req As String) As Long
-    If Left(Req, 12) <> "HTTPRequest(" Or Right(Req, 1) <> ")" Then
+    If Left(Req, 13) <> "HTTPRequest" & ConsoleInvisibleChar & "(" Or Right(Req, 1) <> ")" Then
         ParseReqIDStr = -1
         Exit Function
     End If
 
     On Error GoTo InvalidNumber
-    ParseReqIDStr = Mid(Req, 13, Len(Req) - 13)
+    ParseReqIDStr = Mid(Req, 14, Len(Req) - 14)
     On Error GoTo 0
     Exit Function
 
@@ -1735,14 +1735,18 @@ Public Function DecodeBase64Str(ByVal strData As String) As String
 End Function
 
 Private Function WriteINI_Internal(ByVal File As String, ByVal Section As String, ByVal Key As String, ByVal Value As String)
+    Yield
     WritePrivateProfileString Section, Key, Value, SafePath(File)
+    Yield
 End Function
 
 Private Function ReadINI_Internal(ByVal File As String, ByVal Section As String, ByVal Key As String) As String
+    Yield
     Dim Result As String * 4096
     Dim ResultLen As Long
     ResultLen = GetPrivateProfileString(Section, Key, "", Result, 4096, SafePath(File))
     ReadINI_Internal = Left(Result, ResultLen)
+    Yield
 End Function
 
 Public Function WriteINI(ByVal File As String, ByVal Section As String, ByVal Key As String, ByVal Value As String)
@@ -1776,3 +1780,8 @@ Public Function SetMissionData(ByVal MissionID As String, ByVal Section As Strin
     WriteINI_Internal GetMissionFile(MissionID), Section, Key, Value
 End Function
 
+Public Function TrimWithNewline(ByVal InputStr As String) As String
+    Yield
+    TrimWithNewline = basGeneral.TrimWithNewline(InputStr)
+    Yield
+End Function

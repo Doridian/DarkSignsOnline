@@ -51,6 +51,39 @@ Public Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal
        
 Public Declare Function StrFormatByteSize Lib "shlwapi" Alias "StrFormatByteSizeA" (ByVal dw As Long, ByVal pszBuf As String, ByRef cchBuf As Long) As String
 
+Public Function IsWhitespaceOrNewline(ByVal InputStr As String) As Boolean
+    IsWhitespaceOrNewline = (InputStr = vbCr) Or (InputStr = vbLf) Or (InputStr = vbTab) Or (InputStr = " ")
+End Function
+
+Public Function TrimWithNewline(ByVal InputStr As String) As String
+    If InputStr = "" Then
+        TrimWithNewline = ""
+        Exit Function
+    End If
+
+    Dim StartCut As Long, EndCut As Long
+    StartCut = 1
+    While IsWhitespaceOrNewline(Mid(InputStr, StartCut, 1))
+        StartCut = StartCut + 1
+        If StartCut > Len(InputStr) Then
+            TrimWithNewline = ""
+            Exit Function
+        End If
+    Wend
+    EndCut = Len(InputStr)
+    While IsWhitespaceOrNewline(Mid(InputStr, EndCut, 1))
+        EndCut = EndCut - 1
+        If EndCut < StartCut Then
+            TrimWithNewline = ""
+            Exit Function
+        End If
+    Wend
+
+    Dim CutLen As Long
+    CutLen = (EndCut - StartCut) + 1
+    TrimWithNewline = Mid(InputStr, StartCut, CutLen)
+End Function
+
 Public Function VersionStr() As String
     If App.Minor > 0 Then
         VersionStr = App.Major & "." & App.Minor & "." & App.Revision
@@ -115,17 +148,6 @@ End Function
 
 Public Function GetFile(ByVal FileName As String, Optional ByVal Prefix As String = "") As String
     GetFile = GetFileUnsafe(SafePath(FileName, Prefix))
-End Function
-
-Public Function CountCharInString(s As String, ByVal sToCount As String) As Long
-    sToCount = Trim(LCase(sToCount))
-    CountCharInString = 0
-    Dim n As Long
-    For n = 1 To Len(s)
-        If LCase(Mid(s, n, Len(sToCount))) = sToCount Then
-            CountCharInString = CountCharInString + 1
-        End If
-    Next n
 End Function
 
 Public Function i(ByVal s As String) As String

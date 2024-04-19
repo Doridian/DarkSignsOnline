@@ -1499,7 +1499,7 @@ End Sub
 
 Public Sub ChatSend(ByVal s As String)
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
-    s = Trim(s)
+    s = TrimWithNewline(s)
     If Len(s) > 0 Then
         Send "PRIVMSG " + channel$ + " :" + s
         displaychat "<" + MyIRCName + ">  " + s
