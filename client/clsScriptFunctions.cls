@@ -1041,6 +1041,8 @@ Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal sFileDa
     AssertLocalOnly
     
     Yield
+    
+    Domain = GetDomain(Domain)
 
     Dim tempStrA As String
     tempStrA = EncodeBase64Str(sFileData)
@@ -1672,22 +1674,25 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     Dim DomainSplit() As String
     DomainSplit = Split(DomainRequest.Response, ":-:")
     ' 0 = domain
-    ' 1 = port
-    ' 2 = filekey
-    ' 3 = code
+    ' 1 = ip
+    ' 2 = port
+    ' 3 = filekey
+    ' 4 = code
 
     Dim strDomain As String
     strDomain = DomainSplit(0)
+    Dim strIP As String
+    strIP = DomainSplit(1)
     Dim strPort As Long
-    strPort = Val(DomainSplit(1))
+    strPort = Val(DomainSplit(2))
     If strPort <= 0 Then
         strPort = 99999
     End If
     Dim strFileKey As String
-    strFileKey = DomainSplit(2)
+    strFileKey = DomainSplit(3)
 
     Dim strCode As String
-    strCode = DecodeBase64Str(DomainSplit(3))
+    strCode = DecodeBase64Str(DomainSplit(4))
 
     Dim DomScript As String
     DomScript = "dso://" & strDomain & ":" & strPort

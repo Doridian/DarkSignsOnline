@@ -39,7 +39,11 @@ switch ($ver) {
 		echo $d . '_' . $port . '::' . dso_b64_encode($preamble . implode("\r\n", $lines));
 		break;
 	case 2:
-		echo $d . ':-:' . $port . ':-:' . $dInfo['keycode'] . ':-:' . dso_b64_encode($code_a[0]);
+		$dHost = $dInfo['host'];
+		if (empty($dHost)) {
+			$dHost = $dInfo['ip'];
+		}
+		echo $dHost . ':-:' . $port . ':-:' . $dInfo['keycode'] . ':-:' . dso_b64_encode($code_a[0]);
 		break;
 	default:
 		die_error('not found', 400);

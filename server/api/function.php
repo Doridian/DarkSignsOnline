@@ -81,8 +81,8 @@ function getIpDomain($ip)
 {
 	global $db;
 
-	$stmt = $db->prepare("SELECT ip, host FROM domains WHERE ip=?");
-	$stmt->bind_param('s', $ip);
+	$stmt = $db->prepare("SELECT ip, host FROM domains WHERE ip=? OR host=?");
+	$stmt->bind_param('ss', $ip, $ip);
 	$stmt->execute();
 	$result = $stmt->get_result();
 	$row = $result->fetch_assoc();
