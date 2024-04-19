@@ -1764,6 +1764,10 @@ Public Function GetMissionFile(ByVal MissionID As String)
     GetMissionFile = "/system/missions/" & MissionID & ".ini"
 End Function
 
+' TODO: Synchronize mission from server first time it is read or written after client launch
+' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
+' maybe use client launch time VS file modify time?
+
 Public Function GetMissionData(ByVal MissionID As String, ByVal Section As String, ByVal Key As String) As String
     GetMissionData = ReadINI_Internal(GetMissionFile(MissionID), Section, Key)
 End Function
