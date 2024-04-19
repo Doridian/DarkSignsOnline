@@ -1734,14 +1734,41 @@ Public Function DecodeBase64Str(ByVal strData As String) As String
     DecodeBase64Str = basConsole.DecodeBase64Str(strData)
 End Function
 
-Public Function WriteINI(ByVal File As String, ByVal Section As String, ByVal Key As String, ByVal Value As String)
-    WritePrivateProfileString Section, Key, Value, SafePath(ResolvePath(File))
+Private Function WriteINI_Internal(ByVal File As String, ByVal Section As String, ByVal Key As String, ByVal Value As String)
+    WritePrivateProfileString Section, Key, Value, SafePath(File)
 End Function
 
-Public Function ReadINI(ByVal File As String, ByVal Section As String, ByVal Key As String) As String
+Private Function ReadINI_Internal(ByVal File As String, ByVal Section As String, ByVal Key As String) As String
     Dim Result As String * 4096
     Dim ResultLen As Long
-    ResultLen = GetPrivateProfileString(Section, Key, "", Result, 4096, SafePath(ResolvePath(File)))
-    ReadINI = Left(Result, ResultLen)
+    ResultLen = GetPrivateProfileString(Section, Key, "", Result, 4096, SafePath(File))
+    ReadINI_Internal = Left(Result, ResultLen)
+End Function
+
+Public Function WriteINI(ByVal File As String, ByVal Section As String, ByVal Key As String, ByVal Value As String)
+    AssertLocalOnly
+
+    WriteINI_Internal ResolvePath(File), Section, Key, Value
+End Function
+
+Public Function ReadINI(ByVal File As String, ByVal Section As String, ByVal Key As String, ByVal Value As String) As String
+    AssertLocalOnly
+
+    ReadINI = ReadINI_Internal(ResolvePath(File), Section, Key)
+End Function
+
+Public Function GetMissionFile(ByVal MissionID As String)
+    MissionID = Replace(MissionID, "/", "_")
+    MissionID = Replace(MissionID, "\", "_")
+
+    GetMissionFile = "/system/missions/" & MissionID & ".ini"
+End Function
+
+Public Function GetMissionData(ByVal MissionID As String, ByVal Section As String, ByVal Key As String) As String
+    GetMissionData = ReadINI_Internal(GetMissionFile(MissionID), Section, Key)
+End Function
+
+Public Function SetMissionData(ByVal MissionID As String, ByVal Section As String, ByVal Key As String, ByVal Value As String) As String
+    WriteINI_Internal GetMissionFile(MissionID), Section, Key, Value
 End Function
 

@@ -26,24 +26,15 @@ Function GetAsciiWithPrompt()
     GetAsciiWithPrompt = Choice
 End Function
 
-
-' Mission progress indicators
-Function GetMissionFile(MissionID)
-    MissionID = Replace(MissionID, "/", "_")
-    MissionID = Replace(MissionID, "\", "_")
-
-    GetMissionFile = "/system/missions/" & MissionID & ".ini"
-End Function
-
 ' TODO: Synchronize mission from server first time it is read or written after client launch
 ' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
 ' maybe use client launch time VS file modify time?
 Function SetMissionProgress(MissionID, Key, Value)
-    WriteINI GetMissionFile(MissionID), "progress", Key, Value
+    SetMissionData MissionID, "progress", Key, Value
 End Function
 
 Function GetMissionProgress(MissionID, Key)
-    GetMissionProgress = ReadINI(GetMissionFile(MissionID), "progress", Key)
+    GetMissionProgress = GetMissionData(MissionID, "progress", Key)
 End Function
 
 Function ConsoleEscape(Str)
