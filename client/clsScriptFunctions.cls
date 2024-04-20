@@ -1792,9 +1792,46 @@ Public Function TrimWithNewline(ByVal InputStr As String) As String
     Yield
 End Function
 
+Public Function RequestReadFile() As String
+    Yield
+    If PrivServerPort > 0 Then
+        Say "{{orange}}Server at " & PrivServerDomain & ":" & PrivServerPort & " is requesting to receive a file"
+    Else
+        Say "{{orange}}Local script is requesting to receive a file"
+    End If
+    
+    Dim FileName As String
+    FileName = Trim(ReadLine("Filename?"))
+    If FileName = "" Then
+        RaiseMiscError "User cancelled file request"
+        Exit Function
+    End If
+
+    RequestReadFile = basGeneral.GetFile(ResolvePath(FileName))
+End Function
+
+Public Function RequestWriteFile(ByVal Data As String)
+    Yield
+    If PrivServerPort > 0 Then
+        Say "{{orange}}Server at " & PrivServerDomain & ":" & PrivServerPort & " is requesting to send a file"
+    Else
+        Say "{{orange}}Local script is requesting to send a file"
+    End If
+
+    Dim FileName As String
+    FileName = Trim(ReadLine("Filename?"))
+    If FileName = "" Then
+        RaiseMiscError "User cancelled file request"
+        Exit Function
+    End If
+    
+    basGeneral.WriteFile ResolvePath(FileName), Data
+End Function
+
+Public Function SHA256(ByVal Data As String) As String
+    SHA256 = basAesCtr.SHA256(Data)
+End Function
 
 ' TODO: Synchronize mission from server first time it is read or written after client launch
 ' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
 ' maybe use client launch time VS file modify time?
-' TODO: Servers need to be able to upload files to clients (with permission), and clients need to be able to upload files to servers
-' TODO: Function to hash a string (to compare mission files to their target without leaking them)

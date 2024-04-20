@@ -30,7 +30,7 @@ Private Declare PtrSafe Function BCryptGenerateSymmetricKey Lib "bcrypt" (ByVal 
 Private Declare PtrSafe Function BCryptDestroyKey Lib "bcrypt" (ByVal hKey As LongPtr) As Long
 Private Declare PtrSafe Function BCryptEncrypt Lib "bcrypt" (ByVal hKey As LongPtr, pbInput As Any, ByVal cbInput As Long, ByVal pPaddingInfo As LongPtr, ByVal pbIV As LongPtr, ByVal cbIV As Long, pbOutput As Any, ByVal cbOutput As Long, pcbResult As Long, ByVal dwFlags As Long) As Long
 Private Declare PtrSafe Function BCryptDeriveKeyPBKDF2 Lib "bcrypt" (ByVal hPrf As LongPtr, pbPassword As Any, ByVal cbPassword As Long, pbSalt As Any, ByVal cbSalt As Long, ByVal cIterations As currency, pbDerivedKey As Any, ByVal cbDerivedKey As Long, ByVal dwFlags As Long) As Long
-Private Declare PtrSafe Function BCryptCreateHash Lib "bcrypt" (ByVal hAlgorithm As LongPtr, phHash As LongPtr, ByVal pbHashObject As LongPtr, ByVal cbHashObject As Long, pbSecret As Any, ByVal cbSecret As Long, ByVal dwFlags As Long) As Long
+Private Declare PtrSafe Function BCryptCreateHash Lib "bcrypt" (ByVal hAlgorithm As LongPtr, phHash As LongPtr, ByVal pbHashObject As LongPtr, ByVal cbHashObject As Long, ByVal pbSecret As LongPtr, ByVal cbSecret As Long, ByVal dwFlags As Long) As Long
 Private Declare PtrSafe Function BCryptDestroyHash Lib "bcrypt" (ByVal hHash As LongPtr) As Long
 Private Declare PtrSafe Function BCryptHashData Lib "bcrypt" (ByVal hHash As LongPtr, pbInput As Any, ByVal cbInput As Long, ByVal dwFlags As Long) As Long
 Private Declare PtrSafe Function BCryptFinishHash Lib "bcrypt" (ByVal hHash As LongPtr, pbOutput As Any, ByVal cbOutput As Long, ByVal dwFlags As Long) As Long
@@ -51,7 +51,7 @@ Private Declare Function BCryptGenerateSymmetricKey Lib "bcrypt" (ByVal hAlgorit
 Private Declare Function BCryptDestroyKey Lib "bcrypt" (ByVal hKey As LongPtr) As Long
 Private Declare Function BCryptEncrypt Lib "bcrypt" (ByVal hKey As LongPtr, pbInput As Any, ByVal cbInput As Long, ByVal pPaddingInfo As LongPtr, ByVal pbIV As LongPtr, ByVal cbIV As Long, pbOutput As Any, ByVal cbOutput As Long, pcbResult As Long, ByVal dwFlags As Long) As Long
 Private Declare Function BCryptDeriveKeyPBKDF2 Lib "bcrypt" (ByVal hPrf As LongPtr, pbPassword As Any, ByVal cbPassword As Long, pbSalt As Any, ByVal cbSalt As Long, ByVal cIterations As Currency, pbDerivedKey As Any, ByVal cbDerivedKey As Long, ByVal dwFlags As Long) As Long
-Private Declare Function BCryptCreateHash Lib "bcrypt" (ByVal hAlgorithm As LongPtr, phHash As LongPtr, ByVal pbHashObject As LongPtr, ByVal cbHashObject As Long, pbSecret As Any, ByVal cbSecret As Long, ByVal dwFlags As Long) As Long
+Private Declare Function BCryptCreateHash Lib "bcrypt" (ByVal hAlgorithm As LongPtr, phHash As LongPtr, ByVal pbHashObject As LongPtr, ByVal cbHashObject As Long, ByVal pbSecret As LongPtr, ByVal cbSecret As Long, ByVal dwFlags As Long) As Long
 Private Declare Function BCryptDestroyHash Lib "bcrypt" (ByVal hHash As LongPtr) As Long
 Private Declare Function BCryptHashData Lib "bcrypt" (ByVal hHash As LongPtr, pbInput As Any, ByVal cbInput As Long, ByVal dwFlags As Long) As Long
 Private Declare Function BCryptFinishHash Lib "bcrypt" (ByVal hHash As LongPtr, pbOutput As Any, ByVal cbOutput As Long, ByVal dwFlags As Long) As Long
@@ -76,24 +76,33 @@ Private Declare Function BCryptFinishHash Lib "bcrypt" (ByVal hHash As LongPtr, 
 ' Constants and member variables
 '=========================================================================
 
+
+Private Const BCRYPT_ALG_HANDLE_HMAC_FLAG   As Long = 8
+Private Const BCRYPT_HASH_REUSABLE_FLAG  As Long = &H20
+Private Const BCRYPT_SHA256_ALGORITHM  As String = "SHA256"
+Private Const BCRYPT_SHA512_ALGORITHM  As String = "SHA512"
+
 Private Const AES_BLOCK_SIZE        As Long = 16
 Private Const AES_KEYLEN            As Long = 32                    '-- 32 -> AES-256, 24 -> AES-196, 16 -> AES-128
 Private Const AES_IVLEN             As Long = AES_BLOCK_SIZE
 Private Const KDF_SALTLEN           As Long = 8
 Private Const KDF_ITER              As Long = 10000
-Private Const KDF_HASH              As String = "SHA512"
+Private Const KDF_HASH              As String = BCRYPT_SHA512_ALGORITHM
 Private Const OPENSSL_MAGIC         As String = "Salted__"          '-- for openssl compatibility
 Private Const OPENSSL_MAGICLEN      As Long = 8
 Private Const ERR_UNSUPPORTED_ENCR  As String = "Unsupported encryption"
 Private Const ERR_CHUNKED_NOT_INIT  As String = "AES chunked context not initialized"
-Private Const HMAC_HASH             As String = "SHA256"
+Private Const HMAC_HASH             As String = BCRYPT_SHA256_ALGORITHM
 Public Const HMAC_HASH_LEN          As Long = (256 / 8)
+
+Private Const MS_PRIMITIVE_PROVIDER         As String = "Microsoft Primitive Provider"
+Private Const WIN32_NULL As Long = 0&
 
 Private Type UcsCryptoContextType
     hPbkdf2Alg          As LongPtr
     hHmacAlg            As LongPtr
     hHmacHash           As LongPtr
-    HashLen             As Long
+    hashLen             As Long
     hAesAlg             As LongPtr
     hAesKey             As LongPtr
     AesKeyObjData()     As Byte
@@ -214,9 +223,7 @@ End Function
 '= private ===============================================================
 
 Private Function pvCryptoAesCtrInit(uCtx As UcsCryptoContextType, baPass() As Byte, baSalt() As Byte, baDerivedKey() As Byte, ByVal lKeyLen As Long) As Boolean
-    Const MS_PRIMITIVE_PROVIDER         As String = "Microsoft Primitive Provider"
-    Const BCRYPT_ALG_HANDLE_HMAC_FLAG   As Long = 8
-    Dim hResult         As Long
+    Dim HResult         As Long
     
     With uCtx
         '--- init member vars
@@ -227,50 +234,50 @@ Private Function pvCryptoAesCtrInit(uCtx As UcsCryptoContextType, baPass() As By
         If UBound(baPass) >= 0 Or UBound(baSalt) >= 0 Then
             '--- generate RFC 2898 based derived key
             On Error GoTo EH_Unsupported '--- PBKDF2 API missing on Vista
-            hResult = BCryptOpenAlgorithmProvider(.hPbkdf2Alg, StrPtr(KDF_HASH), StrPtr(MS_PRIMITIVE_PROVIDER), BCRYPT_ALG_HANDLE_HMAC_FLAG)
-            If hResult < 0 Then
+            HResult = BCryptOpenAlgorithmProvider(.hPbkdf2Alg, StrPtr(KDF_HASH), StrPtr(MS_PRIMITIVE_PROVIDER), BCRYPT_ALG_HANDLE_HMAC_FLAG)
+            If HResult < 0 Then
                 GoTo QH
             End If
-            hResult = BCryptDeriveKeyPBKDF2(.hPbkdf2Alg, ByVal pvArrayPtr(baPass), pvArraySize(baPass), ByVal pvArrayPtr(baSalt), pvArraySize(baSalt), _
+            HResult = BCryptDeriveKeyPBKDF2(.hPbkdf2Alg, ByVal pvArrayPtr(baPass), pvArraySize(baPass), ByVal pvArrayPtr(baSalt), pvArraySize(baSalt), _
                     KDF_ITER / 10000@, baDerivedKey(0), UBound(baDerivedKey) + 1, 0)
-            If hResult < 0 Then
+            If HResult < 0 Then
                 GoTo QH
             End If
             On Error GoTo 0
         End If
         '--- init AES key from first half of derived key
         On Error GoTo EH_Unsupported '--- CNG API missing on XP
-        hResult = BCryptOpenAlgorithmProvider(.hAesAlg, StrPtr("AES"), StrPtr(MS_PRIMITIVE_PROVIDER), 0)
-        If hResult < 0 Then
+        HResult = BCryptOpenAlgorithmProvider(.hAesAlg, StrPtr("AES"), StrPtr(MS_PRIMITIVE_PROVIDER), 0)
+        If HResult < 0 Then
             GoTo QH
         End If
         On Error GoTo 0
-        hResult = BCryptGetProperty(.hAesAlg, StrPtr("ObjectLength"), .AesKeyObjLen, 4, 0, 0)
-        If hResult < 0 Then
+        HResult = BCryptGetProperty(.hAesAlg, StrPtr("ObjectLength"), .AesKeyObjLen, 4, 0, 0)
+        If HResult < 0 Then
             GoTo QH
         End If
-        hResult = BCryptSetProperty(.hAesAlg, StrPtr("ChainingMode"), StrPtr("ChainingModeECB"), 30, 0)  ' 30 = LenB("ChainingModeECB")
-        If hResult < 0 Then
+        HResult = BCryptSetProperty(.hAesAlg, StrPtr("ChainingMode"), StrPtr("ChainingModeECB"), 30, 0)  ' 30 = LenB("ChainingModeECB")
+        If HResult < 0 Then
             GoTo QH
         End If
         ReDim .AesKeyObjData(0 To .AesKeyObjLen - 1) As Byte
-        hResult = BCryptGenerateSymmetricKey(.hAesAlg, .hAesKey, .AesKeyObjData(0), .AesKeyObjLen, baDerivedKey(0), lKeyLen, 0)
-        If hResult < 0 Then
+        HResult = BCryptGenerateSymmetricKey(.hAesAlg, .hAesKey, .AesKeyObjData(0), .AesKeyObjLen, baDerivedKey(0), lKeyLen, 0)
+        If HResult < 0 Then
             GoTo QH
         End If
         '--- init AES IV from second half of derived key
         Call CopyMemory(.Nonce(0), baDerivedKey(lKeyLen), AES_IVLEN)
         '--- init HMAC key from last HashLen bytes of derived key
-        hResult = BCryptOpenAlgorithmProvider(.hHmacAlg, StrPtr(HMAC_HASH), StrPtr(MS_PRIMITIVE_PROVIDER), BCRYPT_ALG_HANDLE_HMAC_FLAG)
-        If hResult < 0 Then
+        HResult = BCryptOpenAlgorithmProvider(.hHmacAlg, StrPtr(HMAC_HASH), StrPtr(MS_PRIMITIVE_PROVIDER), BCRYPT_ALG_HANDLE_HMAC_FLAG)
+        If HResult < 0 Then
             GoTo QH
         End If
-        hResult = BCryptGetProperty(.hHmacAlg, StrPtr("HashDigestLength"), .HashLen, 4, 0, 0)
-        If hResult < 0 Then
+        HResult = BCryptGetProperty(.hHmacAlg, StrPtr("HashDigestLength"), .hashLen, 4, 0, 0)
+        If HResult < 0 Then
             GoTo QH
         End If
-        hResult = BCryptCreateHash(.hHmacAlg, .hHmacHash, 0, 0, baDerivedKey(lKeyLen + AES_IVLEN - .HashLen), .HashLen, 0)
-        If hResult < 0 Then
+        HResult = BCryptCreateHash(.hHmacAlg, .hHmacHash, 0, 0, VarPtr(baDerivedKey(lKeyLen + AES_IVLEN - .hashLen)), .hashLen, 0)
+        If HResult < 0 Then
             GoTo QH
         End If
     End With
@@ -278,7 +285,7 @@ Private Function pvCryptoAesCtrInit(uCtx As UcsCryptoContextType, baPass() As By
     pvCryptoAesCtrInit = True
     Exit Function
 QH:
-    uCtx.LastError = GetSystemMessage(hResult)
+    uCtx.LastError = GetSystemMessage(HResult)
     Exit Function
 EH_Unsupported:
     uCtx.LastError = ERR_UNSUPPORTED_ENCR
@@ -319,15 +326,15 @@ Private Function pvCryptoAesCtrCrypt( _
     Dim lIdx            As Long
     Dim lJdx            As Long
     Dim lPadSize        As Long
-    Dim hResult         As Long
+    Dim HResult         As Long
     
     With uCtx
         If Size < 0 Then
             Size = pvArraySize(baData) - Offset
         End If
         If HashBefore Then
-            hResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, Offset), Size, 0)
-            If hResult < 0 Then
+            HResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, Offset), Size, 0)
+            If HResult < 0 Then
                 GoTo QH
             End If
         End If
@@ -358,8 +365,8 @@ Private Function pvCryptoAesCtrCrypt( _
                     End If
                 End If
             Next
-            hResult = BCryptEncrypt(.hAesKey, .EncrData(0), lPadSize, 0, 0, 0, .EncrData(0), lPadSize, lJdx, 0)
-            If hResult < 0 Then
+            HResult = BCryptEncrypt(.hAesKey, .EncrData(0), lPadSize, 0, 0, 0, .EncrData(0), lPadSize, lJdx, 0)
+            If HResult < 0 Then
                 GoTo QH
             End If
             '--- XOR remaining input and leave anything extra in .EncrData for reuse
@@ -369,8 +376,8 @@ Private Function pvCryptoAesCtrCrypt( _
             Next
         End If
         If HashAfter Then
-            hResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, Offset), Size, 0)
-            If hResult < 0 Then
+            HResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, Offset), Size, 0)
+            If HResult < 0 Then
                 GoTo QH
             End If
         End If
@@ -379,14 +386,14 @@ Private Function pvCryptoAesCtrCrypt( _
     pvCryptoAesCtrCrypt = True
     Exit Function
 QH:
-    uCtx.LastError = GetSystemMessage(hResult)
+    uCtx.LastError = GetSystemMessage(HResult)
 End Function
 
 Private Function pvCryptoGetFinalHash(uCtx As UcsCryptoContextType, ByVal lSize As Long) As Byte()
     Dim baResult()      As Byte
     
-    ReDim baResult(0 To uCtx.HashLen - 1) As Byte
-    Call BCryptFinishHash(uCtx.hHmacHash, baResult(0), uCtx.HashLen, 0)
+    ReDim baResult(0 To uCtx.hashLen - 1) As Byte
+    Call BCryptFinishHash(uCtx.hHmacHash, baResult(0), uCtx.hashLen, 0)
     ReDim Preserve baResult(0 To lSize - 1) As Byte
     pvCryptoGetFinalHash = baResult
 End Function
@@ -424,6 +431,76 @@ Private Property Get pvArraySize(baArray() As Byte) As Long
         pvArraySize = UBound(baArray) + 1 - LBound(baArray)
     End If
 End Property
+
+Private Function ToHexByte(ByVal Data As Integer) As String
+    Dim tmpS As String
+    tmpS = Hex(Data)
+    If Len(tmpS) = 1 Then
+        ToHexByte = "0" & tmpS
+    ElseIf Len(tmpS) = 0 Then
+        ToHexByte = "00"
+    Else
+        ToHexByte = tmpS
+    End If
+End Function
+
+' meow = 404cdd7bc109c432f8cc2443b45bcfe95980f5107215c645236e577929ac3e52
+Public Function SHA256(ByVal Data As String) As String
+    Dim HResult As Long
+    Dim hashPtr As LongPtr
+    Dim hashAlg As LongPtr
+    Dim hashLen As Long
+    hashPtr = 0
+    hashAlg = 0
+    hashLen = 0
+    
+    Dim bData() As Byte
+    bData = StrConv(Data, vbFromUnicode)
+
+    HResult = BCryptOpenAlgorithmProvider(hashAlg, StrPtr(BCRYPT_SHA256_ALGORITHM), StrPtr(MS_PRIMITIVE_PROVIDER), 0)
+    If HResult < 0 Then
+        GoTo QH
+    End If
+    HResult = BCryptGetProperty(hashAlg, StrPtr("HashDigestLength"), hashLen, 4, 0, 0)
+    If HResult < 0 Then
+        GoTo QH
+    End If
+
+    HResult = BCryptCreateHash(hashAlg, hashPtr, 0, 0, WIN32_NULL, 0, 0)
+    If HResult < 0 Then
+        GoTo QH
+    End If
+
+    HResult = BCryptHashData(hashPtr, ByVal pvArrayPtr(bData, 0), UBound(bData) + 1, 0)
+    If HResult < 0 Then
+        GoTo QH
+    End If
+
+    Dim baResult() As Byte
+    ReDim baResult(0 To hashLen - 1) As Byte
+    HResult = BCryptFinishHash(hashPtr, baResult(0), hashLen, 0)
+    If HResult < 0 Then
+        GoTo QH
+    End If
+
+    SHA256 = ""
+    Dim X As Long
+    For X = 0 To hashLen - 1
+        SHA256 = SHA256 & LCase(ToHexByte(baResult(X)))
+    Next
+
+OnSHA256End:
+    If hashPtr <> 0 Then
+        Call BCryptDestroyHash(hashPtr)
+    End If
+    If hashAlg <> 0 Then
+        Call BCryptCloseAlgorithmProvider(hashAlg, 0)
+    End If
+    Exit Function
+QH:
+    Err.Raise vbObjectError + 9191, , "SHA256 error: " & GetSystemMessage(HResult)
+    GoTo OnSHA256End
+End Function
 
 Private Function GetSystemMessage(ByVal lLastDllError As Long) As String
     Const FORMAT_MESSAGE_FROM_SYSTEM    As Long = &H1000
