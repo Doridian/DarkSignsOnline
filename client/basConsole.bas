@@ -125,15 +125,21 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
         Exit Sub
     End If
 
-    Console(ConsoleID, 1) = Console_Line_Defaults
     Console(ConsoleID, 1).PreSpace = False
 
     Dim PromptStr As String
     If WaitingForInput(ConsoleID) Then
-        PromptStr = Remove_Property_Space(cPrompt(ConsoleID))
+        If Has_Property_Space(cPrompt(ConsoleID)) Then
+            Console(ConsoleID, 1) = Load_Property_Space(Get_Property_Space(cPrompt(ConsoleID)), Remove_Property_Space(cPrompt(ConsoleID)) & " ")
+            frmConsole.QueueConsoleRender
+            Exit Sub
+        End If
+        PromptStr = cPrompt(ConsoleID)
     Else
         PromptStr = cPath(ConsoleID) & ">"
     End If
+
+    Console(ConsoleID, 1) = Console_Line_Defaults
     Console(ConsoleID, 1).Caption = PromptStr & " "
 
     frmConsole.QueueConsoleRender
@@ -458,6 +464,7 @@ End Function
 Public Function Load_Property_Space(ByVal propertySpace As String, sCaption As String) As ConsoleLine
     propertySpace = " " & Replace(propertySpace, ",", " ") & " "
 
+    Load_Property_Space = Console_Line_Defaults
     Load_Property_Space.Caption = sCaption
     If InStr(propertySpace, "noprespace") > 0 Then Load_Property_Space.PreSpace = False
     If InStr(propertySpace, "forceprespace") > 0 Then Load_Property_Space.PreSpace = True
