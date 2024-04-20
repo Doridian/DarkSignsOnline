@@ -286,7 +286,6 @@ DontDraw:
         End If
 
         If n = 1 And CurrentPromptVisible(ActiveConsole) Then
-            frmConsole.txtPromptInput.Visible = True
             frmConsole.txtPromptInput.Top = frmConsole.CurrentY
             frmConsole.txtPromptInput.Left = frmConsole.CurrentX + frmConsole.lfont.Width
             frmConsole.txtPromptInput.Height = frmConsole.lfont.Height
@@ -295,6 +294,8 @@ DontDraw:
             frmConsole.txtPromptInput.FontName = frmConsole.lfont.FontName
             frmConsole.txtPromptInput.ForeColor = Console_FontColor(n, ActiveConsole)
             frmConsole.txtPromptInput.BackColor = LineBackColor
+            frmConsole.txtPromptInput.Visible = True
+            frmConsole.txtPromptInput.SetFocus
             ConsumedInputPrompt = True
         End If
 

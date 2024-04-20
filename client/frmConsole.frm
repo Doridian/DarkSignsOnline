@@ -36,6 +36,7 @@ Begin VB.Form frmConsole
       TabIndex        =   32
       Text            =   "PROMPT TEXT"
       Top             =   8880
+      Visible         =   0   'False
       Width           =   1815
    End
    Begin VB.Timer tmrProcessQueue 

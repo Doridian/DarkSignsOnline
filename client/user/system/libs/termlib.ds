@@ -1,6 +1,11 @@
 Option Explicit
 
 Sub SaySlow(Delay, Str, Style)
+    If IsOutputDisabled Then
+        Say Str & Style
+        Exit Sub
+    End If
+
     Dim X
     Style = "{{" & Replace(Replace(Style, "{", ""), "}", "") & "}}"
     Say Left(Str, 1) & Style
@@ -16,6 +21,11 @@ Sub SayWithBGColor(R, G, B, Str)
 End Sub
 
 Sub SaySlowWithBGColor(R, G, B, Delay, Str, Style)
+    If IsOutputDisabled Then
+        Say Str & Style
+        Exit Sub
+    End If
+
     Dim X
     Style = "{{" & Replace(Replace(Style, "{", ""), "}", "") & "}}"
     Say Left(Str, 1) & Style
