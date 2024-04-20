@@ -140,7 +140,8 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
 End Sub
 
 Public Sub MoveUnderscoreToEnd(ByVal ConsoleID As Integer)
-    ' TODO
+    CurrentPromptSelStart(ConsoleID) = Len(CurrentPromptInput(ConsoleID))
+    CurrentPromptSelLength(ConsoleID) = 0
 End Sub
 
 Public Sub New_Console_Line(ByVal ConsoleID As Integer)
