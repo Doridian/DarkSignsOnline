@@ -655,6 +655,7 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
         CurrentPromptInput(ActiveConsole) = ""
         CurrentPromptSelStart(ActiveConsole) = 0
         CurrentPromptSelLength(ActiveConsole) = 0
+        RefreshCommandLinePrompt ActiveConsole
         QueueConsoleRender
         Exit Sub
     End If
