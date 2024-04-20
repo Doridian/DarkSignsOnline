@@ -661,38 +661,29 @@ Public Function propertySpace_Color(ByVal s As String) As Long
     If InStr(s, "dred") Then propertySpace_Color = iDarkRed
     
     If InStr(s, "rgb:") Then
-        Dim Error, R, G, b
-        
+        Dim Error As Boolean
+        Dim R As Long, G As Long, B As Long
         Error = False
-        
-        'Dim sTmp As String
-
-        's = Replace(s, ",", " ")
-        'sTmp = Mid(s, InStr(s, "rgb:"), Len(s))
-        'sTmp = Replace(sTmp, ":", " ") & " "
-        
-
-        'R = Trim(GetPart(sTmp, 2, " "))
-        'G = Trim(GetPart(sTmp, 3, " "))
-        'B = Trim(GetPart(sTmp, 4, " "))
-        
-           Dim sTmp As String
-
+        Dim sTmp As String
         s = Replace(s, ",", " ")
         sTmp = Mid(s, InStr(s, "rgb:"), Len(s))
         sTmp = Replace(sTmp, ":", " :") & " "
         
         Dim sSplit() As String
         sSplit = Split(sTmp, ":")
-        
-        R = Trim(sSplit(1))
-        G = Trim(sSplit(2))
-        b = Trim(sSplit(3))
 
-        If IsNumeric(R) And IsNumeric(G) And IsNumeric(b) Then
+        If UBound(sSplit) < 3 Then
+            RGBSplit Trim(sSplit(1)), R, G, B
+        Else
+            R = Trim(sSplit(1))
+            G = Trim(sSplit(2))
+            B = Trim(sSplit(3))
+        End If
+
+        If IsNumeric(R) And IsNumeric(G) And IsNumeric(B) Then
             R = CInt(R)
             G = CInt(G)
-            b = CInt(b)
+            B = CInt(B)
         
             If R < 0 Or R > 255 Then
                 Error = True
@@ -702,12 +693,12 @@ Public Function propertySpace_Color(ByVal s As String) As Long
                 Error = True
             End If
             
-            If b < 0 Or b > 255 Then
+            If B < 0 Or B > 255 Then
                 Error = True
             End If
             
             If Error = False Then
-                propertySpace_Color = RGB(R, G, b)
+                propertySpace_Color = RGB(R, G, B)
             End If
         End If
     End If
