@@ -1863,3 +1863,6 @@ End Function
 ' TODO: Synchronize mission from server first time it is read or written after client launch
 ' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
 ' maybe use client launch time VS file modify time?
+' TODO: Hash storage fetch, like OpenHashData("abcdef0123456789"), will download to /system/hashstore/abcdef0123456789 if doesnt exist, verify actual data hash!
+' TODO: Hash storage upload, like UploadHashData("abcdef0123456789", "data here"), server should verify hash before storing!
+' TODO: DLOpenHash("abcdef0123456789") to open a library from the hash store
