@@ -187,7 +187,7 @@ Public Function ScriptGetOutput() As String
     ScriptGetOutput = PrivOutput
 End Function
 
-Public Function ReadLine(ByVal Prompt As String, Optional ByVal R As Long = -1, Optional ByVal G As Long = -1, Optional ByVal B As Long = -1) As String
+Public Function ReadLine(ByVal Prompt As String, Optional ByVal R As Long = -1, Optional ByVal G As Long = -1, Optional ByVal b As Long = -1) As String
     If PrivDisableOutput Then
         ReadLine = ""
         Yield
@@ -201,8 +201,8 @@ Public Function ReadLine(ByVal Prompt As String, Optional ByVal R As Long = -1, 
     WaitingForInput(ConsoleID) = True
     
     New_Console_Line ConsoleID
-    If R >= 0 And B >= 0 And G >= 0 Then
-        DRAW -1, R, G, B, "solid"
+    If R >= 0 And b >= 0 And G >= 0 Then
+        DRAW -1, R, G, b, "solid"
     End If
 
     While WaitingForInput(ConsoleID)
@@ -217,7 +217,6 @@ ReadLineExit:
     CurrentPromptSelLength(ConsoleID) = 0
     CurrentPromptInput(ConsoleID) = ""
     WaitingForInput(ConsoleID) = False
-    RefreshCommandLinePrompt ConsoleID
     Yield
 End Function
 
@@ -772,12 +771,12 @@ Public Function BoolToString(ByVal Param As String) As Boolean
     End If
 End Function
 
-Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal B As Long, ByVal Mode As String)
+Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String)
     If PrivDisableOutput Then
         Yield
         Exit Function
     End If
-    DrawItUp YPos, R, G, B, Mode, PrivConsoleID
+    DrawItUp YPos, R, G, b, Mode, PrivConsoleID
     Yield
 End Function
 
@@ -954,13 +953,13 @@ Public Function yDiv(ByVal setValue As Integer)
     SetYDiv setValue
 End Function
 
-Public Function PAUSE(Optional ByVal Prompt As String = "", Optional ByVal R As Long = -1, Optional ByVal G As Long = -1, Optional ByVal B As Long = -1)
+Public Function PAUSE(Optional ByVal Prompt As String = "", Optional ByVal R As Long = -1, Optional ByVal G As Long = -1, Optional ByVal b As Long = -1)
     Yield
     If PrivDisableOutput Then
         Exit Function
     End If
 
-    PauseConsole Prompt, PrivConsoleID, R, G, B
+    PauseConsole Prompt, PrivConsoleID, R, G, b
     Yield
 End Function
 
