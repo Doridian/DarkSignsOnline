@@ -60,41 +60,8 @@ Public Const ConsoleXSpacing = 360
 Public Const ConsoleXSpacingIndent = 960
 
 Public Property Get ConsoleInvisibleChar() As String
-    ConsoleInvisibleChar = Chr(6)
+    ConsoleInvisibleChar = Chr(7)
 End Property
-
-Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal ConsoleID As Integer)
-    If frmConsole.ChatBox.Visible = True Then Exit Sub
-    
-    Dim tmpS As String
-    
-    If KeyCode = vbKeyReturn Then
-        Dim CommandStr As String
-        CommandStr = CurrentPromptInput(ConsoleID)
-        Console(ConsoleID, 1).Caption = Console(ConsoleID, 1).Caption & CommandStr
-        CurrentPromptInput(ConsoleID) = ""
-        CurrentPromptSelStart(ConsoleID) = 0
-        CurrentPromptSelLength(ConsoleID) = 0
-        RecentCommandsIndex(ConsoleID) = 0
-        AddToRecentCommands CommandStr
-        CurrentPromptVisible(ConsoleID) = False
-        RefreshCommandLinePrompt ConsoleID
-
-        'process the command, unless it is input
-        If WaitingForInput(ConsoleID) = True Then
-            WaitingForInputReturn(ConsoleID) = CommandStr
-            WaitingForInput(ConsoleID) = False
-            If CancelScript(ConsoleID) Then
-                New_Console_Line ConsoleID
-            End If
-        Else
-            Run_Command CommandStr, ConsoleID, False
-            New_Console_Line ConsoleID
-        End If
-
-        Exit Sub
-    End If
-End Sub
 
 Public Sub AddToRecentCommands(ByVal s As String)
     If Trim(s) = "" Then Exit Sub
@@ -138,6 +105,8 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
     Else
         PromptStr = cPath(ConsoleID) & ">"
     End If
+    
+    PromptStr = Replace(PromptStr, ConsoleInvisibleChar, "")
 
     Console(ConsoleID, 1) = Console_Line_Defaults
     Console(ConsoleID, 1).Caption = PromptStr & " "
@@ -290,7 +259,7 @@ DontDraw:
 
         frmConsole.CurrentX = ConsoleXSpacing
 
-        tmpS = Replace(tmpS, ConsoleInvisibleChar, "")
+        'tmpS = Replace(tmpS, ConsoleInvisibleChar, "")
 
         isAligned = False
         
@@ -429,6 +398,7 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
     End If
 
     s = StripAfterNewline(s)
+    s = Replace(s, ConsoleInvisibleChar, "")
 
     Dim propertySpace As String
 

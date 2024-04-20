@@ -712,7 +712,7 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
     If KeyCode = vbKeyReturn Then
         Dim CommandStr As String
         CommandStr = CurrentPromptInput(ActiveConsole)
-        Console(ActiveConsole, 1).Caption = Console(ActiveConsole, 1).Caption & CommandStr
+        Console(ActiveConsole, 1).Caption = Console(ActiveConsole, 1).Caption & Replace(CommandStr, ConsoleInvisibleChar, "")
         CurrentPromptInput(ActiveConsole) = ""
         CurrentPromptSelStart(ActiveConsole) = 0
         CurrentPromptSelLength(ActiveConsole) = 0
