@@ -2,11 +2,28 @@ Option Explicit
 
 Sub SaySlow(Delay, Str, Style)
     Dim X
-    Style = "{{" & Style & "}}"
+    Style = "{{" & Replace(Replace(Style, "{", ""), "}", "") & "}}"
     Say Left(Str, 1) & Style
     For X = 2 To Len(Str)
         Wait(Delay)
         SayLine Mid(Str, 1, X) & Style
+    Next
+End Sub
+
+Sub SayWithBGColor(R, G, B, Str)
+    Say Str
+    Draw -1, R, G, B, "solid"
+End Sub
+
+Sub SaySlowWithBGColor(R, G, B, Delay, Str, Style)
+    Dim X
+    Style = "{{" & Replace(Replace(Style, "{", ""), "}", "") & "}}"
+    Say Left(Str, 1) & Style
+    Draw -1, R, G, B, "solid"
+    For X = 2 To Len(Str)
+        Wait(Delay)
+        SayLine Mid(Str, 1, X) & Style
+        Draw -1, R, G, B, "solid"
     Next
 End Sub
 
