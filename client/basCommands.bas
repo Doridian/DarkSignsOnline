@@ -460,12 +460,21 @@ RunSplitCommand:
     ParseCommandLineInt = ParseCommandLineInt & RestSplit
 End Function
 
+Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef B As Long)
+    R = lColor And &HFF ' mask the low byte
+    G = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
+    B = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
+End Function
+
 ' -y r g b mode
 '  SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE
-Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal B As Long, ByVal Mode As String, ByVal ConsoleID As Integer)
+Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As String, ByVal ConsoleID As Integer)
     Dim sColor As String
     Dim sMode As String
     
+    Dim R As Long, G As Long, B As Long
+    RGBSplit RGBVal, R, G, B
+
     If YPos >= 0 Then
         Exit Sub
     End If
@@ -490,7 +499,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
             If R < 1 Then R = 0
             If G < 1 Then G = 0
             If B < 1 Then B = 0
-        
+
             Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         
@@ -782,7 +791,7 @@ Public Function SayError(s As String, ByVal ConsoleID As Integer)
     SayRaw ConsoleID, "Error - " & s & " {{orange}}"
 End Function
 
-Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer, Optional ByVal R As Long = -1, Optional ByVal G As Long = -1, Optional ByVal B As Long = -1)
+Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer, Optional ByVal RGBVal As Long = -1)
     ConsolePaused(ConsoleID) = True
 
     Dim propSpace As String
@@ -805,8 +814,8 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer, Optional 
     s = propSpace & s
 
     SayRaw ConsoleID, s
-    If R >= 0 And G >= 0 And B >= 0 Then
-        DrawItUp -1, R, G, B, "solid", ConsoleID
+    If RGBVal >= 0 Then
+        DrawItUp -1, RGBVal, "solid", ConsoleID
     End If
     Do
         DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents

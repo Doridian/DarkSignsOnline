@@ -15,12 +15,12 @@ Sub SaySlow(Delay, Str, Style)
     Next
 End Sub
 
-Sub SayWithBGColor(R, G, B, Str)
+Sub SayWithBGColor(RGBVal, Str)
     Say Str
-    Draw -1, R, G, B, "solid"
+    Draw -1, RGBVal, "solid"
 End Sub
 
-Sub SaySlowWithBGColor(R, G, B, Delay, Str, Style)
+Sub SaySlowWithBGColor(RGBVal, Delay, Str, Style)
     If IsOutputDisabled Then
         Say Str & Style
         Exit Sub
@@ -29,7 +29,7 @@ Sub SaySlowWithBGColor(R, G, B, Delay, Str, Style)
     Dim X
     Style = "{{" & Replace(Replace(Style, "{", ""), "}", "") & "}}"
     Say Left(Str, 1) & Style
-    Draw -1, R, G, B, "solid"
+    Draw -1, RGBVal, "solid"
     For X = 2 To Len(Str)
         Wait(Delay)
         SayLine Mid(Str, 1, X), -1, True

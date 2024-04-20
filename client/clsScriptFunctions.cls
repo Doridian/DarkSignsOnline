@@ -187,7 +187,7 @@ Public Function ScriptGetOutput() As String
     ScriptGetOutput = PrivOutput
 End Function
 
-Public Function ReadLine(ByVal Prompt As String, Optional ByVal R As Long = -1, Optional ByVal G As Long = -1, Optional ByVal b As Long = -1) As String
+Public Function ReadLine(ByVal Prompt As String, Optional ByVal RGBVal As Long = -1) As String
     If PrivDisableOutput Then
         ReadLine = ""
         Yield
@@ -201,8 +201,8 @@ Public Function ReadLine(ByVal Prompt As String, Optional ByVal R As Long = -1, 
     WaitingForInput(PrivConsoleID) = True
     
     New_Console_Line PrivConsoleID
-    If R >= 0 And b >= 0 And G >= 0 Then
-        DRAW -1, R, G, b, "solid"
+    If RGBVal >= 0 Then
+        DRAW -1, RGBVal, "solid"
     End If
 
     While WaitingForInput(ConsoleID)
@@ -770,12 +770,12 @@ Public Function BoolToString(ByVal Param As String) As Boolean
     End If
 End Function
 
-Public Function DRAW(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String)
+Public Function DRAW(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As String)
     If PrivDisableOutput Then
         Yield
         Exit Function
     End If
-    DrawItUp YPos, R, G, b, Mode, PrivConsoleID
+    DrawItUp YPos, RGBVal, Mode, PrivConsoleID
     Yield
 End Function
 
@@ -952,13 +952,13 @@ Public Function yDiv(ByVal setValue As Integer)
     SetYDiv setValue
 End Function
 
-Public Function PAUSE(Optional ByVal Prompt As String = "", Optional ByVal R As Long = -1, Optional ByVal G As Long = -1, Optional ByVal b As Long = -1)
+Public Function PAUSE(Optional ByVal Prompt As String = "", Optional ByVal RGBVal As Long = -1)
     Yield
     If PrivDisableOutput Then
         Exit Function
     End If
 
-    PauseConsole Prompt, PrivConsoleID, R, G, b
+    PauseConsole Prompt, PrivConsoleID, RGBVal
     Yield
 End Function
 
@@ -1832,6 +1832,15 @@ End Function
 
 Public Function SHA256(ByVal Data As String) As String
     SHA256 = basAesCtr.SHA256(Data)
+End Function
+
+Public Function RGBSplit(ByVal lColor As Long) As Variant
+    Dim Ret() As Long
+    ReDim Ret(0 To 2)
+    Ret(0) = lColor And &HFF ' mask the low byte
+    Ret(1) = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
+    Ret(2) = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
+    RGBSplit = Ret
 End Function
 
 ' TODO: Synchronize mission from server first time it is read or written after client launch
