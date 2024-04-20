@@ -1834,6 +1834,10 @@ Public Function SHA256(ByVal Data As String) As String
     SHA256 = basAesCtr.SHA256(Data)
 End Function
 
+Public Function RGBJoin(ByVal Val As Variant) As Long
+    RGBJoin = RGB(Val(0), Val(1), Val(2))
+End Function
+
 Public Function RGBSplit(ByVal lColor As Long) As Variant
     Dim Ret() As Long
     ReDim Ret(0 To 2)
