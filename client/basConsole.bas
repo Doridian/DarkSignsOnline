@@ -212,6 +212,9 @@ Public Sub Print_Console()
 
         frmConsole.CurrentY = printHeight
 
+        Dim LineBackColor As Long
+        LineBackColor = frmConsole.BackColor
+
         '--------------- DRAW ------------------------------------------
         '--------------- DRAW ------------------------------------------
         If Console(ActiveConsole, n).DrawEnabled = True Then
@@ -221,13 +224,14 @@ Public Sub Print_Console()
             frmConsole.CurrentY = tmpY
             
             If i(Console(ActiveConsole, n).DrawMode) = "solid" Then
-                    'draw it all in one, much faster
-                    frmConsole.Line _
-                    (((frmConsole.Width / DrawDividerWidth) * 0), tmpY2)- _
-                    ((frmConsole.Width / DrawDividerWidth) * _
-                    (DrawDividerWidth), _
-                    (tmpY2 + FontHeight)), _
-                    Console(ActiveConsole, n).DrawColors(1), BF
+                LineBackColor = Console(ActiveConsole, n).DrawColors(1)
+                'draw it all in one, much faster
+                frmConsole.Line _
+                (((frmConsole.Width / DrawDividerWidth) * 0), tmpY2)- _
+                ((frmConsole.Width / DrawDividerWidth) * _
+                (DrawDividerWidth), _
+                (tmpY2 + FontHeight)), _
+                LineBackColor, BF
             Else
                 For n2 = 1 To DrawDividerWidth
                     frmConsole.Line _
@@ -288,6 +292,7 @@ DontDraw:
             frmConsole.txtPromptInput.FontSize = frmConsole.lfont.FontSize
             frmConsole.txtPromptInput.FontName = frmConsole.lfont.FontName
             frmConsole.txtPromptInput.ForeColor = Console_FontColor(n, ActiveConsole)
+            frmConsole.txtPromptInput.BackColor = LineBackColor
             ConsumedInputPrompt = True
         End If
 

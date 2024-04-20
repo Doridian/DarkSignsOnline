@@ -462,7 +462,7 @@ End Function
 
 ' -y r g b mode
 '  SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE
-Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal b As Long, ByVal Mode As String, ByVal ConsoleID As Integer)
+Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal B As Long, ByVal Mode As String, ByVal ConsoleID As Integer)
     Dim sColor As String
     Dim sMode As String
     
@@ -481,32 +481,32 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(ConsoleID, yIndex).DrawB = B
         
         For n = ((DrawDividerWidth / 2) + 1) To DrawDividerWidth
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
+            B = B - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         
         R = Console(ConsoleID, yIndex).DrawR
         G = Console(ConsoleID, yIndex).DrawG
-        b = Console(ConsoleID, yIndex).DrawB
+        B = Console(ConsoleID, yIndex).DrawB
         
         For n = (DrawDividerWidth / 2) To 1 Step -1
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
+            B = B - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         
     Case "fadeinverse":
@@ -514,32 +514,32 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(ConsoleID, yIndex).DrawB = B
         
         For n = DrawDividerWidth To ((DrawDividerWidth / 2) + 1) Step -1
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
+            B = B - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         
         R = Console(ConsoleID, yIndex).DrawR
         G = Console(ConsoleID, yIndex).DrawG
-        b = Console(ConsoleID, yIndex).DrawB
+        B = Console(ConsoleID, yIndex).DrawB
         
         For n = 1 To (DrawDividerWidth / 2)
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
+            B = B - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
     
     
@@ -548,17 +548,17 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(ConsoleID, yIndex).DrawB = B
         
         For n = 1 To DrawDividerWidth
             R = R - 4
             G = G - 4
-            b = b - 4
+            B = B - 4
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
 
 
@@ -568,17 +568,17 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(ConsoleID, yIndex).DrawB = B
         
         For n = DrawDividerWidth To 1 Step -1
             R = R - 4
             G = G - 4
-            b = b - 4
+            B = B - 4
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
 
 
@@ -588,27 +588,27 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(ConsoleID, yIndex).DrawB = B
         
         For n = 1 To ((DrawDividerWidth / 4) * 1)
             R = R - 5
             G = G - 5
-            b = b - 5
+            B = B - 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            If B < 1 Then B = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         
                 
         For n = (((DrawDividerWidth / 4) * 1) + 1) To (((DrawDividerWidth / 4) * 2))
             R = R + 5
             G = G + 5
-            b = b + 5
+            B = B + 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            If B < 1 Then B = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         
                 
@@ -616,11 +616,11 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
         For n = (((DrawDividerWidth / 4) * 2) + 1) To (((DrawDividerWidth / 4) * 3))
             R = R - 5
             G = G - 5
-            b = b - 5
+            B = B - 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            If B < 1 Then B = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         
                         
@@ -628,11 +628,11 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
         For n = (((DrawDividerWidth / 4) * 3) + 1) To (((DrawDividerWidth / 4) * 4))
             R = R + 5
             G = G + 5
-            b = b + 5
+            B = B + 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            If B < 1 Then B = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         
         
@@ -643,11 +643,11 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal R As Long, ByVal G As Long, ByVal 
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        Console(ConsoleID, yIndex).DrawB = B
         
         
         For n = 1 To DrawDividerWidth
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
     End Select
     
@@ -782,7 +782,7 @@ Public Function SayError(s As String, ByVal ConsoleID As Integer)
     SayRaw ConsoleID, "Error - " & s & " {{orange}}"
 End Function
 
-Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer, Optional ByVal R As Long = -1, Optional ByVal G As Long = -1, Optional ByVal B As Long = -1)
     ConsolePaused(ConsoleID) = True
 
     Dim propSpace As String
@@ -805,6 +805,9 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer)
     s = propSpace & s
 
     SayRaw ConsoleID, s
+    If R >= 0 And G >= 0 And B >= 0 Then
+        DrawItUp -1, R, G, B, "solid", ConsoleID
+    End If
     Do
         DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
     Loop Until ConsolePaused(ConsoleID) = False

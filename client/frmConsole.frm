@@ -28,7 +28,7 @@ Begin VB.Form frmConsole
    StartUpPosition =   3  'Windows Default
    Begin VB.TextBox txtPromptInput 
       Appearance      =   0  'Flat
-      BackColor       =   &H001B1410&
+      BackColor       =   &H00000000&
       BorderStyle     =   0  'None
       ForeColor       =   &H00FFFFFF&
       Height          =   495
