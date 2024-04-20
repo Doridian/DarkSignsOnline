@@ -650,10 +650,12 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
     If KeyCode = vbKeyF11 Then ToggleConsoleFull: Exit Sub
 
     If Shift = 2 And KeyCode = vbKeyB Then
+        If CurrentPromptVisible(ActiveConsole) Then
+            CurrentPromptInput(ActiveConsole) = CurrentPromptInput(ActiveConsole) & "^B"
+        End If
         'cancel the running script
         CancelScript(ActiveConsole) = True
         If (Not WaitingForInput(ActiveConsole)) And CurrentPromptVisible(ActiveConsole) Then
-            CurrentPromptInput(ActiveConsole) = CurrentPromptInput(ActiveConsole) & "^B"
             RenderPromptInput ActiveConsole
             frmConsole.txtPromptInput.Text = ""
             New_Console_Line ActiveConsole
