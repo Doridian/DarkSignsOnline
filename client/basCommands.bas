@@ -125,6 +125,14 @@ Public Function VBEscapeSimple(ByVal Str As String) As String
     VBEscapeSimple = Replace(Str, """", """""")
 End Function
 
+Public Function VBEscapeSimpleQuoted(ByVal Str As String) As String
+    If LCase(Str) = "true" Or LCase(Str) = "false" Or LCase(Str) = "null" Or LCase(Str) = "nothing" Or IsNumeric(Str) Then
+        VBEscapeSimpleQuoted = Str
+        Exit Function
+    End If
+    VBEscapeSimpleQuoted = """" & Replace(Str, """", """""") & """"
+End Function
+
 
 Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer, Optional ScriptFrom As String, Optional FromScript As Boolean = True)
     If ConsoleID < 1 Then
@@ -148,7 +156,7 @@ Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer, Op
     Dim RunStr As String
     Dim OptionDScript As Boolean
     OptionDScript = scrConsoleDScript(ConsoleID)
-    RunStr = ParseCommandLine(tmpS, OptionDScript, True)
+    RunStr = ParseCommandLine(tmpS, OptionDScript, False, ConsoleID, True)
     scrConsoleDScript(ConsoleID) = OptionDScript
 
     scrConsole(ConsoleID).AddCode RunStr
@@ -204,18 +212,16 @@ End Function
 Public Function ParseCommandLineOptional(ByVal tmpS As String, Optional ByVal AllowCommands As Boolean = True) As String
     Dim OptionDScript As Boolean
     OptionDScript = False
-    ParseCommandLineOptional = ParseCommandLine(tmpS, OptionDScript, AllowCommands)
+    ParseCommandLineOptional = ParseCommandLine(tmpS, OptionDScript, True, 0, AllowCommands)
 End Function
 
-Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByVal AllowCommands As Boolean) As String
-    Dim OptionExplicit As Boolean
-    OptionExplicit = True
+Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByVal OptionExplicit As Boolean, ByVal AutoVariablesFrom As Integer, ByVal AllowCommands As Boolean) As String
     Dim RestStart As Long
     RestStart = 1
     ParseCommandLine = ""
     While RestStart > 0
         tmpS = Mid(tmpS, RestStart)
-        ParseCommandLine = ParseCommandLine & ParseCommandLineInt(tmpS, RestStart, OptionExplicit, OptionDScript, AllowCommands)
+        ParseCommandLine = ParseCommandLine & ParseCommandLineInt(tmpS, RestStart, OptionExplicit, OptionDScript, AutoVariablesFrom, AllowCommands)
     Wend
 
     If OptionExplicit Then
@@ -223,7 +229,47 @@ Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Bo
     End If
 End Function
 
-Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Long, ByRef OptionExplicit As Boolean, ByRef OptionDScript As Boolean, ByVal AllowCommands As Boolean) As String
+Public Function IsValidVarName(ByVal Candidate As String) As Boolean
+    If Candidate = "" Then
+        IsValidVarName = False
+        Exit Function
+    End If
+
+    If LCase(Candidate) = "true" Or LCase(Candidate) = "false" Or LCase(Candidate) = "null" Or LCase(Candidate) = "nothing" Then
+        IsValidVarName = False
+        Exit Function
+    End If
+
+    If IsNumeric(Candidate) Then
+        IsValidVarName = False
+        Exit Function
+    End If
+
+    Dim X As Long, C As Integer
+    For X = 1 To Len(Candidate)
+        C = Asc(Mid(Candidate, X, 1))
+        If C >= Asc("a") And C <= Asc("z") Then
+            GoTo CIsValid
+        End If
+        If C >= Asc("A") And C <= Asc("Z") Then
+            GoTo CIsValid
+        End If
+        If C >= Asc("0") And C <= Asc("9") Then
+            GoTo CIsValid
+        End If
+        If C = Asc("_") Or C = Asc("(") Or C = Asc(")") Then
+            GoTo CIsValid
+        End If
+
+        IsValidVarName = False
+        Exit Function
+CIsValid:
+    Next
+
+    IsValidVarName = True
+End Function
+
+Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Long, ByRef OptionExplicit As Boolean, ByRef OptionDScript As Boolean, ByVal AutoVariablesFrom As Integer, ByVal AllowCommands As Boolean) As String
     Dim CLIArgs() As String
     Dim CLIArgsQuoted() As Boolean
     ReDim CLIArgs(0 To 0)
@@ -431,11 +477,21 @@ CommandForNext:
         If X > ArgStart Or CommandNeedFirstComma Then
             ParseCommandLineInt = ParseCommandLineInt & ", "
         End If
-        If Left(CLIArgs(X), 1) = "$" And Not CLIArgsQuoted(X) Then
-            ParseCommandLineInt = ParseCommandLineInt & Mid(CLIArgs(X), 2)
-        Else
-            ParseCommandLineInt = ParseCommandLineInt & """" & VBEscapeSimple(CLIArgs(X)) & """"
+
+        Dim ArgVal As String
+        ArgVal = CLIArgs(X)
+        If CLIArgsQuoted(X) Then
+            GoTo ArgIsNotVar
         End If
+        If Not IsValidVarName(ArgVal) Then
+            GoTo ArgIsNotVar
+        End If
+
+        ParseCommandLineInt = ParseCommandLineInt & "Coalesce(Eval(" & VBEscapeSimpleQuoted(ArgVal) & "), " & VBEscapeSimpleQuoted(ArgVal) & ")"
+        GoTo NextCLIFor
+ArgIsNotVar:
+        ParseCommandLineInt = ParseCommandLineInt & VBEscapeSimpleQuoted(ArgVal)
+NextCLIFor:
     Next X
     ParseCommandLineInt = ParseCommandLineInt & ")"
     GoTo RunSplitCommand
@@ -460,10 +516,10 @@ RunSplitCommand:
     ParseCommandLineInt = ParseCommandLineInt & RestSplit
 End Function
 
-Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef B As Long)
+Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef b As Long)
     R = lColor And &HFF ' mask the low byte
     G = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
-    B = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
+    b = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
 End Function
 
 ' -y r g b mode
@@ -472,8 +528,8 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As Stri
     Dim sColor As String
     Dim sMode As String
     
-    Dim R As Long, G As Long, B As Long
-    RGBSplit RGBVal, R, G, B
+    Dim R As Long, G As Long, b As Long
+    RGBSplit RGBVal, R, G, b
 
     If YPos >= 0 Then
         Exit Sub
@@ -490,32 +546,32 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As Stri
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = B
+        Console(ConsoleID, yIndex).DrawB = b
         
         For n = ((DrawDividerWidth / 2) + 1) To DrawDividerWidth
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            B = B - (DrawDividerWidth / 2)
+            b = b - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
 
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
         R = Console(ConsoleID, yIndex).DrawR
         G = Console(ConsoleID, yIndex).DrawG
-        B = Console(ConsoleID, yIndex).DrawB
+        b = Console(ConsoleID, yIndex).DrawB
         
         For n = (DrawDividerWidth / 2) To 1 Step -1
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            B = B - (DrawDividerWidth / 2)
+            b = b - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
     Case "fadeinverse":
@@ -523,32 +579,32 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As Stri
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = B
+        Console(ConsoleID, yIndex).DrawB = b
         
         For n = DrawDividerWidth To ((DrawDividerWidth / 2) + 1) Step -1
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            B = B - (DrawDividerWidth / 2)
+            b = b - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
         R = Console(ConsoleID, yIndex).DrawR
         G = Console(ConsoleID, yIndex).DrawG
-        B = Console(ConsoleID, yIndex).DrawB
+        b = Console(ConsoleID, yIndex).DrawB
         
         For n = 1 To (DrawDividerWidth / 2)
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            B = B - (DrawDividerWidth / 2)
+            b = b - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
     
     
@@ -557,17 +613,17 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As Stri
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = B
+        Console(ConsoleID, yIndex).DrawB = b
         
         For n = 1 To DrawDividerWidth
             R = R - 4
             G = G - 4
-            B = B - 4
+            b = b - 4
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
 
 
@@ -577,17 +633,17 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As Stri
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = B
+        Console(ConsoleID, yIndex).DrawB = b
         
         For n = DrawDividerWidth To 1 Step -1
             R = R - 4
             G = G - 4
-            B = B - 4
+            b = b - 4
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
 
 
@@ -597,27 +653,27 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As Stri
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = B
+        Console(ConsoleID, yIndex).DrawB = b
         
         For n = 1 To ((DrawDividerWidth / 4) * 1)
             R = R - 5
             G = G - 5
-            B = B - 5
+            b = b - 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            If b < 1 Then b = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
                 
         For n = (((DrawDividerWidth / 4) * 1) + 1) To (((DrawDividerWidth / 4) * 2))
             R = R + 5
             G = G + 5
-            B = B + 5
+            b = b + 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            If b < 1 Then b = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
                 
@@ -625,11 +681,11 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As Stri
         For n = (((DrawDividerWidth / 4) * 2) + 1) To (((DrawDividerWidth / 4) * 3))
             R = R - 5
             G = G - 5
-            B = B - 5
+            b = b - 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            If b < 1 Then b = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
                         
@@ -637,11 +693,11 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As Stri
         For n = (((DrawDividerWidth / 4) * 3) + 1) To (((DrawDividerWidth / 4) * 4))
             R = R + 5
             G = G + 5
-            B = B + 5
+            b = b + 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            If b < 1 Then b = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
         
         
@@ -652,11 +708,11 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As Stri
         Console(ConsoleID, yIndex).DrawEnabled = True
         Console(ConsoleID, yIndex).DrawR = R
         Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = B
+        Console(ConsoleID, yIndex).DrawB = b
         
         
         For n = 1 To DrawDividerWidth
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
         Next n
     End Select
     

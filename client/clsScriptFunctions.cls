@@ -731,6 +731,19 @@ Public Function SayCOMM(ParamArray Params() As Variant)
     Yield
 End Function
 
+Public Function Coalesce(ParamArray VarValues() As Variant) As Variant
+    Dim X As Long
+    Dim VarValue As Variant
+    For X = LBound(VarValues) To UBound(VarValues)
+        VarValue = VarValues(X)
+        If Not IsEmpty(VarValue) Then
+            Coalesce = VarValue
+            Exit Function
+        End If
+    Next
+    Coalesce = Null
+End Function
+
 Public Function CLIParse(ByVal Src As String, ByVal Dest As String)
     AssertLocalOnly
 
