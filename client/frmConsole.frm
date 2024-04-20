@@ -26,6 +26,18 @@ Begin VB.Form frmConsole
    ScaleHeight     =   9705
    ScaleWidth      =   11475
    StartUpPosition =   3  'Windows Default
+   Begin VB.TextBox txtPromptInput 
+      Appearance      =   0  'Flat
+      BackColor       =   &H001B1410&
+      BorderStyle     =   0  'None
+      ForeColor       =   &H00FFFFFF&
+      Height          =   495
+      Left            =   7560
+      TabIndex        =   32
+      Text            =   "PROMPT TEXT"
+      Top             =   8880
+      Width           =   1815
+   End
    Begin VB.Timer tmrProcessQueue 
       Enabled         =   0   'False
       Index           =   0
@@ -595,10 +607,26 @@ Sub SetConsoleActive(ByVal ConsoleID As Integer)
         Case 4: consoleShape.Left = 750
     End Select
 
+    CurrentPromptSelStart(ActiveConsole) = txtPromptInput.SelStart
+    CurrentPromptSelLength(ActiveConsole) = txtPromptInput.SelLength
+    ActiveConsole = ConsoleID
+    txtPromptInput.Text = CurrentPromptInput(ConsoleID)
+    txtPromptInput.SelStart = CurrentPromptSelStart(ConsoleID)
+    txtPromptInput.SelLength = CurrentPromptSelLength(ConsoleID)
+
     QueueConsoleRender
 End Sub
 
-Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
+Private Sub txtPromptInput_KeyPress(KeyAscii As Integer)
+    If KeyAscii = vbKeyReturn Or KeyAscii = vbKeyUp Or KeyAscii = vbKeyDown Then
+        KeyAscii = 0
+    End If
+End Sub
+
+Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
+    Dim KeyCode As Integer
+    KeyCode = KeyCodeIn
+    KeyCodeIn = 0
     If KeyCode = vbKeyEscape Then
         Unload Me
     End If
@@ -608,43 +636,39 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     If KeyCode = vbKeyPageDown And Shift = 0 Then ScrollConsoleDown: Exit Sub
     If KeyCode = vbKeyPageUp And Shift = 0 Then ScrollConsoleUp: Exit Sub
     ConsoleScrollInt(ActiveConsole) = 0
-    
-    If KeyCode = vbKeyF1 Then ChatBox.Visible = False: ActiveConsole = 1: SetConsoleActive 1: Exit Sub
-    If KeyCode = vbKeyF2 Then ChatBox.Visible = False: ActiveConsole = 2: SetConsoleActive 2: Exit Sub
-    If KeyCode = vbKeyF3 Then ChatBox.Visible = False: ActiveConsole = 3: SetConsoleActive 3: Exit Sub
-    If KeyCode = vbKeyF4 Then ChatBox.Visible = False: ActiveConsole = 4: SetConsoleActive 4: Exit Sub
+
+    If KeyCode = vbKeyF1 Then ChatBox.Visible = False: SetConsoleActive 1: Exit Sub
+    If KeyCode = vbKeyF2 Then ChatBox.Visible = False: SetConsoleActive 2: Exit Sub
+    If KeyCode = vbKeyF3 Then ChatBox.Visible = False: SetConsoleActive 3: Exit Sub
+    If KeyCode = vbKeyF4 Then ChatBox.Visible = False: SetConsoleActive 4: Exit Sub
     If KeyCode = vbKeyF5 Then ShowChat: Exit Sub
-    
+
     If KeyCode = vbKeyF11 Then ToggleConsoleFull: Exit Sub
-    
+
     If Shift = 2 And KeyCode = vbKeyC Then
         'cancel the running script
         CancelScript(ActiveConsole) = True
         CurrentPromptInput(ActiveConsole) = ""
-        RefreshCommandLinePrompt ActiveConsole
+        CurrentPromptSelStart(ActiveConsole) = 0
+        CurrentPromptSelLength(ActiveConsole) = 0
+        New_Console_Line ActiveConsole
         QueueConsoleRender
         Exit Sub
     End If
-    
-    
+
     autoCompActive(ActiveConsole) = False
-    
+
     'it's getkey!
     If GetKeyWaiting(ActiveConsole) = -1 Then
         GetKeyWaiting(ActiveConsole) = KeyCode: Exit Sub
     End If
     If GetAsciiWaiting(ActiveConsole) = -1 Then Exit Sub
-    'If GetAsciiWaiting(ActiveConsole) = "2" Then Exit Sub
 
-    
-    
     If ConsolePaused(ActiveConsole) = True Then
         ConsolePaused(ActiveConsole) = False
         Exit Sub
     End If
-    
-    
-        
+
     If ChatBox.Visible = True Then
         If KeyCode = vbKeyDown Then
             If curMsg > 0 Then
@@ -686,7 +710,35 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
         Exit Sub
     End If
 
-    Add_Key KeyCode, Shift, ActiveConsole
+    If KeyCode = vbKeyReturn Then
+        Dim CommandStr As String
+        CommandStr = CurrentPromptInput(ActiveConsole)
+        Console(ActiveConsole, 1).Caption = Console(ActiveConsole, 1).Caption & CommandStr
+        CurrentPromptInput(ActiveConsole) = ""
+        CurrentPromptSelStart(ActiveConsole) = 0
+        CurrentPromptSelLength(ActiveConsole) = 0
+        RecentCommandsIndex(ActiveConsole) = 0
+        AddToRecentCommands CommandStr
+        CurrentPromptVisible(ActiveConsole) = False
+        RefreshCommandLinePrompt ActiveConsole
+
+        'process the command, unless it is input
+        If WaitingForInput(ActiveConsole) = True Then
+            WaitingForInputReturn(ActiveConsole) = CommandStr
+            WaitingForInput(ActiveConsole) = False
+            If CancelScript(ActiveConsole) Then
+                New_Console_Line ActiveConsole
+            End If
+        Else
+            Run_Command CommandStr, ActiveConsole, False
+            New_Console_Line ActiveConsole
+        End If
+
+        Exit Sub
+    End If
+
+    KeyCodeIn = KeyCode
+
     QueueConsoleRender
 End Sub
 
@@ -953,11 +1005,7 @@ Private Sub lblUsername_Click()
 End Sub
 
 Private Sub lConsole_Click(Index As Integer)
-    
     ChatBox.Visible = False
-    
-    ActiveConsole = Index
-    
     SetConsoleActive Index
 End Sub
 
@@ -1009,6 +1057,7 @@ End Sub
 
 Private Sub tmrPrint_Timer()
     Print_Console
+
     tmrPrint.Enabled = False
 End Sub
 
@@ -1051,6 +1100,16 @@ End Sub
 
 Private Sub txtPrivMsg_GotFocus()
     cmdPriv.Default = True  'set the private button as the default button
+End Sub
+
+Private Sub txtPromptInput_Change()
+    CurrentPromptInput(ActiveConsole) = txtPromptInput.Text
+End Sub
+
+Private Sub txtPromptInput_LostFocus()
+    If txtPromptInput.Visible Then
+        txtPromptInput.SetFocus
+    End If
 End Sub
 
 'Private Sub txtStatus_DblClick()

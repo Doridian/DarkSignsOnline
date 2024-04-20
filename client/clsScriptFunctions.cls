@@ -117,10 +117,6 @@ Public Property Get IsOutputRedirected() As Boolean
     IsOutputRedirected = PrivRedirectOutput
 End Property
 
-Public Property Get ConsoleCursorChar() As String
-    ConsoleCursorChar = basConsole.ConsoleCursorChar
-End Property
-
 Public Property Get ConsoleInvisibleChar() As String
     ConsoleInvisibleChar = basConsole.ConsoleInvisibleChar
 End Property
@@ -199,6 +195,8 @@ Public Function ReadLine(ByVal Prompt As String) As String
 
     cPrompt(ConsoleID) = Prompt
     CurrentPromptInput(ConsoleID) = ""
+    CurrentPromptSelStart(ConsoleID) = 0
+    CurrentPromptSelLength(ConsoleID) = 0
     WaitingForInput(ConsoleID) = True
     
     New_Console_Line ConsoleID
@@ -211,8 +209,11 @@ Public Function ReadLine(ByVal Prompt As String) As String
 
 ReadLineExit:
     ReadLine = ""
+    CurrentPromptSelStart(ConsoleID) = 0
+    CurrentPromptSelLength(ConsoleID) = 0
     CurrentPromptInput(ConsoleID) = ""
     WaitingForInput(ConsoleID) = False
+    RefreshCommandLinePrompt ConsoleID
     Yield
 End Function
 

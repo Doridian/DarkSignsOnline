@@ -798,7 +798,7 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer)
     s = Kill_Property_Space(s)
 
     If Trim(s) = "" Then
-        s = "Press any key to continue..." & Chr(7)
+        s = "Press any key to continue..."
         strDefault = True
     End If
 
@@ -808,8 +808,4 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer)
     Do
         DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
     Loop Until ConsolePaused(ConsoleID) = False
-
-    If strDefault Then
-        SayRaw ConsoleID, Replace(s, Chr(7), ""), -1
-    End If
 End Sub

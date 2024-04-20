@@ -10,19 +10,11 @@ Sub SaySlow(Delay, Str, Style)
     Next
 End Sub
 
-Function GetKeyWithPrompt()
-    Say "{{noprespace}}> " & ConsoleCursorChar
-    Dim Choice
-    Choice = GetKey()
-    SayLine "{{noprespace}}> " & Chr(Choice)
-    GetKeyWithPrompt = Choice
-End Function
-
 Function GetAsciiWithPrompt()
-    Say "{{noprespace}}> " & ConsoleCursorChar
+    Say "{{noprespace}}> [_]"
     Dim Choice
     Choice = GetAscii()
-    SayLine "{{noprespace}}> " & Chr(Choice)
+    SayLine "{{noprespace}}> [" & Chr(Choice) & "]"
     GetAsciiWithPrompt = Choice
 End Function
 

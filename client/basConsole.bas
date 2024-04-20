@@ -44,7 +44,8 @@ Public Type ConsoleLine
 End Type
 
 Public CurrentPromptInput(1 To 4) As String
-Public CurrentPromptCursorIndex(1 To 4) As Long
+Public CurrentPromptSelStart(1 To 4) As Long
+Public CurrentPromptSelLength(1 To 4) As Long
 
 Public RecentCommandsIndex(1 To 4) As Integer
 Public RecentCommands(1 To 4, 0 To 99) As String
@@ -58,10 +59,6 @@ Public Const Max_Font_Size = 144
 Public Const ConsoleXSpacing = 360
 Public Const ConsoleXSpacingIndent = 960
 
-Public Property Get ConsoleCursorChar() As String
-    ConsoleCursorChar = Chr(7)
-End Property
-
 Public Property Get ConsoleInvisibleChar() As String
     ConsoleInvisibleChar = Chr(6)
 End Property
@@ -71,20 +68,17 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal Conso
     
     Dim tmpS As String
     
-    If KeyCode = vbKeySpace Then Insert_Char " ", ConsoleID: Exit Sub
-    If KeyCode = vbKeyBack Then RemLastKey ConsoleID: Exit Sub
-    If KeyCode = vbKeyDelete Then RemNextKey ConsoleID: Exit Sub
-    If KeyCode = vbKeyHome Then MoveUnderscoreToHome ConsoleID: Exit Sub
-    If KeyCode = vbKeyEnd Then MoveUnderscoreToEnd ConsoleID: Exit Sub
-    If KeyCode = vbKeyLeft Then MoveUnderscoreLeft ConsoleID: Exit Sub
-    If KeyCode = vbKeyRight Then MoveUnderscoreRight ConsoleID: Exit Sub
-    
     If KeyCode = vbKeyReturn Then
         Dim CommandStr As String
         CommandStr = CurrentPromptInput(ConsoleID)
+        Console(ConsoleID, 1).Caption = Console(ConsoleID, 1).Caption & CommandStr
         CurrentPromptInput(ConsoleID) = ""
+        CurrentPromptSelStart(ConsoleID) = 0
+        CurrentPromptSelLength(ConsoleID) = 0
         RecentCommandsIndex(ConsoleID) = 0
         AddToRecentCommands CommandStr
+        CurrentPromptVisible(ConsoleID) = False
+        RefreshCommandLinePrompt ConsoleID
 
         'process the command, unless it is input
         If WaitingForInput(ConsoleID) = True Then
@@ -100,104 +94,7 @@ Public Sub Add_Key(ByVal KeyCode As Integer, ByVal Shift As Integer, ByVal Conso
 
         Exit Sub
     End If
-    
-    
-    'letters upper case ascii codes
-    If KeyCode >= 65 And KeyCode <= 90 Then
-        If Shift = 1 Then
-            Insert_Char UCase(Chr(KeyCode)), ConsoleID
-        Else
-            Insert_Char LCase(Chr(KeyCode)), ConsoleID
-            GoTo End_Function
-        End If
-    End If
-    'letters lower case ascii codes
-'    If KeyCode >= 97 And KeyCode <= 122 Then
-'        If Shift = 1 Then Insert_Char UCase(Chr(KeyCode)) Else: Insert_Char LCase(Chr(KeyCode))
-'        GoTo End_Function
-'    End If
-    'numbers
-    If KeyCode >= 48 And KeyCode <= 57 Then
-        Select Case KeyCode
-        Case 48: If Shift = 1 Then Insert_Char ")", ConsoleID Else Insert_Char "0", ConsoleID
-        Case 49: If Shift = 1 Then Insert_Char "!", ConsoleID Else Insert_Char "1", ConsoleID
-        Case 50: If Shift = 1 Then Insert_Char "@", ConsoleID Else Insert_Char "2", ConsoleID
-        Case 51: If Shift = 1 Then Insert_Char "#", ConsoleID Else Insert_Char "3", ConsoleID
-        Case 52: If Shift = 1 Then Insert_Char "$", ConsoleID Else Insert_Char "4", ConsoleID
-        Case 53: If Shift = 1 Then Insert_Char "%", ConsoleID Else Insert_Char "5", ConsoleID
-        Case 54: If Shift = 1 Then Insert_Char "^", ConsoleID Else Insert_Char "6", ConsoleID
-        Case 55: If Shift = 1 Then Insert_Char "&", ConsoleID Else Insert_Char "7", ConsoleID
-        Case 56: If Shift = 1 Then Insert_Char "*", ConsoleID Else Insert_Char "8", ConsoleID
-        Case 57: If Shift = 1 Then Insert_Char "(", ConsoleID Else Insert_Char "9", ConsoleID
-        End Select
-        GoTo End_Function
-    End If
-    'everything else
-    Select Case KeyCode
-        Case "192": If Shift = 1 Then Insert_Char "~", ConsoleID Else Insert_Char "`", ConsoleID
-        Case "189": If Shift = 1 Then Insert_Char "_", ConsoleID Else Insert_Char "-", ConsoleID
-        Case "187": If Shift = 1 Then Insert_Char "+", ConsoleID Else Insert_Char "=", ConsoleID
-        Case "219": If Shift = 1 Then Insert_Char "{", ConsoleID Else Insert_Char "[", ConsoleID
-        Case "221": If Shift = 1 Then Insert_Char "}", ConsoleID Else Insert_Char "]", ConsoleID
-        Case "220": If Shift = 1 Then Insert_Char "|", ConsoleID Else Insert_Char "\", ConsoleID
-        Case "186": If Shift = 1 Then Insert_Char ":", ConsoleID Else Insert_Char ";", ConsoleID
-        Case "222": If Shift = 1 Then Insert_Char Chr(34), ConsoleID Else Insert_Char "'", ConsoleID
-        Case "188": If Shift = 1 Then Insert_Char "<", ConsoleID Else Insert_Char ",", ConsoleID
-        Case "190": If Shift = 1 Then Insert_Char ">", ConsoleID Else Insert_Char ".", ConsoleID
-        Case "191": If Shift = 1 Then Insert_Char "?", ConsoleID Else Insert_Char "/", ConsoleID
-        'numpad below
-        Case "110": Insert_Char ".", ConsoleID
-        Case "111": Insert_Char "/", ConsoleID
-        Case "106": Insert_Char "*", ConsoleID
-        Case "109": Insert_Char "-", ConsoleID
-        Case "107": Insert_Char "+", ConsoleID
-        
-        
-        'Case 33: If Shift = 1 Then Insert_Char "!" , ConsoleID Else Insert_Char "1", ConsoleID
-        'Case 34: If Shift = 1 Then Insert_Char Chr(34) , ConsoleID Else Insert_Char "'", ConsoleID
-        Case 35: If Shift = 1 Then Insert_Char "#", ConsoleID Else Insert_Char "3", ConsoleID
-        Case 36: If Shift = 1 Then Insert_Char "$", ConsoleID Else Insert_Char "4", ConsoleID
-        'Case 37: If Shift = 1 Then Insert_Char "%", ConsoleID  Else Insert_Char "5", ConsoleID
-        'Case 38: If Shift = 1 Then Insert_Char "&", ConsoleID  Else Insert_Char "7", ConsoleID
-        'Case 39: If Shift = 1 Then Insert_Char Chr(34), ConsoleID Else Insert_Char "'", ConsoleID
-        'Case 40: If Shift = 1 Then Insert_Char "(" , ConsoleID Else Insert_Char "9", ConsoleID
-        Case 41: If Shift = 1 Then Insert_Char ")", ConsoleID Else Insert_Char "0", ConsoleID
-        Case 42: If Shift = 1 Then Insert_Char "*", ConsoleID Else Insert_Char "8", ConsoleID
-        Case 43: If Shift = 1 Then Insert_Char "+", ConsoleID Else Insert_Char "=", ConsoleID
-        Case 44: If Shift = 1 Then Insert_Char "<", ConsoleID Else Insert_Char ",", ConsoleID
-        'Case 45: If Shift = 1 Then Insert_Char "-", ConsoleID  Else Insert_Char "-", ConsoleID
-        Case 46: If Shift = 1 Then Insert_Char ".", ConsoleID Else Insert_Char ".", ConsoleID
-        Case 47: If Shift = 1 Then Insert_Char "?", ConsoleID Else Insert_Char "/", ConsoleID
-        Case 58: If Shift = 1 Then Insert_Char ":", ConsoleID Else Insert_Char ";", ConsoleID
-        Case 59: If Shift = 1 Then Insert_Char ":", ConsoleID Else Insert_Char ";", ConsoleID
-        Case 60: If Shift = 1 Then Insert_Char "<", ConsoleID Else Insert_Char ",", ConsoleID
-        Case 61: If Shift = 1 Then Insert_Char "+", ConsoleID Else Insert_Char "=", ConsoleID
-        Case 62: If Shift = 1 Then Insert_Char ".", ConsoleID Else Insert_Char ".", ConsoleID
-        Case 63: If Shift = 1 Then Insert_Char "?", ConsoleID Else Insert_Char "/", ConsoleID
-        Case 64: If Shift = 1 Then Insert_Char "@", ConsoleID Else Insert_Char "2", ConsoleID
-        
-        'numpad stuff
-        Case 96: Insert_Char "0", ConsoleID
-        Case 97: Insert_Char "1", ConsoleID
-        Case 98: Insert_Char "2", ConsoleID
-        Case 99: Insert_Char "3", ConsoleID
-        Case 100: Insert_Char "4", ConsoleID
-        Case 101: Insert_Char "5", ConsoleID
-        Case 102: Insert_Char "6", ConsoleID
-        Case 103: Insert_Char "7", ConsoleID
-        Case 104: Insert_Char "8", ConsoleID
-        Case 105: Insert_Char "9", ConsoleID
-        
-        
-        
-        
-    End Select
-    
-    
-End_Function:
 End Sub
-
-
 
 Public Sub AddToRecentCommands(ByVal s As String)
     If Trim(s) = "" Then Exit Sub
@@ -218,96 +115,32 @@ SkipAddingIt:
 End Sub
 
 Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
+    If ConsoleID = ActiveConsole Then
+        frmConsole.txtPromptInput.Text = CurrentPromptInput(ConsoleID)
+        frmConsole.txtPromptInput.SelStart = CurrentPromptSelStart(ConsoleID)
+        frmConsole.txtPromptInput.SelLength = CurrentPromptSelLength(ConsoleID)
+    End If
+
     If Not CurrentPromptVisible(ConsoleID) Then
         Exit Sub
     End If
+
     Console(ConsoleID, 1) = Console_Line_Defaults
     Console(ConsoleID, 1).PreSpace = False
 
-    Dim PromptFull As String
-    PromptFull = CurrentPromptInput(ConsoleID)
-
-    Dim CursorIdx As Long
-    CursorIdx = CurrentPromptCursorIndex(ConsoleID)
-    If CursorIdx > Len(PromptFull) Then
-        CursorIdx = Len(PromptFull)
-        CurrentPromptCursorIndex(ConsoleID) = CursorIdx
-    End If
-
-    Dim PreUnderscore As String
-    Dim PostUnderscore As String
-    If CursorIdx < 1 Then
-        PreUnderscore = ""
-        PostUnderscore = PromptFull
-    Else
-        PreUnderscore = Left(PromptFull, CursorIdx)
-        PostUnderscore = Mid(PromptFull, CursorIdx + 1)
-    End If
-    
-    Dim PreSplit As String
+    Dim PromptStr As String
     If WaitingForInput(ConsoleID) Then
-        PreSplit = Remove_Property_Space(cPrompt(ConsoleID))
+        PromptStr = Remove_Property_Space(cPrompt(ConsoleID))
     Else
-        PreSplit = cPath(ConsoleID) & ">"
+        PromptStr = cPath(ConsoleID) & ">"
     End If
+    Console(ConsoleID, 1).Caption = PromptStr & " "
 
-    Console(ConsoleID, 1).Caption = PreSplit & " " & PreUnderscore & ConsoleCursorChar & PostUnderscore
-End Sub
-
-Public Sub MoveUnderscoreRight(ByVal ConsoleID As Integer)
-    CurrentPromptCursorIndex(ConsoleID) = CurrentPromptCursorIndex(ConsoleID) + 1
-    If CurrentPromptCursorIndex(ConsoleID) > Len(CurrentPromptInput(ConsoleID)) Then
-        CurrentPromptCursorIndex(ConsoleID) = Len(CurrentPromptInput(ConsoleID))
-    End If
-
-    RefreshCommandLinePrompt ConsoleID
-    frmConsole.QueueConsoleRender
-End Sub
-
-Public Sub MoveUnderscoreToHome(ByVal ConsoleID As Integer)
-    CurrentPromptCursorIndex(ConsoleID) = 0
-    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MoveUnderscoreToEnd(ByVal ConsoleID As Integer)
-    CurrentPromptCursorIndex(ConsoleID) = Len(CurrentPromptInput(ConsoleID))
-    RefreshCommandLinePrompt ConsoleID
-    frmConsole.QueueConsoleRender
-End Sub
-
-Public Sub MoveUnderscoreLeft(ByVal ConsoleID As Integer)
-    CurrentPromptCursorIndex(ConsoleID) = CurrentPromptCursorIndex(ConsoleID) - 1
-    If CurrentPromptCursorIndex(ConsoleID) < 0 Then
-        CurrentPromptCursorIndex(ConsoleID) = 0
-    End If
-
-    RefreshCommandLinePrompt ConsoleID
-    frmConsole.QueueConsoleRender
-End Sub
-
-Public Sub Insert_Char(ByVal sChar As String, ByVal ConsoleID As Integer)
-    Dim Prompt As String
-    Prompt = CurrentPromptInput(ConsoleID)
-
-    Dim SelectionIndex As Long
-    SelectionIndex = CurrentPromptCursorIndex(ConsoleID)
-    If SelectionIndex <= 0 Then
-        CurrentPromptInput(ConsoleID) = sChar & Prompt
-        MoveUnderscoreRight ConsoleID
-        Exit Sub
-    End If
-    
-    If SelectionIndex > Len(Prompt) Then
-        SelectionIndex = Len(Prompt)
-    End If
-
-    Prompt = Left(Prompt, SelectionIndex) & sChar & Mid(Prompt, SelectionIndex + 1)
-    CurrentPromptInput(ConsoleID) = Prompt
-    MoveUnderscoreRight ConsoleID
-
-    RefreshCommandLinePrompt ConsoleID
-    frmConsole.QueueConsoleRender
+    ' TODO
 End Sub
 
 Public Sub New_Console_Line(ByVal ConsoleID As Integer)
@@ -315,6 +148,8 @@ Public Sub New_Console_Line(ByVal ConsoleID As Integer)
 
     CurrentPromptVisible(ConsoleID) = True
     CurrentPromptInput(ConsoleID) = ""
+    CurrentPromptSelStart(ConsoleID) = 0
+    CurrentPromptSelLength(ConsoleID) = 0
     RefreshCommandLinePrompt ConsoleID
 
     frmConsole.QueueConsoleRender
@@ -328,45 +163,8 @@ Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     Next n
 
     Console(ConsoleID, 1) = Console_Line_Defaults
-    If CurrentPromptVisible(ConsoleID) Then
-        Console(ConsoleID, 2).Caption = Replace(Console(ConsoleID, 2).Caption, ConsoleCursorChar, "")
-    End If
     Console(ConsoleID, 1).Caption = ""
 
-    frmConsole.QueueConsoleRender
-End Sub
-
-Public Sub RemLastKey(ByVal ConsoleID As Integer)
-    Dim SelectionIndex As Long
-    SelectionIndex = CurrentPromptCursorIndex(ConsoleID)
-    If SelectionIndex <= 0 Then
-        Exit Sub
-    End If
-    
-    Dim Prompt As String
-    Prompt = CurrentPromptInput(ConsoleID)
-    Prompt = Left(Prompt, SelectionIndex - 1) & Mid(Prompt, SelectionIndex + 1)
-    CurrentPromptInput(ConsoleID) = Prompt
-    MoveUnderscoreLeft ConsoleID
-
-    RefreshCommandLinePrompt ConsoleID
-    frmConsole.QueueConsoleRender
-End Sub
-
-Public Sub RemNextKey(ByVal ConsoleID As Integer)
-    Dim Prompt As String
-    Prompt = CurrentPromptInput(ConsoleID)
-
-    Dim SelectionIndex As Long
-    SelectionIndex = CurrentPromptCursorIndex(ConsoleID)
-    If SelectionIndex >= Len(Prompt) Then
-        Exit Sub
-    End If
-    
-    Prompt = Left(Prompt, SelectionIndex) & Mid(Prompt, SelectionIndex + 2)
-    CurrentPromptInput(ConsoleID) = Prompt
-
-    RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
 
@@ -377,6 +175,8 @@ Public Sub Reset_Console(ByVal ConsoleID As Integer)
     Next n
 
     CurrentPromptInput(ConsoleID) = ""
+    CurrentPromptSelStart(ConsoleID) = 0
+    CurrentPromptSelLength(ConsoleID) = 0
     RefreshCommandLinePrompt ConsoleID
     frmConsole.QueueConsoleRender
 End Sub
@@ -410,19 +210,14 @@ Public Sub Print_Console()
         End If
         frmConsole.Print "Loading... " & Mid(LoadingSpinnerAnim, LoadingSpinner, 1)
     End If
+    
+    Dim ConsumedInputPrompt As Boolean
+    ConsumedInputPrompt = False
 
     frmConsole.CurrentX = ConsoleXSpacing
     n = 0
     Do
         n = n + 1
-        
-        'does a new property space need to be set?
-        If n = 1 And WaitingForInput(ActiveConsole) = True Then
-            If Has_Property_Space(cPrompt(ActiveConsole)) = True Then
-                propertySpace = Get_Property_Space(cPrompt(ActiveConsole))
-                Console(ActiveConsole, n) = Load_Property_Space(propertySpace, Console(ActiveConsole, n).Caption)
-            End If
-        End If
 
         frmConsole.FontBold = Console(ActiveConsole, n).FontBold
         frmConsole.FontItalic = Console(ActiveConsole, n).FontItalic
@@ -481,7 +276,6 @@ DontDraw:
         If Console(ActiveConsole, n).Flash = True And Flash = True Then HideLine = True
         If Console(ActiveConsole, n).FlashFast = True And FlashFast = True Then HideLine = True
         If Console(ActiveConsole, n).FlashSlow = True And FlashSlow = True Then HideLine = True
-        If tmpS = "" Then HideLine = True
         If HideLine Then
             frmConsole.Print "  "
             GoTo NextOne
@@ -490,24 +284,6 @@ DontDraw:
         frmConsole.CurrentX = ConsoleXSpacing
 
         tmpS = Replace(tmpS, ConsoleInvisibleChar, "")
-
-        'make underscore flash
-        Dim InsertCursorsAt() As Long
-        ReDim InsertCursorsAt(0 To 0)
-        Dim CurCursorPos As Long
-        Dim CurCursorOffset As Long
-        CurCursorPos = 1
-        CurCursorOffset = 0
-        While CurCursorPos > 0
-            CurCursorPos = InStr(CurCursorPos, tmpS, ConsoleCursorChar)
-            If CurCursorPos > 0 Then
-                ReDim Preserve InsertCursorsAt(0 To UBound(InsertCursorsAt) + 1)
-                InsertCursorsAt(UBound(InsertCursorsAt)) = CurCursorPos - CurCursorOffset
-                CurCursorPos = CurCursorPos + 1
-                CurCursorOffset = CurCursorOffset + 1
-            End If
-        Wend
-        tmpS = Replace(tmpS, ConsoleCursorChar, "")
 
         isAligned = False
         
@@ -526,34 +302,26 @@ DontDraw:
         If Console(ActiveConsole, n).PreSpace Then
             If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
         End If
-        
-        If UBound(InsertCursorsAt) > 0 And Flash Then
-            Dim CursorHeight As Long
-            frmConsole.lfont.Caption = "I"
-            CursorHeight = frmConsole.lfont.Height
 
-            Dim OldX As Long
-            Dim OldY As Long
-            OldX = frmConsole.CurrentX
-            OldY = frmConsole.CurrentY
-
-            Dim BarX As Long
-            Dim X As Long
-            For X = 1 To UBound(InsertCursorsAt)
-                frmConsole.lfont.Caption = Left(tmpS, InsertCursorsAt(X) - 1)
-                BarX = OldX + frmConsole.lfont.Width
-                frmConsole.Line (BarX, OldY)-(BarX, OldY + CursorHeight), Console(ActiveConsole, n).FontColor
-            Next
-
-            frmConsole.CurrentX = OldX
-            frmConsole.CurrentY = OldY
+        If n = 1 And CurrentPromptVisible(ActiveConsole) Then
+            frmConsole.txtPromptInput.Visible = True
+            frmConsole.txtPromptInput.Top = frmConsole.CurrentY
+            frmConsole.txtPromptInput.Left = frmConsole.CurrentX + frmConsole.lfont.Width
+            frmConsole.txtPromptInput.Height = frmConsole.lfont.Height
+            frmConsole.txtPromptInput.Width = frmConsole.Width - frmConsole.txtPromptInput.Left
+            frmConsole.txtPromptInput.FontSize = frmConsole.lfont.FontSize
+            frmConsole.txtPromptInput.FontName = frmConsole.lfont.FontName
+            frmConsole.txtPromptInput.ForeColor = Console_FontColor(n, ActiveConsole)
+            ConsumedInputPrompt = True
         End If
 
         frmConsole.Print tmpS
 NextOne:
     Loop Until printHeight < 0 Or n >= 299
 ExitLoop:
-    
+    If Not ConsumedInputPrompt Then
+        frmConsole.txtPromptInput.Visible = False
+    End If
 End Sub
 
 
