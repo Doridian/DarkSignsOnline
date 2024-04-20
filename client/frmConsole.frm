@@ -618,9 +618,13 @@ Sub SetConsoleActive(ByVal ConsoleID As Integer)
 End Sub
 
 Private Sub txtPromptInput_KeyPress(KeyAscii As Integer)
-    If KeyAscii = vbKeyReturn Or KeyAscii = vbKeyUp Or KeyAscii = vbKeyDown Or KeyAscii = vbKeyEscape Then
+    If KeyAscii = vbKeyReturn Or KeyAscii = vbKeyEscape Then
         KeyAscii = 0
     End If
+End Sub
+
+Private Sub txtPromptInput_Change()
+    CurrentPromptInput(ActiveConsole) = txtPromptInput.Text
 End Sub
 
 Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
@@ -1099,10 +1103,6 @@ End Sub
 
 Private Sub txtPrivMsg_GotFocus()
     cmdPriv.Default = True  'set the private button as the default button
-End Sub
-
-Private Sub txtPromptInput_Change()
-    CurrentPromptInput(ActiveConsole) = txtPromptInput.Text
 End Sub
 
 Private Sub txtPromptInput_LostFocus()
