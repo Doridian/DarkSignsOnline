@@ -652,13 +652,12 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
     If Shift = 2 And KeyCode = vbKeyB Then
         'cancel the running script
         CancelScript(ActiveConsole) = True
-        If Not WaitingForInput(ActiveConsole) Then
-            If CurrentPromptVisible(ActiveConsole) Then
-                RenderPromptInput ActiveConsole
-                frmConsole.txtPromptInput.Text = ""
-                New_Console_Line ActiveConsole
-                QueueConsoleRender
-            End If
+        If (Not WaitingForInput(ActiveConsole)) And CurrentPromptVisible(ActiveConsole) Then
+            CurrentPromptInput(ActiveConsole) = CurrentPromptInput(ActiveConsole) & "^B"
+            RenderPromptInput ActiveConsole
+            frmConsole.txtPromptInput.Text = ""
+            New_Console_Line ActiveConsole
+            QueueConsoleRender
         End If
         Exit Sub
     End If
