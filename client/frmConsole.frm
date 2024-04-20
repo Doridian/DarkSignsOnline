@@ -652,11 +652,14 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
     If Shift = 2 And KeyCode = vbKeyB Then
         'cancel the running script
         CancelScript(ActiveConsole) = True
-        CurrentPromptInput(ActiveConsole) = ""
-        CurrentPromptSelStart(ActiveConsole) = 0
-        CurrentPromptSelLength(ActiveConsole) = 0
-        RefreshCommandLinePrompt ActiveConsole
-        QueueConsoleRender
+        If Not WaitingForInput(ActiveConsole) Then
+            If CurrentPromptVisible(ActiveConsole) Then
+                RenderPromptInput ActiveConsole
+                frmConsole.txtPromptInput.Text = ""
+                New_Console_Line ActiveConsole
+                QueueConsoleRender
+            End If
+        End If
         Exit Sub
     End If
 
@@ -715,21 +718,18 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
     End If
 
     If KeyCode = vbKeyReturn And CurrentPromptVisible(ActiveConsole) Then
+        Dim Waiting As Boolean
+        Waiting = WaitingForInput(ActiveConsole)
         Dim CommandStr As String
         CommandStr = CurrentPromptInput(ActiveConsole)
-        Console(ActiveConsole, 1).Caption = Console(ActiveConsole, 1).Caption & Replace(CommandStr, ConsoleInvisibleChar, "")
-        CurrentPromptInput(ActiveConsole) = ""
-        CurrentPromptSelStart(ActiveConsole) = 0
-        CurrentPromptSelLength(ActiveConsole) = 0
+        RenderPromptInput ActiveConsole
         RecentCommandsIndex(ActiveConsole) = 0
         AddToRecentCommands CommandStr
         CurrentPromptVisible(ActiveConsole) = False
-        RefreshCommandLinePrompt ActiveConsole
 
         'process the command, unless it is input
-        If WaitingForInput(ActiveConsole) = True Then
+        If Waiting Then
             WaitingForInputReturn(ActiveConsole) = CommandStr
-            WaitingForInput(ActiveConsole) = False
             If CancelScript(ActiveConsole) Then
                 New_Console_Line ActiveConsole
             End If

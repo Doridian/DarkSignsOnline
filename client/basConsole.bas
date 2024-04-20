@@ -263,8 +263,6 @@ DontDraw:
 
         frmConsole.CurrentX = ConsoleXSpacing
 
-        'tmpS = Replace(tmpS, ConsoleInvisibleChar, "")
-
         isAligned = False
         
         frmConsole.lfont.FontSize = Console_FontName(n, ActiveConsole)
@@ -385,6 +383,14 @@ Public Function StripAfterNewline(ByVal s As String) As String
     Else
         StripAfterNewline = s
     End If
+End Function
+
+Public Function RenderPromptInput(ByVal ConsoleID As Integer)
+    Console(ConsoleID, 1).Caption = Console(ConsoleID, 1).Caption & Replace(CurrentPromptInput(ConsoleID), ConsoleInvisibleChar, "")
+    CurrentPromptSelStart(ConsoleID) = 0
+    CurrentPromptSelLength(ConsoleID) = 0
+    CurrentPromptInput(ConsoleID) = ""
+    WaitingForInput(ConsoleID) = False
 End Function
 
 Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional ByVal OverwriteLineIndex As Long = 0)

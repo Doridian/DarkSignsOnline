@@ -194,13 +194,13 @@ Public Function ReadLine(ByVal Prompt As String, Optional ByVal R As Long = -1, 
         Exit Function
     End If
 
-    cPrompt(ConsoleID) = Prompt
-    CurrentPromptInput(ConsoleID) = ""
-    CurrentPromptSelStart(ConsoleID) = 0
-    CurrentPromptSelLength(ConsoleID) = 0
-    WaitingForInput(ConsoleID) = True
+    cPrompt(PrivConsoleID) = Prompt
+    CurrentPromptInput(PrivConsoleID) = ""
+    CurrentPromptSelStart(PrivConsoleID) = 0
+    CurrentPromptSelLength(PrivConsoleID) = 0
+    WaitingForInput(PrivConsoleID) = True
     
-    New_Console_Line ConsoleID
+    New_Console_Line PrivConsoleID
     If R >= 0 And b >= 0 And G >= 0 Then
         DRAW -1, R, G, b, "solid"
     End If
@@ -208,15 +208,13 @@ Public Function ReadLine(ByVal Prompt As String, Optional ByVal R As Long = -1, 
     While WaitingForInput(ConsoleID)
         If Not YieldSafe() Then GoTo ReadLineExit
     Wend
-    ReadLine = WaitingForInputReturn(ConsoleID)
+    ReadLine = WaitingForInputReturn(PrivConsoleID)
     Exit Function
 
 ReadLineExit:
     ReadLine = ""
-    CurrentPromptSelStart(ConsoleID) = 0
-    CurrentPromptSelLength(ConsoleID) = 0
-    CurrentPromptInput(ConsoleID) = ""
-    WaitingForInput(ConsoleID) = False
+    RenderPromptInput PrivConsoleID
+    frmConsole.QueueConsoleRender
     Yield
 End Function
 
