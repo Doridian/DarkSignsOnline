@@ -125,10 +125,14 @@ Public Function VBEscapeSimple(ByVal Str As String) As String
     VBEscapeSimple = Replace(Str, """", """""")
 End Function
 
-Public Function VBEscapeSimpleQuoted(ByVal Str As String) As String
-    If LCase(Str) = "true" Or LCase(Str) = "false" Or LCase(Str) = "null" Or LCase(Str) = "nothing" Or IsNumeric(Str) Then
-        VBEscapeSimpleQuoted = Str
-        Exit Function
+Public Function VBEscapeSimpleQuoted(ByVal Str As String, Optional ByVal ForceQuotes As Boolean = False) As String
+    If Not ForceQuotes Then
+        Dim lStr As String
+        lStr = LCase(Str)
+        If lStr = "true" Or lStr = "false" Or lStr = "null" Or lStr = "nothing" Or IsNumeric(Str) Then
+            VBEscapeSimpleQuoted = Str
+            Exit Function
+        End If
     End If
     VBEscapeSimpleQuoted = """" & Replace(Str, """", """""") & """"
 End Function
@@ -235,7 +239,9 @@ Public Function IsValidVarName(ByVal Candidate As String) As Boolean
         Exit Function
     End If
 
-    If LCase(Candidate) = "true" Or LCase(Candidate) = "false" Or LCase(Candidate) = "null" Or LCase(Candidate) = "nothing" Then
+    Dim lCandidate As String
+    lCandidate = LCase(Candidate)
+    If lCandidate = "true" Or lCandidate = "false" Or lCandidate = "null" Or lCandidate = "nothing" Then
         IsValidVarName = False
         Exit Function
     End If
@@ -246,12 +252,10 @@ Public Function IsValidVarName(ByVal Candidate As String) As Boolean
     End If
 
     Dim X As Long, C As Integer
-    For X = 1 To Len(Candidate)
-        C = Asc(Mid(Candidate, X, 1))
+    For X = 1 To Len(lCandidate)
+        C = Asc(Mid(lCandidate, X, 1))
+        ' Only check lowercase as we use LCase'd string
         If C >= Asc("a") And C <= Asc("z") Then
-            GoTo CIsValid
-        End If
-        If C >= Asc("A") And C <= Asc("Z") Then
             GoTo CIsValid
         End If
         If C >= Asc("0") And C <= Asc("9") Then
@@ -490,7 +494,7 @@ CommandForNext:
         ParseCommandLineInt = ParseCommandLineInt & "Coalesce(Eval(" & VBEscapeSimpleQuoted(ArgVal) & "), " & VBEscapeSimpleQuoted(ArgVal) & ")"
         GoTo NextCLIFor
 ArgIsNotVar:
-        ParseCommandLineInt = ParseCommandLineInt & VBEscapeSimpleQuoted(ArgVal)
+        ParseCommandLineInt = ParseCommandLineInt & VBEscapeSimpleQuoted(ArgVal, CLIArgsQuoted(X))
 NextCLIFor:
     Next X
     ParseCommandLineInt = ParseCommandLineInt & ")"
