@@ -92,7 +92,7 @@ EvalError:
     GoTo ScriptEnd
 
 ScriptCancelled:
-    SayRaw ConsoleID, "Script Stopped by User (CTRL + C){{orange}}"
+    SayRaw ConsoleID, "Script Stopped by User (CTRL + B){{orange}}"
 ScriptEnd:
     Run_Script_Code = G.ScriptGetOutput()
     G.CleanupScriptTasks

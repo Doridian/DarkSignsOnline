@@ -196,7 +196,7 @@ EvalError:
     GoTo ScriptEnd
 
 ScriptCancelled:
-    SayRaw ConsoleID, "Script Stopped by User (CTRL + C){{orange}}"
+    SayRaw ConsoleID, "Script Stopped by User (CTRL + B){{orange}}"
 ScriptEnd:
     scrConsoleContext(ConsoleID).CleanupScriptTasks
 End Function

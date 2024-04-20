@@ -618,7 +618,7 @@ Sub SetConsoleActive(ByVal ConsoleID As Integer)
 End Sub
 
 Private Sub txtPromptInput_KeyPress(KeyAscii As Integer)
-    If KeyAscii = vbKeyReturn Or KeyAscii = vbKeyUp Or KeyAscii = vbKeyDown Then
+    If KeyAscii = vbKeyReturn Or KeyAscii = vbKeyUp Or KeyAscii = vbKeyDown Or KeyAscii = vbKeyEscape Then
         KeyAscii = 0
     End If
 End Sub
@@ -645,13 +645,12 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
 
     If KeyCode = vbKeyF11 Then ToggleConsoleFull: Exit Sub
 
-    If Shift = 2 And KeyCode = vbKeyC Then
+    If Shift = 2 And KeyCode = vbKeyB Then
         'cancel the running script
         CancelScript(ActiveConsole) = True
         CurrentPromptInput(ActiveConsole) = ""
         CurrentPromptSelStart(ActiveConsole) = 0
         CurrentPromptSelLength(ActiveConsole) = 0
-        New_Console_Line ActiveConsole
         QueueConsoleRender
         Exit Sub
     End If
