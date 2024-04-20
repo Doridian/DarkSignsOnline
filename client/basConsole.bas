@@ -81,12 +81,16 @@ SkipAddingIt:
     RecentCommandsIndex(ActiveConsole) = 0
 End Sub
 
-Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
+Public Sub RefreshCommandLinePromptInput(ByVal ConsoleID As Integer)
     If ConsoleID = ActiveConsole Then
         frmConsole.txtPromptInput.Text = CurrentPromptInput(ConsoleID)
         frmConsole.txtPromptInput.SelStart = CurrentPromptSelStart(ConsoleID)
         frmConsole.txtPromptInput.SelLength = CurrentPromptSelLength(ConsoleID)
     End If
+End Sub
+
+Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
+    RefreshCommandLinePromptInput ConsoleID
 
     If Not CurrentPromptVisible(ConsoleID) Then
         Exit Sub
@@ -393,7 +397,7 @@ Public Function RenderPromptInput(ByVal ConsoleID As Integer)
     WaitingForInput(ConsoleID) = False
 End Function
 
-Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional ByVal OverwriteLineIndex As Long = 0)
+Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional ByVal OverwriteLineIndex As Long = 0, Optional ByVal NoReset As Boolean = False)
     If ConsoleID > 4 Then Exit Function
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
 
@@ -413,9 +417,10 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
 
     Dim propertySpace As String
 
-    Console(ConsoleID, OverwriteLineIndex) = Console_Line_Defaults
-
-    Console(ConsoleID, OverwriteLineIndex).PreSpace = True
+    If Not NoReset Then
+        Console(ConsoleID, OverwriteLineIndex) = Console_Line_Defaults
+        Console(ConsoleID, OverwriteLineIndex).PreSpace = True
+    End If
 
     If Has_Property_Space(s) = True Then
         propertySpace = i(Get_Property_Space(s)) & " "

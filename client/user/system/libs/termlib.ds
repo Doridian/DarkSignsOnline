@@ -6,7 +6,7 @@ Sub SaySlow(Delay, Str, Style)
     Say Left(Str, 1) & Style
     For X = 2 To Len(Str)
         Wait(Delay)
-        SayLine Mid(Str, 1, X) & Style
+        SayLine Mid(Str, 1, X)
     Next
 End Sub
 
@@ -22,8 +22,7 @@ Sub SaySlowWithBGColor(R, G, B, Delay, Str, Style)
     Draw -1, R, G, B, "solid"
     For X = 2 To Len(Str)
         Wait(Delay)
-        SayLine Mid(Str, 1, X) & Style
-        Draw -1, R, G, B, "solid"
+        SayLine Mid(Str, 1, X), -1, True
     Next
 End Sub
 

@@ -522,7 +522,8 @@ Public Function EDIT(ByVal File As String)
     Yield
 End Function
 
-Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
+Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1, Optional ByVal NoReset As Boolean = False)
+    s = StripAfterNewline(s)
     If s = "" Then
         Yield
         Exit Function
@@ -532,7 +533,7 @@ Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
         If PrivOutput = "" Then
             PrivOutput = s
         Else
-            PrivOutput = PrivOutput & vbCr & s
+            PrivOutput = PrivOutput & vbCrLf & s
         End If
         Yield
     End If
@@ -541,7 +542,7 @@ Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
         Exit Function
     End If
     Yield
-    basConsole.SayRaw PrivConsoleID, s, YPos
+    basConsole.SayRaw PrivConsoleID, s, YPos, NoReset
     Yield
 End Function
 

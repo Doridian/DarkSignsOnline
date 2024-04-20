@@ -610,9 +610,7 @@ Sub SetConsoleActive(ByVal ConsoleID As Integer)
     CurrentPromptSelStart(ActiveConsole) = txtPromptInput.SelStart
     CurrentPromptSelLength(ActiveConsole) = txtPromptInput.SelLength
     ActiveConsole = ConsoleID
-    txtPromptInput.Text = CurrentPromptInput(ConsoleID)
-    txtPromptInput.SelStart = CurrentPromptSelStart(ConsoleID)
-    txtPromptInput.SelLength = CurrentPromptSelLength(ConsoleID)
+    RefreshCommandLinePromptInput ActiveConsole
 
     QueueConsoleRender
 End Sub
@@ -657,7 +655,7 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
         CancelScript(ActiveConsole) = True
         If (Not WaitingForInput(ActiveConsole)) And CurrentPromptVisible(ActiveConsole) Then
             RenderPromptInput ActiveConsole
-            frmConsole.txtPromptInput.Text = ""
+            RefreshCommandLinePromptInput ActiveConsole
             New_Console_Line ActiveConsole
             QueueConsoleRender
         End If
@@ -702,7 +700,7 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
 
         CurrentPromptInput(ActiveConsole) = RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole))
         MoveUnderscoreToEnd ActiveConsole
-        RefreshCommandLinePrompt ActiveConsole
+        RefreshCommandLinePromptInput ActiveConsole
         QueueConsoleRender
         Exit Sub
     ElseIf KeyCode = vbKeyUp Then
@@ -713,7 +711,7 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
 
         CurrentPromptInput(ActiveConsole) = RecentCommands(ActiveConsole, RecentCommandsIndex(ActiveConsole))
         MoveUnderscoreToEnd ActiveConsole
-        RefreshCommandLinePrompt ActiveConsole
+        RefreshCommandLinePromptInput ActiveConsole
         QueueConsoleRender
         Exit Sub
     End If
