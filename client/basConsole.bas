@@ -662,7 +662,7 @@ Public Function propertySpace_Color(ByVal s As String) As Long
     
     If InStr(s, "rgb:") Then
         Dim Error As Boolean
-        Dim R As Long, G As Long, B As Long
+        Dim R As Long, G As Long, b As Long
         Error = False
         Dim sTmp As String
         s = Replace(s, ",", " ")
@@ -673,17 +673,17 @@ Public Function propertySpace_Color(ByVal s As String) As Long
         sSplit = Split(sTmp, ":")
 
         If UBound(sSplit) < 3 Then
-            RGBSplit Trim(sSplit(1)), R, G, B
+            RGBSplit Trim(sSplit(1)), R, G, b
         Else
             R = Trim(sSplit(1))
             G = Trim(sSplit(2))
-            B = Trim(sSplit(3))
+            b = Trim(sSplit(3))
         End If
 
-        If IsNumeric(R) And IsNumeric(G) And IsNumeric(B) Then
+        If IsNumeric(R) And IsNumeric(G) And IsNumeric(b) Then
             R = CInt(R)
             G = CInt(G)
-            B = CInt(B)
+            b = CInt(b)
         
             If R < 0 Or R > 255 Then
                 Error = True
@@ -693,12 +693,12 @@ Public Function propertySpace_Color(ByVal s As String) As Long
                 Error = True
             End If
             
-            If B < 0 Or B > 255 Then
+            If b < 0 Or b > 255 Then
                 Error = True
             End If
             
             If Error = False Then
-                propertySpace_Color = RGB(R, G, B)
+                propertySpace_Color = RGB(R, G, b)
             End If
         End If
     End If

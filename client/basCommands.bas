@@ -837,13 +837,11 @@ End Sub
 Public Function GetShortName(ByVal s As String) As String
     s = ReverseString(s)
     s = Replace(s, "\", "/")
-    
+
     If InStr(s, "/") > 0 Then
-    
         s = Mid(s, 1, InStr(s, "/") - 1)
-        
     End If
-    
+
     GetShortName = Trim(ReverseString(s))
 End Function
 
@@ -860,7 +858,7 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer, Optional 
     strDefault = False
 
     If Not Has_Property_Space(s) Then
-        propSpace = "{{lblue 10 noprespace}}"
+        propSpace = "lblue 10 noprespace"
     Else
         propSpace = Get_Property_Space(s)
     End If
