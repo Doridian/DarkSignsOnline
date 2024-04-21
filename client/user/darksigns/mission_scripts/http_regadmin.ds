@@ -1,0 +1,65 @@
+Option Explicit
+
+DLOpen "termlib"
+
+' regadmin.net
+Sub Disconnect()
+    SaySlow 1, "Connection Terminated", "orange"
+    Quit
+End Sub
+
+SaySlow 1, "#   #    #   #  # ################### #  #   #    #     #", "green"
+SaySlow 1, "REGDOMAINZ Domain Administration Server", "green"
+SaySlow 1, "#   #    #   #  # ################### #  #   #    #     #", "green"
+
+Dim MMInput
+MMInput = QReadLine("Enter your username{{white}}>")
+If MMInput <> "ndrgrnd" Then
+    SaySlow 1, "That username [" & ConsoleEscape(MMInput) & "] was not found on our server", "orange"
+    Pause
+    Disconnect
+End If
+
+MMInput = QReadLine("Enter your password{{white}}>")
+If MMInput <> "burntcrisp" Then
+    SaySlow 1, "That Password is invalid", "orange"
+    Pause
+    Disconnect
+End If
+
+Say "ADMIN Logged In OK{{orange}}"
+Pause
+
+While True
+    Say "0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0{{blue}}"
+    Say "    This server is currently undergoing maintenance.{{orange}}"
+    Say "    To make major changes to your domain(s), please ring{{orange}}"
+    Say "    us directly on (+613) 752 6019.{{orange}}"
+    Say ""
+    Say "    (1) View Account Domains{{white}}"
+    Say "    (2) Disabled for Maintenance{{white}}"
+    Say "    (3) Disabled for Maintenance{{white}}"
+    Say "    (4) Log Out{{white}}"
+    Say ""
+    Say "0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0X0{{blue}}"
+
+    MMInput = QReadLine("Enter Option Number [1 to 4]{{white}}>")
+    If MMInput = "1" Then
+        Say "Account Domains{{blue}}"
+        Say "Domain Name  |  IP Address{{white}}"
+        Say "oxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxox{{white}}"
+        Say ""
+        Say "internal-9.ndrgrnd.pipelink.gov:66.7.82.99{{white}}"
+        Say "base09.pipelink.gov:66.199.200.203{{white}}"
+        Say ""
+        Say "oxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxoxox{{white}}"
+        Pause
+    ElseIf MMInput = "2" Or MMInput = "3" Then
+        Say "    This server is currently undergoing maintenance.{{orange}}"
+        Say "    To make major changes to your domain(s), please ring{{orange}}"
+        Say "    us directly on (+613) 752 6019.{{orange}}"
+        Pause
+    ElseIf MMInput = "4" Then
+        Disconnect
+    End If
+Wend
