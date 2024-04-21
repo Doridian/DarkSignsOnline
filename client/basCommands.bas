@@ -487,6 +487,14 @@ CommandForNext:
         If CLIArgsQuoted(X) Then
             GoTo ArgIsNotVar
         End If
+        If Left(ArgVal, 1) = "%" And Right(ArgVal, 1) = "%" Then
+            ArgVal = Mid(ArgVal, 2, Len(ArgVal) - 2)
+            If Not IsValidVarName(ArgVal) Then
+                GoTo ArgIsNotVar
+            End If
+            ParseCommandLineInt = ParseCommandLineInt & ArgVal
+            GoTo NextCLIFor
+        End If
         If Not IsValidVarName(ArgVal) Then
             GoTo ArgIsNotVar
         End If
