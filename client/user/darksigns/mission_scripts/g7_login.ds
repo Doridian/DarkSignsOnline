@@ -1,0 +1,11 @@
+Option Explicit
+
+DLOpen "termlib"
+
+SaySlow 10, "You are connected to the G7 Private Database.", "red"
+SaySlow 10, "If you do not belong here you are in violation of International Treaties and will be dealt with promptly.", "red"
+Say ""
+ReadLine "Enter Username:{{white}}"
+ReadLine "Enter Password:{{white}}"
+SaySlow 50, "LOGIN/PASSWORD INCORRECT", "red"
+SaySlow 100, "TERMINATING CONNECTION....................", "red"
