@@ -91,7 +91,11 @@ Sub ShellMenu()
             Case "cd~"
                 SetCDir "/home/admin"
             Case "cd"
-                SetCDir SInput(1)
+                If UBound(SInput) < 1 Then
+                    SetCDir ""
+                Else
+                    SetCDir SInput(1)
+                End If
             Case "cwd"
                 SetCDir "."
             Case "exit"

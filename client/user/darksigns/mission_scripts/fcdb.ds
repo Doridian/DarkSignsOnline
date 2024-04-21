@@ -1,0 +1,230 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Dim IsAdmin
+IsAdmin = False
+
+Sub NotAuthError()
+    Say "System Permission Error [not authorized]{{orange}}"
+End Sub
+
+Dim CDir
+CDir = "/"
+
+Dim PackageArrived
+PackageArrived = BoolMissionProgress("DS", "fcdb_package_arrived")
+
+Sub SetCDir(NewDirI)
+    Dim NewDir
+    NewDir = NewDirI
+    If Left(NewDir, 1) <> "/" Then
+        NewDir = CDir & "/" & NewDir
+    End If
+    NewDir = ResolvePath(NewDir)
+
+    If NewDir = "/" Or NewDir = "/home" Or NewDir = "/home/fcdb" Then
+        CDir = NewDir
+        Say "Current Directory: " & ConsoleEscape(CDir)  & "{{orange}}"
+        Exit Sub
+    End If
+
+    If NewDir = "/home/users" Then
+        Say "System Permission Error [not authorized]{{orange}}"
+        Exit Sub
+    End If
+
+    Say "{{red}}Invalid directory [" & ConsoleEscape(NewDirI) & "]"
+End Sub
+
+Sub LSCDir()
+    Select Case CDir
+        Case "/"
+            Say "[home]{{blue}}"
+            Say "NO FILES{{white}}"
+        Case "/home"
+            Say "[fcdb] [users]{{blue}}"
+            Say "NO FILES{{white}}"
+        Case "/home/fcdb"
+            Say "EDITDB.EXE   LOGIC.SYS    READDB.EXE    OPTIONS.INI{{white}}"
+    End Select
+End Sub
+
+Sub TrackPackageMenu()
+    Say ""
+    Say "Tracker Package v2.7{{blue}}"
+    Say ""
+    Dim PackageNum
+    PackageNum = QReadLine("Please enter the package number>{{white}}")
+    If PackageNum = "883597" Then
+        If PackageArrived Then
+            Say "Package has been shipped out{{green}}"
+        Else
+            Say "Package in warehouse awaiting pickup{{green}}"
+        End If
+    Else
+        Say "Package not found{{orange}}"
+    End If
+    Pause
+End Sub
+
+Sub ChangePackageMenu()
+    Say ""
+    Say "Detail Changer v1.3{{blue}}"
+    Say ""
+    Dim PackageNum
+    PackageNum = QReadLine("Please enter the package number>{{white}}")
+    If PackageNum <> "883597" Then
+        Say "Package not found{{orange}}"
+        Pause
+        Exit Sub
+    End If
+    Dim Dest, PType
+    Dest = GetMissionProgress("DS", "fcdb_package_dest")
+    If Dest = "" Then
+        Dest = "Classified"
+    End If
+    PType = GetMissionProgress("DS", "fcdb_package_type")
+    If PType = "" Then
+        PType = "Urgent"
+    End If
+
+    While True
+        Say "1 ) Change Destination [" & ConsoleEscape(Dest) & "]"
+        Say "2 ) Change Postage Type [" & ConsoleEscape(PType) & "]"
+        Say "3 ) Exit"
+        Dim DetailInput
+        DetailInput = QReadLine("Please make your selection ( 1 - 3 )>{{white}}")
+
+        Select Case DetailInput
+            Case "1"
+                If PackageArrived Then
+                    Say "Package has already been shipped out and can no longer be changed{{orange}}"
+                    Pause
+                    Exit Sub
+                End If
+                Dim NewDest
+                NewDest = QReadLine("Please enter the new destination>{{white}}")
+                SetMissionProgress "DS", "fcdb_package_dest", NewDest
+                Dest = NewDest
+                Say "Destination Updated{{green}}"
+                If NewDest = "26 masen av new york usa" And Not PackageArrived Then
+                    PackageArrived = True
+                    BoolSetMissionProgress "DS", "fcdb_package_arrived"
+                    SendMailToUser "zrio@zrio.org", "Encrypted", "Excellant work on completing your last mission:We recieved the package with no problems" & vbCrLf & _
+                                                                    "There was some very interesting documents that we neede" & vbCrLf & _
+                                                                    "But more importantly there was an encrypted hard drive, we need some software to decrypt it though" & vbCrLf & _
+                                                                    "We have put up a list of possible IP address at ZRIO.org port 45" & vbCrLf & _
+                                                                    "Username: ZRIO" & vbCrLf & _
+                                                                    "Password: geno91"
+                End If
+                Pause
+            Case "2"
+                If PackageArrived Then
+                    Say "Package has already been shipped out and can no longer be changed{{orange}}"
+                    Pause
+                    Exit Sub
+                End If
+                Say "1 - Second Class{{blue}}"
+                Say "2 - First Class{{blue}}"
+                Say "3 - Urgent{{blue}}"
+                Dim NewType
+                NewType = QReadLine("Please select the type of delivery>{{white}}")
+                Select Case NewType
+                    Case "1"
+                        SetMissionProgress "DS", "fcdb_package_type", "Second Class"
+                        PType = "Second Class"
+                        Say "Postage Type Updated{{green}}"
+                    Case "2"
+                        SetMissionProgress "DS", "fcdb_package_type", "First Class"
+                        PType = "First Class"
+                        Say "Postage Type Updated{{green}}"
+                    Case "3"
+                        SetMissionProgress "DS", "fcdb_package_type", "Urgent"
+                        PType = "Urgent"
+                        Say "Postage Type Updated{{green}}"
+                    Case Else
+                        Say "Invalid choice{{orange}}"
+                End Select
+                Pause
+            Case "3"
+                Exit Sub
+            Case Else
+                Say "Invalid choice{{orange}}"
+                Pause
+        End Select
+    Wend
+End Sub
+
+Sub EditDBMenu()
+    While True
+        Say "----------------------------------------{{blue}}"
+        Say "      FirstClass DataBase v3.4{{blue}}"
+        Say "            Build v3.21573{{blue}}"
+        Say "----------------------------------------{{blue}}"
+        Say "1 ) Track Package{{blue}}"
+        Say "2 ) Change Package Details{{blue}}"
+        Say "3 ) Logoff{{blue}}"
+        Say "----------------------------------------{{blue}}"
+        Dim FCDBChoice
+        FCDBChoice = QReadLine("Please make your selection ( 1 - 3 )>{{white}}")
+        Select Case FCDBChoice
+            Case "1"
+                TrackPackageMenu
+            Case "2"
+                ChangePackageMenu
+            Case "3"
+                Disconnect
+            Case Else
+                Say "Invalid choice{{red}}"
+        End Select
+    Wend
+End Sub
+
+While True
+    Say "[FirstClass Software] 1989-2003 FCDB.com{{grey}}"
+    Dim DBInput
+    DBInput = Split(QReadLine("{{white}}>"), " ")
+    Select Case DBInput(0)
+        Case "exit":
+            Disconnect
+        Case "su":
+            If UBound(DBInput) < 1 Then
+                Say "Please enter a user{{orange}}"
+            ElseIf DBInput(1) = "fcdb" Then
+                Say "User changed [fcdb]{{orange}}"
+                IsAdmin = True
+            Else
+                NotAuthError
+            End If
+        Case "ls":
+            If IsAdmin Then
+                LSCDir
+            Else
+                NotAuthError
+            End If
+        Case "cd":
+            If UBound(DBInput) < 1 Then
+                SetCDir ""
+            Else
+                SetCDir DBInput(1)
+            End If
+        Case "run":
+            If IsAdmin Then
+                If UBound(DBInput) < 1 Then
+                    Say "Please enter a program{{orange}}"
+                ElseIf DBInput(1) = "editdb.exe" And CDir = "/home/fcdb" Then
+                    EditDBMenu
+                Else
+                    Say "Program not found or invalid{{orange}}"
+                End If
+            Else
+                NotAuthError
+            End If
+    End Select
+Wend
