@@ -17,12 +17,11 @@ RemoteappUploaded = BoolMissionProgress("DS", "code_red_remoteapp_uploaded")
 Dim CDir
 
 Sub SetCDir(NewDirI)
-    Dim NewDir
-    NewDir = NewDirI
-    If Left(NewDir, 1) <> "/" Then
-        NewDir = CDir & "/" & NewDir
+    If NewDirI = "~" Then
+        NewDirI = "/home/admin"
     End If
-    NewDir = ResolvePath(NewDir)
+    Dim NewDir
+    NewDir = ResolvePathRel(CDir, NewDirI)
 
     If NewDir = "/" Or NewDir = "/home" Or NewDir = "/home/admin" Then
         CDir = NewDir
@@ -119,7 +118,7 @@ Sub ShellMenu()
                     Say "Error uploading file [not writable]{{red}}"
                 End If
             Case "run"
-                If CDir = "/home/admin" And RemoteappUploaded And SInput(1) = "remoteapp" Then
+                If ResolvePathRel(CDir, SInput(1)) = "/home/admin/remoteapp" Then
                     If Not BoolMissionProgress("DS", "code_red_done") Then
                         IncMissionProgress "DS", "dos_bw"
                         BoolSetMissionProgress "DS", "code_red_done"

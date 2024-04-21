@@ -21,12 +21,12 @@ Dim PackageArrived
 PackageArrived = BoolMissionProgress("DS", "fcdb_package_arrived")
 
 Sub SetCDir(NewDirI)
-    Dim NewDir
-    NewDir = NewDirI
-    If Left(NewDir, 1) <> "/" Then
-        NewDir = CDir & "/" & NewDir
+    If NewDirI = "~" Then
+        NewDirI = "/home/fcdb"
     End If
-    NewDir = ResolvePath(NewDir)
+
+    Dim NewDir
+    NewDir = ResolvePathRel(CDir, NewDirI)
 
     If NewDir = "/" Or NewDir = "/home" Or NewDir = "/home/fcdb" Then
         CDir = NewDir
@@ -218,7 +218,7 @@ While True
             If IsAdmin Then
                 If UBound(DBInput) < 1 Then
                     Say "Please enter a program{{orange}}"
-                ElseIf DBInput(1) = "editdb.exe" And CDir = "/home/fcdb" Then
+                ElseIf ResolvePathRel(CDir, DBInput(1)) = "/home/fcdb/editdb.exe" Then
                     EditDBMenu
                 Else
                     Say "Program not found or invalid{{orange}}"

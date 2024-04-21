@@ -90,7 +90,7 @@ End Property
 Public Property Get CWD() As String
     AssertLocalOnly
 
-    CWD = cPath(PrivConsoleID)
+    CWD = CPath(PrivConsoleID)
 End Property
 
 Public Property Let CWD(ByVal NewValue As String)
@@ -104,7 +104,7 @@ Public Property Let CWD(ByVal NewValue As String)
         Exit Property
     End If
 
-    cPath(PrivConsoleID) = RawDir
+    CPath(PrivConsoleID) = RawDir
     Yield
 End Property
 
@@ -771,11 +771,25 @@ Public Function CLIParse(ByVal Src As String, ByVal Dest As String)
 End Function
 
 Public Function ResolveCommand(ByVal Command As String) As String
+    AssertLocalOnly
+
     ResolveCommand = basCommands.ResolveCommand(PrivConsoleID, Command)
 End Function
 
 Public Function ResolvePath(ByVal Path As String) As String
+    AssertLocalOnly
+
     ResolvePath = basCommands.ResolvePath(PrivConsoleID, Path)
+End Function
+
+Public Function ResolvePathRel(ByVal BasePath As String, ByVal Path As String) As String
+    ResolvePathRel = basCommands.ResolvePathRel(BasePath, Path)
+    If Right(ResolvePathRel, 1) = "/" And Len(ResolvePathRel) > 1 Then
+        ResolvePathRel = Mid(ResolvePathRel, 1, Len(ResolvePathRel) - 1)
+    End If
+    If ResolvePathRel = "" Then
+        ResolvePathRel = "/"
+    End If
 End Function
 
 Public Function HttpRequest(ByVal Url As String, Optional ByVal PostData As String = "") As String

@@ -45,41 +45,45 @@ Public Function SafePath(ByVal Path As String, Optional ByVal Prefix As String =
 End Function
 
 Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As String
+    If ConsoleID = 0 Then
+        ResolvePath = ResolvePathRel(".", Path)
+        Exit Function
+    End If
+    ResolvePath = ResolvePathRel(CPath(ConsoleID), Path)
+End Function
+
+Public Function ResolvePathRel(ByVal CCPath As String, ByVal Path As String) As String
     If Path = "" Then
-        If ConsoleID = 0 Then
-            ResolvePath = ""
-            Exit Function
-        End If
-        ResolvePath = cPath(ConsoleID)
+        ResolvePathRel = CCPath
         Exit Function
     End If
 
-    If Left(Path, 1) = "/" Or Left(Path, 1) = "\" Or ConsoleID = 0 Then
-        ResolvePath = Path
+    If Left(Path, 1) = "/" Or Left(Path, 1) = "\" Then
+        ResolvePathRel = Path
     Else
-        ResolvePath = cPath(ConsoleID) & "/" & Path
+        ResolvePathRel = CCPath & "/" & Path
     End If
 
-    ResolvePath = Replace(ResolvePath, "\", "/")
-    While InStr(ResolvePath, "//") > 0
-        ResolvePath = Replace(ResolvePath, "//", "/")
+    ResolvePathRel = Replace(ResolvePathRel, "\", "/")
+    While InStr(ResolvePathRel, "//") > 0
+        ResolvePathRel = Replace(ResolvePathRel, "//", "/")
     Wend
 
     Dim IsRelative As Boolean
     IsRelative = True
-    If Left(ResolvePath, 1) = "/" Then
-        ResolvePath = Mid(ResolvePath, 2)
+    If Left(ResolvePathRel, 1) = "/" Then
+        ResolvePathRel = Mid(ResolvePathRel, 2)
         IsRelative = False
     End If
 
     Dim ResolvePathSplit() As String
-    ResolvePathSplit = Split(ResolvePath, "/")
+    ResolvePathSplit = Split(ResolvePathRel, "/")
     
     Dim ResolvePathSplitCut() As String
     ReDim ResolvePathSplitCut(0 To 0)
 
     Dim X As Long
-    ResolvePath = ""
+    ResolvePathRel = ""
     Dim CurPath As String
     For X = LBound(ResolvePathSplit) To UBound(ResolvePathSplit)
         CurPath = ResolvePathSplit(X)
@@ -96,7 +100,7 @@ Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As
     Next X
 
     If UBound(ResolvePathSplitCut) = 0 Then
-        ResolvePath = "/"
+        ResolvePathRel = "/"
         Exit Function
     End If
 
@@ -105,7 +109,7 @@ Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As
     Else
         ResolvePathSplitCut(0) = ""
     End If
-    ResolvePath = Join(ResolvePathSplitCut, "/")
+    ResolvePathRel = Join(ResolvePathSplitCut, "/")
 End Function
 
 Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As String) As String
