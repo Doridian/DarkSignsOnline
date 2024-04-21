@@ -1,0 +1,184 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Dim MainSelect
+MainSelect = ""
+
+Sub Disconnect()
+    Quit
+End Sub
+
+Dim SpooferData
+SpooferData = "Option Explicit" & vbCrLf & _
+                "DLOpen ""termlib""" & vbCrLf & _
+                "Say ""DarkSpoof v0.2beta ... DarkSoft Industries{{red}}""" & vbCrLf & _
+                "Dim SpoofIP" & vbCrLf & _
+                "Dim ServIP" & vbCrLf & _
+                "Dim ServPort" & vbCrLf & _
+                "SpoofIP = QReadLine(""Enter IP of the Server you want to appear as>{{green}}"")" & vbCrLf & _
+                "If SpoofIP <> ""1.1.1.1"" Then" & vbCrLf & _
+                "    Say ""ERROR - Acces Violation{{red}}""" & vbCrLf & _
+                "    Quit" & vbCrLf & _
+                "End If" & vbCrLf & _
+                "Say ""Setting up to spoof IP ["" & ConsoleEscape(SpoofIP) & ""]...{{green}}""" & vbCrLf & _
+                "SaySlow 50, "".........................................................."", ""green""" & vbCrLf & _
+                "Wait 500" & vbCrLf & _
+                "ServIP = QReadLine(""Enter DNS/IP of the Server you want to connect to>{{green}}"")" & vbCrLf & _
+                "ServPort = QReadLine(""Enter the Port you want to connect to>{{green}}"")" & vbCrLf & _
+                "If ServPort <> ""22"" Or (ServIP <> ""xlsptd5.securedigital.com"" And ServIP <> ""82.57.125.6"") Then" & vbCrLf & _
+                "   Wait 500" & vbCrLf & _
+                "   Say ""Could not establish spoofed SSH connection to ["" & ConsoleEscape(ServIP) & "":"" & ConsoleEscape(ServPort) & ""].{{red}}""" & vbCrLf & _
+                "   Quit" & vbCrLf & _
+                "End If" & vbCrLf & _
+                "Say ""Spoofing SSH Connection...{{white}}""" & vbCrLf & _
+                "SaySlow 50, "".........................................................."", ""white""" & vbCrLf & _
+                "Say ""Finished.{{white}}""" & vbCrLf & _
+                "Wait 500" & vbCrLf & _
+                "Connect ServIP, ServPort, ""__secret_spoofed_handshake__""" & vbCrLf & _
+                "Quit"
+
+Dim ItemSelected, VulnSelect, ProgSelect
+While True
+    Say "-----------------------------------------------------------{{green}}"
+    Say "-={   DarkSoft Industries   }=-{{red}}"
+    Say "-----------------------------------------------------------{{green}}"
+
+    ItemSelected = False
+
+    If MainSelect = "1" Then
+        Say "------------------------{{green}}"
+        Say "[1] .......... About Us{{red}}"
+        Say "------------------------{{green}}"
+        ItemSelected = True
+    Else
+        Say "[1] .......... About Us{{white}}"
+    End If
+
+    If MainSelect = "2" Then
+        Say "------------------------{{green}}"
+        Say "[2] ... Vulnerabilities{{red}}"
+        Say "------------------------{{green}}"
+        Say "[1] ..... XNull Port 89{{yellow}}"
+        Say "[2] ..... SecureSafe v1.2{{yellow}}"
+        Say "[0] ... Go back{{yellow}}"
+        Say "------------------------{{green}}"
+        ItemSelected = True
+
+    Else
+        Say "[2] ... Vulnerabilities{{white}}"
+    End If
+
+    If MainSelect = "3" Then
+        Say "------------------------{{green}}"
+        Say "[3] .. DarkSoft Programs{{red}}"
+        Say "------------------------{{green}}"
+        Say "[1] ... DarkSpoof - IP Spoofer v0.2b{{yellow}}"
+        Say "[2] ... DarkScan - IP Scanner v2.6{{yellow}}"
+        Say "[0] ... Go back{{yellow}}"
+        Say "------------------------{{green}}"
+        ItemSelected = True
+    Else
+        Say "[3] .. DarkSoft Programs{{white}}"
+    End If
+
+    Say "[0] .............. Exit{{white}}"
+
+    If MainSelect = "1" Then
+        Say "-----------------------------------------------------------{{green}}"
+        Say "[About Us - The Hacker Manifesto]{{red}}"
+        Say "-----------------------------------------------------------{{green}}"
+        Say "Alsi ku nushi ilani mushiti{{yellow}}"
+        Say "Itti kunu alsi mushitum kallatum kattumtum{{yellow}}"
+        Say "Alsi bararitum qablitum u namaritum{{yellow}}"
+        Say "Ashshu kashshaptu u kashshipanni{{yellow}}"
+        Say "Eli nitum ubbiraanni{{yellow}}"
+        Say "Ili-ia u Ishtari-ia ushis-su-u-eli-ia{{yellow}}"
+        Say "Eli ameri-ia amru-usanaku{{yellow}}"
+        Say "Imdikula salalu musha u urra{{yellow}}"
+        Say "Qu-u imtana-allu-u pi-ia{{yellow}}"
+        Say "Upu unti pi-ia iprusu{{yellow}}"
+        Say "Me mashtiti-ia umattu-u{{yellow}}"
+        Say "Eli li nubu-u xiduti si-ipdi{{yellow}}"
+        Say "Izizanimma ilani rabuti shima-a dababi{{yellow}}"
+        Say "Dini dina alakti limda{{yellow}}"
+        Say "Epu-ush salam kashshapi-ia u kashshapi-ia{{yellow}}"
+        Say "will never forgive me for.{{yellow}}"
+        Say "Sha epishia u mushtepishti-ia{{yellow}}"
+        Say "Is mass-ssarati sha mushi lipshuru ruxisha limnuti{{yellow}}"
+        Say ""
+        Say "                                         -- To be continued.{{white}}"
+        Pause
+        MainSelect = ""
+    End If
+
+    If MainSelect = "2" Then
+        VulnSelect = Chr(GetAscii())
+        If VulnSelect = "0" Then
+            MainSelect = ""
+        ElseIf VulnSelect = "1" Then
+            Say "-----------------------------------------------------------{{green}}"
+            Say "[Vulnerabilities > XNull Port 89]{{red}}"
+            Say "-----------------------------------------------------------{{green}}"
+            Say "[Discoverer: sm4sh0r]{{white}}"
+            Say ""
+            Say "This has been tested and works on several machines{{yellow}}"
+            Say "running the XNULL service. By sending a malformed{{yellow}}"
+            Say "command, malicous users are able to copy files from the{{yellow}}"
+            Say "remote server to their own local computer, for example{{yellow}}"
+            Say "use the below command.{{yellow}}"
+            Say ""
+            Say "RUN FILECOPY.EXE [FILENAME]{{white}}"
+            Pause
+        ElseIf VulnSelect = "2" Then
+            Say "-----------------------------------------------------------{{green}}"
+            Say "[Vulnerabilities > SecureSafe SSH Client v1.2]{{red}}"
+            Say "-----------------------------------------------------------{{green}}"
+            Say "[Discoverer: DarkSoft Industries]{{white}}"
+            Say ""
+            Say "we are after you filler filler filler fillerfiller as{{yellow}}"
+            Say "we are after you filler fillller{{yellow}}"
+            Say "filler fillerwe are after you filler fillller{{yellow}}"
+            Say "filler fillerwe are after yo{{white}}"
+            Pause
+        End If
+    End If
+
+    If MainSelect = "3" Then
+        ProgSelect = Chr(GetAscii())
+        If ProgSelect = "0" Then
+            MainSelect = ""
+        ElseIf ProgSelect = "1" Then
+            Say "-----------------------------------------------------------{{green}}"
+            Say "[DarkSoft Releases > DarkSpoof - IP/SSH Spoofer v0.2b]{{red}}"
+            Say "-----------------------------------------------------------{{green}}"
+            Say "[coded by: DarkSoft Industries]{{white}}"
+            Say ""
+            Say "with this little thingy you are able to connect to a{{yellow}}"
+            Say "SSH client with a spoofed IP. the program simulates{{yellow}}"
+            Say "a secure SSH connection.{{yellow}}"
+            Say "Program still beta!{{yellow}}"
+            Say ""
+            Say "Donwloading file 'spoofer.dss'. Please wait...{{red}}"
+            RequestWriteFile CompileScript(SpooferData)
+            SaySlow 100, "....................................", "yellow"
+        ElseIf ProgSelect = "2" Then
+            Say "-----------------------------------------------------------{{green}}"
+            Say "[Punamir Releases > DarkScan - IP Scanner v2.6]{{red}}"
+            Say "-----------------------------------------------------------{{green}}"
+            Say "[coded by: DarkSoft Industries]{{white}}"
+            Say ""
+            Say "ERROR 404 - File not found on download server!{{red}}"
+            Pause
+        End If
+    End If
+
+    If Not ItemSelected Then
+        VulnSelect = ""
+        ProgSelect = ""
+        MainSelect = Chr(GetAscii())
+        If MainSelect = "0" Then
+            Disconnect
+        End If
+    End If
+Wend
