@@ -1,0 +1,79 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "User Logged into NDRGRND Private Database{{orange}}"
+
+Sub Disconnect()
+    Say "Your connection has been closed by the remote server.{{orange}}"
+    Quit
+End Sub
+
+While True
+    Say "-- 1 -- History Files{{white}}"
+    Say "-- 2 -- History Files{{white}}"
+    Say "-- 3 -- Network Sharing{{white}}"
+    Say "-- 4 -- Disconnect from Server{{white}}"
+
+    Dim optionst
+    optionst = QReadLine("Please Enter 1 to 4>")
+
+    If optionst = "4" Then
+        Disconnect
+    End If
+
+    If optionst = "1" Then
+        Say "Just before the end of the WWII, two German provision U-boats, U-530 and U-977,"
+        Say "were launched from a port on the Baltic Sea. Reportedly they took with them members"
+        Say "of the antigravity-disk research and development teams [ULTRA], and the LAST of the"
+        Say "most vital disc components [much of this technology and hardware had been transported"
+        Say "to the base during the course of the war]."
+        Say ""
+        Say "This included the notes and drawings for the latest saucer or aerial disk designs,"
+        Say "and designs for the gigantic underground complexes and living accommodations based on"
+        Say "the remarkable underground factories of Nordhausen in the Harz Mountains."
+        Pause
+        Say "The two U-boats duly reached the new land of Neu-Schwabenland where they unloaded"
+        Say "everything. When they arrived in Argentina several months later, their crews were captured."
+        Say "It seems as if they were either counting on the formerly German-friendly Argentineans to"
+        Say "allow them access, or it could have been that they intentionally allowed themselves to be"
+        Say "discovered for misinformation purposes, i.e. -- ""yes... we are the last two renegade German"
+        Say "subs. We've been trying to hold out but...oops, you caught us... the war's finally over!"""
+        Pause
+    ElseIf optionst = "2" Then
+        Say "The Antarcticans were desperate following the war, and knew that a confrontation was imminent."
+        Say "Much effort was put into developing secret weapons projects to defend their new underground"
+        Say "Empire, which no doubt was constructed with the 'help' of a large number of expendable"
+        Say "slave laborers transported from the concentration camps of Europe."
+        Say ""
+        Say "The major base-city of Antarctica became known as the NEW BERLIN,"
+        Say "or by the code-named ""Base-211""."
+        Pause
+        Say "The crews of these U-Boats were of course interrogated by U.S. Intelligence agents who"
+        Say "had suspected the existence of the Antarctic base. Whatever the Nazi soldiers tried to tell"
+        Say "them, apparently the Americans were not convinced... especially considering the subsequent"
+        Say "and ill-fated U.S. Navy backed military actions against the Nazi's ""Last Battalion"" in"
+        Say "Antarctica in later years under Admiral Richard E. Byrd, who arrived at Antarctica with"
+        Say "an entire military armada and provisions to last 6 month. However the the entire"
+        Say "expedition lasted only 8 weeks, with only approximately three weeks of actual"
+        Say "full-scale Antarctic operations."
+        Pause
+    ElseIf optionst = "3" Then
+        Dim shareopt
+        shareopt = QReadLine("Enter name of a registered organization to share access with...>")
+        If shareopt = "zrio" Or shareopt = "zrio.org" Then
+            Say "File Accepted by ZRIO"
+            If Not BoolMissionProgress("DS", "pipelink09_zrio_forwarded") Then
+                SendMailToUser "zrio@zrio.org", "pipelink", "The Shadow Goverment have been using the miliary Post Office to send packages and documents for years." & vbCrLf & _
+                                                            "There is an important package still waiting to be delivered, we need this package." & vbCrLf & _
+                                                            "Redirect this package to the following address: 26 Masen Av New York USA" & vbCrLf & _
+                                                            "The package number is 883597 and the website for the Post Office is postoffice.mil"
+                BoolSetMissionProgress "DS", "pipelink09_zrio_forwarded"
+            End If
+            Pause
+        Else
+            Say "That organization is not registered..."
+            Pause
+        End If
+    End If
+Wend
