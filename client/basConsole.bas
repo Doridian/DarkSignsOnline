@@ -96,23 +96,23 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
         Exit Sub
     End If
 
-    Console(ConsoleID, 1).PreSpace = False
-
     Dim PromptStr As String
     If WaitingForInput(ConsoleID) Then
+        PromptStr = cPrompt(ConsoleID)
         If Has_Property_Space(cPrompt(ConsoleID)) Then
-            Console(ConsoleID, 1) = Load_Property_Space(Get_Property_Space(cPrompt(ConsoleID)), Remove_Property_Space(cPrompt(ConsoleID)) & " ")
+            Console(ConsoleID, 1) = Console_Line_Defaults
+            Console(ConsoleID, 1).PreSpace = False
+            Console(ConsoleID, 1) = Load_Property_Space(Get_Property_Space(PromptStr), Replace(Remove_Property_Space(PromptStr), ConsoleInvisibleChar, "") & " ")
             frmConsole.QueueConsoleRender
             Exit Sub
         End If
-        PromptStr = cPrompt(ConsoleID)
+        PromptStr = Replace(PromptStr, ConsoleInvisibleChar, "")
     Else
         PromptStr = cPath(ConsoleID) & ">"
     End If
-    
-    PromptStr = Replace(PromptStr, ConsoleInvisibleChar, "")
 
     Console(ConsoleID, 1) = Console_Line_Defaults
+    Console(ConsoleID, 1).PreSpace = False
     Console(ConsoleID, 1).Caption = PromptStr & " "
 
     frmConsole.QueueConsoleRender
