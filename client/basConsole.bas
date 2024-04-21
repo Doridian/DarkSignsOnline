@@ -414,7 +414,6 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
     End If
 
     s = StripAfterNewline(s)
-    s = Replace(s, ConsoleInvisibleChar, "")
 
     Dim propertySpace As String
 
@@ -442,7 +441,9 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
         If InStr(propertySpace, "right ") > 0 Then Console(ConsoleID, 1).Right = True Else Console(ConsoleID, 1).Right = False
     End If
 
-    Console(ConsoleID, OverwriteLineIndex).Caption = Remove_Property_Space(s)
+    s = Remove_Property_Space(s)
+    s = Replace(s, ConsoleInvisibleChar, "")
+    Console(ConsoleID, OverwriteLineIndex).Caption = s
 
     frmConsole.QueueConsoleRender
     DoEvents
