@@ -1,0 +1,131 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "Welcome to FirstClass DataBase website{{green}}"
+Say "[FirstClass Software] 1989-2003 FCDB.com{{green}}"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Sub DocsMenu()
+    While True
+        Say ""
+        Say "< 1 > Commands{{white}}"
+        Say "< 2 > Known Bugs and Problems{{white}}"
+        Say "< 3 > Report Bug{{white}}"
+        Say "< 4 > Back to main menu{{white}}"
+        Dim DocInput
+        DocInput = QReadLine("Please select a menu option (1-4)>{{white}}")
+        Select Case DocInput
+            Case "1"
+                Say ""
+                Say "FCDB Commands{{blue}}"
+                Say ""
+                Say "These commands are to be used in the FCDB console{{white}}"
+                Say ""
+                Say "CD - usage: cd <folder>{{white}}"
+                Say "Changes current directory to the folder specified{{white}}"
+                Say ""
+                Say "EXIT - usage: exit{{white}}"
+                Say "Exits the FCDB console{{white}}"
+                Say ""
+                Say "LS - usage: ls{{white}}"
+                Say "Lists the files and folders in current directory{{white}}"
+                Say ""
+                Say "RUN - usage: run <filename>{{white}}"
+                Say "Runs the file specified{{white}}"
+                Say ""
+                Say "SU - usage: su <user>{{white}}"
+                Say "Changes to user specified{{white}}"
+                Pause
+            Case "2"
+                Say ""
+                Say "FCDB Known Bugs and Problems{{blue}}"
+                Say ""
+                Say "Posted by BugTracker2000{{white}}"
+                Say "--------------------------------------------------------{{white}}"
+                Say "If the sysadmin is stupid and does not take access to command SU out{{white}}"
+                Say "a user maybe able to exploit this to gain higher premissions.{{white}}"
+                Say "Fix: Deny access for any user to use this command.{{white}}"
+                Say "--------------------------------------------------------{{white}}"
+                Pause
+                Say ""
+                Say "Posted by BillyBase{{white}}"
+                Say "--------------------------------------------------------{{white}}"
+                Say "There is a buffer overflow in the exc( ) module, if a string of more then{{white}}"
+                Say "255 chars the user will be thrown into the console as admin user.{{white}}"
+                Say "Fix: Edit options.ini to deny access to the exc( ) module until patch{{white}}"
+                Say "is released.{{white}}"
+                Say "--------------------------------------------------------{{white}}"
+                Pause
+            Case "3"
+                Say ""
+                Say "Report FCDB Bug{{blue}}"
+                Say ""
+                Say "Please email all bug reports to bugs@fcdb.com{{white}}"
+                Pause
+            Case "4"
+                Exit Sub
+        End Select
+    Wend
+End Sub
+
+While True
+    Say ""
+    Say "< 1 > About us{{white}}"
+    Say "< 2 > Get FCDB{{white}}"
+    Say "< 3 > FCDB documentation{{white}}"
+    Say "< 4 > Contact us{{white}}"
+    Say "< 5 > Exit{{white}}"
+    Dim MMInput
+    MMInput = QReadLine("Please select a menu option (1-5)>{{white}}")
+    Select Case MMInput
+        Case "1"
+            Say ""
+            Say "What is FCDB?{{blue}}"
+            Say ""
+            Say "FirstClass DataBase is not your ordinary database. FCDB is a smart database{{white}}"
+            Say "with many features that include, remote script execution, auto fix, command{{white}}"
+            Say "prompt usage and many many more. FCDB is ideal for small and large{{white}}"
+            Say "businesses alike, even the average user can benefit from FCDB.{{white}}"
+            Say "FCDB is your all-round database, accept nothing else.{{white}}"
+            Pause
+        Case "2"
+            Say ""
+            Say "How to purchase FCDB{{blue}}"
+            Say ""
+            Say "You can purchase FCDB by emailing sales@fcdb.com all information{{white}}"
+            Say "will be emailed back to you asap.{{white}}"
+            Say ""
+            Pause
+        Case "3"
+            Say ""
+            Say "FCDB Documentation{{blue}}"
+            DocsMenu
+        Case "4"
+            Say ""
+            Say "Contact FCDB Team{{blue}}"
+            Say ""
+            Say "If you wish to contact the FCDB team then please send emails to info@fcdb.com"
+            Pause
+        Case "5"
+            Disconnect
+    End Select
+Wend
+
+
+
+
+
+
+
+
+
+
+
+
+
+
