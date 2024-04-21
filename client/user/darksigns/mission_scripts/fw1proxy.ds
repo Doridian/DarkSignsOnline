@@ -1,0 +1,28 @@
+Option Explicit
+
+DLOpen "termlib"
+
+SaySlow 20, "Proxy Service 1.0", "orange"
+Dim Address
+Address = QReadLine("Please enter the IP address>")
+If Address <> "46.23.37.2" And Address <> "corpfw1.org" Then
+    SaySlow 10, "That IP address is not valid"
+    Quit
+End If
+
+Dim Port
+Port = CInt(QReadLine("Please enter the port to connect to>"))
+If IsLocal() Then
+    SpoofLocalConnectingIP "46.23.37.2"
+    If Port = 75 Then
+        Run "/darksigns/mission_scripts/fw1debug.ds"
+    ElseIf Port = 125 Then
+        Run "/darksigns/mission_scripts/fw1slock.ds"
+    End If
+Else
+    If Port = 15 Then
+        SaySlow 10, "Proxy cannot connect to itself"
+        Quit
+    End If
+    Connect Address, Port
+End If

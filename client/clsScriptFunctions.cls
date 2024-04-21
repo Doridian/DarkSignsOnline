@@ -90,7 +90,7 @@ End Property
 Public Property Get CWD() As String
     AssertLocalOnly
 
-    CWD = CPath(PrivConsoleID)
+    CWD = cPath(PrivConsoleID)
 End Property
 
 Public Property Let CWD(ByVal NewValue As String)
@@ -104,7 +104,7 @@ Public Property Let CWD(ByVal NewValue As String)
         Exit Property
     End If
 
-    CPath(PrivConsoleID) = RawDir
+    cPath(PrivConsoleID) = RawDir
     Yield
 End Property
 
@@ -1906,8 +1906,10 @@ Public Function RGBSplit(ByVal lColor As Long) As Variant
 End Function
 
 Public Function SpoofLocalConnectingIP(ByVal NewValue As String)
-    AssertLocalOnly
-    
+    If Not IsLocal() Then
+        Exit Function
+    End If
+
     If NewValue = "" Then
         NewValue = PrivServerConnectingIP
     End If
