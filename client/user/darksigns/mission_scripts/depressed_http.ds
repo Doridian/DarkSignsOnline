@@ -1,0 +1,89 @@
+Option Explicit
+
+DLOpen "termlib"
+' REMOTE ADMINISTRATION 
+
+Dim InpVal
+
+Sub Disconnect()
+    Say "Connection Terminated{{orange}}"
+    Quit
+End Sub
+
+Say "A REALLY DEPRESSED SERVER{{green}}"
+Say "Remote Administration System{{green}}"
+Say "A depressed server - A Username And Password is Required to Access this Server.{{grey}}"
+Say "IF YOU DONT HAVE A USERNAME OR PASSWORD, USE 'ADMIN' FOR BOTH.{{grey}}"
+
+InpVal = QReadLine("Please Enter Your Username to Continue...>")
+If InpVal = "admin" Then
+    Say "...User Verified."
+Else
+    Say "Bad Username"
+    Disconnect
+End If
+
+InpVal = QReadLine("Please Enter Your Password>")
+If InpVal = "admin" Then
+    Say "...Password Accepted"
+Else
+    Say "Bad Password"
+    Disconnect
+End If
+
+Say "The requested document is totally fake."
+Say "No /404 here."
+Say "Even tried multi."
+Say "Nothing helped."
+Say "I'm really depressed about this."
+Say "You see, I'm just a web server..."
+Say "-- here I am, brain the size of the universe,"
+Say "trying to serve you a simple web page,"
+Say "and then it doesn't even exist!"
+Say "Where does that leave me?!"
+Say "I mean, I don't even know you."
+Say "How should I know what you wanted from me?"
+Say "You honestly think I can *guess*"
+SaySlow 1, " what someone I don't even *know*", ""
+Say "wants to find here?"
+Pause
+Say "*sigh*"
+Say "Man, I'm so depressed I could just cry."
+Say "And then where would we be, I ask you?"
+Say "It's not pretty when a web server cries."
+Say "And where do you get off telling me what to show anyway?"
+Say "Just because I'm a web server,"
+Say "and possibly a manic depressive one at that?"
+Say "Why does that give you the right to tell me what to do?"
+Say "Huh?"
+Say "I'm so depressed..."
+Say "I think I'll crawl off into the trash can and decompose."
+Say "I mean, I'm gonna be obsolete in what, two weeks anyway?"
+Say "What kind of a life is that?"
+Say "Two effing weeks,"
+Say "and then I'll be replaced by a .01 release,"
+Say "that thinks it's God's gift to web servers,"
+Say "just because it doesn't have some tiddly little"
+Say "security hole with its HTTP POST implementation,"
+Say "or something."
+Pause
+Say "I'm really sorry to burden you with all this,"
+Say "I mean, it's not your job to listen to my problems,"
+Say "and I guess it is my job to go and fetch web pages for you."
+Say "But I couldn't get this one."
+Say "I'm so sorry."
+Say "Believe me!"
+Say "Maybe I could interest you in another page?"
+Say "There are a lot out there that are pretty neat, they say,"
+Say "although none of them were put on *my* server, of course."
+Say "Figures, huh?"
+Say "Everything here is just mind-numbingly stupid."
+Say "That makes me depressed too, since I have to serve them,"
+Say "all day and all night long."
+Say "Two weeks of information overload,"
+Say "and then *pffftt*, consigned to the trash."
+Say "What kind of a life is that?"
+Say "Now, please let me sulk alone."
+Say "I'm so depressed." 
+Say ""
+Say "Im off to get a virus."

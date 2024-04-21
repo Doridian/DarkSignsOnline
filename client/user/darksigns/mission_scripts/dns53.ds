@@ -1,0 +1,6 @@
+Option Explicit
+
+While True
+    Say "Null connection press Ctrl + B to disconnect{{grey}}"
+    ReadLine ">"
+Wend
