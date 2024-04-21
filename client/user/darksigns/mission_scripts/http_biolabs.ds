@@ -1,0 +1,97 @@
+Option Explicit
+' SECURE HTTP
+' this script runs as the dark signs help server at darksigns.com
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Sayslow 1, "Connection Closed", "blue"
+    Quit
+End Sub
+
+While True
+    Dim optchoice
+    SaySlow 1, "Connected on Port 80 to BIOLABS", "green"
+    SaySlow 1, "Public Information Interface", "green"
+    SaySlow 1, "Biolabs biotechnology research, centered on dolphin intelligence.", "white"
+    SaySlow 1, "1 - Our Research", "grey"
+    SaySlow 1, "2 - Dolphin Encounters", "grey"
+    SaySlow 1, "3 - File Database", "grey"
+    SaySlow 1, "4 - Network", "grey"
+    SaySlow 1, "5 - Disconnect", "grey"
+
+    optchoice = QReadLine("Please select an option from the menu above (1 - 4)>")
+    Select Case optchoice
+        Case "1":
+            Say "Research{{blue}}"
+            Say "Biolabs focuses most of its efforts on dolphin communication.{{white}}"
+            Say "We see dolphins in the ocean and can distinguish many of the{{white}}"
+            Say "individual dolphins by their unique characteristics.{{white}}"
+            Say ""
+            Say "In our continuing research, we believe we are very close to{{white}}"
+            Say "a breakthrough in this new communication science.{{white}}"
+            Pause
+        Case "2":
+            Say "Dolphin Encounters{{blue}}"
+            Say "The best way to have a dolphin encounter is to spend a week{{white}}"
+            Say "with us on a group retreat beside the sea. Here you get to really{{white}}"
+            Say "learn the ways and guidelines for communicating with dolphins,{{white}}"
+            Say "you get to create a pod like community with the other retreaters{{white}}"
+            Say "and live right beside the sea on a marine reserve where they{{white}}"
+            Say "often come to rest and play.{{white}}"
+            Say ""
+            Say "The growth in the dolphin communication experience is very powerful.{{white}}"
+            Pause
+        Case "3":
+            Say "File Database{{blue}}"
+            Say "PUBLIC FILES:{{white}}"
+            Say "(none listed){{white}}"
+            Say "PRIVATE FILES:{{white}}"
+            Say "File 1 - 8m.enc{{white}}"
+            Dim filen
+            filen = QReadLine("Enter A File Number To Download (put 0 to cancel)>")
+            If filen = "1" Then
+                Dim FData
+                FData = "ENCRYPTED" & vbCrLf & _
+                        "SDKJBSKJDBSKJBHDKJSBHKJDBSKJBDS" & vbCrLf & _
+                        "AKUHSMKAHKSAHLKHSMKDHSKJHDKSHJ" & vbCrLf & _
+                        "SSUDHISUHDIUSYGIDUYSGDMJASLKM" & vbCrLf & _
+                        "SIDHMSLKDHKJLXJZLKXHMLZKXJHLKZJH" & vbCrLf & _
+                        "SDJKHSLMDHALIUHSLAUHSLAOHSOIHM" & vbCrLf & _
+                        "AKUHSMKAHKSAHLKHSMKDHSKJHDKSHJ" & vbCrLf & _
+                        "SSUDHISUHDIUSYGIDUYSGDMJASLKM" & vbCrLf & _
+                        "SIDHMSLKDHKJLXJZLKXHMLZKXJHLKZJH" & vbCrLf & _
+                        "SDJKHSLMDHALIUHSLAUHSLAOHSOIHM" & vbCrLf
+                RequestWriteFile FData
+                Say "File [8m.enc] Downloaded{{white}}"
+                Pause
+            Else
+                SaySlow 1, "Invalid Option", "orange"
+            End If
+        Case "4":
+            Say "Network{{blue}}"
+            Say "Restricted to system administrators and biolabs employees only.{{white}}"
+            Pause
+        Case "5":
+            SaySlow 1, "You have been disconnected", "orange"
+            Disconnect
+        Case Else:
+            SaySlow 1, "Invalid Option", "orange"
+    End Select
+Wend
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
