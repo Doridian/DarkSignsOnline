@@ -1,0 +1,79 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "Welcome to the client side application for DoSer v3.1{{green}}"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Dim Connected
+Connected = False
+
+Sub HandleDOS()
+    Dim DOSServer, DOSPort
+    DOSServer = QReadLine("Please enter the server name>{{white}}")
+    If DOSServer <> "fbi.gov" Then
+        Say "Can not find server [" & ConsoleEscape(DOSServer) & "]{{orange}}"
+        Exit Sub
+    End If
+    DOSPort = QReadLine("Please enter the server port>{{white}}")
+    If DOSPort <> "25" Then
+        Say "Can not connect [fbi.gov : " & ConsoleEscape(DOSPort) & "]{{orange}}"
+        Exit Sub
+    End If
+
+    Say ""
+    Say "Sending request to servers{{purple}}"
+    Wait 1000
+    Say ""
+    Say "Sending DoS commands{{purple}}"
+    Wait 1000
+    Say ""
+    Say "DoSing server{{purple}}"
+    SaySlow 250, "....................................................", "purple"
+    Say ""
+    BoolSetMissionProgress "DS", "fbi25_dosed"
+    Say "DoS successfull, FBI.gov:25 wont be taking any connections for a while{{purple}}"
+End Sub
+
+While True
+    Say ""
+    Say "Main Menu{{blue}}"
+    Say "<-------------------------->{{blue}}"
+    Say "1 - Connect to servers{{blue}}"
+    Say "2 - Start DoS{{blue}}"
+    Say "3 - Exit{{blue}}"
+    Say "<-------------------------->{{blue}}"
+    Dim MMInput
+    MMInput = QReadLine(">")
+    If MMInput = "1" Then
+        Say "Getting server list{{green}}"
+        Say ""
+        Say "Recieving idents{{green}}"
+        Say ""
+        Say "Conecting to all infected servers{{green}}"
+        SaySlow 100, "..............................", "green"
+        Say "Connected{{green}}"
+        Connected = True
+        Pause
+    ElseIf MMInput = "2" Then
+        If Not Connected Then
+            Say "Not connected to servers{{orange}}"
+            pause
+        ElseIf IntMissionProgress("DS", "dos_bw") < 9 Then
+            Say "Not enough bandwidth to effectively DoS any server{{orange}}"
+            Say "Infect a few more servers then try again{{orange}}"
+            Pause
+        Else
+            HandleDOS
+            Pause
+        End If
+    ElseIf MMInput = "3" Then
+        Disconnect
+    End If
+Wend
+
+
