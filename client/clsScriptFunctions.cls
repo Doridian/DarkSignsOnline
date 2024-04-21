@@ -1866,3 +1866,4 @@ End Function
 ' TODO: Hash storage fetch, like OpenHashData("abcdef0123456789"), will download to /system/hashstore/abcdef0123456789 if doesnt exist, verify actual data hash!
 ' TODO: Hash storage upload, like UploadHashData("abcdef0123456789", "data here"), server should verify hash before storing!
 ' TODO: DLOpenHash("abcdef0123456789") to open a library from the hash store
+' TODO: Allow scripts to send E-Mails from domains with the same owner (make user emails come from @users to make it easy to tell)
