@@ -1,0 +1,139 @@
+Option Explicit
+
+' DECRYPTION
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Thank you for using DECRYPT.com!{{white}}"
+    SaySlow 1, "Connection Closed", "blue"
+    Quit
+End Sub
+
+Function MHasFile(Name)
+    MHasFile = BoolMissionProgress("DS", "decrypt_has_file_" & Name)
+End Function
+Function MGotFile(Name)
+    MGotFile = MHasFile(Name)
+    If MGotFile Then
+        Exit Function
+    End If
+    BoolSetMissionProgress "DS", "decrypt_has_file_" & Name
+End Function
+
+Sub Got8MAnd9MEnc()
+    SendMailToUser "zrio@zrio.org", "Good...", "I see that we have developed a good working relationship." & vbCrLf & _
+                                                "This is the way it should always be." & vbCrLf & _
+                                                "See what else you can find around biolabs..." & vbCrLf & _
+                                                "Perhaps try biolabs.org, or similar servers." & vbCrLf & _
+                                                "There must be something..."
+End Sub
+
+Sub CheckFileData(FileData)
+    If InStr(FileData, "akuhsmkahksahl") > 0 Then '8m.enc
+        If Not MGotFile("8m.enc") Then
+            If MHasFile("9m.enc") Then
+                Got8MAnd9MEnc
+            Else
+                SendMailToUser "zrio@zrio.org", "decryption", "You did it! We recieved the decryption of the file successfully." & vbCrLf & _
+                                                                "Thank you for your continued efforts." & vbCrLf & _
+                                                                "...we hope you don't mind doing a bit more work for us." & vbCrLf & vbCrLf & _
+                                                                "now, there is another file we need. 8m.enc was only half of it." & vbCrLf & _
+                                                                "We need another file, it is called 9m.enc," & vbCrLf & _
+                                                                "from biolabs.com, we need it decrypted as well." & vbCrLf & _
+                                                                "Good Luck."
+            End If
+
+            SendMailToUser "noreply@security.com", "Mailing List News", "Hello Subscribers!" & vbCrLf & _
+                                                                            "There has been a new bug found in a rare version of the FuzzyMail Server." & vbCrLf & _
+                                                                            "Check our website for more information." & vbCrLf & vbCrLf & _
+                                                                            "Regards," & vbCrLf & _
+                                                                            "David Ashburn" & vbCrLf & _
+                                                                            "SECURITY.com"
+        Else
+            SendMailToUser "zrio@zrio.org", "decryption", "We already had the 8m.enc file!" & vbCrLf & _
+                                                            "We don't need it again."
+        End If
+        Exit Sub
+    End If
+
+    If InStr(FileData, "JAQHZHNJQAMKSAJHSKAJSKAKJSMA") > 0 Then ' 9m.enc
+        If Not MGotFile("9m.enc") Then
+            If MHasFile("8m.enc") Then
+                Got8MAnd9MEnc
+            Else
+                SendMailToUser "zrio@zrio.org", "decryption", "You did it! We recieved the decryption of the file successfully." & vbCrLf & _
+                                                                "Thank you for your continued efforts." & vbCrLf & _
+                                                                "...we hope you don't mind doing a bit more work for us." & vbCrLf & vbCrLf & _
+                                                                "now, there is another file we need. 9m.enc was only half of it." & vbCrLf & _
+                                                                "We need another file, it is called 8m.enc," & vbCrLf & _
+                                                                "from biolabs.com, we need it decrypted as well." & vbCrLf & _
+                                                                "Good Luck."
+            End If
+        Else
+            SendMailToUser "zrio@zrio.org", "decryption", "We already had the 9m.enc file!" & vbCrLf & _
+                                                            "We don't need it again."
+        End If
+        Exit Sub
+    End If
+
+    If InStr(FileData, "JDHKMZXKHJZJXXNHZGXZHXGZXGZX") > 0 Then ' 10m.enc
+        If Not MGotFile("10m.enc") Then
+            SendMailToUser "zrio@zrio.org", "10m.enc", "We got the 10m.enc file. It is useless to us." & vbCrLf & _
+                                                        "Check for other servers." & vbCrLf & _
+                                                        "There may be something important in this IP range: 66.7.1.1 to 66.7.115.255" & vbCrLf & vbCrLf & _
+                                                        "Dig deep " & Username & ", we are counting on you!"
+        Else
+            SendMailToUser "zrio@zrio.org", "decryption", "We already had the 10m.enc file!" & vbCrLf & _
+                                                            "We don't need it again."
+        End If
+        Exit Sub
+    End If
+
+    SendMailToUser "zrio@zrio.org", "no!", "We got a decrypted file that you sent us," & vbCrLf & _
+                                            "but it wasn't what we are looking for" & vbCrLf & _
+                                            "Keep searching..."
+End Sub
+
+Sub DecryptMenu()
+    Say "Enter Complete File Name as it exists{{white}}"
+    Say "on your computer (Eg: myfile.file){{white}}"
+    Dim FileData
+    FileData = RequestReadFile()
+
+    SaySlow 10, "Decryption in Progress", "white"
+    SaySlow 100, "....................................................................", "white"
+    SaySlow 2, "Operation Complete", "white"
+    Pause
+    While True
+        SaySlow 2, "OUTPUT", "white"
+        SaySlow 2, "Please specify to what organization or server should this decryption be sent?", "white"
+        Dim SendTo
+        SendTo = QReadLine("Decrypted file will be sent where specified, type 0 to cancel>")
+        If SendTo = "0" Then
+            Exit Sub
+        End If
+
+        If SendTo = "zrio" Or SendTo = "zrio.org" Then
+            SaySlow 1, "ZRIO Accepted...", "white"
+            CheckFileData FileData
+            Exit Sub
+        Else
+            SaySlow 1, "File Rejected by Remote Server...", "white"
+        End If
+    Wend
+End Sub
+
+While True
+    SaySlow 1, "Public File Decryption Server", "green"
+    SaySlow 1, "1) Decrypt a File", "blue"
+    SaySlow 1, "2) Exit", "blue"
+    Dim MMInput
+    MMInput = QReadLine("Please Enter 1 or 2>")
+
+    If MMInput = "1" Then
+        DecryptMenu
+    ElseIf MMInput = "2" Then
+        Say "No File(s) Decrypted{{white}}"
+        Disconnect
+    End If
+Wend
