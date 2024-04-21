@@ -35,7 +35,12 @@ Sub HandleDOS()
     Say "DoSing server{{purple}}"
     SaySlow 250, "....................................................", "purple"
     Say ""
-    BoolSetMissionProgress "DS", "fbi25_dosed"
+    If Not BoolMissionProgress("DS", "fbi25_dosed") Then
+        BoolSetMissionProgress "DS", "fbi25_dosed"
+        SendMailToUser "zrio@zrio.org", "Waiting", "We are glad to hear that your email trouble is over." & vbCrLf & _
+            "We are currently waiting for another agent to finish a mission before we can give you anymore information." & vbCrLf & _
+            "Expect to hear from us soon"
+    End If
     Say "DoS successfull, FBI.gov:25 wont be taking any connections for a while{{purple}}"
 End Sub
 

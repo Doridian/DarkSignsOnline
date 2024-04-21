@@ -1,0 +1,18 @@
+Option Explicit
+
+DLOpen "termlib"
+
+If BoolMissionProgress("DS", "fbi25_dosed") Then
+    Say "Connection terminated{{red}}"
+    Say "Error: remote host unable to load mail script{{red}}"
+    Say "Please email the admin with the above error message{{red}}"
+Else
+    Say "This is a goverment server, any attempt to gain illegal access to this machine{{blue}}"
+    Say "will be servilely punished{{blue}}"
+    Say ""
+    ReadLine "Username>{{grey}}"
+    ReadLine "Password>{{grey}}"
+    Say "Username/Password Error [bad username/passwd]{{orange}}"
+End If
+
+Say "Connection closed by remote host{{orange}}"
