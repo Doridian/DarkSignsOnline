@@ -1,0 +1,105 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "|\-/|\-/||\-/|\-/||\-/|\-/||\-/|\-/||\-/|\-/||\-/|\-/||\-/|\-/||\-/|{{green}}"
+Say "|\-/|             CrackerTools.com                |\-/|{{green}}"
+Say "|\-/| The only place to get the latest and|\-/|{{green}}"
+Say "|\-/|             best cracker tools!               |\-/|{{green}}"
+Say "|\-/|\-/||\-/|\-/||\-/|\-/||\-/|\-/||\-/|\-/||\-/|\-/||\-/|\-/||\-/|{{green}}"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Sub DownloadsMenu()
+    Say "CrackerTools.com's Downloads{{green}}"
+    Say ""
+    Say "<<( 1 )>> BackDoor v2.0{{purple}}"
+    Say "<<( 2 )>> DoSer v3.1{{purple}}"
+    Say "<<( 3 )>> PasswdCracker Jack v1.0{{purple}}"
+    Say "<<( 4 )>> Encrypt/Decrypt beta v0.3{{purple}}"
+    Say "<<( 5 )>> Back to main menu{{purple}}"
+    Dim DLInput
+    DLInput = QReadLine("Enter 1 - 5>")
+    Select Case DLInput
+        Case "1"
+            Say "BackDoor v2.0{{green}}"
+            Say ""
+            Say "Mirror 1 <<( Down )>>{{purple}}"
+            Say "Mirror 2 <<( Down )>>{{purple}}"
+            Say "Mirror 3 <<( Down )>>{{purple}}"
+            Say ""
+            Say "All mirrors down{{orange}}"
+            Pause
+        Case "2"
+            Say "DoSer v3.1{{green}}"
+            Say ""
+            Say "Mirror 1 <<( Down )>>{{purple}}"
+            Say "Mirror 2 <<( Down )>>{{purple}}"
+            Say "Mirror 3 <<( Active )>>{{purple}}"
+            Say ""
+            Say "Redirecting you to the download server{{purple}}"
+            Say ""
+            SaySlow 100, "............................................", "white"
+            Say ""
+            Say "Downloading [DoSer v3.1]{{blue}}"
+            Dim DoSerTool
+            DoSerTool = "Option Explicit" & vbCrLf & "DLOpen ""termlib""" & vbCrLf & "SaySlow 500, ""INFECTED"", ""red""" & vbCrLf
+            DoSerTool = CompileScript(DoSerTool) & vbCrLf & "XREMOTEAPPSIGNATURE=TRUE" & vbCrLf
+            RequestWriteFile DoSerTool
+            SaySlow 100, ".........................................................", "blue"
+            Say "Download Complete{{blue}}"
+            Pause
+        Case "3"
+            Say "PasswdCracker Jack v1.0{{green}}"
+            Say ""
+            Say "Mirror 1 <<( Down )>>{{purple}}"
+            Say "Mirror 2 <<( Down )>>{{purple}}"
+            Say "Mirror 3 <<( Down )>>{{purple}}"
+            Say ""
+            Say "All mirrors down{{orange}}"
+            Pause
+        Case "4"
+            Say "Encrypt/Decrypt beta v0.3{{green}}"
+            Say ""
+            Say "Mirror 1 <<( Down )>>{{purple}}"
+            Say "Mirror 2 <<( Down )>>{{purple}}"
+            Say "Mirror 3 <<( Down )>>{{purple}}"
+            Say ""
+            Say "All mirrors down{{orange}}"
+            Pause
+        Case "5"
+            Return
+    End Select
+End Sub
+
+While True
+    Say ""
+    Say "<<( 1 )>> Downloads{{purple}}"
+    Say "<<( 2 )>> Exploits{{purple}}"
+    Say "<<( 3 )>> Donate{{purple}}"
+    Say "<<( 4 )>> Links{{purple}}"
+    Say "<<( 5 )>> Exit{{purple}}"
+    Dim MMInput
+    MMInput = QReadLine("Enter 1 - 5>")
+    Select Case MMInput
+        Case "1"
+            DownloadsMenu
+        Case "2"
+            Say "For the latest and greatest exploits check out Security.com{{purple}}"
+            Pause
+        Case "3"
+            Say "Please send an email to donate@crackertools.com for details on donating to{{purple}}"
+            Say "the CrackerTools.com project. Thank you{{purple}}"
+            Pause
+        Case "4"
+            Say "Recommended Links{{green}}"
+            Say "hackme.com - Hack the server :D{{purple}}"
+            Say "crashme.com - FUN FUN FUN{{purple}}"
+            Pause
+        Case "5"
+            Disconnect
+    End Select
+Wend

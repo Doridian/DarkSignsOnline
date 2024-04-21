@@ -11,22 +11,28 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
         DSOSingleEncrypt = "X"
         Exit Function
     End If
+    If ScriptKey = "" Then
+        ScriptKey = "local"
+    End If
 
     Dim CryptoVer As String
     Dim bRaw() As Byte, bProcessed() As Byte, bSalt() As Byte, bPass() As Byte
     Dim X As Long
 
-    bRaw = StrConv(tmpS, vbFromUnicode)
-    If Not ZstdCompress(bRaw, bProcessed) Then
-        tmpS = "X"
-        Exit Function
-    End If
-
     ' BEGIN encrypt
     CryptoVer = "5"
-    If ScriptKey = "" Then
-        ScriptKey = "__NOKEY__"
+
+    bRaw = StrConv(tmpS, vbFromUnicode)
+    If UBound(bRaw) > 128 Then
+        If Not ZstdCompress(bRaw, bProcessed) Then
+            Err.Raise vbObjectError + 9183, , "ZSTD compression error"
+            Exit Function
+        End If
+    Else
+        bProcessed = bRaw
+        CryptoVer = "6"
     End If
+
     ScriptKey = EncryptedDefaultKey & ScriptKey
     bSalt = AesGenSalt()
     bPass = StrConv(ScriptKey & vbNullString, vbFromUnicode)
@@ -52,18 +58,18 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
 End Function
 
 Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As String, ByVal ScriptKey As String) As String
+    If ScriptKey = "" Then
+        ScriptKey = "local"
+    End If
     Dim X As Long
 
     Select Case CryptoVer
-        Case "5":
+        Case "5", "6":
             Dim sSplit() As String, bSalt() As Byte, bHMAC() As Byte, bHMACOut() As Byte, bPass() As Byte, bRaw() As Byte, bDecompressed() As Byte
             sSplit = Split(InputStr, ":")
             bSalt = DecodeBase64Bytes(sSplit(0))
             bHMAC = DecodeBase64Bytes(sSplit(1))
             bRaw = DecodeBase64Bytes(sSplit(2))
-            If ScriptKey = "" Then
-                ScriptKey = "__NOKEY__"
-            End If
             ScriptKey = EncryptedDefaultKey & ScriptKey
             bPass = StrConv(ScriptKey & vbNullString, vbFromUnicode)
 
@@ -91,8 +97,12 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As S
                 Err.Raise vbObjectError + 9092, , "HMAC check failure"
             End If
 
-            If Not ZstdDecompress(bRaw, bDecompressed) Then
-                Err.Raise vbObjectError + 9223, , "ZSTD decompression error"
+            If CryptoVer = "5" Then
+                If Not ZstdDecompress(bRaw, bDecompressed) Then
+                    Err.Raise vbObjectError + 9223, , "ZSTD decompression error"
+                End If
+            Else
+                bDecompressed = bRaw
             End If
             DSOSingleDecrypt = StrConv(bDecompressed, vbUnicode)
         Case "X":
@@ -144,7 +154,7 @@ Public Function DSODecryptScript(ByVal Source As String, ByVal ScriptKey As Stri
     DSODecryptScript = Output
 End Function
 
-Public Function DSOCompileScript(ByVal Source As String, ByVal ScriptKey As String, Optional ByVal AllowCommands As Boolean = True) As String
+Public Function DSOCompileScript(ByVal Source As String, ByVal ScriptKey As String) As String
     Dim ParsedSource As String
     ParsedSource = DSODecryptScript(Source, "")
 

@@ -1,0 +1,43 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "To enter this site you have to answer one question:"
+Dim answer
+Answer = QReadLine("How does elite people spell: hacker?")
+
+If Answer <> "h4ck3r" Then
+    Say "Wrong !"
+    Quit
+End If
+
+Dim Style
+Style = "{{rgb:0,153,0}}"
+
+Sub ViewBackdoor()
+    Say "Hello i've just been fired of internetprovider.com, but i just had the time" & Style
+    Say "take note of some logins + password." & Style
+    Say "I hope some of them still work. Here is the list :" & Style
+    Say "admin / toto" & Style
+    Say "administrator / internet" & Style
+    Say "ipadmin / provider" & Style
+    Say "gota / 1979" & Style
+    Pause
+End Sub
+
+Dim Choice
+While True
+    Say "Welcome to backdoors.com" & Style
+    Say "Here are some backdoors only for you" & Style
+    Say "1. internetprovider.com  thx to : old staff member" & Style
+    Say "0. Disconnect" & Style
+
+    Choice = GetAsciiWithPrompt()
+    If Choice = Asc("1") Then
+        ViewBackdoor
+    End If
+
+    If Choice = Asc("0") Then
+        Quit
+    End If
+Wend

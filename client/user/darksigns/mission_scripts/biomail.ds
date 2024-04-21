@@ -1,0 +1,138 @@
+Option Explicit
+
+DLOpen "termlib"
+
+' don't look at this file!!!! that's cheating!!!!!!!!!!!!!!!! :P
+
+SaySlow 1, "Connected to BIOLABS Mail", "green"
+Dim Username, Password
+Username = QReadLine("Enter Username>{{grey}}")
+SaySlow 100, "Checking...", "grey"
+Password = QReadLine("Enter Password for username: " & ConsoleEscape(Username) & ">{{grey}}")
+SaySlow 100, "Checking...", "grey"
+
+Sub Disconnect()
+    Say "Connection Closed{{blue}}"
+    Quit
+End Sub
+
+If Username <> "research" Then
+    SaySlow 1, "Error... The mail account [" & ConsoleEscape(Username) & "] was not found on this server", "red"
+    Disconnect
+End If
+
+If Password <> "dolphin" Then
+    SaySlow 1, "Error... The password is invalid", "red"
+    Disconnect
+End If
+
+SaySlow 1, "User Logged In", "green"
+
+
+Sub EmailMenu(EmailID)
+    While True
+        Say "Select Mail Task{{blue}}"
+        SaySlow 1, "(1) Forward this Email to someone or somewhere", "grey"
+        SaySlow 1, "(2) Back to the main mail menu", "grey"
+        SaySlow 1, "(3) Disconnect from the server", "grey"
+        Dim OptStr
+        OptStr = QReadLine("Enter A Number Based on your Preference (1-3)>{{grey}}")
+        Select Case OptStr
+            Case "1"
+                Dim SentTo
+                SentTo = QReadLine("Email will be forwarded where specified, type 0 to cancel>{{grey}}")
+                If SentTo = "zrio" Or SentTo = "zrio.org" Then
+                    Say "ZRIO Accepted the Email...{{green}}"
+                    Dim ReplyEmail
+                    Dim ReplySubject
+                    Select Case EmailID
+                        Case 1
+                            ReplySubject = "ZRIO Re:Email We got the email you sent us, but what good is it to us?"
+                            ReplyEmail = "Some spam email about income?" & vbCrLf & _
+                                            "We have enough income already..." & vbCrLf & _
+                                            "Come on... you can do better." & vbCrLf & _
+                                            "Go back and see what you can get for us."
+                        Case 2
+                            ReplySubject = "ZRIO Re:Email We got the email you forwarded to us about the dolphin communication frequency."
+                            ReplyEmail = "They are further along then we feared." & vbCrLf & _
+                                            "In that email was a encrypted location, luckily for us it was easily decrypted." & vbCrLf & _
+                                            "We have the IP address of a computer close to this location, so close, it" & vbCrLf & _
+                                            "might even be at the potential base itself." & vbCrLf & _
+                                            "66.1.22.2... keep searching."
+                        Case 3
+                            ReplySubject = "ZRIO Re:Email We got the email you sent us, but what good is it to us?"
+                            ReplyEmail = "Some spam email about insurance?" & vbCrLf & _
+                                            "Really, we don't want insurance right now." & vbCrLf & _
+                                            "Come on... you can do better." & vbCrLf & _
+                                            "Go back and see what you can get for us."
+                    End Select
+                    SendMailToUser "zrio@zrio.org", ReplySubject, ReplyEmail
+                ElseIf SentTo <> "0" Then
+                    SaySlow 1, "Email Rejected by Remote Server...", "red"
+                End If
+            Case "2"
+                Exit Sub
+            Case "3"
+                Disconnect
+        End Select
+    Wend
+End Sub
+
+While True
+    Say "Select Mail Task", "blue"
+    SaySlow 1, "(1) Read New Mail - get extra income conditions apply .aff", "grey"
+    SaySlow 1, "(2) Read New Mail - Re: Dolphin Project Update", "grey"
+    SaySlow 1, "(3) Read New Mail - AD: Are YOU Paying More than you should on Insurance?", "grey"
+    SaySlow 1, "(4) Disconnect", "grey"
+
+    Dim OptStr
+    OptStr = QReadLine("Enter A Number Based on your Preference (1-4)>{{grey}}")
+    Select Case OptStr
+        Case "1"
+            Say "get extra income conditions apply .aff{{blue}}"
+            Say "This is your chance to open a free online business.{{white}}"
+            Say "Just answer a few over the phone questions and you{{white}}"
+            Say "will be on your way to success.{{white}}"
+            Say ""
+            Say "Ring (012) 727 7293 when asked say you were{{white}}"
+            Say "referred by mrspammer.{{white}}"
+            Pause
+            EmailMenu 1
+        Case "2"
+            Say "Re: Dolphin Project Update{{blue}}"
+            Say "Hi guys... oh my... you have to see this. It's incredible!{{white}}"
+            Say "We have found the correct link frequency for{{white}}"
+            Say "communication with the dolphins! It's way above the{{white}}"
+            Say "range we expected.{{white}}"
+            Say ""
+            Say "This is so exciting for me... it really is an amazing{{white}}"
+            Say "breakthrough. I am currently in Arizona attending{{white}}"
+            Say "a meeting with some other researches. Wait until{{white}}"
+            Say "I get back and I will tell you more.{{white}}"
+            Say ""
+            Say "Frequency: 28.78 GHZ{{white}}"
+            Say "I have found it works best with the bio tuner on a{{white}}"
+            Say "rotating modulation. Don't ask me why yet, but I'm{{white}}"
+            Say "sure we can figure it out when we get back.{{white}}"
+            Say ""
+            Say "And Dr. Wright... the information you have been{{white}}"
+            Say "waiting for. Remember to keep it private.{{white}}"
+            Say "LATITUDE ENC(S29MS8MS){{white}}"
+            Say "LONGITUDE ENC(AJ2M2S08S){{white}}"
+            Say ""
+            Say "Talk to you all again soon,{{white}}"
+            Say "Adam Carter{{white}}"
+            Pause
+            EmailMenu 2
+        Case "3"
+            Say "AD: Are YOU Paying More than you should on Insurance?{{blue}}"
+            Say "AXAS Insurance Global{{white}}"
+            Say "Quality personal insurance for you{{white}}"
+            Say "and your family. Find out how just ring{{white}}"
+            Say "(012) 725 2983.{{white}}"
+            Pause
+            EmailMenu 3
+        Case "4"
+            Disconnect
+    End Select
+Wend

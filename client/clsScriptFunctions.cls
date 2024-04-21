@@ -1722,8 +1722,8 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     Yield
 End Function
 
-Public Function CompileScript(ByVal Source As String, Optional ByVal FileKey As String = "", Optional ByVal AllowCommands As Boolean = True) As String
-    CompileScript = DSOCompileScript(Source, FileKey, AllowCommands)
+Public Function CompileScript(ByVal Source As String, Optional ByVal FileKey As String = "") As String
+    CompileScript = DSOCompileScript(Source, FileKey)
 End Function
 
 ' Encoding helpers

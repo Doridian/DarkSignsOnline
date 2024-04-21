@@ -1,0 +1,242 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Dim OldgamesVisited
+OldgamesVisited = BoolMissionProgress("DS", "oldgames_visited")
+
+Dim InKey
+Dim Style
+Style = "{{rgb:0,153,0}}"
+Dim SubStyle
+SubStyle = "{{blue}}"
+
+Function HelpByNoobReReRe()
+    While True
+        Say SubStyle & "...."
+        Say SubStyle & "AP stands for Admin Panel, the distributor says it's"
+        Say SubStyle & "a very secured Admin Panel... But as usual there are some holes."
+        Say SubStyle & "In v1.0 the username was vulnerable to a buffer over run attack"
+        Say SubStyle & "The buffer had a length of 10."
+        Say SubStyle & "I don't have any info if it has been corrected in v1.0b, so you"
+        Say SubStyle & "should try this method, maybe the hole is still there."
+        Say SubStyle & "Use the hole to run this: 'goto menu'"
+        Say ""
+        Say SubStyle & "h4ck3r"
+        Say ""
+        Say Style & "Replys:"
+        Say Style & "  no replies"
+        Say Style & "  9. Go up"
+        Say Style & "  0. Go to main menu"
+        InKey = GetAsciiWithPrompt()
+        Select Case Chr(InKey)
+            Case "9":
+                HelpByNoobReReRe = False
+                Exit Function
+            Case "0":
+                HelpByNoobReReRe = True
+                Exit Function
+        End Select
+    Wend
+End Function
+
+Function HelpByNoobReRe()
+    While True
+        Say SubStyle & "Ok i managed to get some more info"
+        Say SubStyle & "Soft: AP"
+        Say SubStyle & "Ver: v1.0b"
+        Say SubStyle & "I searched the web, but found nothing about this software..."
+        Say ""
+        Say SubStyle & "Noob"
+        Say ""
+        Say Style & "Replies:"
+        Say Style & "  1. Re: Re: Re: Help  by h4ch3r"
+        Say Style & "  9. Go up"
+        Say Style & "  0. Go to main menu"
+        InKey = GetAsciiWithPrompt()
+        Select Case Chr(InKey)
+            Case "1":
+                HelpByNoobReRe = HelpByNoobReReRe()
+                If HelpByNoobReRe Then
+                    Exit Function
+                End If
+            Case "9":
+                HelpByNoobReRe = False
+                Exit Function
+            Case "0":
+                HelpByNoobReRe = True
+                Exit Function
+        End Select
+    Wend
+End Function
+
+Function HelpByNoobRe()
+    While True
+        Say SubStyle & "noob, can't you give us some more info ?"
+        Say SubStyle & "do you even know what software is being used, give us the version too"
+        Say SubStyle & "if you give us more info then we should may be able to help you..."
+        Say ""
+        Say SubStyle & "h4ck3r"
+        Say ""
+        Say Style & "Replies:"
+        Say Style & "  1. Re: Re: Help  by noob"
+        Say Style & "  9. Go up"
+        Say Style & "  0. Go to main menu"
+        InKey = GetAsciiWithPrompt()
+        Select Case Chr(InKey)
+            Case "1":
+                HelpByNoobRe = HelpByNoobReRe()
+                If HelpByNoobRe Then
+                    Exit Function
+                End If
+            Case "9":
+                HelpByNoobRe = False
+                Exit Function
+            Case "0":
+                HelpByNoobRe = True
+                Exit Function
+        End Select
+    Wend
+End Function
+
+Function HelpByNoob()
+    While True
+        Say SubStyle & "Hello, i'm trying to hack a website but i can't hack the username password."
+        Say SubStyle & "What should i do ?"
+        Say ""
+        Say SubStyle & "Noob"
+        Say ""
+        Say Style & "Replies:"
+        Say Style & "  1. Re: Help  by h4ck3r"
+        Say Style & "  9. Go up"
+        Say Style & "  0. Go to main menu"
+        InKey = GetAsciiWithPrompt()
+        Select Case Chr(InKey)
+            Case "1":
+                HelpByNoob = HelpByNoobRe()
+                If HelpByNoob Then
+                    Exit Function
+                End If
+            Case "9":
+                HelpByNoob = False
+                Exit Function
+            Case "0":
+                HelpByNoob = True
+                Exit Function
+        End Select
+    Wend
+End Function
+
+Function OldgamesDownload()
+    ' The original wanted to offer a file for download here that doesn't actually exist
+    ' Therefor, we just simulate a corrupted file here...
+    ' Line here: decrypt /system/mission/findgame/script1 /oldgftplogin
+    Say "{{orange}}Downloading file oldgftplogin..."
+    SaySlow 50, "..............................", "yellow"
+    Say "{{red}}Warning: Data corrupted. Aborting download!"
+    OldgamesDownload = False
+End Function
+
+Function OldgamesByNoobRe()
+    While True
+        Say SubStyle & "You are lucky, i hacked it once ago, i've attached the script."
+        Say ""
+        Say SubStyle & "l33t h4ck3r"
+        Say ""
+        Say Style & "Replies:"
+        Say Style & "  no replies"
+        Say Style & "  1. Download attached file"
+        Say Style & "  9. Go up"
+        Say Style & "  0. Go to main menu"
+        InKey = GetAsciiWithPrompt()
+        Select Case Chr(InKey)
+            Case "1":
+                OldgamesByNoobRe = OldgamesDownload()
+                If OldgamesByNoobRe Then
+                    Exit Function
+                End If
+            Case "9":
+                OldgamesByNoobRe = False
+                Exit Function
+            Case "0":
+                OldgamesByNoobRe = True
+                Exit Function
+        End Select
+    Wend
+End Function
+
+Function OldgamesByNoob()
+    While True
+        Say SubStyle & "can someone help me accessing oldgames.com 21?"
+        Say ""
+        Say SubStyle & "Noob"
+        Say ""
+        Say Style & "Replies:"
+        Say Style & "  1. Re: Help  by l33t h4ck3r"
+        Say Style & "  9. Go up"
+        Say Style & "  0. Go to main menu"
+        InKey = GetAsciiWithPrompt()
+        Select Case Chr(InKey)
+            Case "1":
+                OldgamesByNoob = OldgamesByNoobRe()
+                If OldgamesByNoob Then
+                    Exit Function
+                End If
+            Case "9":
+                OldgamesByNoob = False
+                Exit Function
+            Case "0":
+                OldgamesByNoob = True
+                Exit Function
+        End Select
+    Wend
+End Function
+
+Function IPFTPByLeet()
+    While True
+        Say SubStyle & "IPFTP:"
+        Say SubStyle & "in this software the passwords are mady only be numbers."
+        Say SubStyle & "so if you know the length of the password you can easily"
+        Say SubStyle & "make a brute force to crack the pass."
+        Say ""
+        Say SubStyle & "l33t h4ck3r"
+        Say ""
+        Say Style & "Replies:"
+        Say Style & "  no replies"
+        Say Style & "  9. Go up"
+        Say Style & "  0. Go to main menu"
+        InKey = GetAsciiWithPrompt()
+        Select Case Chr(InKey)
+            Case "9":
+                IPFTPByLeet = False
+                Exit Function
+            Case "0":
+                IPFTPByLeet = True
+                Exit Function
+        End Select
+    Wend
+End Function
+
+While True
+    Say Style & "Welcome to bbs.security.com"
+    Say Style & "Here are the current active threads:"
+    Say Style & "  1. Help  by noob"
+    Say Style & "  2. oldgames.com 21  by noob"
+    If OldgamesVisited Then
+        Say Style & "  3. IPFTP  by l33t h4ck3r"
+    End If
+    Say Style & "  0. Disconnect"
+    InKey = GetAsciiWithPrompt()
+    Select Case Chr(InKey)
+        Case "0":
+            Quit
+        Case "1":
+            HelpByNoob
+        Case "2":
+            OldgamesByNoob
+        Case "3":
+            If OldgamesVisited Then
+                IPFTPByLeet
+            End If
+    End Select
+Wend

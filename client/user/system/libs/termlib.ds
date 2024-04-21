@@ -52,6 +52,30 @@ Function GetMissionProgress(MissionID, Key)
     GetMissionProgress = GetMissionData(MissionID, "progress", Key)
 End Function
 
+Function IntMissionProgress(MissionID, Key)
+    Dim Val
+    Val = GetMissionProgress(MissionID, Key)
+    If Val = "" Then
+        IntMissionProgress = 0
+    Else
+        IntMissionProgress = CInt(Val)
+    End If
+End Function
+
+Function IncMissionProgress(MissionID, Key)
+    Dim Val
+    Val = IntMissionProgress(MissionID, Key)
+    SetMissionProgress MissionID, Key, (Val + 1)
+End Function
+
+Function BoolMissionProgress(MissionID, Key)
+    BoolMissionProgress = (GetMissionProgress(MissionID, Key) = "1")
+End Function
+
+Function BoolSetMissionProgress(MissionID, Key)
+    SetMissionProgress MissionID, Key, "1"
+End Function
+
 Function ConsoleEscape(Str)
     ConsoleEscape = Replace(Str, ConsoleInvisibleChar, "")
     ConsoleEscape = Replace(ConsoleEscape, "{{", "{" & ConsoleInvisibleChar & "{")

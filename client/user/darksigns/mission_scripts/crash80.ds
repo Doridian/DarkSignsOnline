@@ -1,0 +1,9 @@
+Option Explicit
+
+Dim FColor, BColor
+While True
+    FColor = Rnd * 16777215
+    BColor = Rnd * 16777215
+    Say "CrashMe.com{{rgb:" & FColor & "}}"
+    Draw -1, BColor, "solid"
+Wend

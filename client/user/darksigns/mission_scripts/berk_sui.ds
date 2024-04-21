@@ -1,0 +1,631 @@
+Option Explicit
+
+DLOpen "termlib"
+
+'Front end: port 81!!
+'port 80 public website unavailable
+
+Dim MaxCred
+MaxCred = 100
+
+Dim Department
+Department = GetMissionProgress("DS", "berk_department")
+If Department = "" Then
+    Department = "mathematics"
+End If
+
+Dim Enable
+Enable = (GetMissionProgress("DS", "berk_enable") = "1")
+
+Function AccString()
+    If Enable Then
+        AccString = "ENABLED"
+    Else
+        AccString = "DISABLED"
+    End If
+End Function
+
+Dim Cred
+Cred = GetMissionProgress("DS", "berk_cred")
+If Cred = "" Then
+    Cred = 0
+Else
+    Cred = CInt(Cred)
+End If
+
+Sub SayBG(Str)
+    SayWithBGColor &H03640E, Str
+End Sub
+
+Sub SaySlowBG(Delay, Str, Style)
+    SaySlowWithBGColor &H03640E, Delay, Str, Style
+End Sub
+
+Sub PauseBG()
+    Pause "", &H03640E
+End Sub
+
+Function QReadLineBG(Prompt)
+    QReadLineBG = QReadLine(Prompt, &H03640E)
+End Function
+
+' Standard login screen
+Dim FrontColor
+FrontColor = "{{rgb:94:235:156}}"
+
+Dim Style
+Style = FrontColor
+
+SayBG "Berkeley University of California" & Style
+SayBG "Welcome to the University's student/staff interface." & Style
+SayBG ""
+SayBG "Staff members please log in with your e-mail address."
+SayBG ""
+
+Style = "{{orange}}"
+SayBG "Staff members also please note new password regulations:" & Style
+SayBG "First part of your password must be 5 lowercase alphabetical." & Style
+SayBG "Second part must be 6 numbers." & Style
+SayBG "Update your passwords as soon as possible!" & Style
+SayBG ""
+
+Sub Disconnect()
+    SayBG ""
+    SaySlowBG 50, "Connection Closed...", "{{white}}"
+    Wait 600
+    Quit
+End Sub
+
+Sub StudAssign()
+    Style = FrontColor
+
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Student Menu:" & Style
+    SayBG "------------------------" & Style
+    SayBG ""
+    SayBG "Assignments for the " & Department & " Department:" & Style
+    SayBG ""
+    If Department = "mathematics" Then
+        Style = FrontColor
+        SayBG "- 1 - By Prof. Richards: Please note, all people currently late with their March task receive" & Style
+        SayBG "--- an automatically lower grade!" & Style
+        Style = "{{white}}"
+    ElseIf Department = "physics" Then
+        SayBG "No assignments" & Style
+    End If
+    SayBG ""
+    PauseBG
+End Sub
+
+Sub StudBoard()
+    Style = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Student Menu:" & Style
+    SayBG "------------------------" & Style
+    SayBG ""
+    SayBG "Message board for the " & Department & " Department:" & Style
+    SayBG ""
+    If Department = "mathematics" Then
+        Style = FrontColor
+        SayBG "No messages" & Style
+        Style = "{{white}}"
+    ElseIf Department = "physics" Then
+        SayBG "- 1 - Our new supercomputer is up and running!" & Style
+        SayBG "----- Connect to newton.physics.berkeley.edu !" & Style
+    End If
+    SayBG ""
+    PauseBG
+End Sub
+
+Sub StudTest()
+    Style = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Student Menu:" & Style
+    SayBG "------------------------" & Style
+    SayBG ""
+    Style = FrontColor
+    SayBG "You are no longer a student here." & Style
+    SayBG ""
+    PauseBG
+End Sub
+
+Sub StaffPage()
+    Style = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Name: Susan Metzinger" & Style
+    Style = "{{orange}}"
+    SayBG "------------------------------------------------" & Style
+    Style = "{{white}}"
+    SayBG "Position: Head of Physics Department" & Style
+    SayBG "E-mail address: smetzinger@physics.berkeley.edu" & Style
+    SayBG "Personal webpage: none" & Style
+    SayBG ""
+    SayBG "Name: Tim Waltman" & Style
+    Style = "{{orange}}"
+    SayBG "------------------------------------------------" & Style
+    Style = "{{white}}"
+    SayBG "Position: Professor of Atomic, Molecular and Optical Physics" & Style
+    SayBG "E-mail address: twaltman@physics.berkeley.edu" & Style
+    SayBG "Personal webpage: none" & Style
+    SayBG ""
+    SayBG "Name: Edward Thistle" & Style
+    Style = "{{orange}}"
+    SayBG "------------------------------------------------" & Style
+    Style = "{{white}}"
+    SayBG "Position: Professor of Nonlinear Dynamics and Plasma Physics" & Style
+    SayBG "E-mail address: ethistle@physics.berkeley.edu" & Style
+    SayBG "Personal webpage: none" & Style
+    SayBG ""
+    SayBG "Name: John Davids" & Style
+    Style = "{{orange}}"
+    SayBG "------------------------------------------------" & Style
+    Style = "{{white}}"
+    SayBG "Position: Professor of Theoretical Physics" & Style
+    SayBG "E-mail address: jdavids@physics.berkeley.edu" & Style
+    SayBG "Personal webpage: jdavids.physics.berkeley.edu" & Style
+    SayBG ""
+    SayBG "Name: Roberta Sparrow" & Style
+    Style = "{{orange}}"
+    SayBG "------------------------------------------------" & Style
+    Style = "{{white}}"
+    SayBG "Position: Professor of Quantum Physics" & Style
+    SayBG "E-mail address: rsparrow@physics.berkeley.edu" & Style
+    SayBG "Personal webpage: none" & Style
+    SayBG ""
+    PauseBG
+End Sub
+
+Sub LoginStudent()
+    Style = FrontColor
+
+    SaySlowBG 20, "Welcome back Nguyen.", Style
+    Wait 500
+    SaySlowBG 20, "You are a student in the " & Department & " Department.", Style
+    Wait 1000
+
+    Dim InOpt
+    While True
+        Style = FrontColor
+        SayBG "Berkeley University of California" & Style
+        SayBG "Welcome to the University's student/staff interface." & Style
+        SayBG ""
+        Style = "{{white}}"
+        SayBG "Student Menu:" & Style
+        SayBG "------------------------" & Style
+        SayBG ""
+        Style = FrontColor
+        SayBG "(A)ssignments (view)" & Style
+        SayBG "(M)essageboard (view)" & Style
+        SayBG "(T)est results (view)" & Style
+        SayBG "(S)taff contact information (view)" & Style
+        SayBG "(D)isconnect" & Style
+        SayBG ""
+        Style = "{{white}}"
+        InOpt = QReadLineBG("Select option from menu:" & Style)
+
+        Select Case InOpt
+            Case "a"
+                StudAssign
+            Case "m"
+                StudBoard
+            Case "t"
+                StudTest
+            Case "s"
+                StaffPage
+            Case "d"
+                Disconnect
+            Case Else
+                Style = "{{white}}"
+                SaySlowBG 20, "Incorrect input!", Style
+                Wait 500
+        End Select
+    Wend
+End Sub
+
+Sub StaffStDeleteAccount()
+    Style = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Student Database" & Style
+    SayBG "-----------------------------" & Style
+    SayBG ""
+    SayBG "Student: Nguyen Haong (student id 043946)" & Style
+    SayBG ""
+    SayBG "Error deleting account. Please contact system administrator." & Style
+    SayBG ""
+    PauseBG
+End Sub
+
+Sub StaffStEditAccount()
+    While True
+        Style = FrontColor
+        SayBG "Berkeley University of California" & Style
+        SayBG "Welcome to the University's student/staff interface." & Style
+        SayBG ""
+        Style = "{{white}}"
+        SayBG "Student Database" & Style
+        SayBG "-----------------------------" & Style
+        SayBG ""
+        SayBG "Student: Nguyen Haong (student id 043946)" & Style
+        SayBG ""
+        Style = "{{white}}"
+        SayBG "Account Status: " & AccString() & Style
+        SayBG ""
+        Style = FrontColor
+        SayBG "(E)nable/Disable account" & Style
+        SayBG "(D)elete account" & Style
+        SayBG "(B)ack to student account" & Style
+        SayBG ""
+        Style = "{{white}}"
+        Dim TempInput
+        TempInput = QReadLineBG("Select option from menu:" & Style)
+        Select Case TempInput
+            Case "e"
+                Enable = Not Enable
+                IF Enable then
+                    SetMissionProgress "DS", "berk_enable", "1"
+                Else
+                    SetMissionProgress "DS", "berk_enable", "0"
+                End If
+                Style = "{{white}}"
+                SayBG "Account has been updated!" & Style
+                PauseBG
+            Case "d"
+                StaffStDeleteAccount
+            Case "b"
+                Exit Sub
+            Case Else
+                Style = "{{white}}"
+                SaySlowBG 10, "Incorrect input!", Style
+                PauseBG
+        End Select
+    Wend
+End Sub
+
+Sub StaffStEditDepart()
+    Style = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Student Database" & Style
+    SayBG "-----------------------------" & Style
+    SayBG ""
+    SayBG "Student: Nguyen Haong (student id 043946)" & Style
+    SayBG ""
+    
+    If Not Enable Then
+        SayBG "This account has been disabled. First enable account in order to edit Department settings." & Style
+        PauseBG
+        Exit Sub
+    End If
+
+    While True
+        SayBG "Current Department: " & Department & Style
+        SayBG ""
+        Style = FrontColor
+        SayBG "(C)hange Department" & Style
+        SayBG "(B)ack to student account" & Style
+        SayBG ""
+        Style = "{{white}}"
+        Dim TempInput
+        TempInput = QReadLineBG("Select option from menu:" & Style)
+        Select Case TempInput
+            Case "c"
+                Dim ChangeItInp
+                ChangeItInp = QReadLineBG("Select Department (eg. Physics, Mathematics, History, ...):" & Style)
+                Department = ChangeItInp
+                SetMissionProgress "DS", "berk_department", Department
+                Style = "{{white}}"
+                SayBG "Department has been updated!" & Style
+                PauseBG
+            Case "b"
+                Exit Sub
+            Case Else
+                Style = "{{white}}"
+                SaySlowBG 10, "Incorrect input!", Style
+                PauseBG
+        End Select
+    Wend
+End Sub
+
+Sub StaffStEditStud()
+    Color = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Student Database" & Style
+    SayBG "-----------------------------" & Style
+    SayBG ""
+    SayBG "Student: Nguyen Haong (student id 043946)" & Style
+    SayBG ""
+    SayBG "This student is no longer studying at the University. Their personal information has been deleted." & Style
+    SayBG ""
+    PauseBG
+End Sub
+
+Sub StaffStDatabase()
+    Style = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Student Database" & Style
+    SayBG "-----------------------------" & Style
+    SayBG ""
+    Style = "{{orange}}"
+    Dim IdInput
+    Dim NamInput
+    IdInput = QReadLineBG("Student ID number:" & Style)
+    NamInput = QReadLineBG("Student Name:" & Style)
+
+    If IdInput <> "043946" Or NamInput <> "nguyen haong" Then
+        Style = "{{white}}"
+        SaySlowBG 10, "Incorrect student ID or mismatching name...", Style
+        SayBG ""
+        PauseBG
+        Exit Sub
+    End If
+
+    While True
+        Style = FrontColor
+        SayBG "Berkeley University of California" & Style
+        SayBG "Welcome to the University's student/staff interface." & Style
+        SayBG ""
+        Style = "{{white}}"
+        SayBG "Student Database" & Style
+        SayBG "-----------------------------" & Style
+        SayBG ""
+        SayBG "Student: Nguyen Haong (student id 043946)" & Style
+        SayBG ""
+        Style = FrontColor
+        SayBG "(E)dit Account Status" & Style
+        SayBG "(C)hange Department" & Style
+        SayBG "Edit (s)tudent information" & Style
+        SayBG "(B)ack to staff menu" & Style
+        SayBG ""
+        Style = "{{white}}"
+        Dim Dat3Inp
+        Dat3Inp = QReadLineBG("Select option from menu:" & Style)
+        Select Case Dat3Inp
+            Case "e"
+                StaffStEditAccount
+            Case "c"
+                StaffStEditDepart
+            Case "s"
+                StaffStEditStud
+            Case "b"
+                Exit Sub
+            Case Else
+                Style = "{{white}}"
+                SaySlowBG 10, "Incorrect input!", Style
+                SayBG ""
+                PauseBG
+        End Select
+    Wend
+End Sub
+
+Sub StaffStAssignments()
+    Style = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Staff Menu:" & Style
+    SayBG "------------------------" & Style
+    SayBG ""
+    SayBG "Assignments for the Physics Department:" & Style
+    SayBG ""
+    Style = FrontColor
+    SayBG "No assignments" & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Assignment and messageboard modules are under maintenance. Editing/adding disabled." & Style
+    SayBG ""
+    PauseBG
+End Sub
+
+Sub StaffStBoard()
+    Style = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Staff Menu:" & Style
+    SayBG "------------------------" & Style
+    SayBG ""
+    SayBG "Message board for the Physics Department:" & Style
+    SayBG ""
+    Style = FrontColor
+    SayBG "- 1 - Our new supercomputer is up and running! Connect to newton.physics.berkeley.edu !" & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Assignment and messageboard modules are under maintenance. Editing/adding disabled." & Style
+    SayBG ""
+    PauseBG
+End Sub
+
+Sub StaffStTest()
+    Style = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "Staff Menu:" & Style
+    SayBG "------------------------" & Style
+    SayBG ""
+    Style = FrontColor
+    SayBG "Error in testresults.module. Please contact system administrator." & Style
+    SayBG ""
+    PauseBG
+End Sub
+
+Sub StaffNewton()
+    Style = FrontColor
+    SayBG "Berkeley University of California" & Style
+    SayBG "Welcome to the University's student/staff interface." & Style
+    SayBG ""
+    Style = "{{white}}"
+    SayBG "NEWTON Credits Management" & Style
+    SayBG ""
+    Style = "{{orange}}"
+    Dim IdInp, NameInp
+    IdInp = QReadLineBG("Student ID number:" & Style)
+    NameInp = QReadLineBG("Student Name:" & Style)
+
+    Style = "{{white}}"
+    If IdInput <> "043946" Or NamInput <> "nguyen haong" Then
+        SaySlowBG 10, "Incorrect student ID or mismatching name...", Style
+        SayBG ""
+        PauseBG
+        Exit Sub
+    End If
+
+    If Department <> "physics" Then
+        SaySlowBG 10, "This student is not part of the Physics department", Style
+        SayBG ""
+        PauseBG
+        Exit Sub
+    End If
+
+    While True
+        Style = FrontColor
+        SayBG "Berkeley University of California" & Style
+        SayBG "Welcome to the University's student/staff interface." & Style
+        SayBG ""
+        Style = "{{white}}"
+        SayBG "NEWTON Credits Management" & Style
+        SayBG "Student: Nguyen Haong (student id 043946)" & Style
+        SayBG "Current Credits: " & Cred & Style
+        SayBG ""
+        Style = FrontColor
+        SayBG "(A)dd credits" & Style
+        SayBG "(R)emove credits" & Style
+        SayBG "(B)ack to staff menu" & Style
+        SayBG ""
+        Style = "{{white}}"
+        Dim AddInp
+        Dim Temp
+        AddInp = QReadLineBG("Select option from menu:" & Style)
+        Select Case AddInp
+            Case "a"
+                Temp = 0
+                Dim AddInp2
+                AddInp2 = QReadLineBG("Add how many credits?" & Style)
+                Temp = Cred + AddInp2
+                If Temp > MaxCred Then
+                    SayBG "Cannot add " & AddInp2 & " credits. Maximum credits is set at " & MaxCred & "." & Style
+                    SayBG ""
+                    PauseBG
+                Else
+                    Cred = Cred + AddInp2
+                    SetMissionProgress "DS", "berk_cred", Cred
+                    SayBG "You have added " & AddInp2 & " credits!" & Style
+                    SayBG ""
+                    PauseBG
+                End If
+            Case "r"
+                Dim RemInp
+                Temp = 0
+                RemInp = QReadLineBG("Remove how many credits?" & Style)
+                Temp = Cred - RemInp
+                If Temp < 0 Then
+                    SayBG "Cannot remove " & RemInp & " credits. User does not have enough credits." & Style
+                    SayBG ""
+                    PauseBG
+                Else
+                    Cred = Cred - RemInp
+                    SetMissionProgress "DS", "berk_cred", Cred
+                    SayBG "You have removed " & RemInp & " credits!" & Style
+                    SayBG ""
+                    PauseBG
+                End If
+            Case "b"
+                Exit Sub
+            Case Else
+                Style = "{{white}}"
+                SaySlowBG 10, "Incorrect input!", Style
+        End Select
+    Wend
+End Sub
+
+Sub LoginStaff()
+    Style = FrontColor
+    SaySlowBG 20, "Welcome back John.", Style
+    Wait 500
+    SaySlowBG 20, "You are a staffmember in the Physics Department.", Style
+    Wait 1000
+
+    While True
+        Style = FrontColor
+        SayBG "Berkeley University of California" & Style
+        SayBG "Welcome to the University's student/staff interface." & Style
+        SayBG ""
+        Style = "{{white}}"
+        SayBG "Staff Menu:" & Style
+        SayBG "------------------------" & Style
+        SayBG ""
+        Style = FrontColor
+        SayBG "St(u)dent Database (view/edit/add)" & Style
+        SayBG "(A)ssignments (view/edit/add)" & Style
+        SayBG "(M)essageboard (view/edit/add)" & Style
+        SayBG "(T)est results (view/edit/add)" & Style
+        SayBG "(S)taff contact information (view)" & Style
+        SayBG "(N)EWTON Credits Management" & Style
+        SayBG "(D)isconnect" & Style
+        SayBG ""
+        Style = "{{white}}"
+        Dim StaffMenu
+        StaffMenu = QReadLineBG("Select option from menu:" & Style)
+        Style = FrontColor
+        Select Case StaffMenu
+            Case "u"
+                StaffStDatabase
+            Case "a"
+                StaffStAssignments
+            Case "m"
+                StaffStBoard
+            Case "t"
+                StaffStTest
+            Case "s"
+                StaffPage
+            Case "d"
+                Disconnect
+            Case "n"
+                StaffNewton
+            Case Else
+                SaySlowBG 20, "Incorrect input!", Style
+                Wait 500
+        End Select
+    Wend
+End Sub
+
+While True
+    Dim Login
+    Login = QReadLineBG("Login:")
+    Dim Pass
+    Pass = QReadLineBG("Password:")
+
+    If Login = "043946" And Pass = "a3fl5" Then
+        LoginStudent
+    ElseIf Login = "jdavids@physics.berkeley.edu" And Pass = "quark101556" Then
+        LoginStaff
+    Else
+        SaySlowBG 10, "Incorrect login or password! Please try again...", ""
+    End If
+Wend

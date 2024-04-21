@@ -2,5 +2,11 @@ Option Explicit
 
 Dim strContents, strCompiled
 strContents = Display(ArgV(1))
+
+Say "Old Data" & vbCrLf & strContents
+
 strCompiled = CompileScript(strContents)
+
+Say "New Data" & vbCrLf & strCompiled
+
 Overwrite ArgV(2), strCompiled
