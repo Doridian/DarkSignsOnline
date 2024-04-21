@@ -1,0 +1,91 @@
+Option Explicit
+
+DLOpen "termlib"
+' fuzzymail82
+
+Sub AdminMenu()
+    While True
+        Say "=/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\={{blue}}"
+        Say ""
+        Say " - - - - Welcome Admin, you have 1 new message! - - - -{{white}}"
+        Say ""
+        Say "                    (1) Read New Messages{{white}}"
+        Say "                    (2) View Old Messages{{white}}"
+        Say "                    (3) Log Out{{white}}"
+        Say ""
+        Say "=\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/={{blue}}"
+
+        Dim amchoice
+        amchoice = QReadLine("Enter Option Number [1 to 3]>")
+        If amchoice = "3" Then
+            Exit Sub
+        ElseIf amchoice = "1" Then
+            Say "FROM: Adam Palmer{{white}}"
+            Say "Subject: Recent Proposal{{white}}"
+            Say "Hello,{{white}}"
+            Say ""
+            Say "I have decided not to go ahead with the{{white}}"
+            Say "other domain business. For now I don't{{white}}"
+            Say "need it, however I will keep it in mind, maybe{{white}}"
+            Say "at a later date perhaps. Please let me{{white}}"
+            Say "know if you have any concerns regarding{{white}}"
+            Say "this.{{white}}"
+            Say ""
+            Say "Regards,{{white}}"
+            Say "Adam{{white}}"
+            Pause
+        ElseIf amchoice = "2" Then
+            Say "FROM: Adam Palmer{{white}}"
+            Say "Subject: Re: Proposal{{white}}"
+            Say "Hello,{{white}}"
+            Say ""
+            Say "I will make the necessary preperations.{{white}}"
+            Say ""
+            Say "Regards,{{white}}"
+            Say "Adam{{white}}"
+            Pause
+            Say "FROM: RegDomains Admin{{white}}"
+            Say "Subject: Filenames{{white}}"
+            Say "Hello co admin!{{white}}"
+            Say ""
+            Say "Regarding your recent support question,{{white}}"
+            Say "yes, it is possible. To modify passwords simply{{white}}"
+            Say "open the dompass.txt file, and make changes{{white}}"
+            Say "as needed.{{white}}"
+            Say ""
+            Say "Regards,{{white}}"
+            Say "Scott Riley{{white}}"
+            Pause
+        End If
+    Wend
+End Sub
+
+Sub HandleLogin()
+    Dim username
+    username = QReadLine("Enter your username>")
+    If username <> "admin" Then
+        Say "User [" & ConsoleEscape(username) & "] not found{{orange}}"
+        Exit Sub
+    End If
+
+    Dim password
+    password = QReadLine("Enter your password>")
+    If password <> "fuzzy" Then
+        Say "Invalid Password for specified username{{orange}}"
+        Exit Sub
+    End If
+
+    Say "ADMIN Logged In OK{{orange}}"
+    Pause
+    AdminMenu
+End Sub
+
+SaySlow 1, "Connected to FUZZY-Mail", "green"
+HandleLogin
+Say "Exiting...{{orange}}"
+SaySlow 1, "Connection Terminated", "orange"
+Quit
+
+
+
+
