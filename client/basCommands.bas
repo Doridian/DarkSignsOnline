@@ -213,10 +213,10 @@ ScriptEnd:
     scrConsoleContext(ConsoleID).CleanupScriptTasks
 End Function
 
-Public Function ParseCommandLineOptional(ByVal tmpS As String, Optional ByVal AllowCommands As Boolean = True) As String
+Public Function ParseCommandLineOptional(ByVal tmpS As String, ByVal AutoVariablesFrom As Integer, Optional ByVal AllowCommands As Boolean = True) As String
     Dim OptionDScript As Boolean
     OptionDScript = False
-    ParseCommandLineOptional = ParseCommandLine(tmpS, OptionDScript, True, 0, AllowCommands)
+    ParseCommandLineOptional = ParseCommandLine(tmpS, OptionDScript, True, AutoVariablesFrom, AllowCommands)
 End Function
 
 Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Boolean, ByVal OptionExplicit As Boolean, ByVal AutoVariablesFrom As Integer, ByVal AllowCommands As Boolean) As String
@@ -488,6 +488,18 @@ CommandForNext:
             GoTo ArgIsNotVar
         End If
         If Not IsValidVarName(ArgVal) Then
+            GoTo ArgIsNotVar
+        End If
+        
+        Dim EvalFaulted As Boolean
+        EvalFaulted = True
+        On Error GoTo EvalFaultTrue
+        scrConsole(AutoVariablesFrom).Eval ArgVal
+        EvalFaulted = False
+EvalFaultTrue:
+        On Error GoTo 0
+
+        If EvalFaulted Then
             GoTo ArgIsNotVar
         End If
 

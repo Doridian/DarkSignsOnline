@@ -751,7 +751,7 @@ Public Function CLIParse(ByVal Src As String, ByVal Dest As String)
     SrcStr = GetFile(ResolvePath(Src))
 
     Dim DestStr As String
-    DestStr = ParseCommandLineOptional(SrcStr)
+    DestStr = ParseCommandLineOptional(SrcStr, PrivConsoleID)
 
     WriteFile ResolvePath(Dest), DestStr
 End Function

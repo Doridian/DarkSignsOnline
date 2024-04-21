@@ -40,7 +40,7 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
     s.AddObject "DSO", G, True
 
     tmpAll = DSODecryptScript(tmpAll, ScriptKey)
-    tmpAll = ParseCommandLineOptional(tmpAll, ServerPort <= 0)
+    tmpAll = ParseCommandLineOptional(tmpAll, ConsoleID, ServerPort <= 0)
 
     On Error GoTo EvalError
     s.AddCode tmpAll
