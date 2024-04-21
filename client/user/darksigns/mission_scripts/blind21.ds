@@ -4,8 +4,8 @@ DLOpen "termlib"
 
 Say "Hello and welcome to BlindBallet.org's FTP server{{white}}"
 Say "This server is private, so if your not ment to be here, Please leave now.{{white}}"
-Dim FTPDoneName
-FTPDoneName = "blind_done"
+Dim FTPName
+FTPName = "blind21"
 
 Sub Disconnect()
     Say "Connection closed by remote host{{orange}}"
@@ -16,11 +16,13 @@ Function FileIsRemoteapp(Data)
     FileIsRemoteapp = (InStr(Data, vbCrLf & "XREMOTEAPPSIGNATURE=TRUE" & vbCrLf) > 0)
 End Function
 
-Dim RemoteappUploaded
-RemoteappUploaded = False
+Dim FTPDoneName
+FTPDoneName = "ftp_" & FTPName & "_done"
+Dim FTPRemoteappName
+FTPRemoteappName = "ftp_" & FTPName & "_remoteapp"
 
-Dim BlindDone
-BlindDone = BoolMissionProgress("DS", FTPDoneName)
+Dim RemoteappUploaded
+RemoteappUploaded = BoolMissionProgress("DS", FTPRemoteappName)
 
 While True
     Dim FileName
@@ -42,9 +44,12 @@ While True
     ElseIf MMInput = "put" Then
         FileName = RequestReadFile()
         SaySlow 100, "...........................................", "white"
-        Say "File Uploaded{{white}}"
         If FileIsRemoteapp(FileName) Then
+            Say "File Uploaded{{white}}"
             RemoteappUploaded = True
+            BoolSetMissionProgress "DS", FTPRemoteappName
+        Else
+            Say "Error uploading file [incompatible with server]{{red}}"
         End If
     ElseIf MMInput = "ls" Then
         If RemoteappUploaded Then
@@ -55,8 +60,7 @@ While True
     ElseIf MMInput = "run" Then
         FileName = QReadLine("Enter the file you wish to run>")
         If RemoteappUploaded And FileName = "remoteapp" Then
-            If Not BlindDone Then
-                BlindDone = True
+            If Not BoolMissionProgress("DS", FTPDoneName) Then
                 IncMissionProgress "DS", "dos_bw"
                 BoolSetMissionProgress "DS", FTPDoneName
             End If

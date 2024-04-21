@@ -1,0 +1,176 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Function FileIsRemoteapp(Data)
+    FileIsRemoteapp = (InStr(Data, vbCrLf & "XREMOTEAPPSIGNATURE=TRUE" & vbCrLf) > 0)
+End Function
+
+Dim RemoteappUploaded
+RemoteappUploaded = BoolMissionProgress("DS", "code_red_remoteapp_uploaded")
+
+Dim CDir
+
+Sub SetCDir(NewDirI)
+    Dim NewDir
+    NewDir = NewDirI
+    If Left(NewDir, 1) <> "/" Then
+        NewDir = CDir & "/" & NewDir
+    End If
+    NewDir = ResolvePath(NewDir)
+
+    If NewDir = "/" Or NewDir = "/home" Or NewDir = "/home/admin" Then
+        CDir = NewDir
+        Say "Current Directory: " & ConsoleEscape(CDir)  & "{{orange}}"
+        Exit Sub
+    End If
+
+    Say "{{red}}Invalid directory [" & ConsoleEscape(NewDirI) & "]"
+End Sub
+
+Sub LSCDir()
+    Select Case CDir
+        Case "/"
+            Say "[home]{{blue}}"
+            Say "NO FILES{{white}}"
+        Case "/home"
+            Say "[admin]{{blue}}"
+            Say "NO FILES{{white}}"
+        Case "/home/admin"
+            If RemoteappUploaded Then
+                Say "REMOTEAPP{{white}}"
+            Else
+                Say "NO FILES{{white}}"
+            End If
+    End Select
+End Sub
+
+Sub ShellHelp()
+    Say "CD - usage: cd <folder>{{green}}"
+    Say "Change current directory to <folder>. Use cd.. to goto the folder below current.{{green}}"
+    Say "Use cd ~ to goto current users home directory{{green}}"
+    Say ""
+    Say "CWD - usage: cwd{{green}}"
+    Say "Displays the current directory{{green}}"
+    Say ""
+    Say "EXIT - usage: exit{{green}}"
+    Say "Discconects from host{{green}}"
+    Say ""
+    Say "HELP - usage: help{{green}}"
+    Say "Displays this help screen{{green}}"
+    Say ""
+    Say "LS - usage: ls{{green}}"
+    Say "Lists all files and folders in current directory{{green}}"
+    Say ""
+    Say "PUT - usage: put{{green}}"
+    Say "Upload a file to the current directory{{green}}"
+    Say ""
+    Say "RUN - usage: run{{green}}"
+    Say "Run a file from the current directory{{green}}"
+    Say ""
+    Say "USERS - usage: users{{green}}"
+    Say "Displays the current user that you are logged in as{{green}}"
+    Say ""
+    Say "VERSION - usage: version{{green}}"
+    Say "Displays the current OS version{{green}}"
+End Sub
+
+Sub ShellMenu()
+    CDir = "/"
+    While True
+        Dim SInput
+        SInput = Split(QReadLine("{{blue}}>"), " ")
+        Select Case SInput(0)
+            Case "cd/":
+                SetCDir "/"
+            Case "cd~"
+                SetCDir "/home/admin"
+            Case "cd"
+                SetCDir SInput(1)
+            Case "cwd"
+                SetCDir "."
+            Case "exit"
+                Disconnect
+            Case "help"
+                ShellHelp
+            Case "ls"
+                LSCDir
+            Case "put"
+                If CDir = "/home/admin" Then
+                    FileName = RequestReadFile()
+                    SaySlow 100, ".........................................................", "blue"
+                    If FileIsRemoteapp(FileName) Then
+                        Say "File Uploaded{{white}}"
+                        BoolSetMissionProgress "DS", "code_red_remoteapp_uploaded"
+                        RemoteappUploaded = True
+                    Else
+                        Say "Error uploading file [incompatible with server]{{red}}"
+                    End If
+                Else
+                    Say "Error uploading file [not writable]{{red}}"
+                End If
+            Case "run"
+                If CDir = "/home/admin" And RemoteappUploaded And SInput(1) = "remoteapp" Then
+                    If Not BoolMissionProgress("DS", "code_red_done") Then
+                        IncMissionProgress "DS", "dos_bw"
+                        BoolSetMissionProgress "DS", "code_red_done"
+                    End If
+                    SaySlow 100, "INFECTED", "red"
+                Else
+                    Say "Error running file [file not found]{{red}}"
+                End If
+            Case "users"
+                Say "Current user: admin{{white}}"
+            Case "version"
+                Say "Goldie OS v6.0{{blue}}"
+                Say "Build v5.763213{{blue}}"
+            Case Else
+                Say "{{red}}System Command Error [" & ConsoleEscape(SInput) & "]"
+        End Select
+    Wend
+End Sub
+
+Say "Welcome to CodeRed.com where the hosting is so cheap its at CodeRed alert{{red}}"
+While true
+    Say ""
+    Say "-= 1 =- How Cheap?{{green}}"
+    Say "-= 2 =- Sign up{{green}}"
+    Say "-= 3 =- Exit{{green}}"
+    Dim MMInput
+    MMInput = QReadLine("1 - 3>")
+    If MMInput = "1" Then
+        Say "How cheap is hosting at CodeRed.com?{{red}}"
+        Say "Rates are as fallows:{{green}}"
+        Say "Monthly, $2.99, 500MB, 1GB bandwidth(each month){{green}}"
+        Say "Yearly, $9.99, 2GB, 5GB bandwidth(each month){{green}}"
+    ElseIf MMInput = "2" Then
+        Say "To sign up for hosting at CodeRed.com send an email to sales@codered.com and we'll send you the money details{{green}}"
+    ElseIf MMInput = "3" Then
+        Disconnect
+    ElseIf MMInput = "header::location::crashme.com" Then
+        Say "Redirecting{{orange}}"
+        SaySlow 100, ".....................", "orange"
+        Say ""
+        Say "Connected{{orange}}"
+        Say ""
+        Say "System Command Error [syn/ack]{{orange}}"
+        Say "System Command Error [syn/ack]{{orange}}"
+        Say "System Command Error [syn/ack]{{orange}}"
+        Say "System Command Error [syn/ack]{{orange}}"
+        Say "System Command Error [syn/ack]{{orange}}"
+        Say "System Command Error [syn/ack]{{orange}}"
+        Say ""
+        Say "Fatal Error in [JazzyWeb.exe]{{orange}}"
+        Dim PInput
+        PInput = GetAsciiWithCPrompt("Return to command prompt Y/N{{orange}}")
+        If PInput <> Asc("y") and PInput <> Asc("Y") Then
+            Disconnect
+        End If
+        ShellMenu
+    End If
+Wend

@@ -11,4 +11,5 @@
 /client/user/system/missions/*.ini
 !/client/user/home/README.txt
 !/client/user/home/music/README.txt
+/client/user/darksigns/mission_scripts/remoteapp
 /server/LICENSE

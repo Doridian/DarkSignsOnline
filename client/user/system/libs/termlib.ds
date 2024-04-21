@@ -37,11 +37,15 @@ Sub SaySlowWithBGColor(RGBVal, Delay, Str, Style)
 End Sub
 
 Function GetAsciiWithPrompt()
-    Say "{{noprespace}}> [_]"
+    GetAsciiWithPrompt = GetAsciiWithCPrompt("")
+End Function
+
+Function GetAsciiWithCPrompt(Prompt)
+    Say "{{noprespace}}" & Prompt & "> [_]"
     Dim Choice
     Choice = GetAscii()
-    SayLine "{{noprespace}}> [" & Chr(Choice) & "]"
-    GetAsciiWithPrompt = Choice
+    SayLine"{{noprespace}}" & Prompt & "> [" & Chr(Choice) & "]"
+    GetAsciiWithCPrompt = Choice
 End Function
 
 Function SetMissionProgress(MissionID, Key, Value)
