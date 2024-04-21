@@ -63,7 +63,7 @@ Public Property Get ServerPort() As Long
     ServerPort = PrivServerPort
 End Property
 
-Public Property Get ConnectingIP() As Long
+Public Property Get ConnectingIP() As String
     ConnectingIP = PrivServerConnectingIP
 End Property
 
