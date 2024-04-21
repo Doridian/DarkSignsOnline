@@ -99,7 +99,7 @@ ScriptEnd:
     cPath(ConsoleID) = OldPath
 End Function
 
-Public Function Run_Script(ByVal FileName As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal ScriptKey As String) As String
+Public Function Run_Script(ByVal FileName As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal ScriptKey As String, ByVal ConnectingIP As String) As String
     If ScriptParameters(0) = "" Then
         ScriptParameters(0) = FileName
     End If
@@ -112,7 +112,7 @@ Public Function Run_Script(ByVal FileName As String, ByVal ConsoleID As Integer,
 
     Dim tmpAll As String
     tmpAll = GetFile(FileName)
-    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, "", "", ErrorHandling, RedirectOutput, DisableOutput, ScriptKey, "local")
+    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, "", ConnectingIP, ErrorHandling, RedirectOutput, DisableOutput, ScriptKey, "local")
 End Function
 
 

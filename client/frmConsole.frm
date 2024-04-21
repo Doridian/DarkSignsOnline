@@ -1083,9 +1083,9 @@ Public Sub Start_Console(ByVal ConsoleID As Integer)
     EmptyParams(0) = ""
     If ConsoleID = 1 Then
         'run the primary startup script
-        Run_Script "/system/startup.ds", ConsoleID, EmptyParams, "BOOT", True, False, False, ""
+        Run_Script "/system/startup.ds", ConsoleID, EmptyParams, "BOOT", True, False, False, "", ""
     Else
-        Run_Script "/system/newconsole.ds", ConsoleID, EmptyParams, "BOOT", True, False, False, ""
+        Run_Script "/system/newconsole.ds", ConsoleID, EmptyParams, "BOOT", True, False, False, "", ""
     End If
     New_Console_Line ConsoleID
 End Sub

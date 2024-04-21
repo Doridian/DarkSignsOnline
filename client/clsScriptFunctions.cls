@@ -39,6 +39,7 @@ Private PrivServerDomain As String
 Private PrivServerIP As String
 Private PrivServerConnectingIP As String
 Private PrivServerPort As Long
+Private PrivSpoofedLocalConnectingIP As String
 
 Private PendingCustomDownloads() As Long
 
@@ -285,6 +286,7 @@ Public Function Configure(ByVal NewConsoleID As Integer, ByVal NewScriptFrom As 
     PrivScriptOwner = NewScriptOwner
     PrivServerIP = NewServerIP
     PrivServerConnectingIP = NewServerConnectingIP
+    PrivSpoofedLocalConnectingIP = PrivServerConnectingIP
 End Function
 
 Public Function Cls()
@@ -1420,7 +1422,7 @@ Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOu
 
     SParamArr(0) = Script
     Yield
-    RawRunCaptureA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, RedirectOutput, DisableOutput, "local")
+    RawRunCaptureA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, RedirectOutput, DisableOutput, "local", PrivSpoofedLocalConnectingIP)
     Yield
 End Function
 
@@ -1887,6 +1889,15 @@ Public Function RGBSplit(ByVal lColor As Long) As Variant
     Ret(1) = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
     Ret(2) = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
     RGBSplit = Ret
+End Function
+
+Public Function SpoofLocalConnectingIP(ByVal NewValue As String)
+    AssertLocalOnly
+    
+    If NewValue = "" Then
+        NewValue = PrivServerConnectingIP
+    End If
+    PrivSpoofedLocalConnectingIP = NewValue
 End Function
 
 ' TODO: Synchronize mission from server first time it is read or written after client launch

@@ -847,7 +847,7 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
         Shift_Console_Lines ConsoleID
         Dim EmptyArguments(0 To 0) As Variant
         EmptyArguments(0) = ""
-        Run_Script EditorRunFile, ConsoleID, EmptyArguments, "CONSOLE", True, False, False, ""
+        Run_Script EditorRunFile, ConsoleID, EmptyArguments, "CONSOLE", True, False, False, "", ""
     End If
     
     
