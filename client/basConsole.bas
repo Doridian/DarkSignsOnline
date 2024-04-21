@@ -285,7 +285,7 @@ DontDraw:
             If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
         End If
 
-        If n = 1 And CurrentPromptVisible(ActiveConsole) Then
+        If n = 1 And CurrentPromptVisible(ActiveConsole) And Not frmConsole.ChatBox.Visible Then
             frmConsole.txtPromptInput.Top = frmConsole.CurrentY
             frmConsole.txtPromptInput.Left = frmConsole.CurrentX + frmConsole.lfont.Width
             frmConsole.txtPromptInput.Height = frmConsole.lfont.Height

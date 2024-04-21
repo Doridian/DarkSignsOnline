@@ -969,25 +969,21 @@ Private Sub Label2_Click()
 End Sub
 
 Private Sub Label3_Click()
-    
     ShowChat
-    
-    
-    
 End Sub
 
 Sub ShowChat()
-    
     ChatBox.Visible = True
     ChatBox.ZOrder 0
     
     
     consoleShape.Left = 1600
-    
+
+    Me.txtPromptInput.Visible = False
+
     DoEvents
     On Error Resume Next
     Me.txtChatMsg.SetFocus
-    
 End Sub
 
 
