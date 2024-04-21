@@ -4,11 +4,13 @@ Dim ss
 ss = "{{gold}}"
 
 Say "Dark Signs Keyboard Actions{{gold 14}}"
-
+Say ""
 Say "Page Up: Scroll the console up." & ss
 Say "Page Down: Scroll the console down." & ss
-
+Say ""
 Say "Shift + Page Up: Decrease size of the COMM." & ss
 Say "Shift + Page Down: Incease size of the COMM." & ss
-
+Say ""
 Say "F11: Toggle maximum console display." & ss
+Say ""
+Say "Ctrl + B: Cancel the current command." & ss
