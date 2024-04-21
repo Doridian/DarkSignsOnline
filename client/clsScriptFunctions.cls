@@ -36,6 +36,8 @@ Private PrivDisableOutput As Boolean
 Private PrivRedirectOutput As Boolean
 Private PrivOutput As String
 Private PrivServerDomain As String
+Private PrivServerIP As String
+Private PrivServerConnectingIP As String
 Private PrivServerPort As Long
 
 Private PendingCustomDownloads() As Long
@@ -52,8 +54,16 @@ Public Property Get ServerDomain() As String
     ServerDomain = PrivServerDomain
 End Property
 
+Public Property Get ServerIP() As String
+    ServerIP = PrivServerIP
+End Property
+
 Public Property Get ServerPort() As Long
     ServerPort = PrivServerPort
+End Property
+
+Public Property Get ConnectingIP() As Long
+    ConnectingIP = PrivServerConnectingIP
 End Property
 
 Public Property Let UserName(ByVal NewValue As String)
@@ -256,7 +266,7 @@ ExitGetASCII:
     Yield
 End Function
 
-Public Function Configure(ByVal NewConsoleID As Integer, ByVal NewScriptFrom As String, ByVal NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, ByVal NewFileKey As String, ByVal NewServerDomain As String, ByVal NewServerPort As Long, ByVal NewRedirect As Boolean, NewDisableOutput As Boolean, ByVal NewAllowUnAbort As Boolean, ByVal NewScriptOwner As String)
+Public Function Configure(ByVal NewConsoleID As Integer, ByVal NewScriptFrom As String, ByVal NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, ByVal NewFileKey As String, ByVal NewServerDomain As String, ByVal NewServerPort As Long, ByVal NewRedirect As Boolean, NewDisableOutput As Boolean, ByVal NewAllowUnAbort As Boolean, ByVal NewScriptOwner As String, ByVal NewServerIP As String, ByVal NewServerConnectingIP As String)
     If IsConfigured Then
         Exit Function
     End If
@@ -273,6 +283,8 @@ Public Function Configure(ByVal NewConsoleID As Integer, ByVal NewScriptFrom As 
     PrivServerPort = NewServerPort
     PrivAllowUnAbort = NewAllowUnAbort
     PrivScriptOwner = NewScriptOwner
+    PrivServerIP = NewServerIP
+    PrivServerConnectingIP = NewServerConnectingIP
 End Function
 
 Public Function Cls()
@@ -1519,7 +1531,7 @@ Private Function RawRunCaptureCodeA(ByVal RedirectOutput As Boolean, ByVal Disab
 
     SParamArr(0) = "inline://"
     Yield
-    RawRunCaptureCodeA = Run_Script_Code(Code, PrivConsoleID, SParamArr, "RunCode", FileKey, PrivServerDomain, PrivServerPort, False, RedirectOutput, DisableOutput, "", "local")
+    RawRunCaptureCodeA = Run_Script_Code(Code, PrivConsoleID, SParamArr, "RunCode", FileKey, PrivServerDomain, PrivServerPort, PrivServerIP, PrivServerConnectingIP, False, RedirectOutput, DisableOutput, "", "local")
     Yield
 End Function
 
@@ -1691,9 +1703,10 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     DomainSplit = Split(DomainRequest.Response, ":-:")
     ' 0 = domain
     ' 1 = port
-    ' 2 = owner
-    ' 3 = filekey
-    ' 4 = code
+    ' 2 = ip
+    ' 3 = owner
+    ' 4 = filekey
+    ' 5 = code
 
     Dim strDomain As String
     strDomain = DomainSplit(0)
@@ -1702,22 +1715,24 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     If strPort <= 0 Then
         strPort = 99999
     End If
+    Dim strIP As String
+    strIP = DomainSplit(2)
     Dim strOwner As String
-    strOwner = DomainSplit(2)
+    strOwner = DomainSplit(3)
     Dim strFileKey As String
-    strFileKey = DomainSplit(3)
+    strFileKey = DomainSplit(4)
 
     If strOwner = "" Then
         strOwner = "unknown"
     End If
 
     Dim strCode As String
-    strCode = DecodeBase64Str(DomainSplit(4))
+    strCode = DecodeBase64Str(DomainSplit(5))
 
     Dim DomScript As String
     DomScript = "dso://" & strDomain & ":" & strPort
     DomainConnectParams(0) = DomScript
-    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, False, RedirectOutput, DisableOutput, DomScript, strOwner)
+    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, strIP, PrivServerIP, False, RedirectOutput, DisableOutput, DomScript, strOwner)
 
     Yield
 End Function
