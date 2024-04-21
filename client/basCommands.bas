@@ -488,11 +488,12 @@ CommandForNext:
             GoTo ArgIsNotVar
         End If
         If Left(ArgVal, 1) = "%" And Right(ArgVal, 1) = "%" Then
-            ArgVal = Mid(ArgVal, 2, Len(ArgVal) - 2)
-            If Not IsValidVarName(ArgVal) Then
+            Dim ArgValStripped As String
+            ArgValStripped = Mid(ArgVal, 2, Len(ArgVal) - 2)
+            If Not IsValidVarName(ArgValStripped) Then
                 GoTo ArgIsNotVar
             End If
-            ParseCommandLineInt = ParseCommandLineInt & ArgVal
+            ParseCommandLineInt = ParseCommandLineInt & ArgValStripped
             GoTo NextCLIFor
         End If
         If Not IsValidVarName(ArgVal) Then
