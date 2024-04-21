@@ -85,7 +85,3 @@ HandleLogin
 Say "Exiting...{{orange}}"
 SaySlow 1, "Connection Terminated", "orange"
 Quit
-
-
-
-
