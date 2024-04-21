@@ -1814,15 +1814,22 @@ Public Function RequestReadFile() As String
     Else
         Say "{{orange}}Local script is requesting to receive a file"
     End If
-    
-    Dim FileName As String
-    FileName = Trim(ReadLine("Filename?"))
-    If FileName = "" Then
-        RaiseMiscError "User cancelled file request"
-        Exit Function
-    End If
 
-    RequestReadFile = basGeneral.GetFile(ResolvePath(FileName))
+    While True
+        Dim FileName As String
+        FileName = Trim(ReadLine("Filename (empty to cancel)?"))
+        If FileName = "" Then
+            RaiseMiscError "User cancelled file request"
+            Exit Function
+        End If
+        FileName = ResolvePath(FileName)
+        If Not FileExists(FileName) Then
+            Say "{{red}}File not found. Please choose an existing file."
+        Else
+            RequestReadFile = basGeneral.GetFile(FileName)
+            Exit Function
+        End If
+    Wend
 End Function
 
 Public Function RequestWriteFile(ByVal Data As String)
@@ -1833,14 +1840,21 @@ Public Function RequestWriteFile(ByVal Data As String)
         Say "{{orange}}Local script is requesting to send a file"
     End If
 
-    Dim FileName As String
-    FileName = Trim(ReadLine("Filename?"))
-    If FileName = "" Then
-        RaiseMiscError "User cancelled file request"
-        Exit Function
-    End If
-    
-    basGeneral.WriteFile ResolvePath(FileName), Data
+    While True
+        Dim FileName As String
+        FileName = Trim(ReadLine("Filename (empty to cancel)?"))
+        If FileName = "" Then
+            RaiseMiscError "User cancelled file request"
+            Exit Function
+        End If
+        FileName = ResolvePath(FileName)
+        If FileExists(FileName) Then
+            Say "{{red}}File already exists. Please choose a different filename."
+        Else
+            basGeneral.WriteFile FileName, Data
+            Exit Function
+        End If
+    Wend
 End Function
 
 Public Function SHA256(ByVal Data As String) As String
