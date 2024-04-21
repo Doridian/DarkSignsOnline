@@ -12,6 +12,10 @@ Sub Disconnect()
     Quit
 End Sub
 
+Function FileIsRemoteapp(Data)
+    FileIsRemoteapp = (InStr(Data, vbCrLf & "XREMOTEAPPSIGNATURE=TRUE" & vbCrLf) > 0)
+End Function
+
 Dim RemoteappUploaded
 RemoteappUploaded = False
 

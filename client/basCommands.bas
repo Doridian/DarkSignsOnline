@@ -491,7 +491,7 @@ CommandForNext:
             GoTo ArgIsNotVar
         End If
 
-        ParseCommandLineInt = ParseCommandLineInt & "Coalesce(Eval(" & VBEscapeSimpleQuoted(ArgVal) & "), " & VBEscapeSimpleQuoted(ArgVal) & ")"
+        ParseCommandLineInt = ParseCommandLineInt & "Coalesce(Eval(" & VBEscapeSimpleQuoted(ArgVal, True) & "), " & VBEscapeSimpleQuoted(ArgVal) & ")"
         GoTo NextCLIFor
 ArgIsNotVar:
         ParseCommandLineInt = ParseCommandLineInt & VBEscapeSimpleQuoted(ArgVal, CLIArgsQuoted(X))
