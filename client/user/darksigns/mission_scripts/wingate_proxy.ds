@@ -17,6 +17,12 @@ Dim theip, theport
 theip = QReadLine("Enter Destination Address (Hostname or IP Address)>{{grey}}")
 theport = QReadLine("Enter Destination Port>{{grey}}")
 
+SpoofLocalConnectingIP "17.191.200.201"
+If IsLocal() And theip = "127.0.0.1" And theport = 22 Then
+    Run "/darksigns/mission_scripts/sendmail_22.ds"
+    Quit
+End If
+
 Dim PP
 PP = PingPort(theip, theport)
 SaySlow 10, "Scanning " & ConsoleEscape(theip) & "...", "grey"
@@ -27,4 +33,5 @@ End If
 
 Say "Port " & ConsoleEscape(theport) & " is open on [" & ConsoleEscape(theip) & "]{{green}}"
 Say "Linking connection...{{grey}}"
+
 Connect theip, theport
