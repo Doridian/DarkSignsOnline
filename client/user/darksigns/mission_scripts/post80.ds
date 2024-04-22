@@ -48,7 +48,7 @@ While True
         Say "Critical HTTP error: Encryption error 677{{red}}"
         Say "Transfered from: prx.postoffice.mil{{red}}"
         Say "Module: getdb( ){{red}}"
-        Say "Date and Time: " & Now
+        Say "Date and Time: " & ConsoleEscape(Now)
         Say ""
         Say "Please email admin with errors above{{white}}"
         Say ""

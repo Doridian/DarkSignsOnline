@@ -1,0 +1,63 @@
+Option Explicit
+
+DLOpen "termlib"
+
+
+Dim MaxPrime
+MaxPrime = CInt(QReadLine("Enter the number you wish to go up to:"))
+
+Dim CurrentNum, PrimeCount
+CurrentNum = 2
+PrimeCount = 0
+
+Dim StartTime
+StartTime = Now
+Sub Disconnect()
+    Dim EndTime
+    EndTime = Now
+    Say "Found " & PrimeCount & " primes up to " & MaxPrime
+    Say "Started at: " & ConsoleEscape(StartTime) & "; Finished at: " & ConsoleEscape(EndTime)
+    Quit
+End Sub
+
+Function IsPrime(Num)
+    If Num < 2 Then
+        IsPrime = False
+        Exit Function
+    End If
+    If Num = 2 then
+        IsPrime = True
+        Exit Function
+    End If
+    If Num Mod 2 = 0 Then
+        IsPrime = False
+        Exit Function
+    End If
+
+    ' Any factors is bad here, since we only test halfway
+    Dim i, imax, factors
+    imax = Num \ 2
+    factors = 0
+    For i = 3 To imax Step 2
+        If Num Mod i = 0 then
+            IsPrime = False
+            Exit Function
+        End If
+    Next
+
+    IsPrime = True
+End Function
+
+If MaxPrime >= 2 Then
+    Say "Found 2"
+End If
+CurrentNum = 3
+Do
+    If IsPrime(CurrentNum) Then
+        PrimeCount = PrimeCount + 1
+        Say "Found " & CurrentNum
+    End If
+    CurrentNum = CurrentNum + 2
+Loop Until CurrentNum > MaxPrime
+
+Disconnect
