@@ -1,0 +1,36 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "Null Connection{{white}}"
+
+Sub RunFilecopy(fnameIn)
+    If fnameIn <> "9m.enc"
+        SaySlow 1, " ../FILECOPY.EXE OUTPUT: File Not Found", "white"
+        Exit Sub
+    End If
+
+    Dim FData
+    FData = "ENCRYPTED" & vbCrLf & _
+            "SUDHMSIHDJAMKAKZYVMKAYVMZVAYAM" & vbCrLf & _
+            "JMAKKZUHZMMZULZMZHZHZLAUSASJIA" & vbCrLf & _
+            "AJAQHZHNJQAMKSAJHSKAJSKAKJSMAJKS" & vbCrLf & _
+            "SUDHMSIHDJAMKAKZYVMKAYVMZVAYAM" & vbCrLf & _
+            "JMAKKZUHZMMZULZMZHZHZLAUSASJIA" & vbCrLf
+
+    Say "Copying [9m.enc]...{{white}}"
+    RequestWriteFile FData
+    SaySlow 1, "../FILECOPY.EXE OUTPUT: Copied", "white"
+    Say "File [9m.enc] Downloaded{{white}}"
+End Sub
+
+While True
+    Dim nInput
+    nInput = QReadLine("Enter Input (CTRL + B to Cancel)>{{grey}}")
+
+    If InStr(nInput, "run filecopy.exe") = 1 Then
+        RunFilecopy Trim(Mid(nInput, 17))
+    Else
+        Say "Thanks for nothing...{{white}}"
+    End If
+Wend

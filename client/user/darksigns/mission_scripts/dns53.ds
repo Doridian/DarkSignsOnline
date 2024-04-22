@@ -1,6 +1,7 @@
 Option Explicit
 
+Say "Null Connection{{white}}"
 While True
-    Say "Null connection press Ctrl + B to disconnect{{grey}}"
-    ReadLine ">"
+    ReadLine "Enter Input (CTRL + B to Cancel)>{{grey}}"
+    Say "Thanks for nothing...{{white}}"
 Wend
