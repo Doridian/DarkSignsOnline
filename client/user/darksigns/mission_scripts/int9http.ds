@@ -1,0 +1,23 @@
+Option Explicit
+
+DLOpen "termlib"
+
+' DECRYPTION
+
+Sub Disconnect()
+    SaySlow 1, "Connection Closed", "blue"
+    Quit
+End Sub
+
+If BoolMissionProgress("DS", "int9http_visited") Then
+    SaySlow 1, "Access Denied", "red"
+    Disconnect
+End If
+
+SendMailToUser "noreply@find.com", "Newsletter", "Hi " & Username & "," & vbCrLf & vbCrLf & _
+                                                "We have finished upgrading our database and our website" & vbCrLf & _
+                                                "is now back up and running." & vbCrLf & vbCrLf & vbCrLf & _
+                                                "Thank you," & vbCrLf & _
+                                                "Barry Simons" & vbCrLf & _
+                                                "FIND.com President"
+Disconnect

@@ -1,0 +1,13 @@
+Option Explicit
+
+DLOpen "termlib"
+
+' DECRYPTION
+
+Sub Disconnect()
+    SaySlow 1, "Connection Closed", "blue"
+    Quit
+End Sub
+
+SaySlow 1, "Access Denied", "red"
+Disconnect
