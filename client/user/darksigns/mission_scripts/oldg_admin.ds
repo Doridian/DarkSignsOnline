@@ -1,0 +1,134 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Disconnecting{{yellow}}"
+    Quit
+End Sub
+
+Dim username, password
+
+Say "Welcome to oldgames.com's admin panel (AP 1.0b){{rgb:39168}}"
+Say "You need a correct user and password to continue:{{rgb:39168}}"
+username = QReadLine("Username>")
+password = QReadLine("Password>")
+
+If InStr(username, "goto menu") <= 10 Then
+    SaySlow 10, "Wrong username/password", "red"
+    Disconnect
+End If
+
+Sub ViewLogL00017239()
+    Say "Reading file ...{{rgb:39168}}"
+    Say "L00017239.log{{blue}}"
+    Say "Starting log...{{blue}}"
+    Say "User 1 connected from user152-dialup.internetprovider.com{{blue}}"
+    Say "User 2 connected from user17-dsl.broadband.com{{blue}}"
+    Say "User 3 connected from user9903-dialup.internetprovider.com{{blue}}"
+    Say "User 2 disconnected{{blue}}"
+    Say "User 1 downloads game 15234{{blue}}"
+    Say "User 3 downloads game 54314{{blue}}"
+    Say "User 3 downloads game 9535{{blue}}"
+    Say "User 4 connected from proxy.com{{blue}}"
+    Say "User 4 banned for 1 hour, trying to access unauthorized area.{{blue}}"
+    Say "User 1 disconnected{{blue}}"
+    Say "User 3 disconnected{{blue}}"
+    Say "Log file closed.{{blue}}"
+    Pause
+End Sub
+
+Sub ViewLogL00017240()
+    Say "Reading file ...{{rgb:39168}}"
+    Say "L00017240.log{{blue}}"
+    Say "Starting log...{{blue}}"
+    Say "User 1 connected from user6542-dialup.internetprovider.com{{blue}}"
+    Say "User 1 downloads game 345{{blue}}"
+    Say "User 1 disconnected{{blue}}"
+    Say "Log file closed.{{blue}}"
+    Pause
+End Sub
+
+Sub ViewLogL00017241()
+    Say "Reading file ...{{rgb:39168}}"
+    Say "L00017241.log{{blue}}"
+    Say "Starting log...{{blue}}"
+    Say "Log file closed.{{blue}}"
+    Pause
+End Sub
+
+Sub ViewLogL00017243()
+    Say "Reading file ...{{rgb:39168}}"
+    Say "L00017243.log{{blue}}"
+    Say "Error : file is empty{{red}}"
+    Pause
+End Sub
+
+Sub ViewLogL00017244()
+    Say "Reading file ...{{rgb:39168}}"
+    Say "L00017244.log{{blue}}"
+    Say "Starting log...{{blue}}"
+    Say "User 1 connected from user532-dsl.broadband.com{{blue}}"
+    Say "User 1 downloads game 1943{{blue}}"
+    Say "User 2 connected from " & ConsoleEscape(ConnectingIP) & "{{blue}}"
+    Say "WARNING : intrusion detected{{blue}}"
+    Say "System error : shutting down http service{{blue}}"
+    Pause
+End Sub
+
+Sub ViewLogsMenu()
+    While True
+        Say "Here are the currents logs:{{rgb:39168}}"
+        Say "1. L00017239.log{{rgb:39168}}"
+        Say "2. L00017240.log{{rgb:39168}}"
+        Say "3. L00017241.log{{rgb:39168}}"
+        Say "4. L00017243.log{{rgb:39168}}"
+        Say "5. L00017244.log{{rgb:39168}}"
+        Say "0. Main menu{{rgb:39168}}"
+
+        Dim gkeyv
+        gkeyv = GetAsciiWithPrompt()
+        If gkeyv = Asc("1") Then
+            ViewLogL00017239
+        ElseIf gkeyv = Asc("2") Then
+            ViewLogL00017240
+        ElseIf gkeyv = Asc("3") Then
+            ViewLogL00017241
+        ElseIf gkeyv = Asc("4") Then
+            ViewLogL00017243
+        ElseIf gkeyv = Asc("5") Then
+            ViewLogL00017244
+        ElseIf gkeyv = Asc("0") Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+While True
+    Say "Welcome $#%#)(^) here are the admin commands{{rgb:39168}}"
+    Say "1. View logs{{rgb:39168}}"
+    Say "2. Edit configuration{{rgb:39168}}"
+    Say "3. View Backup configuration{{rgb:39168}}"
+    Say "0. Disconnect{{rgb:39168}}"
+
+    Dim gkey
+    gkey = GetAsciiWithPrompt()
+    If gkey = Asc("1") Then
+        ViewLogsMenu
+    ElseIf gkey = Asc("2") Then
+        Say "An error has occured while trying to edit the configuration.{{red}}"
+        Pause
+    ElseIf gkey = Asc("3") Then
+        Say "Backup configuration{{rgb:39168}}"
+        Say "Backup: on{{rgb:39168}}"
+        Say "Backup files: *.scr *.log *.conf *.bin{{rgb:39168}}"
+        Say "Storage space: oldgames.com 21{{rgb:39168}}"
+        Say "username: save{{rgb:39168}}"
+        Say "password: ***{{rgb:39168}}"
+        Say ""
+        Say "Returning to menu{{yellow}}"
+        Pause
+    ElseIf gkey = Asc("0") Then
+        Disconnect
+    End If
+Wend

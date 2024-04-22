@@ -1,0 +1,81 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "Welcome to the Media.com's telnet server{{green}}"
+Dim TelnetName
+TelnetName = "media23"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Function FileIsRemoteapp(Data)
+    FileIsRemoteapp = (InStr(Data, vbCrLf & "XREMOTEAPPSIGNATURE=TRUE" & vbCrLf) > 0)
+End Function
+
+Dim TelnetDoneName
+TelnetDoneName = "telnet_" & TelnetName & "_done"
+Dim TelnetRemoteappName
+TelnetRemoteappName = "telnet_" & TelnetName & "_remoteapp"
+
+Dim RemoteappUploaded
+RemoteappUploaded = BoolMissionProgress("DS", TelnetRemoteappName)
+
+While True
+    Dim MMInput
+    MMInput = QReadLine(">")
+    If MMInput = "exit" Then
+        Disconnect
+    ElseIf MMInput = "version" Then
+        Say "OS: Gunner v4.5"
+        Say "Build: v4.24926432a"
+    ElseIf MMInput = "help" Then
+        Say "EXIT - usage: exit{{green}}"
+        Say "Disconnects you from remote host{{white}}"
+        Say ""
+        Say "HELP - usage: help{{green}}"
+        Say "Displays this help screen{{white}}"
+        Say ""
+        Say "LS - usage: ls{{green}}"
+        Say "Lists all files and folders in the current directory{{white}}"
+        Say ""
+        Say "RUN - usage: run{{green}}"
+        Say "Runs a remote file{{white}}"
+        Say ""
+        Say "VERSION - usage: version{{green}}"
+        Say "Displays OS version and build{{white}}"
+    ElseIf MMInput = "ls" Then
+        If RemoteappUploaded Then
+            Say "REMOTEAPP"
+        Else
+            Say "NO FILES"
+        End If
+    ElseIf MMInput = "run" Then
+        Dim RunInput
+        RunInput = QReadLine("Enter file to run>")
+        If RunInput = "runmodule uploadandrun()" Then
+            Dim FileName
+            FileName = RequestReadFile()
+            SaySlow 100, "...........................................", "white"
+            If FileIsRemoteapp(FileName) Then
+                Say "File Uploaded{{white}}"
+                RemoteappUploaded = True
+                BoolSetMissionProgress "DS", TelnetRemoteappName
+            Else
+                Say "Error uploading file [incompatible with server]{{red}}"
+            End If
+        ElseIf RunInput = "remoteapp" And RemoteappUploaded Then
+            If Not BoolMissionProgress("DS", TelnetDoneName) Then
+                IncMissionProgress "DS", "dos_bw"
+                BoolSetMissionProgress "DS", TelnetDoneName
+            End If
+            SaySlow 100, "INFECTED", "red"
+        Else
+            Say "File Error [can not find " & FileToRun & "]{{orange}}"
+        End If
+    Else
+        Say "System Command Error [" & MMInput & "]{{orange}}"
+    End If
+Wend
