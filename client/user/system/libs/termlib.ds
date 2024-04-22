@@ -1,23 +1,5 @@
 Option Explicit
 
-Sub SaySlow(Delay, Str, Style)
-    If IsOutputDisabled Then
-        Say Str & Style
-        Exit Sub
-    End If
-
-    Dim X
-    Style = "{{" & Replace(Replace(Style, "{", ""), "}", "") & "}}"
-    Say Left(Str, 1) & Style
-    For X = 2 To Len(Str)
-        If Mid(Str, X, 1) = ConsoleInvisibleChar Then
-            X = X + 1
-        End If
-        Wait(Delay)
-        SayLine Mid(Str, 1, X), -1, True
-    Next
-End Sub
-
 Sub SayWithBGColor(RGBVal, Str)
     Say Str
     Draw -1, RGBVal, "solid"
@@ -32,7 +14,9 @@ Sub SaySlowWithBGColor(RGBVal, Delay, Str, Style)
     Dim X
     Style = "{{" & Replace(Replace(Style, "{", ""), "}", "") & "}}"
     Say Left(Str, 1) & Style
-    Draw -1, RGBVal, "solid"
+    If RGBVal >= 0 Then
+        Draw -1, RGBVal, "solid"
+    End If
     For X = 2 To Len(Str)
         If Mid(Str, X, 1) = ConsoleInvisibleChar Then
             X = X + 1
@@ -42,13 +26,9 @@ Sub SaySlowWithBGColor(RGBVal, Delay, Str, Style)
     Next
 End Sub
 
-Function GetAsciiWithPrompt()
-    GetAsciiWithPrompt = GetAsciiWithCPrompt("")
-End Function
-
-Function GetAsciiWithCPrompt(Prompt)
-    GetAsciiWithCPrompt = GetAsciiWithCPromptBG(-1, Prompt)
-End Function
+Sub SaySlow(Delay, Str, Style)
+    SaySlowWithBGColor -1, Delay, Str, Style
+End Sub
 
 Function GetAsciiWithCPromptBG(RGBVal, Prompt)
     Say "{{noprespace}}" & Prompt & "> [_]"
@@ -59,6 +39,14 @@ Function GetAsciiWithCPromptBG(RGBVal, Prompt)
     Choice = GetAscii()
     SayLine "{{noprespace}}" & Prompt & "> [" & Chr(Choice) & "]", -1 , True
     GetAsciiWithCPromptBG = Choice
+End Function
+
+Function GetAsciiWithCPrompt(Prompt)
+    GetAsciiWithCPrompt = GetAsciiWithCPromptBG(-1, Prompt)
+End Function
+
+Function GetAsciiWithPrompt()
+    GetAsciiWithPrompt = GetAsciiWithCPrompt("")
 End Function
 
 Function SetMissionProgress(MissionID, Key, Value)
