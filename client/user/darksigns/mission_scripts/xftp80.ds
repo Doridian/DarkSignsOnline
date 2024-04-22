@@ -1,0 +1,144 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "Thank you for visting XFTP's official website{{purple}}"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Sub DocsMenu()
+    While True
+        Say "Documentation{{green}}"
+        Say ""
+        Say "( 1 ) Overview{{white}}"
+        Say "( 2 ) Commands{{white}}"
+        Say "( 3 ) Back to main menu{{white}}"
+        Dim docInput
+        docInput = QReadLine("Please select a number ( 1 - 3 ){{white}}")
+        If docInput = "1" Then
+            Say "XFTP Overview{{green}}"
+            Say ""
+            Say "XFTP is an user driven FTP server, meaning you will have to have a user{{white}}"
+            Say "account to use the services XFTP offers. User permissions tell the server{{white}}"
+            Say "what a user can and can not do. The Admin user is the highest account{{white}}"
+            Say "on the server, it can do what it wants, when it wants. Protect the admin{{white}}"
+            Say "account with a strong password. By default a user will be logged in as{{white}}"
+            Say "the anonymous user when first connected, but this can be changed by{{white}}"
+            Say "adding the line, ""login_anonymous false"" (no quotes) to the init.conf file.{{white}}"
+            Pause
+        ElseIf docInput = "2" Then
+            Say "Commands{{green}}"
+            Say ""
+            Say "CD - usage:  cd <folder>{{blue}}"
+            Say "Changes the current directory. Use cd.. to go back one folder.{{white}}"
+            Say ""
+            Say "EXIT - usage: exit{{blue}}"
+            Say "Discconects from XFTP{{white}}"
+            Say ""
+            Say "GET - usage: get{{blue}}"
+            Say "Asks which file to download and then downloads that file to the current local directory{{white}}"
+            Say ""
+            Say "HELP - usage: help{{blue}}"
+            Say "Displays this help file{{white}}"
+            Say ""
+            Say "LOGIN - usage: login{{blue}}"
+            Say "Prompts user for a username and password.{{white}}"
+            Say "If currect logs in as that user.{{white}}"
+            Say ""
+            Say "LOGOUT - useage: logout{{blue}}"
+            Say "Logs out the current user and makes them anonymous user{{white}}"
+            Say ""
+            Say "LS - usage: ls{{blue}}"
+            Say "Lists all files and folder in the current directory{{white}}"
+            Say ""
+            Say "PUT - usage: put{{blue}}"
+            Say "Asks which to upload and then uploads that file to the current local directory{{white}}"
+            Say ""
+            Say "RUN - usage: run{{blue}}"
+            Say "Asks which file to run remotely{{white}}"
+            Say ""
+            Say "USERS - usage: users{{blue}}"
+            Say "Displays current user account being used{{white}}"
+            Say ""
+            Say "VERSION - usage: version{{blue}}"
+            Say "Displays XFTP version{{white}}"
+            Pause
+        ElseIf docInput = "3" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+Sub BugsMenu()
+    Say "Bug Reports{{green}}"
+    Say "-------------------------------------------------------{{white}}"
+    Say "Buffer Over Flow in Login Command{{white}}"
+    Say "-------------------------------------------------------{{white}}"
+    Say "Affected versions: 1.x{{white}}"
+    Say "Priority: Extreme{{white}}"
+    Say "-------------------------------------------------------{{white}}"
+    Say "There is a buffer over flow in the login command for XFTP v1.x command{{white}}"
+    Say "that could give command prompt access as user xftp. xftp user only has{{white}}"
+    Say "read write access to the xftp root directory.{{white}}"
+    Say "If a string more then 36 characters long is entered as the username OR{{white}}"
+    Say "password XFTP will crash and throw you into the command prompt.{{white}}"
+    Say "-------------------------------------------------------{{white}}"
+    Say "Fix: Apply patch to server{{white}}"
+    Say "-------------------------------------------------------{{white}}"
+    Pause
+    Say "-------------------------------------------------------{{white}}"
+    Say "Default Admin Access Using debug Mode{{white}}"
+    Say "-------------------------------------------------------{{white}}"
+    Say "Affected versions: 1.x{{white}}"
+    Say "Priority: Urgent{{white}}"
+    Say "-------------------------------------------------------{{white}}"
+    Say "If an attacker gained access to the init.conf file they could gain admin rights{{white}}"
+    Say "in XFTP. By editing the init.conf file an attacker could run XFTP in debug which{{white}}"
+    Say "gives you admin rights on connect. The default for debug mode is off.{{white}}"
+    Say "-------------------------------------------------------{{white}}"
+    Say "Fix: Apply patch to server{{white}}"
+    Say "-------------------------------------------------------{{white}}"
+    Pause
+End Sub
+
+While True
+    Say ""
+    Say "( 1 ) What is XFTP{{white}}"
+    Say "( 2 ) Documentation{{white}}"
+    Say "( 3 ) Bugs{{white}}"
+    Say "( 4 ) Donations{{white}}"
+    Say "( 5 ) Contact us{{white}}"
+    Say "( 6 ) Disconect{{white}}"
+    Dim mmInput
+    mmInput = QReadLine("Please select a number ( 1 - 6 ){{white}}")
+    If mmInput = "1" Then
+        Say ""
+        Say "What is XFTP?{{green}}"
+        Say ""
+        Say "XFTP is an open source FTP server service. It is free for all to download{{white}}"
+        Say "and edit in anyway they see fit. Features in XFTP include multiple user{{white}}"
+        Say "accounts, permissions, auto-update and more.{{white}}"
+        Say ""
+        Pause
+    ElseIf mmInput = "2" Then
+        DocsMenu
+    ElseIf mmInput = "3" Then
+        BugsMenu
+    ElseIf mmInput = "4" Then
+        Say "Donations{{green}}"
+        Say ""
+        Say "Thank you for your interest in supporting the XFTP project. Please send an{{white}}"
+        Say "email to donations@xftp.com for info about donating to the project.{{white}}"
+        Pause
+    ElseIf mmInput = "5" Then
+        Say "Contact us{{green}}"
+        Say ""
+        Say "For any additional information please send emails to info@xftp.com"
+        Pause
+    ElseIf mmInput = "6" Then
+        Disconnect
+    End If
+Wend
