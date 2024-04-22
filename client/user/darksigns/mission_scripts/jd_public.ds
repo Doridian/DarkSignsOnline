@@ -1,0 +1,18 @@
+Option Explicit
+
+Say "Hello fellow academics. This is my first attempt at a homepage!{{white}}"
+Say "I'll put something decent here soon but for now he's some personal information:{{white}}"
+Say ""
+Say "Name:{{white}}"
+Say "John Davids{{blue}}"
+Say "Birthdate:{{white}}"
+Say "10/15/56{{blue}}"
+Say "Profession:{{white}}"
+Say "Professor at UCB{{blue}}"
+Say "Pets:{{white}}"
+Say "Quark, my labrador. He's my biggest treasure in life!{{blue}}"
+Say "Here's a picture of him and my wife: quark.jpg{{blue}}"
+Say "Hobbies:{{white}}"
+Say "Fishing, reading, dining{{blue}}"
+Say ""
+Say "That's it for now, I'm still learning this HTLMN thing.{{white}}"

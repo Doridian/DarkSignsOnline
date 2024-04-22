@@ -1,0 +1,12 @@
+Option Explicit
+
+say "Hello! And welcome to the Lower Ebworth Tourist Site{{white}}"
+Say "We hope you enjoy your stay in Lower Ebworth and we{{white}}"
+Say "H4V3 B33n 0Wn3d{{green}}"
+Say "(by The H8 Club){{green}}"
+Say "Our message for you is this:{{green}}"
+Say "We rule!{{green}}"
+Say "Outpost oo ee oo aah?{{green}}"
+Say "who hee who ha?{{green}}"
+Say "Love Hatred, Gage, Beater, Jpain and Dewey{{green}}"
+Pause

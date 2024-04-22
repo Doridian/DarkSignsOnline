@@ -1,0 +1,64 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Disconnecting{{yellow}}"
+    Quit
+End Sub
+
+Sub FindAGame()
+    If BoolMissionProgress("DS", "securedigital_jobs_game_sent") Then
+        Say "You already took this mission!{{orange}}"
+        Disconnect
+        Exit Sub
+    End If
+
+    SendMailToUser "jobs@securedigital.com", "Job", "Your job is to find a game." & vbCrLf & _
+                                                    "The game is stored at oldgames.com." & vbCrLf & _
+                                                    "We don't have any information about the security level." & vbCrLf & _
+                                                    "There is a rumor saying someone else wants the game too." & vbCrLf & _
+                                                    "But this rumor has not been confirmed, so you should not have any problems." & vbCrLf & _
+                                                    "Game Doom8 file game868686.bin" & vbCrLf & _
+                                                    "Upload the file to ipgames.com"
+    SendMailToUser "bbs@security.com", "BBS", "Great news: Security.com launched some days ago their BBS!" & vbCrLf & _
+                                                "Yes you're right, this is a wonderfull thing." & vbCrLf & _
+                                                "Don't hesitate to come and see how security holes are found in real time !" & vbCrLf & _
+                                                "Visit us @ bbs.security.com"
+    BoolSetMissionProgress "DS", "securedigital_jobs_game_sent"
+    Disconnect
+End Sub
+
+Sub JobsMenu()
+    while True
+        Say "Actual jobs:{{rgb:39168}}"
+        Say "1. Find a game{{rgb:39168}}"
+        Say "0. Main menu{{rgb:39168}}"
+
+        Dim keyin
+        keyin = Chr(GetAsciiWithPrompt())
+
+        If keyin = "0" Then
+            Exit Sub
+        ElseIf keyin = "1" Then
+            FindAGame
+        End If
+    Wend
+End Sub
+
+while True
+    Say "Welcome to jobs.securedigital.com{{rgb:39168}}"
+    Say "Here you can find some 'special' jobs.{{rgb:39168}}"
+    Say "The menu:{{rgb:39168}}"
+    Say "1. See job offers{{rgb:39168}}"
+    Say "0. Disconnect{{rgb:39168}}"
+
+    Dim keyin
+    keyin = Chr(GetAsciiWithPrompt())
+
+    If keyin = "0" Then
+        Disconnect
+    ElseIf keyin = "1" Then
+        JobsMenu
+    End If
+Wend
