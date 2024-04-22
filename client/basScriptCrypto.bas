@@ -6,13 +6,10 @@ Public Const EncryptedCanary = "Option DSciptCompiledLoaded" & vbCrLf
 Public Const EncryptedLineLen = 140
 Private Const EncryptedDefaultKey = "DSO$S3cur3_K3y!!111"
 
-Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As String, ByVal NoWrap As Boolean) As String
+Public Function DSOEncrypt(ByVal tmpS As String, ByVal Password As String, ByVal NoWrap As Boolean) As String
     If tmpS = "" Then
-        DSOSingleEncrypt = "X"
+        DSOEncrypt = "X"
         Exit Function
-    End If
-    If ScriptKey = "" Then
-        ScriptKey = "local"
     End If
 
     Dim CryptoVer As String
@@ -33,9 +30,8 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
         CryptoVer = "6"
     End If
 
-    ScriptKey = EncryptedDefaultKey & ScriptKey
     bSalt = AesGenSalt()
-    bPass = StrConv(ScriptKey & vbNullString, vbFromUnicode)
+    bPass = StrConv(EncryptedDefaultKey & Password & vbNullString, vbFromUnicode)
 
     ' END encrypt
     Dim bUnused() As Byte
@@ -47,20 +43,17 @@ Private Function DSOSingleEncrypt(ByVal tmpS As String, ByVal ScriptKey As Strin
     End If
     tmpS = EncodeBase64Bytes(bSalt) & ":" & EncodeBase64Bytes(bHMAC) & ":" & EncodeBase64Bytes(bProcessed)
 
-    DSOSingleEncrypt = ""
+    DSOEncrypt = ""
     If Not NoWrap Then
         While Len(tmpS) > EncryptedLineLen
-            DSOSingleEncrypt = DSOSingleEncrypt & "_" & Mid(tmpS, 1, EncryptedLineLen) & vbCrLf
+            DSOEncrypt = DSOEncrypt & "_" & Mid(tmpS, 1, EncryptedLineLen) & vbCrLf
             tmpS = Mid(tmpS, EncryptedLineLen + 1)
         Wend
     End If
-    DSOSingleEncrypt = DSOSingleEncrypt & CryptoVer & tmpS
+    DSOEncrypt = DSOEncrypt & CryptoVer & tmpS
 End Function
 
-Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As String, ByVal ScriptKey As String) As String
-    If ScriptKey = "" Then
-        ScriptKey = "local"
-    End If
+Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As String, ByVal Password As String) As String
     Dim X As Long
 
     Select Case CryptoVer
@@ -70,8 +63,7 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As S
             bSalt = DecodeBase64Bytes(sSplit(0))
             bHMAC = DecodeBase64Bytes(sSplit(1))
             bRaw = DecodeBase64Bytes(sSplit(2))
-            ScriptKey = EncryptedDefaultKey & ScriptKey
-            bPass = StrConv(ScriptKey & vbNullString, vbFromUnicode)
+            bPass = StrConv(EncryptedDefaultKey & Password & vbNullString, vbFromUnicode)
 
             Dim bUnused() As Byte
             ReDim bHMACOut(0 To HMAC_HASH_LEN - 1)
@@ -117,6 +109,10 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As S
 End Function
 
 Public Function DSODecryptScript(ByVal Source As String, ByVal ScriptKey As String) As String
+    If ScriptKey = "" Then
+        ScriptKey = "local"
+    End If
+
     If UCase(Left(Source, Len(EncryptedHeader))) <> UCase(EncryptedHeader) Then
         DSODecryptScript = Source
         Exit Function
@@ -129,12 +125,24 @@ Public Function DSODecryptScript(ByVal Source As String, ByVal ScriptKey As Stri
     LastLine = Lines(LBound(Lines))
     Output = DSOSingleDecrypt(Left(LastLine, 1), Mid(LastLine, 2), ScriptKey)
     If Output <> EncryptedCanary Then
-        Err.Raise vbObjectError + 9878, , "Failed to parse header ofcompiled script"
+        Err.Raise vbObjectError + 9878, , "Failed to parse header of compiled script"
     End If
+    
+    DSODecryptScript = DSODecryptLines(Lines, ScriptKey, 1)
+End Function
 
+Public Function DSODecrypt(ByVal Source As String, ByVal Password As String) As String
+    Dim Lines() As String
+    Lines = Split(Source, vbCrLf)
+    DSODecrypt = DSODecryptLines(Lines, Password)
+End Function
+
+Private Function DSODecryptLines(Lines() As String, ByVal Password As String, Optional ByVal SkipLines As Long = 0) As String
+    Dim X As Long, Line As String, LastLine As String
     LastLine = ""
-    Output = ""
-    For X = LBound(Lines) + 1 To UBound(Lines)
+    DSODecryptLines = ""
+
+    For X = LBound(Lines) + SkipLines To UBound(Lines)
         Line = Lines(X)
         If Trim(Line) <> "" Then
             LastLine = LastLine & Mid(Line, 2)
@@ -142,23 +150,25 @@ Public Function DSODecryptScript(ByVal Source As String, ByVal ScriptKey As Stri
 
         If Left(Line, 1) <> "_" Then
             If Trim(LastLine) <> "" Then
-                If Output <> "" Then
-                    Output = Output & vbCrLf
+                If DSODecryptLines <> "" Then
+                    DSODecryptLines = DSODecryptLines & vbCrLf
                 End If
-                Output = Output & DSOSingleDecrypt(Left(Line, 1), LastLine, ScriptKey)
+                DSODecryptLines = DSODecryptLines & DSOSingleDecrypt(Left(Line, 1), LastLine, Password)
             End If
             LastLine = ""
         End If
     Next
-
-    DSODecryptScript = Output
 End Function
 
 Public Function DSOCompileScript(ByVal Source As String, ByVal ScriptKey As String) As String
+    If ScriptKey = "" Then
+        ScriptKey = "local"
+    End If
+
     Dim ParsedSource As String
     ParsedSource = DSODecryptScript(Source, "")
 
-    ParsedSource = DSOSingleEncrypt(ParsedSource, ScriptKey, True)
-    DSOCompileScript = EncryptedHeader & DSOSingleEncrypt(EncryptedCanary, ScriptKey, False) & vbCrLf & ParsedSource & vbCrLf
+    ParsedSource = DSOEncrypt(ParsedSource, ScriptKey, True)
+    DSOCompileScript = EncryptedHeader & DSOEncrypt(EncryptedCanary, ScriptKey, False) & vbCrLf & ParsedSource & vbCrLf
 End Function
 

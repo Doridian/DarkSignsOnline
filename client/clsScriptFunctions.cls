@@ -1905,6 +1905,14 @@ Public Function RGBSplit(ByVal lColor As Long) As Variant
     RGBSplit = Ret
 End Function
 
+Public Function Encrypt(ByVal Data As String, ByVal Password As String, Optional ByVal NoWrap As Boolean = False) As String
+    Encrypt = DSOEncrypt(Data, "dsoscript_" & Password, NoWrap)
+End Function
+
+Public Function Decrypt(ByVal Data As String, ByVal Password As String) As String
+    Decrypt = DSODecrypt(Data, "dsoscript_" & Password)
+End Function
+
 Public Function SpoofLocalConnectingIP(ByVal NewValue As String)
     If Not IsLocal() Then
         Exit Function

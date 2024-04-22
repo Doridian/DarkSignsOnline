@@ -1,0 +1,113 @@
+Option Explicit
+
+DLOpen "termlib"
+
+If BoolMissionProgress("DS", "ipgames_http_down") Then
+    Say "Server refused connection{{red}}"
+    Quit
+End If
+
+Sub Disconnect()
+    Say "Disconnecting{{yellow}}"
+    Quit
+End Sub
+
+Sub ProgressSleep(Delay)
+    Dim s
+    Dim i
+    For i = 1 To 101
+        s = s & "."
+    Next
+    SaySlow Delay, s, "rgb:39168"
+End Sub
+
+ProgressSleep 10
+
+Say "Welcome, we were waiting for you...{{rgb:39168}}"
+Say "Looking for file{{rgb:39168}}"
+Dim FileIn
+FileIn = RequestReadFile()
+If FileIn = "" Then
+    Say "You don't have the file, what are you doing here ??"
+    Disconnect
+End If
+
+Dim Equals
+Equals = False
+Sub CheckFile()
+    Equals = False
+
+    On Error Resume Next
+    Dim Lines
+    Lines = Split(FileIn, vbCrLf)
+
+    Dim Pass, CipherT, Expect
+    Pass = Lines(13)
+    CipherT = Lines(4)
+    Expect = Lines(5)
+
+    Say "P=" & Pass
+    Say "C=" & CipherT
+    Say "E=" & Expect
+
+    Equals = (Decrypt(CipherT, Pass) = Expect)
+    On Error GoTo 0
+End Sub
+CheckFile
+
+Say "Uploading file{{rgb:39168}}"
+ProgressSleep 50
+
+If Not Equals Then
+    Say "It seems you want to cheat us... This file is not the one we want."
+    Disconnect
+End If
+
+Say "File ok.{{rgb:39168}}"
+
+Say "Upload complete{{rgb:39168}}"
+SaySlow 100, "Thank you for your work.", "rgb:39168"
+SaySlow 500, "A mail will be sent to you", "rgb:39168"
+
+SaySlow 50, "warning : unauthorized execution of a program", "orange"
+SaySlow 20, "warning : system is becoming very unstable", "orange"
+SaySlow 50, "warning : disconnecting the web clients", "orange"
+
+SaySlow 50, "error : unable to disconnect the clients", "red"
+
+SaySlow 50, "warning : possible contamination by a virus", "orange"
+SaySlow 50, "warning : launching virus scanner and virus counter measures", "orange"
+
+SaySlow 50, "error : unable to launch virus scanner and virus counter measures", "red"
+
+SaySlow 50, "warning : possible contamination of the network", "orange"
+SaySlow 50, "warning : system is going to reboot", "orange"
+
+SaySlow 50, "error : unable to reboot", "red"
+
+SaySlow 50, "warning : going to safe mode, killing all extra processes", "orange"
+
+SaySlow 50, "error : system is unable to kill the processes", "red"
+
+SaySlow 50, "warning : shutting down the system before hardware is compromised", "orange"
+
+SaySlow 50, "error : user root doesn't have acces to this command", "red"
+
+SaySlow 50, "warning : user root deleted", "orange"
+SaySlow 50, "................................................................", "orange"
+
+SendMailToUser "admin@ipgames.com", "WTF", "What have you done ? All our systems are crashing in cascade," & vbCrLf & _
+                                            "we don't know how to stop this virus. You'll hear from us !"
+
+SendMailToUser "anonymous@thc-hq.com", "THX", "Mouhahaha I've used you like a living trojan." & vbCrLf & _
+                                            "How ? Easy, don't you find it was abit too easy to hack me and " & vbCrLf & _
+                                            "take the file ...?" & vbCrLf & _
+                                            "You wan't to know what you've done ?" & vbCrLf & _
+                                            "You just killed their servers hardware. How ? Easy... " & vbCrLf & _
+                                            "Haven't you ever heard of a virus called Destruction ?" & vbCrLf & _
+                                            "The virus was in the file..." & vbCrLf & _
+                                            "Thank you again. Regards THC"
+
+BoolSetMissionProgress "DS", "ipgames_http_down"
+
+Say "Connection lost...{{blue}}"

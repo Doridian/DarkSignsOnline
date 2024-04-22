@@ -1,0 +1,66 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Disconnecting{{yellow}}"
+    Quit
+End Sub
+
+Say "To enter this site port you need a password{{rgb:39168}}"
+
+Dim Ans
+Ans = QReadLine("Password>")
+
+If Ans <> "fretpor" Then
+    Say "Wrong password{{red}}"
+    Disconnect
+End If
+
+Say "Loading shell{{rgb:39168}}"
+SaySlow 50, ".................", "rgb:39168"
+
+While True
+    Say "Welcome you are in the public section.{{rgb:39168}}"
+    Say "Here are the files you can download:{{rgb:39168}}"
+    Say "1. game868686.bin{{rgb:39168}}"
+    Say "0. Disconnect{{rgb:39168}}"
+
+    Dim gkey
+    gkey = GetAsciiWithPrompt()
+    If gkey = Asc("1") Then
+        Dim RawData
+        RawData = "game868686_DOOM423%(#$^)"
+        Dim KeyCode
+        KeyCode = "game_@$(@#$%)%@___2342"
+
+        Dim FileData
+        FileData = "%403906DOOMGAME354423" & vbCrLf & _
+                    "GAME CODE BEGIN" & vbCrLf & _
+                    "4320595^TKLPWEGKWTE" & vbCrLf & _
+                    "ASFLSP$)(T(WE$Y(450-y40y9054)))" & vbCrLf & _
+                    Encrypt(RawData, KeyCode, True) & vbCrLf & _
+                    RawData & vbCrLf & _
+                    "$@#()EFKASFOLKDS)#$(WE)T" & vbCrLf & _
+                    "sD<AS#390wr98wsfsdfsFS" & vbCrLf & _
+                    "ASDFLAS()#RWSFsddfgdfgdflgsd" & vbCrLf & _
+                    "we30r9we0fgSDGKSDKH)$EW)$(YH)(E$%H)" & vbCrLf & _
+                    "SDFKCS#W90r98seduf8as@#$@$@#$%@%^DSFS" & vbCrLf & _
+                    "SDF0348284727812434%#$%^&%)(&#$&Y#)" & vbCrLf & _
+                    "SDK2390489fsdGSDGHSDJHJSDFH" & vbCrLf & _
+                    KeyCode & vbCrLf & _
+                    "S9358vdSDGJKBSD(T$*(*E$GSgbs))" & vbCrLf & _
+                    "SCAS(RT*#W(T*FGSMVGS(T$I()WISKG)))" & vbCrLf & _
+                    "SCKZ()#WDFackijaiahz238cA#()*" & vbCrLf & _
+                    "SKA3w908cscAA/DVMSG()$IE$" & vbCrLf & _
+                    "MFGERG()OVsvaioj828qadfqagwhwses" & vbCrLf & _
+                    "349ifVCAS(O#R*(FVGJMSDBKM)R)" & vbCrLf
+
+        Say "Downloading file game868686.bin{{rgb:39168}}"
+        RequestWriteFile FileData
+        SaySlow 10, "..................................................", "rgb:39168"
+        Say "Download complete{{rgb:39168}}"
+    ElseIf gkey = Asc("0") Then
+        Disconnect
+    End If
+Wend
