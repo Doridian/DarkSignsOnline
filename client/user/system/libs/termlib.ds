@@ -10,6 +10,9 @@ Sub SaySlow(Delay, Str, Style)
     Style = "{{" & Replace(Replace(Style, "{", ""), "}", "") & "}}"
     Say Left(Str, 1) & Style
     For X = 2 To Len(Str)
+        If Mid(Str, X, 1) = ConsoleInvisibleChar Then
+            X = X + 1
+        End If
         Wait(Delay)
         SayLine Mid(Str, 1, X), -1, True
     Next
@@ -31,6 +34,9 @@ Sub SaySlowWithBGColor(RGBVal, Delay, Str, Style)
     Say Left(Str, 1) & Style
     Draw -1, RGBVal, "solid"
     For X = 2 To Len(Str)
+        If Mid(Str, X, 1) = ConsoleInvisibleChar Then
+            X = X + 1
+        End If
         Wait(Delay)
         SayLine Mid(Str, 1, X), -1, True
     Next

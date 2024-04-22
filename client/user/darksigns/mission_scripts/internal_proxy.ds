@@ -1,0 +1,31 @@
+Option Explicit
+
+DLOpen "termlib"
+
+' INTERNAL PROXY
+' connect to a target through a proxy, and your IP
+' address will not be logged on the server this file is running on.
+
+Sub Disconnect()
+    SaySlow 1, "Connection Terminated", "orange"
+    Quit
+End Sub
+
+SaySlow 1, "<internal proxy>", "green"
+
+Dim theip, theport
+theip = QReadLine("Enter Destination Address (Hostname or IP Address)>{{grey}}")
+theport = QReadLine("Enter Destination Port>{{grey}}")
+
+Dim PP
+PP = PingPort(theip, theport)
+SaySlow 10, "Scanning " & ConsoleEscape(theip) & "...", "grey"
+If Not WaitFor(PP) Then
+    SaySlow 1, "Port " & ConsoleEscape(theport) & " is not available on " & ConsoleEscape(theip), "orange"
+    Disconnect
+End If
+
+Say "Port " & ConsoleEscape(theport) & " is open on [" & ConsoleEscape(theip) & "]{{green}}"
+Say "Linking connection...{{grey}}"
+Connect theip, theport
+Disconnect
