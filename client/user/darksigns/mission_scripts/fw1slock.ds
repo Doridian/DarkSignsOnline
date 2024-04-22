@@ -31,39 +31,6 @@ If total <> 189 Then
 End If
 SaySlow 20, "Connecting to firewall2", "orange"
 
-Sub Port150Menu()
-    Say "Connecting to port 150{{white}}"
-    Say ""
-    Say "Safe Lock V1.25{{orange}}"
-    number1 = CInt(QReadLine("Please enter first code number"))
-    number2 = CInt(QReadLine("Please enter second code number"))
-    number3 = CInt(QReadLine("Please enter third code number"))
-    If number1 > 10 Then
-        SaySlow 20, "First code number is invalid", "orange"
-        Quit
-    End If
-    If number2 > 10 Then
-        SaySlow 20, "Second code number is invalid", "orange"
-        Quit
-    End If
-    If number3 > 10 Then
-        SaySlow 20, "Third code number is invalid", "orange"
-        Quit
-    End If
-    If number2 = 0 Or number3 = 0 Then
-        SaySlow 20, "Maths Error", "red"
-        SaySlow 20, "Exiting....", "red"
-        Pause
-        Say "Login:{{white}}"
-        Say ""
-        Say ""
-        Say "Congratulations agent, you level code is : frenchoxford2{{white}}"
-        Quit
-    End If
-    SaySlow 20, "Incorrect code", "orange"
-    Quit
-End Sub
-
 total = 0
 While total <> 150
     total = QReadLine("Please enter which port to connect to or enter port 0 to disconnect>{{orange}}")
@@ -75,4 +42,34 @@ While total <> 150
         SaySlow 20, "Port does not exist", "orange"
     End If
 Wend
-Port150Menu
+
+Say "Connecting to port 150{{white}}"
+Say ""
+Say "Safe Lock V1.25{{orange}}"
+number1 = CInt(QReadLine("Please enter first code number"))
+number2 = CInt(QReadLine("Please enter second code number"))
+number3 = CInt(QReadLine("Please enter third code number"))
+If number1 > 10 Then
+    SaySlow 20, "First code number is invalid", "orange"
+    Quit
+End If
+If number2 > 10 Then
+    SaySlow 20, "Second code number is invalid", "orange"
+    Quit
+End If
+If number3 > 10 Then
+    SaySlow 20, "Third code number is invalid", "orange"
+    Quit
+End If
+If number2 = 0 Or number3 = 0 Then
+    SaySlow 20, "Maths Error", "red"
+    SaySlow 20, "Exiting....", "red"
+    Pause
+    Say "Login:{{white}}"
+    Say ""
+    Say ""
+    Say "Congratulations agent, you level code is : frenchoxford2{{white}}"
+    Quit
+End If
+SaySlow 20, "Incorrect code", "orange"
+Quit

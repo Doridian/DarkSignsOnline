@@ -5,8 +5,8 @@ DLOpen "termlib"
 SaySlow 20, "Proxy Service 1.0", "orange"
 Dim Address
 Address = QReadLine("Please enter the IP address>")
-If Address <> "46.23.37.2" And Address <> "corpfw1.org" Then
-    SaySlow 10, "That IP address is not valid"
+If Address <> "46.23.37.2" Then
+    SaySlow 10, "That IP address is not valid", "red"
     Quit
 End If
 
@@ -22,7 +22,7 @@ If IsLocal() Then
     End If
 Else
     If Port = 15 Then
-        SaySlow 10, "Proxy cannot connect to itself"
+        SaySlow 10, "Proxy cannot connect to itself", "red"
         Quit
     End If
     Connect Address, Port

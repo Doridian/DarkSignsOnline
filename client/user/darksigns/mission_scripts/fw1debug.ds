@@ -1,0 +1,139 @@
+Option Explicit
+
+DLOpen "termlib"
+
+If ConnectingIP <> "46.23.37.2" Then
+    Say "You do not have permission to access this port{{red}}"
+    Quit
+End If
+
+Sub HandleProxy()
+    Say ">>> Option Explicit"
+    Say ">>> DLOpen ""termlib"""
+    Say ">>> SaySlow 20, ""Proxy Service 1.0"", ""orange"""
+    SaySlow 20, "Proxy Service 1.0", "orange"
+    Say ">>> Dim Address"
+    Dim Address
+    Say ">>> Address = QReadLine(""Please enter the IP address>"")"
+    Address = QReadLine("Please enter the IP address>")
+    Say ">>> If Address <> ""46.23.37.2"" Then"
+    If Address <> "46.23.37.2" Then
+        Say ">>> SaySlow 10, ""That IP address is not valid"", ""red"""
+        SaySlow 10, "That IP address is not valid", "red"
+        Say ">>> Quit"
+        Say ">>> Debugged program terminated{{yellow}}"
+        Exit Sub
+    End If
+    Say ">>> End If"
+
+    Say ">>> Dim Port"
+    Dim Port
+    Say ">>> Port = CInt(QReadLine(""Please enter the port to connect to>""))"
+    Port = CInt(QReadLine("Please enter the port to connect to>"))
+    Say ">>> If Port = 15 Then"
+    If Port = 15 Then
+        Say ">>> SaySlow 10, ""Proxy cannot connect to itself"", ""red"""
+        SaySlow 10, "Proxy cannot connect to itself", "red"
+        Say ">>> Quit"
+        Say ">>> Debugged program terminated{{yellow}}"
+        Exit Sub
+    End If
+    Say ">>> End If"
+    Say ">>> Connect Address, Port"
+    Say ">>> Debugger cannot follow script, closing{{orange}}"
+End Sub
+
+Sub HandleSlock()
+    Say ">>> Option Explicit{{blue}}"
+    Say ">>> DLOpen ""termlib""{{blue}}"
+
+    Say ">>> If ConnectingIP <> ""46.23.37.2"" Then{{blue}}"
+    If ConnectingIP <> "46.23.37.2" Then
+        Dim ceRed
+        ceRed = ConsoleEscape("{{red}}")
+        Say ">>> Say ""You do not have permission to access this port" & ceRed & """{{blue}}"
+        Say "You do not have permission to access this port{{red}}"
+        Say ">>> Quit{{blue}}"
+        Say ">>> Debugged program terminated{{yellow}}"
+        Exit Sub
+    End If
+    Say ">>> End If{{blue}}"
+
+    Say ">>> SaySlow 20, ""Safe Lock V1.0"", ""orange""{{blue}}"
+    Say ">>> Dim number1, number2, number3, total{{blue}}"
+    Dim number1, number2, number3, total
+    Say ">>> number1 = CInt(QReadLine(""Please enter first code number"")){{blue}}"
+    number1 = CInt(QReadLine("Please enter first code number"))
+    Say ">>> number2 = CInt(QReadLine(""Please enter second code number"")){{blue}}"
+    number2 = CInt(QReadLine("Please enter second code number"))
+    Say ">>> number3 = CInt(QReadLine(""Please enter third code number"")){{blue}}"
+    number3 = CInt(QReadLine("Please enter third code number"))
+    Say ">>> If number1 > 10 Then{{blue}}"
+    If number1 > 10 Then
+        Say ">>> SaySlow 20, ""First code number is invalid"", ""orange""{{blue}}"
+        SaySlow 20, "First code number is invalid", "orange"
+        Say ">>> Quit{{blue}}"
+        Say ">>> Debugged program terminated{{yellow}}"
+        Exit Sub
+    End If
+    Say ">>> End If{{blue}}"
+    Say ">>> If number2 > 10 Then{{blue}}"
+    If number2 > 10 Then
+        Say ">>> SaySlow 20, ""Second code number is invalid"", ""orange""{{blue}}"
+        SaySlow 20, "Second code number is invalid", "orange"
+        Say ">>> Quit{{blue}}"
+        Say ">>> Debugged program terminated{{yellow}}"
+        Exit Sub
+    End If
+    Say ">>> End If{{blue}}"
+    Say ">>> If number3 > 10 Then{{blue}}"
+    If number3 > 10 Then
+        Say ">>> SaySlow 20, ""Third code number is invalid"", ""orange""{{blue}}"
+        SaySlow 20, "Third code number is invalid", "orange"
+        Say ">>> Quit{{blue}}"
+        Say ">>> Debugged program terminated{{yellow}}"
+        Exit Sub
+    End If
+    Say ">>> End If{{blue}}"
+    Say ">>> total = number1 * number2 * number3{{blue}}"
+    total = number1 * number2 * number3
+    Say ">>> If total <> 189 Then{{blue}}"
+    If total <> 189 Then
+        Say ">>> SaySlow 20, ""Incorrect code"", ""orange""{{blue}}"
+        SaySlow 20, "Incorrect code", "orange"
+        Say ">>> Quit{{blue}}"
+        Say ">>> Debugged program terminated{{yellow}}"
+        Exit Sub
+    End If
+    Say ">>> End If{{blue}}"
+    Say ">>> SaySlow 20, ""Connecting to firewall2"", ""orange""{{blue}}"
+    SaySlow 20, "Connecting to firewall2", "orange"
+    Say ">>> FwallConnect ""hst2""{{blue}}"
+    Say ">>> Debugger cannot follow script, closing{{orange}}"
+End Sub
+
+While True
+    SaySlow 20, "Server Debugger 1.0", "orange"
+    Dim whichService
+    whichService = CInt(QReadLine("Please enter the service port to connect to (0 to disconnect)>{{white}}"))
+    If whichService = 15 Then
+        Say "Connecting to Port 15{{orange}}"
+        Say "Debug Mode : On{{orange}}"
+        Say ""
+        HandleProxy
+        Pause
+    ElseIf whichService = 125 Then
+        Say "Connecting to Port 125{{orange}}"
+        Say "Debug Mode : On{{orange}}"
+        Say ""
+        HandleSlock
+        Pause
+    ElseIf whichService = 75 Then
+        SaySlow 20, "You can't debug the debugger", "orange"
+    ElseIf whichService = 0 Then
+        Say "Disconnecting{{orange}}"
+        Quit
+    Else
+        Say "That port is not open{{white}}"
+    End If
+Wend
