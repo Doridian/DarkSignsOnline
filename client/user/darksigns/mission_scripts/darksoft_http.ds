@@ -35,6 +35,7 @@ SpooferData = "Option Explicit" & vbCrLf & _
                 "SaySlow 50, "".........................................................."", ""white""" & vbCrLf & _
                 "Say ""Finished.{{white}}""" & vbCrLf & _
                 "Wait 500" & vbCrLf & _
+                "SpoofLocalConnectingIP SpoofIP" & vbCrLf & _
                 "Connect ServIP, ServPort, ""__secret_spoofed_handshake__""" & vbCrLf & _
                 "Quit"
 
