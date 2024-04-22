@@ -1,0 +1,244 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Quit
+End Sub
+
+Dim L1Unlocked, L2Unlocked, L3Unlocked
+L1Unlocked = BoolMissionProgress("DS", "lew_admin_l1")
+L2Unlocked = BoolMissionProgress("DS", "lew_admin_l2")
+L3Unlocked = BoolMissionProgress("DS", "lew_admin_l3")
+
+Dim MOTD1, MOTD2, MOTD3, MOTD4
+MOTD1 = GetMissionProgress("DS", "lew_admin_motd1")
+MOTD2 = GetMissionProgress("DS", "lew_admin_motd2")
+MOTD3 = GetMissionProgress("DS", "lew_admin_motd3")
+MOTD4 = GetMissionProgress("DS", "lew_admin_motd4")
+If MOTD1 = "" Then
+    MOTD1 = "We rule!"
+End If
+If MOTD2 = "" Then
+    MOTD2 = "Outpost oo ee oo aah?"
+End If
+If MOTD3 = "" Then
+    MOTD3 = "who hee who ha?"
+End If
+If MOTD4 = "" Then
+    MOTD4 = "Love Hatred, Gage, Beater, Jpain and Dewey"
+End If
+
+Sub HandleAdminLock(LNum, LCode)
+    LCode = LCase(Trim(LCode))
+    Select Case LNum
+        Case "1:"
+            If LCode = "coolsalsa" Then
+                Say "*********** Lock 1 Unlocked ***************"
+                L1Unlocked = True
+                BoolSetMissionProgress "DS", "lew_admin_l1"
+            Else
+                Say "*********** Invalid Code ******************"
+            End If
+        Case "2:"
+            If InStr(LCode, "%") > 0 Then
+                Say "Patched by jpain{{green}}"
+                Say "You ain't using no percentages boy{{green}}"
+                Say "Shoutout to Phil Whiting for this bugfix{{green}}"
+            End If
+
+            If LCode = "9640382" Then
+                Say "*********** Lock 2 Unlocked ***************"
+                L2Unlocked = True
+                BoolSetMissionProgress "DS", "lew_admin_l2"
+            Else
+                Say "*********** Invalid Code ******************"
+            End If
+        Case "3:"
+            ' Stock uses ENCRYPT here?! encrypt$ "passcode" LCode
+            If LCode = "alphabetispageti" Then
+                Say "*********** Lock 3 Unlocked ***************"
+                L3Unlocked = True
+                BoolSetMissionProgress "DS", "lew_admin_l3"
+            Else
+                Say "*********** Invalid Code ******************"
+            End If
+        Case Else
+            Say "************ Invalid Command ************"
+    End Select
+End Sub
+
+Sub HandleEditOpeningMessage()
+    Say "____________________________________________________________________________________"
+    Say ""
+    Say "                                                                Edit opening message"
+    Say "____________________________________________________________________________________"
+    Say "Current message:"
+    Say MOTD1
+    Say MOTD2
+    Say MOTD3
+    Say MOTD4
+
+    Dim NewMOTD1, NewMOTD2, NewMOTD3, NewMOTD4
+    NewMOTD1 = ReadLine("Enter first new line>")
+    NewMOTD2 = ReadLine("Enter second new line>")
+    NewMOTD3 = ReadLine("Enter third new line>")
+    NewMOTD4 = ReadLine("Enter forth new line>")
+    If NewMOTD1 = MOTD1 And NewMOTD2 = MOTD2 And NewMOTD3 = MOTD3 And NewMOTD4 = MOTD4 Then
+        Say "No changes made!{{yellow}}"
+        Exit Sub
+    End If
+
+    SaySlow 20, "Saving........", "blue"
+
+    SetMissionProgress "DS", "lew_admin_motd1", MOTD1
+    SetMissionProgress "DS", "lew_admin_motd2", MOTD2
+    SetMissionProgress "DS", "lew_admin_motd3", MOTD3
+    SetMissionProgress "DS", "lew_admin_motd4", MOTD4
+
+    Say "Saved!{{green}}"
+
+    Say "Congratulations agent!!!"
+    Say "Your mission up code: strongslapstick173"
+    Pause
+    Quit
+End Sub
+
+Sub HandleProjectBOB()
+    While True
+        Dim bobMsg
+        bobMsg = "A LORAN who uses the nickname BOB is believed by the netcops to be responcible for a series of recent high profile" & vbCrLf & _
+                "computer break ins. These were generally of netcop servers and thus they would very much like to catch this LORAN" & vbCrLf & _
+                "(something the netcops generally don't do). THC have been offered an exchange, if we help them catch BOB we will" & vbCrLf & _
+                "have our records wiped, THC members in prison will be released and we will receive a nice cash sum." & vbCrLf & _
+                "Sofar we have very little information" & vbCrLf & _
+                "We know he used a proxy with the ip: proxy048.cyberhelp.org" & vbCrLf & _
+                "He uses the email address: BOB@securemail.net" & vbCrLf & _
+                "Find what you can, this is very important"
+
+        Say "____________________________________________________________________________________"
+        Say ""
+        Say "                                                                       Project : BOB"
+        Say "____________________________________________________________________________________"
+        Say ConsoleEscape(bobMsg)
+
+        Say "(b)ack to exploits menu                 - (s)ave file and go back to menu"
+        Dim bobChoice
+        bobChoice = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If bobChoice = "b" Then
+            Exit Sub
+        ElseIf bobChoice = "s" Then
+            RequestWriteFile "From: lower.ebworth.org (124.64.231.23) Filename: project.BOB" & vbCrLf & _
+                            "Will save as project.BOB" & vbCrLf & _
+                            bobMsg
+            Say "File saved!"
+            Pause
+        End If
+    Wend
+End Sub
+
+Sub HandleAdminMenu()
+    While True
+        Say "____________________________________________________________________________________"
+        Say ""
+        Say "                                                                      THC admin area"
+        Say "____________________________________________________________________________________"
+        Say "(e)dit opening message"
+        Say "(p)roject BOB"
+        Say "e(x)it"
+
+        Dim adminC
+        adminC = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If adminC = "e" Then
+            HandleEditOpeningMessage
+        ElseIf adminC = "p" Then
+            HandleProjectBOB
+        ElseIf adminC = "x" Then
+            Quit
+        End If
+    Wend
+End Sub
+
+Sub HandleAdminLogin()
+    Dim Username, Password
+    Username = QReadLine("Please enter username>")
+    Password = QReadLine("Please enter password>")
+
+    If InStr(Username, "tckbackopen") = 1 Or InStr(Password, "tckbackclose") = 1 Then
+        Say "Invalid input{{red}}"
+        Say "Hahahahahaha!{{green}}"
+        Say "You don't think you can hack our machine with the same bug we used to get in{{green}}"
+        Say "Mr David Niven has seen to the fact that you can't use the same bug{{green}}"
+        Quit
+    End If
+
+    If InStr(Username, "getencrypteduser") > 0 Then
+        Say "Invalid input{{red}}"
+        Exit Sub
+    End If
+
+    If InStr(Password, "getencryptedpass") > 0 Then
+        Say "Invalid input{{red}}"
+        Exit Sub
+    End If
+
+    If InStr(Username, "tckbackopen") <= 0 Then
+        Say "Invalid username and password combination{{red}}"
+        Exit Sub
+    End If
+
+    If InStr(Password, "tckbackclose") <= 0 Then
+        Say "Invalid username and password combination{{red}}"
+        Exit Sub
+    End If
+
+    Say "Thankyou. Logging in...{{green}}"
+
+    'Unfinished mission, clearly, this server hosts no possible proxies (thc-hq.com)
+    'If ConnectingIP <> "24.53.123.5" Then
+    '    Say "You do not come from the H8{{green}}"
+    '    Quit
+    'End If
+
+    HandleAdminMenu
+End Sub
+
+While True
+    Dim cmmd
+    cmmd = QReadLine("*********** Command? ********************>")
+    If cmmd = "help" Then
+        Say "********** help ****************************"
+        Say "Use the following commands:"
+        Say "about, admlock1, admlock2, admlock3, login, exit"
+        Say "********************************************"
+        Say "First, unlock the three admin locks using your"
+        Say "given passwords in this form"
+        Say "admlock1:password"
+        Say "Then use login to login to the system"
+        Say "********************************************"
+    ElseIf cmmd = "exit" Then
+        Disconnect
+    ElseIf cmmd = "about" Then
+        Say "*************** about TCKsecure *********"
+        Say "TCKsecure v1.0"
+        Say "Written by TCK (tck.com)"
+        Say "********************************************"
+    ElseIf Left(cmmd, 7) = "admlock" Then
+        Dim LockNum, LCode
+        LockNum = Mid(cmmd, 8, 2)
+        LCode = Mid(cmmd, 10)
+        HandleAdminLock LockNum, LCode
+    ElseIf cmmd = "login" Then
+        If Not L1Unlocked Then
+            Say "Adminlock 1 is still locked"
+        ElseIf Not L2Unlocked Then
+            Say "Adminlock 2 is still locked"
+        ElseIf Not L3Unlocked Then
+            Say "Adminlock 3 is still locked"
+        Else
+            HandleAdminLogin
+        End If
+    Else
+        Say "************ Invalid Command ************"
+    End If
+Wend
