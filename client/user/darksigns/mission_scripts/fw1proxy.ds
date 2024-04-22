@@ -12,6 +12,7 @@ End If
 
 Dim Port
 Port = CInt(QReadLine("Please enter the port to connect to>"))
+
 If IsLocal() Then
     SpoofLocalConnectingIP "46.23.37.2"
     If Port = 75 Then
