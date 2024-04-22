@@ -1,0 +1,78 @@
+Option Explicit
+'ZRIO FILE TRANSFER
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Connection Closed{{blue}}"
+    Quit
+End Sub
+
+SaySlow 1, "Connected to ZRIO File Transfer", "green"
+Dim ynIn
+ynIn = QReadLine("Would you like to upload a file to our server? (y/n){{white}}")
+If ynIn <> "y" Then
+    Say "No File(s) Uploaded"
+    Disconnect
+End If
+
+Dim fileData
+fileData = RequestReadFile()
+If fileData = "" Then
+    Say "Specified file was not found or is empty..."
+    Say "Please check the file path and spelling, and try again."
+    Disconnect
+End If
+
+SaySlow 60, "Uploading ..................................", "yellow"
+SaySlow 2, "Upload Complete", "green"
+
+fileData = LCase(fileData)
+
+Function FileHasZRIOSig(ZSig)
+    If InStr(fileData, vbCrLf & "xx_tsig=" & ZSig & vbCrLf) Then
+        FileHasZRIOSig = True
+    Else
+        FileHasZRIOSig = False
+    End If
+End Function
+
+If InStr(fileData, "akuhsmkahksahl") Then '8m.enc
+    SendMailToUser "zrio@zrio.org", "8m.enc", "Thanks for the file, it's good to have you on our side." & vbCrLf & _
+                                            "Unfortunately, there's still a bit of a problem." & vbCrLf & _
+                                            "You see, the file you got for us is highly encrypted." & vbCrLf & _
+                                            "Are you able to decrypt it?" & vbCrLf & _
+                                            "" & vbCrLf & _
+                                            "Perhaps you could try using the tools at decrypt.com..." & vbCrLf & _
+                                            "When asked who to send it to, type in ZRIO." & vbCrLf & _
+                                            "" & vbCrLf & _
+                                            "Hope to hear from you again."
+ElseIf FileHasZRIOSig("csetup139.exe") Then 'cryptsetup.exe
+    SendMailToUser "zrio@zrio.org", "cryptsetup.exe", "Excellent work in getting the decryption software for us." & vbCrLf & _
+                                            "We have decrypted the hard drive." & vbCrLf & _
+                                            "There is one file we thought you should know about and have hosted it at ZRIO.org port 45." & vbCrLf & _
+                                            "Username: zrio" & vbCrLf & _
+                                            "Password: geno38"
+ElseIf FileHasZRIOSig("fire23094.exe") Then ' fireteambuild4.exe
+    SendMailToUser "zrio@zrio.org", "fireteambuild4.exe", "We really appreciate what you have done for us." & vbCrLf & _
+                                            "This firewall will protect us in the near future when it comes to hackers"
+
+    SendMailToUser "zrio@zrio.org", "List", "We have gained new evidence of the whereabouts of a very important list of names." & vbCrLf & _
+                                            "We MUST get a copy of this list, we only know what the list is contained on either one of the following servers:" & vbCrLf & _
+                                            "camp.joana.whitehouse.gov" & vbCrLf & _
+                                            "193.campus.boston.edu" & vbCrLf & _
+                                            "ftp.fishy.org" & vbCrLf & _
+                                            "" & vbCrLf & _
+                                            "We really need this list, work fast"
+ElseIf FileHasZRIOSig("gen_oprt_lst") Then 'genoprt27.lst
+    SendMailToUser "zrio@zrio.org", "Congratulations", "You did it, you got the list for us and have helped the world." & vbCrLf & _
+                                            "We plan to globally publish everything you have sent." & vbCrLf & _
+                                            "It is everyone's right to know what goes on 'behind the scenes'." & vbCrLf & _
+                                            "Your help has been invaluable." & vbCrLf & _
+                                            "Without you we would have never been able to gain the information we have now." & vbCrLf & _
+                                            "Thank you, and good luck!"
+Else
+    SendMailToUser "zrio@zrio.org", "Wat?", "This is not the file we wanted." & vbCrLf & _
+                                            "Please get serious there is not much time left"
+End If
+Disconnect
