@@ -1,0 +1,100 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Quit
+End Sub
+
+Sub SayBG(Str)
+    SayWithBGColor &H9C9AE9, Str & "{{white}}"
+End Sub
+
+Sub SaySlowBG(Delay, Str)
+    SaySlowWithBGColor &H9C9AE9, Delay, Str, "white"
+End Sub
+
+Sub PauseBG()
+    Pause "", &H9C9AE9
+End Sub
+
+Function QReadLineBG(Prompt)
+    QReadLineBG = QReadLine(Prompt & "{{white}}", &H9C9AE9)
+End Function
+
+Function GetAsciiBG(Prompt)
+    GetAsciiBG = GetAsciiWithCPromptBG(&H9C9AE9, Prompt & "{{white}}")
+End Function
+
+Sub DownloadTCKLogin()
+    Say "Downloading file: tck.login.src"
+
+    Dim FData
+    FData = "Option Explicit" & vbCrLf & _
+            "DLOpen ""termlib""" & vbCrLf & _
+            "While True" & vbCrLf & _
+            "    Say ""1) Login for beta testing""" & vbCrLf & _
+            "    Say ""2) Check for updates""" & vbCrLf & _
+            "    Say ""3) Leave""" & vbCrLf & _
+            "    Dim gkey" & vbCrLf & _
+            "    gkey = GetAsciiWithCPrompt(""Please make your selection"")" & vbCrLf & _
+            "    If gkey = Asc(""1"") Then" & vbCrLf & _
+            "        Dim passwd" & vbCrLf & _
+            "        passwd = QReadLine(""Please enter beta password>"")" & vbCrLf & _
+            "        If passwd = ""passwordhere"" Then" & vbCrLf & _
+            "            Say ""Beta password accepted{{green}}""" & vbCrLf & _
+            "            SaySlow 10, ""Enabling beta access...."", ""yellow""" & vbCrLf & _
+            "            Say ""FATAL ERROR{{red}}""" & vbCrLf & _
+            "            Quit" & vbCrLf & _
+            "        Else" & vbCrLf & _
+            "            Say ""Incorrect password""" & vbCrLf & _
+            "        End If" & vbCrLf & _
+            "    ElseIf gkey = Asc(""2"") Then" & vbCrLf & _
+            "        SaySlow 10, ""Checking for updates........"", ""blue""" & vbCrLf & _
+            "        Say ""No updates found{{green}}""" & vbCrLf & _
+            "        Pause" & vbCrLf & _
+            "    ElseIf gkey = Asc(""3"") Then" & vbCrLf & _
+            "        Say ""Logging out""" & vbCrLf & _
+            "        Quit" & vbCrLf & _
+            "    End If" & vbCrLf & _
+            "Wend" & vbCrLf
+
+    RequestWriteFile FData
+
+    Say "Download complete"
+End Sub
+
+While True
+    SayBG "[[[[[[[[[[[[[[[[[[[[[[[[ Mickelshaft FileServe v.1.4 ]]]]]]]]]]]]]]]]]]]]]]]]"
+    SayBG "Welcome to the TCK public file server"
+    SayBG "You are on page 1 of 1"
+    SayBG "The following files are available"
+    SayBG "1) tck.login.src"
+    SayBG "2) empty"
+    SayBG "3) empty"
+    SayBG "4) empty"
+    SayBG "5) empty"
+    SayBG "6) empty"
+    SayBG "7) empty"
+    SayBG "8) empty"
+    SayBG "9) empty"
+
+    SayBG "Select a file to download"
+    SayBG "or use f to go forward a page, b to go back a page and x to logout"
+    Dim gkey, gkeyA
+    gkey = LCase(Chr(GetAsciiBG("Enter a selection")))
+    gkeyA = Asc(gkey)
+    If gkey = "x" Then
+        SayBG "Logging out"
+        Wait 1000
+        Disconnect
+    ElseIf gkey = "b" Or gkey = "f" Then
+        SayBG "You are on the only page"
+    ElseIf gkey = "1" Then
+        DownloadTCKLogin
+    ElseIf gkeyA >= Asc("1") And gkeyA <= Asc("9") Then
+        SayBG "No such file"
+    Else
+        SayBG "Invalid option"
+    End If
+Wend

@@ -1,0 +1,95 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Quit
+End Sub
+
+Sub SayBG(Str)
+    SayWithBGColor &H9C9AE9, Str & "{{white}}"
+End Sub
+
+Sub SaySlowBG(Delay, Str)
+    SaySlowWithBGColor &H9C9AE9, Delay, Str, "white"
+End Sub
+
+Sub PauseBG()
+    Pause "", &H9C9AE9
+End Sub
+
+Function QReadLineBG(Prompt)
+    QReadLineBG = QReadLine(Prompt & "{{white}}", &H9C9AE9)
+End Function
+
+Function GetAsciiBG(Prompt)
+    GetAsciiBG = GetAsciiWithCPromptBG(&H9C9AE9, Prompt & "{{white}}")
+End Function
+
+While True
+    SayBG "This site is very much work in progress, as is everything on this machine"
+    SayBG "***********************************TCK Software******************************"
+    SayBG "Please select an option"
+    SayBG "1:Who are TCK Software"
+    SayBG "2:What is going on with the site"
+    SayBG "3:Current updates"
+    SayBG "4:Logout"
+    Dim gkey
+    gkey = GetAsciiBG("Make your selection")
+    If gkey = Asc("1") Then
+        SayBG "Who are TCK Software?"
+        SayBG "***********************************TCK Software******************************"
+        SayBG "TCK Software are a small group of programmers who became fairly well know after their"
+        SayBG "release of TCKsecure, an extensive security program for protecting sites."
+        SayBG "Various other pieces of software have been written by TCK but their most well known"
+        SayBG "is TCKsecure"
+        PauseBG
+    ElseIf gkey = Asc("2") Then
+        SayBG "What is going on with the site"
+        SayBG "***********************************TCK Software******************************"
+        SayBG "We are currently working on a new large project. Entitled simply TCK we hope"
+        SayBG "for it to be a versatile tool for companies to easily create sites for various"
+        SayBG "users. Features include an article search engine (which can be adapted for many"
+        SayBG "uses), a flexible file storage area and much more."
+        SayBG "The uniqueness of this project is it is in part being used to help itself."
+        SayBG "As new parts are added to the software they are posted online, when a section"
+        SayBG "is completely finished the sourcecode is posted. The software will eventually"
+        SayBG "make up the whole of TCK's site."
+        SayBG "***"
+        SayBG "Many other changes are taking place within the TCK company and so we have"
+        SayBG "decided to give the site over completely to the development of TCK. Those"
+        SayBG "who have come here for TCKsecure support will need to use the username and"
+        SayBG "password which they will have been sent to access TCK (the program is "
+        SayBG "running on port 225).  TCK is now in a stage where it can be used to "
+        SayBG "offer similar support as we offered users with the old software AND IT IS"
+        SayBG "ONLY 25% COMPLETE!"
+        SayBG "***"
+        SayBG "TCK is destined to become a very important piece of software on the internet"
+        SayBG "landscape."
+        PauseBG
+    ElseIf gkey = Asc("3") Then
+        SayBG "Current updates"
+        SayBG "***********************************TCK Software******************************"
+        SayBG "5th of March 2012"
+        SayBG "Since the login screen is now finished the source code has been posted to"
+        SayBG "the public on the public fileserver (port 21). The source is fairly simply"
+        SayBG "but userfriendly as it allows for a menu of options to be presented at"
+        SayBG "login.   We are currently bug fixing the TCK file hosting program so that"
+        SayBG "it can be used to host these files"
+        SayBG "***"
+        SayBG "3rd of March 2012"
+        SayBG "A beta version of the TCK search engine has been posted. This allows users"
+        SayBG "to search through TCKsecure articles detailing modifications and bugfixes"
+        SayBG "***"
+        SayBG "1st of March 2012"
+        SayBG "Updated the TCK fileserver to fix a few bugs"
+        SayBG "***"
+        SayBG "28th of February 2012"
+        SayBG "Added a beta version of the fileserver where you can also download the TCKsecure"
+        SayBG "source code"
+        SayBG "***"
+        PauseBG
+    ElseIf gkey = Asc("4") Then
+        Quit
+    End If
+Wend

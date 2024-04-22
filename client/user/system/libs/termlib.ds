@@ -47,11 +47,18 @@ Function GetAsciiWithPrompt()
 End Function
 
 Function GetAsciiWithCPrompt(Prompt)
+    GetAsciiWithCPrompt = GetAsciiWithCPromptBG(-1, Prompt)
+End Function
+
+Function GetAsciiWithCPromptBG(RGBVal, Prompt)
     Say "{{noprespace}}" & Prompt & "> [_]"
+    If RGBVal >= 0 Then
+        Draw -1, RGBVal, "solid"
+    End If
     Dim Choice
     Choice = GetAscii()
-    SayLine"{{noprespace}}" & Prompt & "> [" & Chr(Choice) & "]"
-    GetAsciiWithCPrompt = Choice
+    SayLine "{{noprespace}}" & Prompt & "> [" & Chr(Choice) & "]", -1 , True
+    GetAsciiWithCPromptBG = Choice
 End Function
 
 Function SetMissionProgress(MissionID, Key, Value)
