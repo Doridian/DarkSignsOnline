@@ -53,7 +53,7 @@ ElseIf FileHasZRIOSig("csetup139.exe") Then 'cryptsetup.exe
                                             "There is one file we thought you should know about and have hosted it at ZRIO.org port 45." & vbCrLf & _
                                             "Username: zrio" & vbCrLf & _
                                             "Password: geno38"
-ElseIf FileHasZRIOSig("fire23094.exe") Then ' fireteambuild4.exe
+ElseIf FileHasZRIOSig("fire23094.exe") Then ' fireteambuild4.exe, THIS FILE DOES NOT EXIST!
     SendMailToUser "zrio@zrio.org", "fireteambuild4.exe", "We really appreciate what you have done for us." & vbCrLf & _
                                             "This firewall will protect us in the near future when it comes to hackers"
 
@@ -64,7 +64,7 @@ ElseIf FileHasZRIOSig("fire23094.exe") Then ' fireteambuild4.exe
                                             "ftp.fishy.org" & vbCrLf & _
                                             "" & vbCrLf & _
                                             "We really need this list, work fast"
-ElseIf FileHasZRIOSig("gen_oprt_lst") Then 'genoprt27.lst
+ElseIf FileHasZRIOSig("gen_oprt_lst") Then 'genoprt27.lst, THIS FILE DOES NOT EXIST!
     SendMailToUser "zrio@zrio.org", "Congratulations", "You did it, you got the list for us and have helped the world." & vbCrLf & _
                                             "We plan to globally publish everything you have sent." & vbCrLf & _
                                             "It is everyone's right to know what goes on 'behind the scenes'." & vbCrLf & _
