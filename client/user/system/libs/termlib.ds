@@ -101,3 +101,8 @@ End Sub
 Function QReadLine(Prompt)
     QReadLine = LCase(Trim(ReadLine(Prompt)))
 End Function
+
+
+Function QReadLineBG(RGBVal, Prompt)
+    QReadLineBG = LCase(Trim(ReadLine(Prompt, RGBVal)))
+End Function

@@ -1,0 +1,202 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Dim FrontStyle
+FrontStyle = "{{rgb:6220700}}"
+
+Sub SayBG(Str)
+    SayWithBGColor &H222222, Str
+End Sub
+
+Sub SaySlowBG(Delay, Str, Style)
+    SaySlowWithBGColor &H222222, Delay, Str, Style
+End Sub
+
+Sub PauseBG()
+    Pause "", &H222222
+End Sub
+
+Function QReadLineBGMe(Prompt)
+    QReadLineBGMe = QReadLineBG(&H222222, Prompt)
+End Function
+
+Sub Disconnect()
+    SayBG ""
+    SaySlowBG 50, "Connection Closed...", FrontStyle
+    Wait 600
+End Sub
+
+Dim Department
+Department = GetMissionProgress("DS", "berk_department")
+
+Dim Enable
+Enable = BoolMissionProgress("DS", "berk_enable")
+
+Dim Cred
+Cred = IntMissionProgress("DS", "berk_cred")
+
+Dim PResultsData
+PResultsData = ""
+Sub AddLogR(D)
+    PResultsData = PResultsData & D & vbCrLf
+End Sub
+Sub AddLogN(D)
+    AddLogR "[NEWTON]: " & D
+End Sub
+
+Sub NewtonCalc()
+    SayBG "Berkeley University of California, Physics Department" & FrontStyle
+    SayBG "Welcome to the NEWTON User Interface" & FrontStyle
+    SayBG ""
+
+    AddLogN "Entering calculation mode..."
+
+    While True
+        Dim calcInput
+        calcInput = QReadLineBGMe("Enter calculation:{{white}}")
+        If calcInput = "q" Then
+            Exit Sub
+        End If
+
+        Dim parenPos, parenPos2
+        parenPos = InStr(calcInput, "(")
+        If parenPos <= 0 Then
+            SayBG "Syntax error. Consult your NEWTON Manual for correct syntax." & FrontStyle
+            Wait 2000
+        End If
+
+        parenPos2 = InStr(parenPos + 1, calcInput, ")")
+        If parenPos2 < parenPos Then
+            parenPos2 = Len(calcInput)
+        End If
+        Dim possibleCmdStr
+        possibleCmdStr = Trim(Mid(calcInput, parenPos + 1, (parenPos2 - parenPos)))
+
+        If possibleCmdStr = "ls" Then
+            AddLogN "Listing files in current folder..."
+            AddLogR "Current Folder:"
+            AddLogR "/admin"
+            AddLogR "Files in folder:"
+            AddLogR "passwds.dec"
+        ElseIf possibleCmdStr = "cat" Or Left(possibleCmdStr, 4) = "cat " Then
+            Dim possibleFile
+            possibleFile = Trim(Mid(possibleCmdStr, 5))
+            If possibleFile = "passwds.dec" Then
+                AddLogN "Listing contents of file ""passwds.dec""..."
+                AddLogR "root:al2m3n8P"
+                AddLogR "student:nm92r4bp"
+                AddLogR "staff:nx5j2643"
+                AddLogR "#admin password is not stored here"
+                AddLogR "#maintenance password is not stored here"
+            Else
+                AddLogN "File not found or access level insufficient: " & possibleFile
+                Wait 2000
+            End If
+        ElseIf possibleCmdStr = "commands" Or possibleCmdStr = "help" Then
+            AddLogN "Available commands for your user level: HELP COMMANDS LS CAT"
+        Else
+            AddLogN "Command unknown or access level insufficient."
+            Wait 2000
+        End If
+    Wend
+End Sub
+
+Sub HandleNewtonLogin()
+    Dim login, pass
+    login = QReadLineBGMe("Login:")
+    pass = QReadLineBGMe("Password:")
+
+    If login <> "043946" Or pass <> "a3fl5" Then
+        SaySlowBG 10, "Incorrect login or password! Please try again...", FrontStyle
+        Wait 1000
+        Exit Sub
+    End If
+
+    If Not Enable Then
+        SayBG "Your account has been disabled." & FrontStyle
+        PauseBG
+        Exit Sub
+    End If
+
+    If Department <> "physics" Then
+        SayBG "You are not part of the Physics department." & FrontStyle
+        PauseBG
+        Exit Sub
+    End If
+
+    If Cred <= 0 Then
+        SayBG "You don't have any credits left." & FrontStyle
+        PauseBG
+        Exit Sub
+    End If
+
+    While True
+        SayBG "Berkeley University of California, Physics Department" & FrontStyle
+        SayBG "Welcome to the NEWTON User Interface" & FrontStyle
+        SayBG ""
+        SayBG "|--------------------------|{{white}}"
+        SayBG ": (E)nter calculation mode" & FrontStyle
+        SayBG ": (S)ave project result file" & FrontStyle
+        SayBG ": (U)pdates and notices" & FrontStyle
+        SayBG ": (B)ack to main menu" & FrontStyle
+        SayBG "|--------------------------|{{white}}"
+        SayBG ""
+        Dim ntInput
+        ntInput = QReadLineBGMe("Select option from menu:")
+        If ntInput = "b" Then
+            Exit Sub
+        ElseIf ntInput = "e" Then
+            NewtonCalc
+        ElseIf ntInput = "s" Then
+            RequestWriteFile PResultsData
+        ElseIf ntInput = "u" Then
+            SayBG "RECENT UPDATES/NOTICES:" & FrontStyle
+            SayBG ""
+            SayBG "To leave the calculation console enter a q{{white}}"
+            SayBG ""
+            SayBG "WARNING: while most mathematical codes are accepted, using{{orange}}"
+            SayBG "the ( sign causes an error in NEWTON at the moment, and it{{orange}}"
+            SayBG "will interpret the following information as a server command.{{orange}}"
+            SayBG "Abusing this problem will result in immediate expulsion!{{orange}}"
+            SayBG "To solve this problem, use [ and ] for encapsulation{{orange}}"
+            PauseBG
+        Else
+            SayBG "Incorrect input!" & FrontStyle
+        End If
+    Wend
+End Sub
+
+While True
+    SayBG "Berkeley University of California, Physics Department" & FrontStyle
+    SayBG "Welcome to the NEWTON User Interface" & FrontStyle
+    SayBG ""
+    SayBG "|--------------------------|{{white}}"
+    SayBG ": (L)ogin Student" & FrontStyle
+    SayBG ": (A)bout Newton" & FrontStyle
+    SayBG ": (D)isconnect" & FrontStyle
+    SayBG "|--------------------------|{{white}}"
+    SayBG ""
+    Dim mmInput
+    mmInput = QReadLineBGMe("Select option from menu:")
+    If mmInput = "l" Then
+        HandleNewtonLogin
+    ElseIf mmInput = "a" Then
+        SayBG "About NEWTON{{white}}"
+        SayBG "---------------------------------------{{white}}"
+        SayBG "NEWTON is the Physics department brand new Supercomputer.{{white}}"
+        SayBG "NEWTON uses a cluster of some 100 high-end processors, has{{white}}"
+        SayBG "gigantic storage capabilities and very fast memory banks.{{white}}"
+        SayBG "Most of Newton's technology is brand new and not yet commercially available,{{white}}"
+        SayBG "and thus Newton also serves as a brute testing platform. Students{{white}}"
+        SayBG "of the Physics department can log in to NEWTON, and use their available{{white}}"
+        SayBG "credits to use NEWTON's computing power for school tasks or big projects.{{white}}"
+        SayBG "Students are granted a limited amount of credits by authorization{{white}}"
+        SayBG "of staff members.{{white}}"
+        PauseBG
+    ElseIf mmInput = "d" Then
+        Disconnect
+    Else
+        SayBG "Incorrect input!" & FrontStyle
+    End If
+Wend

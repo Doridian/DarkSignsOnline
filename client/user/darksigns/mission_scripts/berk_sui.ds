@@ -5,34 +5,6 @@ DLOpen "termlib"
 'Front end: port 81!!
 'port 80 public website unavailable
 
-Dim MaxCred
-MaxCred = 100
-
-Dim Department
-Department = GetMissionProgress("DS", "berk_department")
-If Department = "" Then
-    Department = "mathematics"
-End If
-
-Dim Enable
-Enable = (GetMissionProgress("DS", "berk_enable") = "1")
-
-Function AccString()
-    If Enable Then
-        AccString = "ENABLED"
-    Else
-        AccString = "DISABLED"
-    End If
-End Function
-
-Dim Cred
-Cred = GetMissionProgress("DS", "berk_cred")
-If Cred = "" Then
-    Cred = 0
-Else
-    Cred = CInt(Cred)
-End If
-
 Sub SayBG(Str)
     SayWithBGColor &H03640E, Str
 End Sub
@@ -45,9 +17,31 @@ Sub PauseBG()
     Pause "", &H03640E
 End Sub
 
-Function QReadLineBG(Prompt)
-    QReadLineBG = QReadLine(Prompt, &H03640E)
+Function QReadLineBGMe(Prompt)
+    QReadLineBGMe = QReadLineBG(&H03640E, Prompt)
 End Function
+
+Dim MaxCred
+MaxCred = 100
+
+Dim Department
+Department = GetMissionProgress("DS", "berk_department")
+If Department = "" Then
+    Department = "mathematics"
+End If
+
+Dim Enable
+Enable = BoolMissionProgress("DS", "berk_enable")
+Function AccString()
+    If Enable Then
+        AccString = "ENABLED"
+    Else
+        AccString = "DISABLED"
+    End If
+End Function
+
+Dim Cred
+Cred = IntMissionProgress("DS", "berk_cred")
 
 ' Standard login screen
 Dim FrontColor
@@ -213,7 +207,7 @@ Sub LoginStudent()
         SayBG "(D)isconnect" & Style
         SayBG ""
         Style = "{{white}}"
-        InOpt = QReadLineBG("Select option from menu:" & Style)
+        InOpt = QReadLineBGMe("Select option from menu:" & Style)
 
         Select Case InOpt
             Case "a"
@@ -272,7 +266,7 @@ Sub StaffStEditAccount()
         SayBG ""
         Style = "{{white}}"
         Dim TempInput
-        TempInput = QReadLineBG("Select option from menu:" & Style)
+        TempInput = QReadLineBGMe("Select option from menu:" & Style)
         Select Case TempInput
             Case "e"
                 Enable = Not Enable
@@ -323,11 +317,11 @@ Sub StaffStEditDepart()
         SayBG ""
         Style = "{{white}}"
         Dim TempInput
-        TempInput = QReadLineBG("Select option from menu:" & Style)
+        TempInput = QReadLineBGMe("Select option from menu:" & Style)
         Select Case TempInput
             Case "c"
                 Dim ChangeItInp
-                ChangeItInp = QReadLineBG("Select Department (eg. Physics, Mathematics, History, ...):" & Style)
+                ChangeItInp = QReadLineBGMe("Select Department (eg. Physics, Mathematics, History, ...):" & Style)
                 Department = ChangeItInp
                 SetMissionProgress "DS", "berk_department", Department
                 Style = "{{white}}"
@@ -371,8 +365,8 @@ Sub StaffStDatabase()
     Style = "{{orange}}"
     Dim IdInput
     Dim NamInput
-    IdInput = QReadLineBG("Student ID number:" & Style)
-    NamInput = QReadLineBG("Student Name:" & Style)
+    IdInput = QReadLineBGMe("Student ID number:" & Style)
+    NamInput = QReadLineBGMe("Student Name:" & Style)
 
     If IdInput <> "043946" Or NamInput <> "nguyen haong" Then
         Style = "{{white}}"
@@ -401,7 +395,7 @@ Sub StaffStDatabase()
         SayBG ""
         Style = "{{white}}"
         Dim Dat3Inp
-        Dat3Inp = QReadLineBG("Select option from menu:" & Style)
+        Dat3Inp = QReadLineBGMe("Select option from menu:" & Style)
         Select Case Dat3Inp
             Case "e"
                 StaffStEditAccount
@@ -485,8 +479,8 @@ Sub StaffNewton()
     SayBG ""
     Style = "{{orange}}"
     Dim IdInp, NameInp
-    IdInp = QReadLineBG("Student ID number:" & Style)
-    NameInp = QReadLineBG("Student Name:" & Style)
+    IdInp = QReadLineBGMe("Student ID number:" & Style)
+    NameInp = QReadLineBGMe("Student Name:" & Style)
 
     Style = "{{white}}"
     If IdInput <> "043946" Or NamInput <> "nguyen haong" Then
@@ -521,12 +515,12 @@ Sub StaffNewton()
         Style = "{{white}}"
         Dim AddInp
         Dim Temp
-        AddInp = QReadLineBG("Select option from menu:" & Style)
+        AddInp = QReadLineBGMe("Select option from menu:" & Style)
         Select Case AddInp
             Case "a"
                 Temp = 0
                 Dim AddInp2
-                AddInp2 = QReadLineBG("Add how many credits?" & Style)
+                AddInp2 = QReadLineBGMe("Add how many credits?" & Style)
                 Temp = Cred + AddInp2
                 If Temp > MaxCred Then
                     SayBG "Cannot add " & AddInp2 & " credits. Maximum credits is set at " & MaxCred & "." & Style
@@ -542,7 +536,7 @@ Sub StaffNewton()
             Case "r"
                 Dim RemInp
                 Temp = 0
-                RemInp = QReadLineBG("Remove how many credits?" & Style)
+                RemInp = QReadLineBGMe("Remove how many credits?" & Style)
                 Temp = Cred - RemInp
                 If Temp < 0 Then
                     SayBG "Cannot remove " & RemInp & " credits. User does not have enough credits." & Style
@@ -591,7 +585,7 @@ Sub LoginStaff()
         SayBG ""
         Style = "{{white}}"
         Dim StaffMenu
-        StaffMenu = QReadLineBG("Select option from menu:" & Style)
+        StaffMenu = QReadLineBGMe("Select option from menu:" & Style)
         Style = FrontColor
         Select Case StaffMenu
             Case "u"
@@ -617,9 +611,9 @@ End Sub
 
 While True
     Dim Login
-    Login = QReadLineBG("Login:")
+    Login = QReadLineBGMe("Login:")
     Dim Pass
-    Pass = QReadLineBG("Password:")
+    Pass = QReadLineBGMe("Password:")
 
     If Login = "043946" And Pass = "a3fl5" Then
         LoginStudent
