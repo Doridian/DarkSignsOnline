@@ -1,0 +1,91 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Dim Proto
+Proto = QReadLine("Requesting protocol setup...>")
+
+If Proto <> "ds:med:8rn" Then
+    Dim Rando
+    Dim Line
+    Line = "INVALID PROTOCOL SETUP GOES HERE JUST TO SPAM THINGS. THIS LINE IS LONG TO TRIP NEWLINE ON FIRST CHAR."
+    While True
+        Rando = (Rnd * 94) + 32
+        If Len(Line) > 40 Then
+            Say Chr(Rando)
+            Line = ""
+        End If
+        Line = Line & Chr(Rando)
+        SayLine Line
+        Wait 10
+    Wend
+    Quit
+End If
+
+Say "Establishing connection.....{{red}}"
+Wait 1000
+Say "Connection established....{{red}}"
+Wait 1000
+Say "Loading menu{{red}}"
+Wait 1000
+
+Sub PasswordRecoveryMenu()
+    Say "Password recovery for which account?{{white}}"
+    Say "1) Main account: admin{{white}}"
+    Say "2) FileSharing account: admin{{white}}"
+    Say "3) Transfer Code{{white}}"
+    Say "4) Shutdown Code{{white}}"
+    Say "5) Return to main menu{{white}}"
+    Dim gkeypw
+    gkeypw = GetAsciiWithCPrompt("Please make your selection")
+    If gkeypw = Asc("1") Then
+        ReadLine "Recovery Question: What is the name of your pet?{{white}}"
+        Say "Invalid answer{{red}}"
+        Exit Sub
+    ElseIf gkeypw = Asc("3") Then
+        ReadLine "Recovery Question: What is the name of the street where you were born?{{white}}"
+        Say "Invalid answer{{red}}"
+        Exit Sub
+    ElseIf gkeypw = Asc("4") Then
+        ReadLine "Recovery Question: What is your grandmother's name?{{white}}"
+        Say "Invalid answer{{red}}"
+        Exit Sub
+    ElseIf gkeypw = Asc("5") Then
+        Exit Sub
+    ElseIf gkeypw = Asc("2") Then
+        Dim pwAnswer
+        pwAnswer = QReadLine("Recovery Question: What is your mother's maiden name?{{white}}")
+        If pwAnswer = "hurley" Then
+            Say "Correct Answer{{white}}"
+            Say "Password is: aspidistra{{white}}"
+            Pause
+            Exit Sub
+        Else
+            Say "Invalid answer{{red}}"
+            Exit Sub
+        End If
+    End If
+End Sub
+
+While True
+    Say "Welcome. How may I help you?{{white}}"
+    Say "1) Transfer to root account{{white}}"
+    Say "2) Password recovery{{white}}"
+    Say "3) Transfer system to admin (safe) mode{{white}}"
+    Say "4) Logout{{white}}"
+    Dim gkey
+    gkey = GetAsciiWithCPrompt("Please make your selection")
+    If gkey = Asc("1") Then
+        ReadLine "Please enter transfer code>"
+        Say "Invalid Code{{red}}"
+    ElseIf gkey = Asc("2") Then
+        PasswordRecoveryMenu
+    ElseIf gkey = Asc("3") Then
+        ReadLine "Please enter shutdown code>"
+        Say "Invalid Code{{red}}"
+    ElseIf gkey = Asc("4") Then
+        Say "Logging out...{{white}}"
+        Say "Have a nice day!{{white}}"
+        Quit
+    End If
+Wend

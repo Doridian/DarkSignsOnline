@@ -1,0 +1,65 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+While True
+    Say "Welcome to the Military PostOffice Website{{green}}"
+    Say ""
+    Say "1 - About us{{white}}"
+    Say "2 - Employment{{white}}"
+    Say "3 - Check package status{{white}}"
+    Say "4 - Email admin{{white}}"
+    Say "5 - Exit{{white}}"
+
+    Dim mpchoice
+    mpchoice = QReadLine("Please make your choice (1 - 5)>")
+
+    If mpchoice = "1" Then
+        Say ""
+        Say "What we do:{{blue}}"
+        Say ""
+        Say "The Military PostOffice is just like your ordinary postoffice with the{{white}}"
+        Say "major difference being that we deliver postage to US armed forces{{white}}"
+        Say "all around the world.{{white}}"
+        Say ""
+        Say "How important is the Military PostOffice?{{blue}}"
+        Say ""
+        Say "The Military PostOffice is very important to the workings of the US{{white}}"
+        Say "forces. With out us no-one would get any mail, the men on the battle{{white}}"
+        Say "field would not be able to communicate with their families back home.{{white}}"
+        Say "We also do much more then deliver mail, we also control the traffic{{white}}"
+        Say "of our electronic mail(eMail).{{white}}"
+        Say ""
+        Pause
+    ElseIf mpchoice = "2" Then
+        Say ""
+        Say "If you wish to find out about current job offers for the Military PostOffice{{white}}"
+        Say "then email jobs@postoffice.mil with your details and we will get back to{{white}}"
+        Say "you ASAP.{{white}}"
+        Say ""
+        Pause
+    ElseIf mpchoice = "3" Then
+        Say ""
+        Say "Critical HTTP error: Encryption error 677{{red}}"
+        Say "Transfered from: prx.postoffice.mil{{red}}"
+        Say "Module: getdb( ){{red}}"
+        Say "Date and Time: " & Now
+        Say ""
+        Say "Please email admin with errors above{{white}}"
+        Say ""
+        Pause
+    ElseIf mpchoice = "4" Then
+        Say ""
+        Say "Email bug/error reports to admin@postoffice.mil{{white}}"
+        Say "Please quote all error information{{white}}"
+        Say ""
+        Pause
+    ElseIf mpchoice = "5" Then
+        Disconnect
+    End If
+Wend

@@ -28,7 +28,7 @@ Say "Looking for file{{rgb:39168}}"
 Dim FileIn
 FileIn = RequestReadFile()
 If FileIn = "" Then
-    Say "You don't have the file, what are you doing here ??"
+    Say "You don't have the file, what are you doing here ??{{orange}}"
     Disconnect
 End If
 
@@ -59,7 +59,8 @@ Say "Uploading file{{rgb:39168}}"
 ProgressSleep 50
 
 If Not Equals Then
-    Say "It seems you want to cheat us... This file is not the one we want."
+    Say "It seems you want to cheat us... This file is not the one we want.{{yellow}}"
+    Say "Please get us game868686.bin!{{red}}"
     Disconnect
 End If
 
