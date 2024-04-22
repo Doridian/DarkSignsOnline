@@ -1,0 +1,60 @@
+Option Explicit
+'don't look at this file!!!! that's cheating!!!!!!!!!!!!!!!! :P
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Connection Closed{{blue}}"
+    Quit
+End Sub
+
+Sub DoSendFile(Name, FData)
+    Say "Opening file [" & ConsoleEscape(Name) & "]{{blue}}"
+    RequestWriteFile FData
+    SaySlow 1, "..........................................", "blue"
+    Say "File [" & ConsoleEscape(Name) & "] Downloaded{{blue}}"
+End Sub
+
+While True
+    SaySlow 1, "....................", "white"
+    SaySlow 1, "This is a private server", "white"
+    SaySlow 1, "Error accessing auth file", "white"
+    SaySlow 1, "File Database", "blue"
+    SaySlow 1, "PRIVATE FILES:", "white"
+    SaySlow 1, "File 1 - 8m.enc", "white"
+    SaySlow 1, "File 2 - 9m.enc", "white"
+    SaySlow 1, "File 3 - 10m.enc", "white"
+    Dim mmInput
+    mmInput = QReadLine("Enter A File Number To Download (anything else to exit)>")
+    If mmInput = "1" Then
+        DoSendFile "8m.enc", "ENCRYPTED" & vbCrLf & _
+            "SDKJBSKJDBSKJBHDKJSBHKJDBSKJBDS" & vbCrLf & _
+            "AKUHSMKAHKSAHLKHSMKDHSKJHDKSHJ" & vbCrLf & _
+            "SSUDHISUHDIUSYGIDUYSGDMJASLKM" & vbCrLf & _
+            "SIDHMSLKDHKJLXJZLKXHMLZKXJHLKZJH" & vbCrLf & _
+            "SDJKHSLMDHALIUHSLAUHSLAOHSOIHM" & vbCrLf & _
+            "AKUHSMKAHKSAHLKHSMKDHSKJHDKSHJ" & vbCrLf & _
+            "SSUDHISUHDIUSYGIDUYSGDMJASLKM" & vbCrLf & _
+            "SIDHMSLKDHKJLXJZLKXHMLZKXJHLKZJH" & vbCrLf & _
+            "SDJKHSLMDHALIUHSLAUHSLAOHSOIHM" & vbCrLf
+    ElseIf mmInput = "2" Then
+        DoSendFile "9m.enc", "ENCRYPTED" & vbCrLf & _
+            "SUDHMSIHDJAMKAKZYVMKAYVMZVAYAM" & vbCrLf & _
+            "JMAKKZUHZMMZULZMZHZHZLAUSASJIA" & vbCrLf & _
+            "AJAQHZHNJQAMKSAJHSKAJSKAKJSMAJKS" & vbCrLf & _
+            "SUDHMSIHDJAMKAKZYVMKAYVMZVAYAM" & vbCrLf & _
+            "JMAKKZUHZMMZULZMZHZHZLAUSASJIA" & vbCrLf
+    ElseIf mmInput = "3" Then
+        DoSendFile "10m.enc", "ENCRYPTED" & vbCrLf & _
+            "SJHDKMSGKAGMSKVGASMAGVNSFVZJK" & vbCrLf & _
+            "AHKMWJVNGMZJGVNXNGHZVNXGZXZXZ" & vbCrLf & _
+            "QSUHQKHSHUKHUMHIHSUZMIKIZHIUSD" & vbCrLf & _
+            "JASHMLKAXGHJZGVNXZHNFXHZGXNFHN" & vbCrLf & _
+            "ASJBKAHMSGZHJJHGNXZFGHSFNGHFGH" & vbCrLf & _
+            "IJQOISJWOIJSSHALKISLIAJIUHAUISHMA" & vbCrLf & _
+            "SJDHKMZXKHJZJXXNHZGXZHXGZXGZXZ" & vbCrLf & _
+            "SDHJKMSYWGUYWGEUYGWUGUYQUYGQ" & vbCrLf
+    Else
+        Disconnect
+    End If
+Wend

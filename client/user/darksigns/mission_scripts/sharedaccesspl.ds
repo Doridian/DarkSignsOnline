@@ -1,0 +1,9 @@
+Option Explicit
+'don't look at this file!!!! that's cheating!!!!!!!!!!!!!!!! :P
+
+DLOpen "termlib"
+
+SaySlow 1, "....................", "white"
+SaySlow 1, "This is a private server", "white"
+
+Say "Connection Closed{{blue}}"

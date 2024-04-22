@@ -1,0 +1,41 @@
+Option Explicit
+'Script on special 81
+'Let's go
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    SaySlow 1, "ByeBye", "orange"
+    Quit
+End Sub
+
+While True
+    Dim user, pass
+    SaySlow 1, "Ftp-client", "yellow"
+    SaySlow 1, "---------------", "yellow"
+    user = QReadLine("Enter Username:")
+    If user <> "micmast" Then
+        Disconnect
+    End If
+    SaySlow 1, "Username accepted", "yellow"
+    pass = QReadLine("Enter Password:")
+    If pass <> "urgettingsomewhere" Then
+        Disconnect
+    End If
+    SaySlow 1, "Password accepted", "yellow"
+
+    Dim mmChoice
+    SaySlow 1, "commands: copy, upload, exit", "yellow"
+    mmChoice = QReadLine("What to do?{{yellow}}")
+    If mmChoice = "upload" Then
+        SaySlow 1, "Upload-section is down", "yellow"
+    ElseIf mmChoice = "copy" Then
+        Dim FData
+        FData = "Well done, you have completed this level" & vbCrLf & _
+                "after you decrypt this =]" & vbCrLf & _
+                "qydy czomskvcobfob.myw" & vbCrLf
+        RequestWriteFile FData
+    ElseIf mmChoice = "exit" Then
+        Disconnect
+    End If
+Wend

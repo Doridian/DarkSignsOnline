@@ -1,0 +1,26 @@
+Option Explicit
+'Script on specialstorage.com 80
+'Let's go
+
+Sub Disconnect()
+    SaySlow 1, "ByeBye", "orange"
+    Quit
+End Sub
+
+Dim user, pass
+SaySlow 1, "Welcome log in first", "white"
+user = QReadLine("Enter username:")
+If user <> "micmast" Then
+    Disconnect
+End If
+SaySlow 1, "Username accepted", "white"
+
+pass = QReadLine("Enter password:")
+If pass <> "urgettingsomewhere" Then
+    Disconnect
+End If
+SaySlow 1, "Password accepted", "white"
+
+SaySlow 1, "This is your public server, upload & download from your private!!!!", "white"
+SaySlow 1, "-------------------------------------------------", "white"
+Disconnect
