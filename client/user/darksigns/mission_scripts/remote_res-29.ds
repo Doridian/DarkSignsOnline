@@ -1,0 +1,44 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Dim ResetKeyCode
+ResetKeyCode = GetMissionProgress("DS", "remote29_reset_keycode")
+
+While True
+    Say "Remote Resource Server{{blue}}"
+    Dim inptf
+    inptf = QReadLine("Waiting for Command>")
+
+    If inptf = "help" Then
+        Say "Commands{{blue}}"
+        Say "help, keycode, mod, reset, exit{{white}}"
+    ElseIf inptf = "mod" Then
+        Dim inptf2
+        inptf2 = QReadLine("Waiting for new code...>")
+        If Left(inptf2, 3) = "rrs" Then
+            inptf2 = Mid(inptf2, 4)
+            If IsNumeric(inptf2) Then   
+                ResetKeyCode = inptf2
+                SetMissionProgress "DS", "remote29_reset_keycode", inptf2
+                Say "Resource Code OK{{white}}"
+            Else
+                Say "Invalid Resource Code{{red}}"
+            End If
+        Else
+            Say "Invalid Resource Code{{red}}"
+        End If
+    ElseIf inptf = "reset" then
+        Say "Keycode Value...{{blue}}"
+        SetMissionProgress "DS", "remote29_reset_keycode", "331"
+        ResetKeyCode = "331"
+        Say "Reset!{{white}}"
+    ElseIf inptf = "keycode" Then
+        Say "Keycode Value{{blue}}"
+        Say ConsoleEscape(ResetKeyCode) & "{{white}}"
+    ElseIf inptf = "exit" Then
+        Quit
+    Else
+        Say "Invalid Command{{red}}"
+    End If
+Wend

@@ -1,0 +1,15 @@
+Option Explicit
+'SECURE DIGITAL SENDMAIL SERVER
+
+DLOpen "termlib"
+
+SaySlow 1, "Security Mail Server", "green"
+SaySlow 1, "Warning - This is a private mail server.", "orange"
+SaySlow 1, "You will be automatically disconnected if you are not part of our network.", "orange"
+
+SaySlow 10, "Verifying your network information...", "grey"
+SaySlow 1, "You have been identified...", "green"
+
+SaySlow 1, "ACCESS DENIED - Multiple unsuccessful attempts will be logged automatically.", "red"
+
+SaySlow 1, "Connection Terminated", "orange"

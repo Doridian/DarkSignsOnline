@@ -2,12 +2,19 @@ Option Explicit
 
 DLOpen "termlib"
 
-Say "User Logged into NDRGRND Private Database{{orange}}"
-
 Sub Disconnect()
     Say "Your connection has been closed by the remote server.{{orange}}"
     Quit
 End Sub
+
+Dim ResetKeyCode
+ResetKeyCode = GetMissionProgress("DS", "remote29_reset_keycode")
+
+If ResetKeyCode <> "441" Then
+    Disconnect
+End If
+
+Say "User Logged into NDRGRND Private Database{{orange}}"
 
 While True
     Say "-- 1 -- History Files{{white}}"

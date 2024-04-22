@@ -35,8 +35,8 @@ While True
         KeyCode = "game_@$(@#$%)%@___2342"
 
         Dim FileData
-        FileData = "%403906DOOMGAME354423" & vbCrLf & _
-                    "GAME CODE BEGIN" & vbCrLf & _
+        FileData = "ENCRYPTED" & vbCrLf & _
+                    "%403906DOOMGAME354423" & vbCrLf & _
                     "4320595^TKLPWEGKWTE" & vbCrLf & _
                     "ASFLSP$)(T(WE$Y(450-y40y9054)))" & vbCrLf & _
                     Encrypt(RawData, KeyCode, True) & vbCrLf & _
