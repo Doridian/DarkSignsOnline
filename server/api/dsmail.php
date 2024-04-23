@@ -55,11 +55,12 @@ else if ($action === 'send')
 
 	$time = time();
 
+	$msg_hash = dso_hash($message);
 	$uEmail = $user['username'] . '@users';
 	foreach ($nameID AS $id)
 	{
-		$stmt = $db->prepare("INSERT INTO dsmail (from_addr, to_user, subject, message, time) VALUES (?, ?, ?, ?, ?)");
-		$stmt->bind_param('sissi', $uEmail, $id, $sub, $msg, $time);
+		$stmt = $db->prepare("INSERT INTO dsmail (from_addr, to_user, subject, message, time, message_hash) VALUES (?, ?, ?, ?, ?, ?)");
+		$stmt->bind_param('sissis', $uEmail, $id, $sub, $msg, $time, $msg_hash);
 		$stmt->execute();
 	}
 	die('success');
