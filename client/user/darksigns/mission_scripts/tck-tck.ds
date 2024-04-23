@@ -26,7 +26,7 @@ Sub Disconnect()
     Quit
 End Sub
 
-Sub FileServer()
+Sub FileServerMenu()
     While True
         SayBG "****************************************** TCK ***********************************"
         SayBG "*******TCK FServe v0.8 *********************************************************"
@@ -230,7 +230,7 @@ Sub MainMenu()
             SayBG "Logging out"
             Disconnect
         ElseIf sSel5 = Asc("1") Then
-            FileServer
+            FileServerMenu
         ElseIf sSel5 = Asc("2") Then
             SearchEngine
         Else
