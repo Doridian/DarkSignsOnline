@@ -1,0 +1,35 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Dim HasWelcome
+HasWelcome = BoolMissionProgress("DS", "has_welcome")
+
+If HasWelcome Then
+    Say "You are already part of the classic DS storyline!{{yellow}}"
+    Quit
+End If
+
+Say "Welcome to the classic DS storyline!{{yellow}}"
+
+SendMailToUser "gpit@12.78.3.221", "Your Mission", "I am unable to reveal my identity due to unmentionable dangers," & vbCrLf & _
+    "however our team and I have reason to believe you are skilled" & vbCrLf & _
+    "in the area of electronic espionage." & vbCrLf & vbCrLf & _
+    "It is for this reason we have taken the risk to contact you." & vbCrLf & vbCrLf & _
+    "We have gathered enough evidence to suggest that there may be an" & vbCrLf & _
+    "important document, and document that we need, somewhere inside the" & vbCrLf & _
+    "server biolabs.com. Our team urgently needs this file to continue" & vbCrLf & _
+    "our investigation. The name of this file is 8m.enc" & vbCrLf & vbCrLf & _
+    "If you agree to help us, then get the file, and upload it to the server zrio.org - we await the file."
+
+SendMailToUser "terminal@darksigns.com", "Training Mission", "Mission Objective: Retrieve the Internal Services Phone Number" & vbCrLf & _
+    "Starting Link: SECUREDIGITAL.com" & vbCrLf & vbCrLf & _
+    "Please check the included game documentation for a complete" & vbCrLf & _
+    "tutorial on the training mission. It will likely be difficult" & vbCrLf & _
+    "without proper training and experience, so we recommend you" & vbCrLf & _
+    "use the guide for this mission. Find it in the Dark Signs" & vbCrLf & _
+    "folder on your windows start menu. Even Print it." & vbCrLf & vbCrLf & _
+    "Great to see you here!" & vbCrLf & _
+    "Dark Signs Administration"
+
+BoolSetMissionProgress "DS", "has_welcome"

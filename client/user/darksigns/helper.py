@@ -159,4 +159,9 @@ def dso_uploadscript():
         for f in listdir(path_join(bPath, dom)):
             print(f"Run \"RemoteUpload\", \"{dom}\", \"{f}\", \"/darksigns/remotefs/{dom}/{f}\"")
 
+    bPath = "dso_specific"
+    for scr in listdir(bPath):
+        host, port = scr.removesuffix(".ds").split("___")
+        print(f"PrintVar UPLOAD(\"{host}\", {port}, \"/darksigns/dso_specific/{scr}\")")
+
 dso_uploadscript()
