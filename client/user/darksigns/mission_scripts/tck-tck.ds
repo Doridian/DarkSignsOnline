@@ -1,0 +1,283 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub SayBG(Str)
+    SayWithBGColor &H9C9AE9, Str & "{{white}}"
+End Sub
+
+Sub SaySlowBG(Delay, Str)
+    SaySlowWithBGColor &H9C9AE9, Delay, Str, "white"
+End Sub
+
+Sub PauseBG()
+    Pause "", &H9C9AE9
+End Sub
+
+Function QQReadLineBG(Prompt)
+    QQReadLineBG = QReadLineBG(&H9C9AE9, Prompt & "{{white}}")
+End Function
+
+Function GetAsciiBG(Prompt)
+    GetAsciiBG = GetAsciiWithCPromptBG(&H9C9AE9, Prompt & "{{white}}")
+End Function
+
+Sub Disconnect()
+    Quit
+End Sub
+
+Sub FileServer()
+    While True
+        SayBG "****************************************** TCK ***********************************"
+        SayBG "*******TCK FServe v0.8 *********************************************************"
+        SayBG "***********************************************************************************"
+        SayBG "Page 1 contains :"
+        SayBG "1. tcksecure.source"
+        SayBG "Options"
+        SayBG "l. Forward A Page"
+        SayBG "k. Back a page"
+        SayBG "b. Back to Main Menu"
+        Dim sSel2
+        sSel2 = GetAsciiBG("Please make your selection")
+        If sSel2 = Asc("b") then
+            SayBG "****************************************"
+            SayBG "******** Returning to main menu  *******"
+            SayBG "****************************************"
+            PauseBG
+            Exit Sub
+        ElseIf sSel2 = Asc("l") Then
+            SayBG "****************************************"
+            SayBG "******* You are on the last page *******"
+            SayBG "****************************************"
+            PauseBG
+        ElseIf sSel2 = Asc("k") Then
+            SayBG "****************************************"
+            SayBG "******* You are on the first page ******"
+            SayBG "****************************************"
+            PauseBG
+        ElseIf sSel2 = Asc("1") Then
+            SayBG "Downloading tcksecure.source"
+            ' basically lew-admin.ds goes here
+            SayBG "****************************************"
+            SayBG "******** Download Complete *************"
+            SayBG "****************************************"
+            PauseBG
+        Else
+            SayBG "****************************************"
+            SayBG "******** Invalid Selection  ************"
+            SayBG "****************************************"
+        End If
+    Wend
+End Sub
+
+Sub SearchEngine()
+    While True
+        SayBG "****************************************** TCK ***********************************"
+        SayBG "*******TCK Search v0.2 *********************************************************"
+        SayBG "***********************************************************************************"
+        SayBG "Search by: Author"
+        SayBG "You can currently only search by author, please use the query Surname, Firstname"
+        SayBG "Type exit to leave"
+        Dim sSel3, sSel4
+        sSel3 = QQReadLineBG("Please enter author to search by>")
+        If sSel3 = "whiting, phil" Then
+            SayBG "****************************************"
+            SayBG "******** 1 Result Found ****************"
+            SayBG "****************************************"
+            SayBG "1. Percentage bug and fix - by Phil Whiting"
+            sSel4 = GetAsciiBG("Please make your selection")
+            If sSel4 = Asc("1") Then
+                SayBG "************* Percentage bug and fix ********************"
+                SayBG "**************** Phil Whiting *******************"
+                SayBG "In the adminlock sections of source code one can use percentage signs"
+                SayBG "around codelock as the password. DScript interprets this as to assign"
+                SayBG "the value of the variable codelock to the user input. Thus they do"
+                SayBG "not need to know the password. The patch doens't need to be applied"
+                SayBG "to the third lock"
+                SayBG "This can be filtered out using the following code"
+                SayBG "(percentage sign is represented by %chr%)"
+                SayBG "var perc"
+                SayBG "!perc=%chr%"
+                SayBG "instr strmid perc"
+                SayBG "if instr>0"
+                SayBG "Invalid Input"
+                SayBG "run logcurrentuser.mod"
+                SayBG "goto cprompt"
+                SayBG "endif"
+                SayBG "free perc"
+                SayBG "Credit to Alex John for his logcurrentuser module"
+                PauseBG
+            End If
+        ElseIf sSel3 = "john, alex" Then
+            SayBG "****************************************"
+            SayBG "******** 2 Results Found ***************"
+            SayBG "****************************************"
+            SayBG "1. logcurrentuser function - by Alex John"
+            SayBG "2. logcurrentuser upgrade - By Alex John"
+            sSel4 = GetAsciiBG("Please make your selection")
+            If sSel4 = Asc("1") then
+                SayBG "********************* logcurrentuser function ***********************"
+                SayBG "***************************** By Alex John **************************"
+                SayBG "This logs a few current variables to a file, useful for stopping hackers"
+                SayBG "// Percentage sign is represented by %chr%"
+                SayBG "// store info"
+                SayBG "var l1"
+                SayBG "var l2"
+                SayBG "var l3"
+                SayBG "var l4"
+                SayBG "!l1=cmmd"
+                SayBG "connectip"
+                SayBG "!l2=connectedip"
+                SayBG "!l3=lcase"
+                SayBG "connectedname"
+                SayBG "!l4=connectedname"
+                SayBG "pipe logfile"
+                SayBG "%chr%l1%chr%"
+                SayBG "%chr%l2%chr%"
+                SayBG "%chr%l3%chr%"
+                SayBG "%chr%l4%chr%"
+                SayBG "pipe"
+                PauseBG
+            ElseIf sSel4 = Asc("2") Then
+                SayBG "********************* logcurrentuser update *************************"
+                SayBG "***************************** By Alex John ***************************"
+                SayBG "This is a special version for Phil's bugfix, it saves a few more"
+                SayBG "useful variables"
+                SayBG "// Percentage sign is represented by %chr%"
+                SayBG "// store info"
+                SayBG "var l1"
+                SayBG "var l2"
+                SayBG "var l3"
+                SayBG "var l4"
+                SayBG "var l5"
+                SayBG "!l1=cprompt"
+                SayBG "!l2=instr"
+                SayBG "!l3=strlen"
+                SayBG "getconnectip"
+                SayBG "!l4=getconnectip"
+                SayBG "connectedname"
+                SayBG "!l5=connectedname"
+                SayBG "pipe logfile"
+                SayBG "%chr%l1%chr%"
+                SayBG "%chr%l2%chr%"
+                SayBG "%chr%l3%chr%"
+                SayBG "%chr%l4%chr%"
+                SayBG "%chr%l5%chr%"
+                SayBG "pipe"
+                PauseBG
+            End If
+        ElseIf sSel3 = "niven, david" Then
+            SayBG "****************************************"
+            SayBG "******** 1 Result Found ***************"
+            SayBG "****************************************"
+            SayBG "1. Fixing a backdoor in tcksecure - By David Niven"
+            sSel4 = GetAsciiBG("Please make your selection")
+            If sSel4 = Asc("1") Then
+                SayBG "******** Fixing a backdoor in TCKsecure ****************************"
+                SayBG "***************************** By David Niven ************************"
+                SayBG "TCKsecure has two bugs at the login stage (after unlocking the three locks)"
+                SayBG "There is a backdoor user/pass combo of tckbackopen/tckbackclose which automatically"
+                SayBG "logs you in. Or the user can use percentage signs to redirect a variable"
+                SayBG "to read the contents of getencrypteduser and getencryptedpass"
+                SayBG "This will fix it (do it before checking passwords)"
+                SayBG "var temptest"
+                SayBG "!temptest=tckbackopen"
+                SayBG "instr cmmd temptest"
+                SayBG "if instr>0"
+                SayBG "Invalid input"
+                SayBG "goto cprompt"
+                SayBG "endif"
+                SayBG "!temptest=getencrypteduser"
+                SayBG "instr cmmd temptest"
+                SayBG "if instr>0"
+                SayBG "Invalid input"
+                SayBG "goto cprompt"
+                SayBG "endif"
+                SayBG "!temptest=tckbackclose"
+                SayBG "instr thepass temptest"
+                SayBG "if instr>0"
+                SayBG "Invalid input"
+                SayBG "goto cprompt"
+                SayBG "endif"
+                SayBG "!temptest=getencryptedpass"
+                SayBG "instr thepass temptest"
+                SayBG "if instr>0"
+                SayBG "Invalid input"
+                SayBG "goto cprompt"
+                SayBG "endif"
+                SayBG "free temptest"
+                PauseBG
+            End If
+        ElseIf sSel3 = "exit" Then
+            Exit Sub
+        Else
+            SayBG "No Results Found"
+        End If
+    Wend
+End Sub
+
+Sub MainMenu()
+    While True
+        SayBG "****************************************** TCK ***********************************"
+        SayBG "*******TCK Menu v0.6 ***********************************************************"
+        SayBG "***********************************************************************************"
+        SayBG "1. File Server"
+        SayBG "2. Article Search Engine"
+        SayBG "3. Logout"
+        Dim sSel5
+        sSel5 = GetAsciiBG("Please make your selection")
+        If sSel5 = Asc("3") Then
+            SayBG "Logging out"
+            Disconnect
+        ElseIf sSel5 = Asc("1") Then
+            FileServer
+        ElseIf sSel5 = Asc("2") Then
+            SearchEngine
+        Else
+            SayBG "Invalid selection"
+        End If
+    Wend
+End Sub
+
+While True
+    SayBG "Welcome to the TCK Beta Testing System"
+    SayBG "1) Login for beta testing"
+    SayBG "2) Check for updates"
+    SayBG "3) Leave"
+    SayBG "Please make your selection"
+    Dim sSel6
+    sSel6 = QQReadLineBG("Please make your selection")
+    If sSel6 = "1" Then
+        Dim sInPassword
+        sInPassword = QQReadLineBG("Please enter beta password>")
+        Dim sInstr
+        sInstr = InStr(sInPassword, "%")
+        If sInstr > 0 Then
+            SayBG "No percentages, that mistake isn't happening again"
+            Disconnect
+        End If
+        Dim cPassword ' Figure out new way to leak this...
+        cPassword = "cyberscience"
+        If sInPassword <> cPassword Then
+            SayBG "Incorrect password"
+            Disconnect
+        End If
+        SayBG "Logging in"
+        Wait 500
+        MainMenu
+    ElseIf sSel6 = "2" Then
+        SayBG "****************************************************"
+        SayBG "Newest Update : 3/3/12"
+        SayBG "Updated : Search engine has first beta test uploaded"
+        SayBG "You can now search for articles by author, soon we"
+        SayBG "will be adding more ways of searching through our"
+        SayBG "database of bug fixes and modifications"
+        SayBG "****************************************************"
+        PauseBG
+    ElseIf sSel6 = "3" Then
+        SayBG "Logging out"
+        Disconnect
+    Else
+        SayBG "Invalid selection"
+    End If
+Wend
