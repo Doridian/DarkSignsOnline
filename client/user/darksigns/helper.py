@@ -170,4 +170,14 @@ def dso_uploadscript():
         print(f"Run \"UPLOAD\", \"{host}\", {port}, \"/darksigns/dso_specific/{scr}\"")
         print(f"Say \"Uploaded {scr} to {host}:{port}\"")
 
-dso_uploadscript()
+def dso_upload_traceroutes():
+    print("Dim sTrace")
+    for server in servers:
+        if not server.trace:
+            continue
+        print(f"sTrace = \"allowlist=fileserver\" & vbCrLf")
+        for trace in server.trace:
+            print(f"sTrace = sTrace & \"{trace}\" & vbCrLf")
+        print(f"PrintVar RemoteWrite(\"traceroute.dsn\", \"{server.ip}.trace\", sTrace)")
+
+dso_upload_traceroutes()

@@ -1,0 +1,82 @@
+Option Explicit
+
+DLOpen "termlib"
+
+' Well, we dont have traceroutes in DSO, so this fakes them in for DS classic
+
+Function IsIP(sCand)
+    Dim sSplit
+    sSplit = Split(sCand, ".")
+    If UBound(sSplit) <> 3 Then
+        IsIP = False
+        Exit Function
+    End If
+    Dim j, sSpl, sNum
+    For j = 0 To 3
+        sSpl = sSplit(j)
+        If Not IsNumeric(sSpl) Then
+            IsIP = False
+            Exit Function
+        End If
+        sNum = CInt(sSpl)
+        If sNum < 0 Or sNum > 255 Then
+            IsIP = False
+            Exit Function
+        End If
+    Next
+    IsIP = True
+End Function
+
+Say "Welcome to DarkSigns traceroute service. Please enter the IP address or domain you would like to traceroute to{{blue}}"
+Dim sInput
+sInput = QReadLine(">")
+
+Dim sIp
+If IsIP(sInput) Then
+    sIp = sInput
+Else
+    Dim sIpTr
+    sIpTr = GetIP(sInput)
+    SaySlow 10, "Got domain, resolving to IP...", "blue"
+    sIp = WaitFor(sIpTr)
+    If sIp = "" Then
+        Say "Could not resolve the IP address of that domain.{{red}}"
+        Quit
+    End If
+    Say "Resolved to IP: " & ConsoleEscape(sIp) & "{{blue}}"
+End If
+
+Dim sTraceFile
+sTraceFile = sIp & ".trace"
+If IsLocal() Then
+    sTraceFile = RemoteView("traceroute.dsn", sTraceFile, 2)
+Else
+    sTraceFile = FileServer(sTraceFile, 2)
+End If
+Dim sTraceRes
+sTraceRes = ""
+On Error Resume Next
+sTraceRes = WaitFor(sTraceFile)
+On Error GoTo 0
+If sTraceRes = "" Then
+    Say "Traceroute failed.{{red}}"
+    Quit
+End If
+
+Dim sLines, i, sHost, sHostRes, sLine
+sLines = Split(sTraceRes, vbCrLf)
+For i = 0 To UBound(sLines)
+    sLine = Trim(sLines(i))
+    If sLine <> "" Then
+        sHost = GetDomain(sLine)
+        SaySlow 10, "IP: " & ConsoleEscape(sLine) & " ; Host: [Resolving...]", "blue"
+        sHostRes = ""
+        On Error Resume Next
+        sHostRes = WaitFor(sHost)
+        On Error GoTo 0
+        If sHostRes = "" Then
+            sHostRes = "Unknown"
+        End If
+        SayLine "IP: " & ConsoleEscape(sLine) & " ; Host: " & ConsoleEscape(sHostRes) & "{{blue}}"
+    End If
+Next
