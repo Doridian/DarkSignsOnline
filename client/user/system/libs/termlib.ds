@@ -85,12 +85,6 @@ Function BoolClearMissionProgress(MissionID, Key)
     SetMissionProgress MissionID, Key, "0"
 End Function
 
-Function ConsoleEscape(Str)
-    ConsoleEscape = Replace(Str, ConsoleInvisibleChar, "")
-    ConsoleEscape = Replace(ConsoleEscape, "{{", "{" & ConsoleInvisibleChar & "{")
-    ConsoleEscape = Replace(ConsoleEscape, "}}", "}" & ConsoleInvisibleChar & "}")
-End Function
-
 Function ConsoleUnescape(Str)
     ConsoleUnescape = Replace(Str, ConsoleInvisibleChar, "")
 End Function
