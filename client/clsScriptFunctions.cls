@@ -28,6 +28,7 @@ Private IsConfigured As Boolean
 Private SControl As ScriptControl
 Private FileKey As String
 Private PrivScriptOwner As String
+Private PrivTermlibObject As clsScriptTermlib
 
 Private Aborted As Boolean
 Private PrivAllowUnAbort As Boolean
@@ -1483,6 +1484,15 @@ End Function
 
 ' This allows remote/domain calls on purpose!
 Public Function DLOpen(ByVal Library As String)
+    If LCase(Trim(Library)) = "termlib" Then
+        If PrivTermlibObject Is Nothing Then
+            Set PrivTermlibObject = New clsScriptTermlib
+            PrivTermlibObject.SetGSF Me
+            SControl.AddObject "termlib", PrivTermlibObject, True
+        End If
+        Exit Function
+    End If
+
     If InStr(Library, "/") > 0 Or InStr(Library, "\") > 0 Then
         Exit Function
     End If
