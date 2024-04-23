@@ -10,7 +10,7 @@ if ($dInfo === false) {
 	die('not found');
 }
 
-$owner_id = $dInfo[1];
+$owner_id = $dInfo['owner'];
 $date_formatted = date('Y-m-d H:i:s', $dInfo['time']);
 $owner = idToUser($owner_id);
 
