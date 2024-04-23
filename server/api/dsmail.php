@@ -97,6 +97,6 @@ else if ($action === 'script_send_to_self')
 	$time = time();
 	$stmt = $db->prepare("INSERT INTO dsmail (from_addr, to_user, subject, message, time) VALUES (?, ?, ?, ?, ?)");
 	$stmt->bind_param('sissi', $from, $to, $subject, $message, $time);
-	$stmt->execute() or die_error($db->error);
+	$stmt->execute();
 }
 die_error('No request sent');
