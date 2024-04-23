@@ -1,0 +1,292 @@
+Option Explicit
+' X
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Quit
+End Sub
+
+Sub SayBG(Str)
+    SayWithBGColor &HFFFFFF, "{{black}}" & Str
+End Sub
+
+Sub SaySlowBG(Delay, Str)
+    SaySlowWithBGColor &HFFFFFF, Delay, Str, "black"
+End Sub
+
+Sub PauseBG()
+    Pause "", &HFFFFFF
+End Sub
+
+Function QQReadLineBG(Prompt)
+    QQReadLineBG = QReadLineBG(&HFFFFFF, Prompt & "{{black}}")
+End Function
+
+Function GetAsciiBG(Prompt)
+    GetAsciiBG = GetAsciiWithCPromptBG(&HFFFFFF, Prompt & "{{black}}")
+End Function
+
+Dim Uploaded
+Uploaded = BoolMissionProgress("DS", "newton_admin_uploaded")
+Dim AutoexecAdded
+AutoexecAdded = BoolMissionProgress("DS", "newton_admin_autoexec")
+Dim LogsDeleted6, LogsDeleted7
+LogsDeleted6 = BoolMissionProgress("DS", "newton_admin_logsdeleted6")
+LogsDeleted7 = BoolMissionProgress("DS", "newton_admin_logsdeleted7")
+
+Dim CDir
+
+Sub SetCDir(NewDirI)
+    Dim NewDir
+    NewDir = ResolvePathRel(CDir, Replace(NewDirI, "\", "/"))
+    NewDir = Replace(NewDir, "/", "\")
+
+    If NewDir = "\" Or NewDir = "\tools" Or NewDir = "\tools\htmlstats" Or NewDir = "\tools\htmlstats\images" Then
+        CDir = NewDir
+        Say "Current Directory: " & ConsoleEscape(CDir)  & "{{orange}}"
+        Exit Sub
+    End If
+
+    Say "{{red}}Invalid directory [" & ConsoleEscape(NewDirI) & "]"
+End Sub
+
+Function ResPath(OtherDir)
+    ResPath = Replace(ResolvePathRel(CDir, OtherDir), "/", "\")
+End Function
+
+CDir =  "\"
+
+Dim sInpt
+SaySlowBG 20, "NEWTON Physics Supercomputer"
+SaySlowBG 20, "Model x25n5"
+SaySlowBG 20, "Located at: Berkeley University of California"
+SaySlowBG 200, "..."
+SaySlowBG 100, "......."
+SaySlowBG 200, ".."
+SaySlowBG 20, "Warning! An administrator is present 24/7 to monitor the system."
+SaySlowBG 20, "Any suspicious behaviour will result in a disconnect."
+SaySlowBG 200, "...."
+SaySlowBG 20, "Accessing Administration Module"
+Wait 1000
+SayBG ""
+MainMenu
+
+Function IsBdntwn(fileData)
+    fileData = LCase(fileData)
+    IsBdntwn = (InStr(fileData, vbCrLf & "xx_nusig=bdnwtn.exe" & vbCrLf) > 0)
+End Function
+
+Sub CheckBackdoor()
+    If Uploaded And AutoexecAdded And LogsDeleted6 And LogsDeleted7 Then
+        SayBG "CONGRATULATIONS! You have succesfully completed my first mission!"
+        SayBG "Please mail comments to polka@pandora.be"
+        Quit
+    End If
+End Sub
+
+Sub DoNLogin()
+    Dim Login, Pass
+    Login = QQReadLineBG("Login:")
+    Pass = QQReadLineBG("Pass:")
+    If Login = "root" And Pass = "al2m3n8p" Then
+        RootMenu
+    ElseIf Login = "student" Or Login = "staff" Then
+        SayBG "[NEWTON]: This account can only be accessed from the NEWTON User Interface"
+        Wait 2000
+    Else
+        SayBG "[NEWTON]: Incorrect user/password"
+        Wait 1000
+    End If
+End Sub
+
+Sub MainMenu()
+    While True
+        SayBG ""
+        SayBG "NEWTON Physics Supercomputer"
+        SayBG "Model x25n5"
+        SayBG "Located at: Berkeley University of California"
+        SayBG ""
+        sInpt = QQReadLineBG("[NEWTON]:")
+        If sInpt = "login 0" Then
+            CheckBackdoor
+        ElseIf sInpt = "login" Then
+            DoNLogin
+        Else
+            SayBG "[NEWTON]: Not Logged In"
+            Wait 1000
+        End If
+    Wend
+End Sub
+
+Sub RootMenu()
+    While True
+        SayBG ""
+        SayBG "NEWTON Physics Supercomputer"
+        SayBG "Model x25n5"
+        SayBG "Located at: Berkeley University of California"
+        SayBG ""
+        sInpt = QQReadLineBG("[NEWTON.root]:")
+        Wait 500
+        If sInpt = "disconnect" Or sInpt = "quit" Or sInpt = "exit" Then
+            Quit
+        ElseIf sInpt = "help" Or sInpt = "commands" Then
+            SayBG "[NEWTON.root]: Available commands for your user level: CAT COMMANDS EDIT HELP LS PUT CD"
+        ElseIf sInpt = "cd" Then
+            SetCDir(QQReadLineBG("What directory do you want to change to?"))
+        ElseIf sInpt = "ls" Then
+            If CDir = "\tools" Then
+                SayBG "Current Folder:{{black}}"
+                SayBG "\tools{{blue}}"
+                SayBG "Files in folder:{{black}}"
+                SayBG "htmlstats.tool{{blue}}"
+                SayBG "viruschecker.tool{{blue}}"
+                SayBG "notepad++.tool{{blue}}"
+                SayBG "Subdirectories:{{black}}"
+                SayBG "[htmlstats]{{blue}}"
+            ElseIf CDir = "\tools\htmlstats" Then
+                SayBG "Current Folder:{{black}}"
+                SayBG "\tools\htmlstats{{blue}}"
+                SayBG "Files in folder:{{black}}"
+                SayBG "stats.htm{{blue}}"
+                SayBG "stats.cgi{{blue}}"
+                SayBG "Subdirectories:{{black}}"
+                SayBG "[images]{{blue}}"
+            ElseIf CDir = "\tools\htmlstats\images" Then
+                SayBG "Current Folder:{{black}}"
+                SayBG "\tools\htmlstats\images{{blue}}"
+                SayBG "Files in folder:{{black}}"
+                SayBG "logo.gif{{blue}}"
+                SayBG "berkeley.jpg{{blue}}"
+                SayBG "redbar.gif{{blue}}"
+                SayBG "bluebar.gif{{blue}}"
+                If Uploaded Then
+                    SayBG "bdnwtn.exe{{blue}}"
+                End If
+                SayBG "Subdirectories:{{black}}"
+                SayBG "None{{blue}}"
+            ElseIf CDir = "\" Then
+                SayBG "Current Folder:{{black}}"
+                SayBG "\{{blue}}"
+                SayBG "Files in folder:{{black}}"
+                SayBG "boot.ini{{blue}}"
+                SayBG "newton.program{{blue}}"
+                SayBG "newton.os{{blue}}"
+                SayBG "autoexec{{blue}}"
+                SayBG "change.log{{blue}}"
+                SayBG "Subdirectories:{{black}}"
+                SayBG "[tools]{{blue}}"
+            End If
+        ElseIf sInpt = "put" Then
+            If CDir = "\tools\htmlstats\images" Then
+                Dim FData
+                FData = RequestReadFile()
+                SayBG "Uploading"
+                SaySlowBG 100, "[..............................................]"
+                If IsBdntwn(FData) Then
+                    If Uploaded Then
+                        SayBG "[NEWTON.root]: File already exists. Overwrite access denied."
+                    Else
+                        SayBG "[NEWTON.root]: Upload complete."
+                        Uploaded = True
+                        BoolSetMissionProgress "DS", "newton_admin_uploaded"
+                    End If
+                Else
+                    SayBG "[NEWTON.root]: File rejected."
+                End If
+            Else
+                SayBG "[NEWTON.root]: Folder is write protected."
+            End If
+        ElseIf sInpt = "edit" Then
+            Dim Inpt, Inpt2
+            Inpt = ResPath(QQReadLineBG("Which file would you like to edit?"))
+            If Inpt = "\autoexec" Then
+                Inpt2 = QQReadLineBG("Which line would you like to edit?")
+                If Inpt2 = "1" Then
+                    Dim Inpt3
+                    Inpt3 = QQReadLineBG("Enter new line:")
+                    If Inpt3 = "run:tools\htmlstats\images\bdnwtn.exe" Or Inpt3 = "run:\tools\htmlstats\images\bdnwtn.exe" Then
+                        BoolSetMissionProgress "DS", "newton_admin_autoexec"
+                        AutoexecAdded = True
+                        SayBG "[NEWTON.root]: Line edited."
+                    Else
+                        SayBG "[NEWTON.root]: Line edited."
+                    End If
+                Else
+                    SayBG "[NEWTON.root]: No such line or access denied."
+                End If
+            ElseIf Inpt = "\change.log" Then
+                Inpt2 = QQReadLineBG("Which line would you like to edit?")
+                If Inpt2 = "6" Or Inpt2 = "7" Then
+                    Dim WhatDo
+                    WhatDo = QQReadLineBG("What do you want to do with the line? (D)elete or (E)dit")
+                    If WhatDo = "d" Then
+                        If Inpt2 = "6" Then
+                            BoolSetMissionProgress "DS", "newton_admin_logsdeleted6"
+                            LogsDeleted6 = True
+                        ElseIf Inpt2 = "7" Then
+                            BoolSetMissionProgress "DS", "newton_admin_logsdeleted7"
+                            LogsDeleted7 = True
+                        End If
+                        SayBG "[NEWTON.root]: Line deleted."
+                    Else
+                        SayBG "[NEWTON.root]: Edit function disabled on this file."
+                    End If
+                Else
+                    SayBG "[NEWTON.root]: No such line or access denied."
+                End If
+            Else
+                SayBG "[NEWTON.root]: File not present or write protected."
+            End If
+        ElseIf sInpt = "cat" Then
+            Dim Inpt4
+            Inpt4 = ResPath(QQReadLineBG("Which file would you like to see?"))
+            If Inpt4 = "\boot.ini" Then
+                SayBG "// This boot up file is revised frequently"
+                SayBG "// NOTE: The autoexec option seems superfluous for our system but removing the line creates complications"
+                SayBG "// NEWTON boot.ini"
+                SayBG "run autoexec"
+                SayBG "run newton.os"
+                SayBG "run newton.program"
+                SayBG "// EOF"
+            ElseIf Inpt4 = "\autoexec" Then
+                SayBG "// Autoexec file"
+                SayBG "// Code will be executed upon boot"
+                SayBG "// syntax:"
+                SayBG "// run:path\file.extension"
+                SayBG "// eg:"
+                SayBG "// run:tools\htmlstats\htmlstats.tool"
+                SayBG "// EOF"
+                If AutoexecAdded Then
+                    SayBG ""
+                    SayBG "run:tools\htmlstats\images\bdnwtn.exe"
+                End If
+            ElseIf Inpt4 = "\change.log" Then
+                SayBG "// The ten most recent changes to the system"
+                SayBG "c1- User 'root' updated boot.ini"
+                SayBG "c2- User 'maintenace' updated newton.os"
+                SayBG "c3- User 'root' updated boot.ini"
+                SayBG "c4- User 'maintenance' updated newton.program"
+                SayBG "c5- User 'maintenance' deleted temp.os"
+                If AutoexecAdded And Not LogsDeleted6 Then
+                    SayBG "c6- User 'root'(duplicate user) updated autoexec"
+                End If
+                If Uploaded And Not LogsDeleted7 Then
+                    SayBG "c7- User 'root'(duplicate user) uploaded bdnwtn.exe"
+                End If
+            Else
+                SayBG "[NEWTON.root]: File not present or access level insufficient."
+            End If
+        Else
+            SayBG "[NEWTON.root]: Command unknown or access level insufficient."
+        End If
+        ' Set a seed X, such that X is a random number between 10 and 20
+        ' Every command, increment I
+        ' If I > X, boot
+    Wend
+End Sub
+
+Sub BootUser()
+    SayBG "YOU HAVE BEEN BOOTED FROM THE SYSTEM BY AN ADMINISTRATOR!!!!!{{flash red}}"
+    Quit
+End Sub
