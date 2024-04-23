@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 18, 2024 at 09:41 PM
+-- Generation Time: Apr 23, 2024 at 10:27 AM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 7.4.33
 
@@ -76,7 +76,7 @@ CREATE TABLE `domain_scripts` (
 CREATE TABLE `dsmail` (
   `id` int(11) NOT NULL,
   `to_user` int(11) NOT NULL,
-  `from_user` int(11) NOT NULL,
+  `from_addr` varchar(255) NOT NULL,
   `subject` varchar(4096) NOT NULL,
   `message` longtext NOT NULL,
   `time` int(11) NOT NULL
@@ -193,8 +193,7 @@ ALTER TABLE `domain_scripts`
 --
 ALTER TABLE `dsmail`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `to_user` (`to_user`),
-  ADD KEY `from_user` (`from_user`);
+  ADD KEY `to_user` (`to_user`);
 
 --
 -- Indexes for table `file_database`
@@ -312,7 +311,6 @@ ALTER TABLE `domain_scripts`
 -- Constraints for table `dsmail`
 --
 ALTER TABLE `dsmail`
-  ADD CONSTRAINT `dsmail_ibfk_1` FOREIGN KEY (`from_user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `dsmail_ibfk_2` FOREIGN KEY (`to_user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
