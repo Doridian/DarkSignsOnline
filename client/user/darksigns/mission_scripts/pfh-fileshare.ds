@@ -1,0 +1,344 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Quit
+End Sub
+
+Sub MainMenu()
+    Say "Welcome to the FileShare program. Please enter your username and password"
+    Say "     (to access the public area enter the username public)"
+    Dim user, pass
+
+    user = QReadLine("Username:")
+    If user = "public" Then
+        PublicMenu
+        Exit Sub
+    End If
+    pass = QReadLine("Password:")
+    If user = "admin" And pass = "aspidistra" Then
+        AdminMenu
+        Exit Sub
+    End If
+
+    Say "Invalid Username and Password"
+End Sub
+
+Sub PublicHandle(pubin, EnableAdmin)
+    ' Leak this filter as filter A
+    If Left(pubin, 6) = "get .\" Then
+        Say "---"
+        Say "Invalid use of .\"
+        Say "---"
+        Exit Sub
+    End If
+
+    ' Leak this filter as filter B
+    Dim sInstr, sTmp
+    Do
+        sInstr = InStr(pubin, ";")
+        If sInstr > 0 Then
+            sInstr = sInstr - 1
+            sTmp = Mid(pubin, 1, sInstr)
+            sInstr = sInstr + 2
+            pubin = sTmp & Mid(pubin, sInstr)
+        End If
+    Loop Until sInstr <= 0
+
+    If EnableAdmin Then
+        Select Case pubin
+            Case "list"
+                Say "---"
+                Say "Files:"
+                Say "comms"
+                Say "intro"
+                Say "pass"
+                Say "pfh-advisory"
+                Say "radmin"
+                Say "radmin.info"
+                Say "---"
+                Exit Sub
+            Case "stat pfh-advisory"
+                Say "---"
+                Say "Filename : pfh-advisory"
+                Say "Size : 1,302 bytes"
+                Say "Created : 25/02/12"
+                Say "Actual path : .\adminarea"
+                Say "Machine : 123.53.4.9"
+                Say "Comment : Fixed our version with the advisory here"
+                Say "---"
+                Exit Sub
+            Case "get pfh-advisory"
+                Say "---"
+
+                Say "Advisory of bugs in the Palmer Filehosting System"
+                Say "                    by b0b0"
+                Say "The Bugs:"
+                Say "        There are two key bugs in the Palmer filehosting"
+                Say "system. The first is that one use the semicolon (;) which seperates"
+                Say "commands on the command line to run extra commands. There are points"
+                Say "when your input is run through the command line and so use of the colon"
+                Say "will run extra commands, like so:"
+                Say "get file ; del *"
+                Say "---"
+                Say "The second bug is that despite some checks on the get command one can"
+                Say "still access files in other directories by using .\ (the operating"
+                Say "system uses backslashes) to go back a directory."
+                Say "Thus you can access any files on the same machine (check which machine"
+                Say "you are on using stat)"
+                Say "---"
+                Say "The Fix:"
+                Say "        First to avoid the get problem simply add these lines"
+
+                ' LEAK FILTER A HERE
+                Say "    If Left(pubin, 6) = ""get .\"" Then"
+                Say "        Say ""---"""
+                Say "        Say ""Invalid use of .\"""
+                Say "        Say ""---"""
+                Say "        Exit Sub"
+                Say "    End If"
+                Say "        Then you can use this code to filter out colons :"
+
+                ' LEAK FILTER B HERE
+                Say "    Dim sInstr, sTmp"
+                Say "    Do"
+                Say "        sInstr = InStr(pubin, "";"")"
+                Say "        If sInstr > 0 Then"
+                Say "            sInstr = sInstr - 1"
+                Say "            sTmp = Mid(pubin, 1, sInstr)"
+                Say "            sInstr = sInstr + 2"
+                Say "            pubin = sTmp & Mid(pubin, sInstr)"
+                Say "        End If"
+                Say "    Loop Until sInstr <= 0"
+
+                Say "        That should fix the bugs"
+                Say "Thanks To: Mung, Mong & Mang."
+
+                Say "Download complete{{green}}"
+                Say "---"
+                Exit Sub
+        End Select
+    End If
+
+    Select Case pubin
+        Case "help"
+            Say "---"
+            Say "Commands"
+            Say "get filename - download filename"
+            Say "list - listfiles"
+            Say "stat filename - display file stats"
+            Say "password filename - enter the password for unlocking filename"
+            Say "logout - logout"
+            Say "---"
+        Case "logout"
+            Say "Thankyou for using Palmer FileSharer"
+            Exit Sub
+        Case "list"
+            Say "---"
+            Say "Files:"
+            Say "comms"
+            Say "intro"
+            Say "pass"
+            Say "radmin"
+            Say "radmin.info"
+            Say "---"
+        Case "stat intro"
+            Say "---"
+            Say "Filename : intro"
+            Say "Size : 249 bytes"
+            Say "Created : 21/02/12"
+            Say "Actual path : .\publicarea"
+            Say "Machine : 123.53.4.9"
+            Say "Comment : none"
+            Say "---"
+        Case "stat comms"
+            Say "---"
+            Say "Filename : comms"
+            Say "Size : 491 bytes"
+            Say "Created : 20/02/12"
+            Say "Actual path : .\publicarea"
+            Say "Machine : 123.53.4.9"
+            Say "Comment : none"
+            Say "---"
+        Case "stat radmin"
+            Say "---"
+            Say "Filename : radmin"
+            Say "Size : 769 bytes"
+            Say "Created : 20/02/12"
+            Say "Actual path : .\publicarea"
+            Say "Machine : 123.53.4.9"
+            Say "Comment : none"
+            Say "---"
+        Case "stat pass"
+            Say "---"
+            Say "Filename : pass"
+            Say "Size : 522 bytes"
+            Say "Created : 20/02/12"
+            Say "Actual path : .\publicarea"
+            Say "Machine : 123.53.4.9"
+            Say "Comment : none"
+            Say "---"
+        Case "stat radmin.info"
+            Say "---"
+            Say "Filename : radmin.info"
+            Say "Size : 880 bytes"
+            Say "Created : 1/03/12"
+            Say "Actual path : .\publicarea"
+            Say "Machine : 123.53.4.9"
+            Say "Comment : Laura - I'm using this file to test a bug I think I've found in our server,"
+            Say "          encrypted using our common password with md5 hash"
+            Say "          f82d71a6491c31b384ab5b57d85b6593"
+            Say "                  - Fadda"
+            Say "---"
+        Case "get radmin.info"
+            Say "---"
+            Say "Error: File is password protected"
+            Say "---"
+        Case "password radmin.info"
+            RAdminPassword
+        Case "get .\password"
+            Say "---"
+
+            Say "Congratulations Agent"
+            Say "Your level up code is tripleplay700"
+
+            Say "Download complete{{green}}"
+            Say "---"
+        Case "get intro"
+            Say "---"
+            Say "Downloading intro..."
+
+            Say "*** Welcome to our public File Sharing directory."
+            Say "Here you will find several files about the file hosting/sharing software."
+            Say "The file comms is about the commands you can use on this program"
+            Say "The file radmin is about the remote administration port"
+            Say "The file pass is about the password/encryption system"
+
+            Say "Download complete{{green}}"
+            Say "---"
+        Case "get pass"
+            Say "---"
+            Say "Downloading pass..."
+
+            Say "*** The Password System"
+            Say "The password system allows you to lock files in this area. The file is encrypted using"
+            Say "your specific password (using our own encryption). Then an extra line is added to the"
+            Say "top of the file which contains the phrase ""palmer"" (no quotes) encrypted using your password."
+            Say "This way the software can easily check if the password is correct or not. This encryption"
+            Say "is done using the built in DScript encryption for speed."
+            Say "As you can see, this password protection is comprehensive and hard to break."
+
+            Say "Download complete{{green}}"
+            Say "---"
+        Case "get comms"
+            Say "---"
+            Say "Downloading comms..."
+
+            Say "*** Commands"
+            Say "The filesharing program is very simple to use and has only a small number of commands."
+            Say "LIST will list files."
+            Say "GET filename will download filename"
+            Say "STAT filename will display statistics filename"
+            Say "PASS filename is for passworded files. Once you enter the password the file will be downloaded."
+            Say "HELP will list commands useable."
+            Say "Logout will logout"
+            Say "Commands can be typed in lowercase or uppercase."
+            Say "With software as easy to use as this, you can see why Palmer FileHoster is the best."
+
+            Say "Download complete{{green}}"
+            Say "---"
+        Case "get radmin"
+            Say "---"
+            Say "Downloading radmin..."
+
+            Say "*** Remote Administration Port"
+            Say "The remote administration port allows for easy administration of the machine. It resides on port 120 and has many"
+            Say "functions. To use it a connection establisher must be sent. This contains details of the computers which are making"
+            Say "the connection. This is stored in a program which the admin will have. If the establisher is entered incorrectly for"
+            Say "any reason the connection will simply appear as garbage."
+            Say "Once in the remote administration program various actions can be done. With a special code the admin can be transfered"
+            Say "to a superuser program for administration of the computer. The computer can also be shut down into ""safe mode"" for"
+            Say "maintenance. The admin can also do password recovery using a series of recovery questions."
+
+            Say "Download complete{{green}}"
+            Say "---"
+        Case Else
+            If Mid(pubin, 1, 3) = "get" Then
+                Say "---"
+                Say "Invalid file"
+                Say "---"
+            ElseIf Mid(pubin, 1, 4) = "stat" Then
+                Say "---"
+                Say "Invalid file"
+                Say "---"
+            ElseIf Mid(pubin, 1, 8) = "password" Then
+                Say "---"
+                Say "File does not exist or is not password protected"
+                Say "---"
+            Else
+                Say "---"
+                Say "Invalid Command"
+                Say "---"
+            End If
+    End Select
+End Sub
+
+Sub PublicMenu()
+    Say "Welcome to the Public fileshare area"
+    Say "             Type help for help"
+    Dim pubin
+    While True
+        pubin = QReadLine(">")
+        PublicHandle pubin, False
+    Wend
+End Sub
+
+Sub AdminMenu()
+    Say "Welcome to the Admin fileshare area"
+    Say "             Type help for help"
+    Dim pubin2
+    While True
+        pubin2 = QReadLine(">")
+        PublicHandle pubin2, True
+    Wend
+End Sub
+
+Sub RAdminPassword()
+    Dim pwInput
+    pwInput = QReadLine("Please enter password>")
+    IF pwInput = "national" Then
+        Say "Downloading radmin.info..."
+        Say "---"
+        Say "Connect On the admin port - quick reference"
+        Say "nb: When prompted send codes for each section divided by a colon"
+        Say "Section 1 - OS of connecting computer"
+        Say "DarkSigns - DS"
+        Say "Windows - WN"
+        Say "Unix or variant - UX"
+        Say "BlueSky - BS"
+        Say "Section 2 - Hardware of remote machine"
+        Say "4 Ghz (or equivalent) - low"
+        Say "5 - 8 Ghz (or equivalent) - med"
+        Say "9 - 12 Ghz (or equivalent) - top"
+        Say "Section 3 - Connection setup"
+        Say "This consists of 3 characters."
+        Say "The first character is a number between 1 and 9. This is the connection speed of the"
+        Say "remote network (in gpbs) divided by 20 and rounded down."
+        Say "The second character is the medium of connection :"
+        Say "Fibreoptic cable - f"
+        Say "Radio based network - r"
+        Say "Lightreflect network - l"
+        Say "The third character is either a y or n. This represents whether ""packet security"" is turned"
+        Say "on."
+        Say "An example request will look something like"
+        Say "WN:med:6fn"
+        Say "---"
+        Say "Download complete{{green}}"
+    Else
+        Say "Incorrect Password{{red}}"
+    End If
+End Sub
+
+MainMenu
+Disconnect
