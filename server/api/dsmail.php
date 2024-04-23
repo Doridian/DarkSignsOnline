@@ -87,7 +87,7 @@ else if ($action === 'script_send_to_self')
 
 	$dInfo = getDomainInfo($emlsplit[1]);
 	if ($dInfo === false || $dInfo['owner'] !== $sInfo['owner']) {
-		die_error('Server owner not matched');
+		die_error('Server owner not matched (' . $emlsplit[1] . ' vs ' . $server . ')');
 	}
 
 	if (preg_match('/[^a-zA-Z0-9_-]/', $emlsplit[0]) || strlen($emlsplit[0]) > 32) {
