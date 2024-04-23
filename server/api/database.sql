@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 23, 2024 at 10:27 AM
+-- Generation Time: Apr 23, 2024 at 11:35 PM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 7.4.33
 
@@ -79,7 +79,8 @@ CREATE TABLE `dsmail` (
   `from_addr` varchar(255) NOT NULL,
   `subject` varchar(4096) NOT NULL,
   `message` longtext NOT NULL,
-  `time` int(11) NOT NULL
+  `time` int(11) NOT NULL,
+  `message_hash` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -193,6 +194,7 @@ ALTER TABLE `domain_scripts`
 --
 ALTER TABLE `dsmail`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `message_uniqueness` (`to_user`,`from_addr`,`subject`,`message_hash`) USING HASH,
   ADD KEY `to_user` (`to_user`);
 
 --
