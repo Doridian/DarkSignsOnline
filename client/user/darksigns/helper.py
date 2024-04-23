@@ -156,12 +156,12 @@ def dso_uploadscript():
             print(f"Run \"UPLOAD\", \"{server.ip}\", {port}, \"/darksigns/mission_scripts/{script.name}.ds\"")
             print(f"Say \"Uploaded {script.name}.ds to {server.ip}:{port}\"")
 
-    # bPath = "remotefs"
-    # for dom in listdir(bPath):
-    #     for f in listdir(path_join(bPath, dom)):
-    #         print(f"Say \"Uploading {f} to {dom}\"")
-    #         print(f"Run \"RemoteUpload\", \"{dom}\", \"{f}\", \"/darksigns/remotefs/{dom}/{f}\"")
-    #         print(f"Say \"RemoteUploaded {f} to {dom}\"")
+    bPath = "remotefs"
+    for dom in listdir(bPath):
+        for f in listdir(path_join(bPath, dom)):
+            print(f"Say \"Uploading {f} to {dom}\"")
+            print(f"Run \"RemoteUpload\", \"{dom}\", \"{f}\", \"/darksigns/remotefs/{dom}/{f}\"")
+            print(f"Say \"RemoteUploaded {f} to {dom}\"")
 
     bPath = "dso_specific"
     for scr in listdir(bPath):
