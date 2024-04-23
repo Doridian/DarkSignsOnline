@@ -1,0 +1,242 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Dim CDir, CUser
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Sub SetCDir(NewDirI)
+    If NewDirI = "~" Then
+        NewDirI = "/home/" & CUser
+    End If
+
+    Dim NewDir
+    NewDir = ResolvePathRel(CDir, NewDirI)
+
+    If NewDir = "/" Or NewDir = "/home" Or NewDir = "/home/admin" Or NewDir = "/home/ann" Or NewDir = "/home/joe" Or NewDir = "/home/marie" Then
+        CDir = NewDir
+        Say "Current Directory: " & ConsoleEscape(CDir)  & "{{orange}}"
+        Exit Sub
+    End If
+
+    Say "{{red}}Invalid directory [" & ConsoleEscape(NewDirI) & "]"
+End Sub
+
+Dim xftpDebug
+xftpDebug = BoolMissionProgress("DS", "xftp25_debug")
+
+CUser = "anonymous"
+CDir = "/"
+
+If xftpDebug Then
+    CUser = "admin"
+End If
+
+Say "Welcome to XFTP v1.0{{purple}}"
+Say "Check out our website at xftp.com for bug reports, documentation and general news{{purple}}"
+
+Sub EditInitConf()
+    Say "File Contents:{{blue}}"
+    If xftpDebug Then
+        Say "1 - debug true{{blue}}"
+    Else
+        Say "1 - debug false{{blue}}"
+    End If
+    Dim editIn
+    editIn = QReadLine("Please enter the number of the line to edit: ")
+    If editIn = "1" Then
+        Dim editIn2
+        editIn2 = QReadLine("Enter the replacement text: ")
+        If editIn2 = "debug true" Then
+            xftpDebug = True
+            CUser = "admin"
+            BoolSetMissionProgress "DS", "xftp25_debug"
+            Say "File Updated{{blue}}"
+            Exit Sub
+        ElseIf editIn2 = "debug false" Then
+            xftpDebug = False
+            BoolClearMissionProgress "DS", "xftp25_debug"
+            Say "File Updated{{blue}}"
+            Exit Sub
+        End If
+    End If
+    Say "File Update Failed{{red}}"
+End Sub
+
+Sub CrashToShell()
+    Say "Fatal program fault [XFTP.EXE]{{red}}"
+    Say "Closing program and returning to command prompt{{red}}"
+
+    While True
+        Dim shIn, shC, shFn
+        shIn = Split(QReadLine(">"), " ")
+        shC = ""
+        shFn = ""
+        On Error Resume Next
+        shC = shIn(0)
+        shFn = shIn(1)
+        On Error GoTo 0
+
+        If shC = "exit" Then
+            Quit
+        ElseIf shC = "ls" Then
+            Say "INIT.CONF    XFTP.EXE{{white}}"
+        ElseIf shC = "edit" Or shC = "script" Then
+            If shFn = "init.conf" Then
+                EditInitConf
+            Else
+                Say "File not found [" & ConsoleEscape(shFn) & "]{{red}}"
+            End If
+        ElseIf shC = "run" Then
+            If shFn = "xftp.exe" Then
+                Exit Sub
+            Else
+                Say "File could not be executed [" & ConsoleEscape(shFn) & "]{{red}}"
+            End If
+        Else
+            Say "System Command Error [" & ConsoleEscape(shC) & "]{{red}}"
+        End If
+    Wend
+End Sub
+
+Dim xftpIn, xftmCmd
+While True
+    xftpIn = Split(QReadLine(">"), " ")
+    xftmCmd = ""
+    On Error Resume Next
+    xftmCmd = xftpIn(0)
+    On Error GoTo 0
+
+    Dim cmdUnhandled
+    cmdUnhandled = False
+
+    Select Case xftmCmd
+        Case "exit"
+            Disconnect
+        Case "help"
+            Say "Commands{{green}}"
+            Say "CD - usage: cd <folder>{{blue}}"
+            Say "Changes the current directory. Use cd.. to go back one folder.{{white}}"
+            Say "EXIT - usage: exit{{blue}}"
+            Say "Discconects from XFTP{{white}}"
+            Say "GET - usage: get{{blue}}"
+            Say "Asks which file to download and then downloads that file to the current local directory{{white}}"
+            Say "HELP - usage: help{{blue}}"
+            Say "Displays this help file{{white}}"
+            Say "LOGIN - usage: login{{blue}}"
+            Say "Prompts user for a username and password.{{white}}"
+            Say "If currect logs in as that user.{{white}}"
+            Say "LOGOUT - useage: logout{{blue}}"
+            Say "Logs out the current user and makes them anonymous user{{white}}"
+            Say "LS - usage: ls{{blue}}"
+            Say "Lists all files and folder in the current directory{{white}}"
+            Say "PUT - usage: put{{blue}}"
+            Say "Asks which to upload and then uploads that file to the current local directory{{white}}"
+            Say "RUN - usage: run{{blue}}"
+            Say "Asks which file to run remotely{{white}}"
+            Say "USERS - usage: users{{blue}}"
+            Say "Displays current user account being used{{white}}"
+            Say "VERSION - usage: version{{blue}}"
+            Say "Displays XFTP version{{white}}"
+        Case "users"
+            Say "Current user: " & ConsoleEscape(CUser)
+        case "version"
+            Say "XFTP Version 1.0{{purple}}"
+            Say "Build 1.8825{{purple}}"
+        Case "login"
+            Dim UName, UPass
+            UName = QReadLine("Enter user name: ")
+            If Len(UName) > 36 Then
+                CrashToShell
+            Else
+                UPass = QReadLine("Enter Password: ")
+                If Len(UPass) > 36 Then
+                    CrashToShell
+                Else
+                    Say "User name/Password error{{orange}}"
+                End If
+            End If
+        Case Else
+            cmdUnhandled = True
+            If CUser <> "admin" Then
+                Say "System Command Error [" & ConsoleEscape(xftmCmd) & "]{{orange}}"
+            End If
+    End Select
+    If cmdUnhandled And CUser = "admin" Then
+        Select Case xftmCmd
+            Case "cd"
+                If UBound(xftpIn) = 1 Then
+                    SetCDir(xftpIn(1))
+                Else
+                    SetCDir "/"
+                End If
+            Case "cd.."
+                SetCDir ".."
+            Case "cd~"
+                SetCDir "~"
+            Case "logout"
+                CUser = "anonymous"
+                CDir = "/"
+            Case "get"
+                Dim Fname
+                Fname = QReadLine("Enter file name: ")
+                If CUser = "admin" And ResolvePathRel(CDir, Fname) = "/home/admin/cryptsetup.exe" Then
+                    Say "Downloading{{blue}}"
+
+                    Dim FData
+                    FData = "Option Explicit" & vbCrLf & _
+                            "Say ""Crypt v1.2 Setup{{green}}""" & vbCrLf & _
+                            "DLOpen ""termlib""" & vbCrLf & _
+                            "Say """"" & vbCrLf & _
+                            "Dim yn" & vbCrLf & _
+                            "Say ""Setup will now install Crypt v1.2 to your hard drive{{white}}""" & vbCrLf & _
+                            "yn = QReadLine(""Do you wish to continue Y/N{{white}}?"")" & vbCrLf & _
+                            "If yn = ""y"" Then" & vbCrLf & _
+                            "    Say ""Installing{{white}}""" & vbCrLf & _
+                            "    SaySlow 500, "">>>>>>"", ""white""" & vbCrLf & _
+                            "    Wait 3000" & vbCrLf & _
+                            "    Say ""Setup failed{{red}}""" & vbCrLf & _
+                            "End If" & vbCrLf
+
+                    Dim CFData
+                    CFData = CompileScript(FData) & vbCrLf & "XX_TSIG=csetup139.exe" & vbCrLf
+
+                    RequestWriteFile CFData
+
+                    SaySlow 100, "............................................", "blue"
+                    Wait 500
+                    Say "Done{{blue}}"
+                Else
+                    Say "File not found or access denied [" & ConsoleEscape(Fname) & "]{{orange}}"
+                End If
+            Case "ls"
+                Select Case CDir
+                    Case "/"
+                        Say "[home]{{blue}}"
+                    Case "/home"
+                        Say "[admin]    [ann]    [joe]    [marie]{{blue}}"
+                    Case "/home/admin"
+                        Say "CRYPTSETUP.EXE"
+                    Case Else
+                        Say "NO FILES"
+                End Select
+            Case "put"
+                Dim Fname2
+                Fname2 = QReadLine("Enter file name: ")
+                Say "Uploading{{blue}}"
+                SaySlow 500, ".....................", "blue"
+                Wait 1000
+                Say "Fatal Protocal Error [remote connection lost]{{orange}}"
+            Case "run"
+                Dim Fname3
+                Fname3 = QReadLine("Enter file name: ")
+                Say "File could not be executed [" & ConsoleEscape(Fname3) & "]{{orange}}"
+            Case Else
+                Say "System Command Error [" & ConsoleEscape(xftmCmd) & "]{{orange}}"
+        End Select
+    End If
+Wend

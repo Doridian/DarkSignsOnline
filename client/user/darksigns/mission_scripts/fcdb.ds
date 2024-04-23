@@ -190,7 +190,13 @@ While True
     Say "[FirstClass Software] 1989-2003 FCDB.com{{grey}}"
     Dim DBInput
     DBInput = Split(QReadLine("{{white}}>"), " ")
-    Select Case DBInput(0)
+    Dim DBCmd
+    DBCmd = ""
+    On Error Resume Next
+    DBCmd = DBInput(0)
+    On Error GoTo 0
+
+    Select Case DBCmd
         Case "exit":
             Disconnect
         Case "su":

@@ -1,0 +1,305 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Function IsValidUser(user)
+    IsValidUser = (user = "guest" or user = "jsmith" or user = "su1" or user = "su2" or user = "dclark" or user = "su3" or user = "bhorne")
+End Function
+
+Sub Disconnect()
+    Quit
+End Sub
+
+Sub BBSIntro()
+    Say "-- Welcome to the New Pute BBS system --{{red}}"
+    Say ""
+    Say "This system will be used by employees for contacting each other and{{white}}"
+    Say "discussing anything of importance. At the moment the system is in early{{white}}"
+    Say "stages, however we hope to add more soon. You can use the SMS system{{white}}"
+    Say "to message other users and we have opened a technical support board{{white}}"
+    Say "for asking questions about using the system. Soon we hope to add more{{white}}"
+    Say "boards and other features.{{white}}"
+    Say "There are only a few users at the moment so you cannot message anyone{{white}}"
+    Say "who works here and be sure they will receive the message.{{white}}"
+    Say "The system administrator uses the username bhorne if you need to contact him{{white}}"
+    Pause
+End Sub
+
+Sub BBSTechSupport(EnablePost)
+    While True
+        Say "Technical Support Message Board{{red}}"
+        Say ""
+        Say "1) Disk Space{{white}}"
+        Say "2) Problem With user verification{{white}}"
+        Say "3) THC{{white}}"
+        If EnablePost Then
+            Say "p) Post{{white}}"
+        End If
+        Dim tsInput
+        tsInput = QReadLine("Select your option or type 0 to return to menu>")
+        If tsInput = "1" Then
+            Say "Message: Disk Space{{red}}"
+            Say "Posted By: bhorne{{red}}"
+            Say ""
+            Say "Disk space is limited at the moment, so a script has been set up{{white}}"
+            Say "so that messages other than from top superuser will be deleted{{white}}"
+            Say "when an account receives them. I will post an announcement when{{white}}"
+            Say "things are working better{{white}}"
+            Pause
+        ElseIf tsInput = "2" Then
+            Say "Message: Problem with user verification{{red}}"
+            Say "Posted By: jsmith{{red}}"
+            Say ""
+            Say "I hope this is the correct place to post, as we can't send{{white}}"
+            Say "SMS messages at the moment. My user verification code is not{{white}}"
+            Say "correct and so I can't verify my account. Can someone sort{{white}}"
+            Say "this out please?{{white}}"
+            Pause
+        ElseIf tsInput = "3" Then
+            Say "Message: THC{{red}}"
+            Say "Posted By: U R HaX0R3d{{red}}"
+            Say ""
+            Say "The H8 Club 0WN your SYSTEM{{green}}"
+            Say "u wANT it bAcK?{{green}}"
+            Pause
+        ElseIf tsInput = "p" And EnablePost Then
+            Say "THC gag u!{{green}}"
+            Say "reTARds!{{green}}"
+            Pause
+        ElseIf tsInput = "0" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+Sub BBSSMS()
+    Say "Send an SMS{{red}}"
+    Say ""
+    Dim smsUser
+    smsUser = QReadLine("Please enter the user you are sending the message to{{white}}>")
+    Dim smsDummyData
+    smsDummyData = ""
+    If smsUser = "headers" Then
+        smsDummyData = QReadLine("Please enter your message in headers form{{white}}>")
+    Else
+        smsDummyData = QReadLine("Please enter the message you want to send{{white}}>")
+    End If
+    If smsDummyData = "bhorne:su1:user up" Then
+        Say "Changing User to Super User 1{{green}}"
+        Pause
+        SU1Login
+        Disconnect
+    End If
+
+    Say "Please enter the message you want to send{{white}}"
+    Dim smsMessage
+    smsMessage = QReadLine("Enter the message>")
+    Say "Message Sent{{green}}"
+    Pause
+End Sub
+
+Sub BBSAnnouncements()
+    Say "Board Announcements{{red}}"
+    Say ""
+    Say "Announcement from bhorne - 23rd March 2012{{white}}"
+    Say "I will be going away for 2 weeks, when I return more{{white}}"
+    Say "changes will be made to the board. I have sent details{{white}}"
+    Say "to dclark so that he can take over any system administration{{white}}"
+    Say "duties. If you have any queries please SMS him.{{white}}"
+    Say ""
+    Say "Announcement from THC{{green}}"
+    Say "U r all ReTARds!{{green}}"
+    Say "We 0WN u!{{green}}"
+    Pause
+End Sub
+
+Sub BBSCheckLogs()
+    While True
+        Say "Log checker{{red}}"
+        Say ""
+        Say "1) SMS Logs{{white}}"
+        Say "2) Message Board Logs{{white}}"
+        Say "3) Login Logs{{white}}"
+        Dim logChoice
+        logChoice = QReadLine("Enter the log number or press enter to leave>")
+        If logChoice = "3" Then
+            Say "Nothing 2 C HeRe!{{green}}"
+            Pause
+        ElseIf logChoice = "2" Then
+            Say "Message Board logs for : Technical support{{white}}"
+            Say "21/3/12 - bhorne - Disk Space{{white}}"
+            Say "24/3/12 - jsmith - Problems with user verification{{white}}"
+            Say "26/3/12 - su2 - THC{{white}}"
+            Pause
+        ElseIf logChoice = "1" Then
+            Dim smsUser
+            smsUser = QReadLine("Please enter the username of the SMS account to view{{white}}>")
+            If smsUser = "dclark" Then
+                Say "That user has 3 messages{{white}}"
+                Say "23/3/12 - bhorne:dclark:Super User 1 Password is reporter{{white}}"
+                Say "23/3/12 - bhorne:dclark:Super User 2 Password is digital{{white}}"
+                Say "23/3/12 - bhorne:dclark:You shouldn't need su3 password, phone me if you have problems{{white}}"
+                Pause
+            ElseIf IsValidUser(smsUser) Then
+                Say "That user has no SMS messages{{white}}"
+                Pause
+            Else
+                Say "No such username{{red}}"
+                Pause
+            End If
+        ElseIf logChoice = "" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+Sub GuestLogin()
+    While True
+        Say "Welcome to the Guest Profile{{red}}"
+        Say ""
+        Say "1) BBS Introduction{{white}}"
+        Say "2) Technical Support Forum{{white}}"
+        Say "3) Logout{{white}}"
+        Dim guestInput
+        guestInput = QReadLine("Give The Number of your Option>")
+        If guestInput = "1" Then
+            BBSIntro
+        ElseIf guestInput = "2" Then
+            BBSTechSupport False
+        ElseIf guestInput = "3" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+Sub JSmithLogin()
+    While True
+        Say "Welcome John Smith{{red}}"
+        Say ""
+        Say "1) BBS Introduction{{white}}"
+        Say "2) Announcements{{white}}"
+        Say "3) Technical Support Forum{{white}}"
+        Say "4) User Verification{{white}}"
+        Say "5) Send an SMS{{white}}"
+        Say "6) Logout{{white}}"
+        Dim jsInput
+        jsInput = QReadLine("Give The Number of your Option>")
+        If jsInput = "1" Then
+            BBSIntro
+        ElseIf jsInput = "2" Then
+            BBSAnnouncements
+        ElseIf jsInput = "3" Then
+            BBSTechSupport True
+        ElseIf jsInput = "4" Then
+            Say "Verify Your Account{{red}}"
+            Say ""
+            Say "Please verify your account which will unlock several features in your account{{white}}"
+            Say "Please enter the following verification code:{{white}}"
+            Say "Error 453 : Fault in script userverify.scr{{orange}}"
+            ReadLine "Please enter the verification code>"
+            ReadLine "Please enter your new password>"
+            Say "Incorrect Verification Code{{red}}"
+            Pause
+        ElseIf jsInput = "5" Then
+            BBSSMS
+        ElseIf jsInput = "6" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+Sub SU1Login()
+    While True
+        Say "Welcome Super User 1{{red}}"
+        Say ""
+        Say "1) BBS Introduction{{white}}"
+        Say "2) Announcements{{white}}"
+        Say "3) Technical Support Forum{{white}}"
+        Say "4) Check Logs{{white}}"
+        Say "5) Send an SMS{{white}}"
+        Say "6) Logout{{white}}"
+        Dim su1Input
+        su1Input = QReadLine("Give The Number of your Option>")
+        If su1Input = "1" Then
+            BBSIntro
+        ElseIf su1Input = "2" Then
+            BBSAnnouncements
+        ElseIf su1Input = "3" Then
+            BBSTechSupport True
+        ElseIf su1Input = "4" Then
+            BBSCheckLogs
+        ElseIf su1Input = "5" Then
+            BBSSMS
+        ElseIf su1Input = "6" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+Sub SU2Login()
+    SaySlow 10, "======================================[THC]====================================", "green"
+    SaySlow 10, "=================================[The H8 Club]==================================", "green"
+    Say ""
+    SaySlow 10, "We 0WN u all!", "green"
+    SaySlow 10, "ReTARds thE lOT of YOu!", "green"
+    Say ""
+    SaySlow 10, "Tell u What", "green"
+    SaySlow 10, "I'll give you access to SU3", "green"
+    SaySlow 10, "If you can answer my questions 3", "green"
+    SaySlow 10, "(who needs proper rhymes when I've 0WNED YOUR BOX)", "white"
+    SaySlow 10, "Answer in lower case stoopid", "green"
+    Say ""
+    Dim su2Input
+    su2Input = Replace(Replace(QReadLine("What else does THC stand for?>"), " ", ""), "-", "")
+    If su2Input <> "tetrahydrocannabinol" Then
+        Say "WRONG!{{red}}"
+        Exit Sub
+    End If
+    SaySlow 10, "One right - Can you answer the rest though?", "green"
+    SaySlow 10, "In the blue corner! The Masters of Destruction", "blue"
+    su2Input = QReadLine("Who would be in the red corner?>")
+    If su2Input <> "legion of doom" Then
+        Say "WRONG!{{red}}"
+        Exit Sub
+    End If
+    SaySlow 10, "One more to go - Then you can have control of your box again", "green"
+    su2Input = QReadLine("What fruit would I find in white lightning jolt cola?>")
+    If su2Input <> "grape" and su2Input <> "grapes" Then
+        SaySlow 50, "So Close", "red"
+        SaySlow 50, "but yet so far", "red"
+        Say "WRONG!{{red}}"
+        Exit Sub
+    End If
+
+    Say "Welcome Super User 3.{{red}}"
+    Say ""
+    Say "Congratulations Agent, use the level up code of bluepig96{{white}}"
+    Quit
+End Sub
+
+Say "Welcome to New 'Pute Co. Technical BBS{{red}}"
+Say "This system is for employees of New 'Pute Co. only{{red}}"
+Say ""
+Say "Please enter your username and password{{white}}"
+Say "                                     ---    {{white}}"
+Dim iUser, pass
+iUser = QReadLine("Enter Your UserName>")
+pass = QReadLine("Enter Your Password>")
+
+If iUser = "guest" and pass = "guest" Then
+    GuestLogin
+ElseIf iUser = "jsmith" and pass = "changeme" Then
+    JSmithLogin
+ElseIf iUser = "su1" and pass = "reporter" Then
+    SU1Login
+ElseIf iUser = "su2" and pass = "digital" Then
+    SU2Login
+ElseIf IsValidUser(iUser) Then
+    Say "Invalid Password{{red}}"
+    Disconnect
+Else
+    Say "Invalid Username{{red}}"
+    Disconnect
+End If
+
+Disconnect

@@ -82,9 +82,14 @@ End Sub
 Sub ShellMenu()
     CDir = "/"
     While True
-        Dim SInput
+        Dim SInput, SCmd
         SInput = Split(QReadLine("{{blue}}>"), " ")
-        Select Case SInput(0)
+        SCmd = ""
+        On Error Resume Next
+        SCmd = SInput(0)
+        On Error GoTo 0
+
+        Select Case SCmd
             Case "cd/":
                 SetCDir "/"
             Case "cd~"
@@ -118,7 +123,9 @@ Sub ShellMenu()
                     Say "Error uploading file [not writable]{{red}}"
                 End If
             Case "run"
-                If ResolvePathRel(CDir, SInput(1)) = "/home/admin/remoteapp" Then
+                If UBound(SInput) < 1 Then
+                    Say "Error running file [no file specified]{{red}}"
+                ElseIf ResolvePathRel(CDir, SInput(1)) = "/home/admin/remoteapp" Then
                     If Not BoolMissionProgress("DS", "code_red_done") Then
                         IncMissionProgress "DS", "dos_bw"
                         BoolSetMissionProgress "DS", "code_red_done"
