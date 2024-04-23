@@ -94,17 +94,10 @@ else if ($action === 'script_send_to_self')
 		die_error('Invalid from name');
 	}
 
-	$stmt = $db->prepare("SELECT id FROM users WHERE from_addr = ? AND to_user = ? AND subject = ? AND message = ?");
-	$stmt->bind_param('siss', $from, $to, $subject, $message);
-	$stmt->execute();
-	$result = $stmt->get_result();
-	if ($result->num_rows > 0) {
-		die('Already sent');
-	}
-
+	$msg_hash = dso_hash($message);
 	$time = time();
-	$stmt = $db->prepare("INSERT INTO dsmail (from_addr, to_user, subject, message, time) VALUES (?, ?, ?, ?, ?)");
-	$stmt->bind_param('sissi', $from, $to, $subject, $message, $time);
+	$stmt = $db->prepare("INSERT INTO dsmail (from_addr, to_user, subject, message, message_hash, time) VALUES (?, ?, ?, ?, ?)");
+	$stmt->bind_param('sisssi', $from, $to, $subject, $message, $msg_hash, $time);
 	$stmt->execute();
 	die('OK');
 }

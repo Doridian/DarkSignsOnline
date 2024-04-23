@@ -68,6 +68,10 @@ function make_new_domain($regtype, $fixedip = '', $userid = 0, $host = '', $pare
 	return $db->insert_id;
 }
 
+function dso_hash($data) {
+	return strtolower(hash('sha256', $data));
+}
+
 function die_error($str, $code = 400) {
 	global $ver;
 	if ($ver > 1) {
