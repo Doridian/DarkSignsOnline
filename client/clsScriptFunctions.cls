@@ -1940,7 +1940,11 @@ End Function
 Public Function ConsoleEscape(ByVal tmpS As String) As String
     ConsoleEscape = basCommands.ConsoleEscape(tmpS)
 End Function
-
+ 
+ Public Function ConsoleUnescape(ByVal tmpS As String) As String
+     ConsoleUnescape = Replace(tmpS, ConsoleInvisibleChar, "")
+ End Function
+ 
 ' TODO: Synchronize mission from server first time it is read or written after client launch
 ' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
 ' maybe use client launch time VS file modify time?

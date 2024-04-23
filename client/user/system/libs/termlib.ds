@@ -85,10 +85,6 @@ Function BoolClearMissionProgress(MissionID, Key)
     SetMissionProgress MissionID, Key, "0"
 End Function
 
-Function ConsoleUnescape(Str)
-    ConsoleUnescape = Replace(Str, ConsoleInvisibleChar, "")
-End Function
-
 Function QReadLine(Prompt)
     QReadLine = LCase(Trim(ReadLine(Prompt)))
 End Function
