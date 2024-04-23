@@ -88,7 +88,7 @@ EvalError:
     If ErrNumber = 13 Then
         ErrHelp = "This error might mean a function you tried to use does not exist"
     End If
-    SayRaw ConsoleID, "Error processing script: " & ErrDescription & " " & ErrNumberStr & " " & ErrHelp & "{{red}}"
+    SayRaw ConsoleID, "Error processing script: " & ConsoleEscape(ErrDescription) & " " & ErrNumberStr & " " & ErrHelp & "{{red}}"
     GoTo ScriptEnd
 
 ScriptCancelled:

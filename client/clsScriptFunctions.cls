@@ -1933,7 +1933,7 @@ Public Function SendMailToUser(ByVal sFrom As String, ByVal sSubject As String, 
     ReqIdx = DoDownloadAPI("dsmail.php", True, "action=script_send_to_self" & _
                                                 "&server=" & EncodeURLParameter(PrivServerIP) & _
                                                 "&from=" & EncodeURLParameter(sFrom) & _
-                                                "subject=" & EncodeURLParameter(sSubject) & _
+                                                "&subject=" & EncodeURLParameter(sSubject) & _
                                                 "&message=" & EncodeURLParameter(sMessage), "")
     WaitFor ReqIdx
     SayCOMM "You got a new DSMail from " & sFrom

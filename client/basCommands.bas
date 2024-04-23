@@ -49,7 +49,7 @@ Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As
         ResolvePath = ResolvePathRel(".", Path)
         Exit Function
     End If
-    ResolvePath = ResolvePathRel(CPath(ConsoleID), Path)
+    ResolvePath = ResolvePathRel(cPath(ConsoleID), Path)
 End Function
 
 Public Function ResolvePathRel(ByVal CCPath As String, ByVal Path As String) As String
@@ -208,13 +208,20 @@ EvalError:
         ErrNumberStr = "(E#" & ErrNumber & ")"
     End If
     
-    SayRaw ConsoleID, "Error processing CLI input: " & ErrDescription & " " & ErrNumberStr & " " & ErrHelp & "{{red}}"
+    SayRaw ConsoleID, "Error processing CLI input: " & ConsoleEscape(ErrDescription) & " " & ErrNumberStr & " " & ErrHelp & "{{red}}"
     GoTo ScriptEnd
 
 ScriptCancelled:
     SayRaw ConsoleID, "Script Stopped by User (CTRL + B){{orange}}"
 ScriptEnd:
     scrConsoleContext(ConsoleID).CleanupScriptTasks
+End Function
+
+Public Function ConsoleEscape(ByVal tmpS As String) As String
+    tmpS = Replace(tmpS, ConsoleInvisibleChar, "")
+    tmpS = Replace(tmpS, "}}", "}" & ConsoleInvisibleChar & "}")
+    tmpS = Replace(tmpS, "{{", "{" & ConsoleInvisibleChar & "{")
+    ConsoleEscape = tmpS
 End Function
 
 Public Function ParseCommandLineOptional(ByVal tmpS As String, ByVal AutoVariablesFrom As Integer, Optional ByVal AllowCommands As Boolean = True) As String
