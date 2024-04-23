@@ -120,6 +120,10 @@ Sub MainMenu()
 End Sub
 
 Sub RootMenu()
+    Dim BootTime, UseTime
+    BootTime = (Rnd * 10) + 10
+    UseTime = 0
+
     While True
         SayBG ""
         SayBG "NEWTON Physics Supercomputer"
@@ -280,9 +284,10 @@ Sub RootMenu()
         Else
             SayBG "[NEWTON.root]: Command unknown or access level insufficient."
         End If
-        ' Set a seed X, such that X is a random number between 10 and 20
-        ' Every command, increment I
-        ' If I > X, boot
+        UseTime = UseTime + 1
+        If UseTime > BootTime Then
+            BootUser
+        End If
     Wend
 End Sub
 
