@@ -53,7 +53,7 @@ function verify_keycode($filename, $opname, $require_owner = false) {
 		die_error("Error - ($filename) Not owner: " . strtoupper($d));
 	}
 
-	if ($_REQUEST['is_local_script'] !== 'true' || !$is_owner) {
+	if ($opname !== 'fileserver' && ($_REQUEST['is_local_script'] !== 'true' || !$is_owner)) {
 		$keycode = $_REQUEST['keycode'];
 		if ($keycode !== $dInfo['keycode']) {
 			die_error("Error - ($filename) Invalid Server Key: " . strtoupper($d));

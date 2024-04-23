@@ -1,0 +1,304 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "____________________________________________________________________________________{{green}}"
+Say ""
+Say "                                                                   The THC HQ{{green}}"
+Say "____________________________________________________________________________________{{green}}"
+Say "Login for THC Challenge levels{{green}}"
+
+Dim userinput, passwd
+userinput = QReadLine("Username:{{green}}")
+passwd = QReadLine("Password:{{green}}")
+
+If userinput = "noname" Then
+    Say "This account can log in on port 200{{green}}"
+    Pause
+    Quit
+End If
+
+If userinput = "jpain" Or userinput = "beater" Or userinput = "gage" Or userinput = "hatred" Or userinput = "dewey" Then
+    Say "Real accounts can log in on port 300{{green}}"
+    Pause
+    Quit
+End If
+
+Sub Level1Menu()
+    While True
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "     User: level1         -         Location : main menu         -         THC Rule!{{green}}"
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say " (w)hat am I doing here?{{green}}"
+        Say " (l)evel up{{green}}"
+        Say " (s)ource code{{green}}"
+        Say " (e)xit{{green}}"
+        Dim l1gkey
+        l1gkey = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If l1gkey = "w" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level1         -         Location : what am I doing here?         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "THC is The H8 Club -  we are the best hacker ring on the web{{green}}"
+            Say "we have the best contacts - we get the best missions{{green}}"
+            Say "we earn our group the most money{{green}}"
+            Say "To find this place, you have shown some skill{{green}}"
+            Say "proove yourself, the level up program requires a password{{green}}"
+            Say "the source code is the code for the password checking program{{green}}"
+            Say "you should be able to crack it?{{green}}"
+            Say ""
+            Say "This place is our place{{green}}"
+            Say "get through all the levels and theres a mine of information and stuff{{green}}"
+            Say "you may get a few glimpses of what you get as you go on{{green}}"
+            Pause
+        ElseIf l1gkey = "l" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level1         -         Location : level up         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Dim pwRight, pwInput
+            If IsLocal() Then
+                pwRight = RemoteView("thc-hq.com", "level1.password", 2, 1)
+            Else
+                pwRight = ServerView("level1.password", 2, 1)
+            End If
+            pwInput = TrimWithNewline(ReadLine("Please enter your password>{{green}}"))
+            If pwInput = TrimWithNewline(WaitFor(pwRight)) Then
+                Say "account: level2{{green}}"
+                Say "password: cookbook{{green}}"
+            Else
+                SaySlow 100, "Wrong!!!", "green"
+            End If
+            Pause
+        ElseIf l1gkey = "s" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level1         -         Location : source code         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "Dim pwRight, pwInput{{green}}"
+            Say "pwRight = ServerView(""level1.password"", 2, 1){{green}}"
+            Say "pwInput = TrimWithNewline(ReadLine(""Please enter your password>"")){{green}}"
+            Say "If pwInput = TrimWithNewline(WaitFor(pwRight)) Then{{green}}"
+            Say "    Say ""account: level2""{{green}}"
+            Say "    Say ""password: ""!!!!!!!""{{green}}"
+            Say "    Pause{{green}}"
+            Say "End If{{green}}"
+            Pause
+        ElseIf l1gkey = "e" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+Sub Level2Menu()
+    While True
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "     User: level2         -         Location : main menu         -         THC Rule!{{green}}"
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say " (m)essage boards{{green}}"
+        Say " e(x)ploits{{green}}"
+        Say " (v)irri{{green}}"
+        Say " (l)evel up{{green}}"
+        Say " (s)ource code{{green}}"
+        Say " (e)xit{{green}}"
+        Dim l2gkey
+        l2gkey = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If l2gkey = "m" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level2         -         Location : message boards         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "Our message boards are populated by the most knowledgeable hackers around{{green}}"
+            Say "plenty of discussion with useful information{{green}}"
+            Say "plenty of hints and shared findings{{green}}"
+            Say "plenty of help when you need it{{green}}"
+            Say "Another reason why THC are the best hacking ring{{green}}"
+            Pause
+        ElseIf l2gkey = "e" Then
+            Say "__________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level2         -         Location : exploits         -         THC Rule!{{green}}"
+            Say "__________________________________________________________________________________{{green}}"
+            Say ""
+            Say "We have the newest exploits found{{green}}"
+            Say "check our achives which date back for a very long time{{green}}"
+            Say "contains many exploits far before they're released to the 'hacker community'{{green}}"
+            Say "because we are the best{{green}}"
+            Pause
+        ElseIf l2gkey = "v" Then
+            Say "__________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level2         -         Location : virri         -         THC Rule!{{green}}"
+            Say "__________________________________________________________________________________{{green}}"
+            Say ""
+            Say "This section contains many virri, and antidotes created for them{{green}}"
+            Say "often far before anyone else{{green}}"
+            Say "why do we have these?{{green}}"
+            Say "because we wrote 75% of them{{green}}"
+            Pause
+        ElseIf l2gkey = "l" Then
+            Say "__________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level2         -         Location : level up         -         THC Rule!{{green}}"
+            Say "__________________________________________________________________________________{{green}}"
+            Say ""
+            Dim pwRight, pwInput
+            pwRight = "23eeb69c681dfdb8eacc7ce9e55ea007d41c2dd5273848c597f1b3e49dbd86e1"
+            pwInput = SHA256(TrimWithNewline(ReadLine("Please enter your password>{{green}}")))
+            If pwInput = TrimWithNewline(WaitFor(pwRight)) Then
+                Say "account: level3{{green}}"
+                Say "password: average{{green}}"
+            Else
+                SaySlow 100, "Wrong!!!", "green"
+            End If
+            Pause
+        ElseIf l2gkey = "s" Then
+            Say "__________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level2         -         Location : source code         -         THC Rule!{{green}}"
+            Say "__________________________________________________________________________________{{green}}"
+            Say ""
+            Say "Dim pwRight, pwInput{{green}}"
+            Say "pwRight = ""23eeb69c681dfdb8eacc7ce9e55ea007d41c2dd5273848c597f1b3e49dbd86e1""{{green}}"
+            Say "pwInput = SHA256(TrimWithNewline(ReadLine(""Please enter your password>""))){{green}}"
+            Say "If pwInput = TrimWithNewline(WaitFor(pwRight)) Then{{green}}"
+            Say "    Say ""account: level3""{{green}}"
+            Say "    Say ""password: !!!!!!!""{{green}}"
+            Say "    Pause{{green}}"
+            Say "End If{{green}}"
+            Pause
+        ElseIf l2gkey = "e" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+Sub Level3ExploitsMenu()
+    While True
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "     User: level3         -         Location : Exploits Menu         -         THC Rule!{{green}}"
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "Viewing exploits from the last : 5 days{{green}}"
+        Say "       [If you have a proper account you will be able to change this, this is just a taste]{{green}}"
+        Say "1) UHB Login script{{green}}"
+        Say "b) Back to main menu{{green}}"
+        Dim l3egkey
+        l3egkey = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If l3egkey = "1" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level3         -         Location : The UHB exploit         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "UHB Login script exploit - Found by Beater{{green}}"
+            Say "UHB have a stupid system where even if you have the username and password{{green}}"
+            Say "you still have to be on a list of authorised IP addresses{{green}}"
+            Say "however, the programmers are also morons{{green}}"
+            Say "One of the 'authorised' IPs is the actual IP of the machine itself{{green}}"
+            Say "  and there is a debug profile open which acts as a proxy{{green}}"
+            Say "username: proxy password: proxy{{green}}"
+            Say "and since it's a special program, you don't need to be on an authorised IP to use it{{green}}"
+            Say "                    By Beater{{green}}"
+            Say "(b)ack to exploits menu                 - (s)ave file and go back to menu{{green}}"
+            Dim l3eugkey
+            l3eugkey = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+            If l3eugkey = "b" Then
+                Exit Sub
+            ElseIf l3eugkey = "s" Then
+                Say "____________________________________________________________________________________{{green}}"
+                Say ""
+                Say "     User: level3         -         Location : The UHB exploit         -         THC Rule!{{green}}"
+                Say "____________________________________________________________________________________{{green}}"
+                Say ""
+                Say "Will save UHB.exploit{{green}}"
+                Dim FData
+                FData = "From: thc-hq.com (24.53.123.5) Filename: UHB.exploit" & vbCrLf & _
+                        "UHB Login script exploit - Found by Beater" & vbCrLf & _
+                        "UHB have a stupid system where even if you have the username and password" & vbCrLf & _
+                        "you still have to be on a list of authorised IP addresses" & vbCrLf & _
+                        "however, the programmers are also morons" & vbCrLf & _
+                        "One of the 'authorised' IPs is the actual IP of the machine itself" & vbCrLf & _
+                        "  and there is a debug profile open which acts as a proxy" & vbCrLf & _
+                        "username: proxy password: proxy" & vbCrLf & _
+                        "and since it's a special program, you don't need to be on an authorised IP to use it" & vbCrLf & _
+                        "                    By Beater" & vbCrLf
+                RequestWriteFile FData
+                Say "Saved{{green}}"
+                Pause
+            End If
+        ElseIf l3egkey = "b" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+Sub Level3Menu()
+    While True
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "     User: level3         -         Location : main menu         -         THC Rule!{{green}}"
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say " e(x)ploits{{green}}"
+        Say " (l)evel up{{green}}"
+        Say " (s)ource code{{green}}"
+        Say " (e)xit{{green}}"
+        Dim l3gkey
+        l3gkey = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If l3gkey = "x" Then
+            Level3ExploitsMenu
+        ElseIf l3gkey = "l" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level3         -         Location : level up         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Dim pwInput
+            pwInput = TrimWithNewline(ReadLine("Please enter your password>{{green}}"))
+            If pwInput = "oohnasty" Then
+                Say "account: noname{{green}}"
+                Say "password: usermanual{{green}}"
+            Else
+                SaySlow 100, "Wrong!!!", "green"
+            End If
+            Pause
+        ElseIf l3gkey = "s" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "     User: level3         -         Location : source code         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            ' oohnasty as level up PW
+            ' noname as account
+            ' usermanual as password
+        ElseIf l3gkey = "e" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+If userinput = "level1" And passwd = "ultimate" Then
+    Level1Menu
+    Quit
+End If
+
+If userinput = "level2" And passwd = "cookbook" Then
+    Level2Menu
+    Quit
+End If
+
+If userinput = "level3" And passwd = "average" Then
+    Level3Menu
+    Quit
+End If
+
+SaySlow 100, "Wrong!!!", "green"
+Quit

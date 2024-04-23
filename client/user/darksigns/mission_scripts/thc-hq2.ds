@@ -1,0 +1,280 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub MessageBoardMenu()
+    While True
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "          User: noname         -         Location : General Discussion         -         THC Rule!{green}}"
+        Say "____________________________________________________________________________________{{green}}"
+        Say "User : guest - You may only read the messages in this section"
+        Say "(1) Title : Music - Started by : dewey"
+        Say "(2) Title : wtf - Started by : jpain"
+        Say "(3) Title : modding - Started by : dewey"
+        Say "(4) Title : outpost 0E0A ideas - Started by : gage"
+        Say "(5) Title : Palmer FileHosting hacked - Started by : beater"
+        Say "(x) Logout"
+        Dim getkey
+        getkey = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If getkey = "x" Then
+            Exit Sub
+        ElseIf getkey = "1" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: noname         -         Location : Music (gendisc)        -         THC Rule!{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Thread : Music{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 1/3/12 - User : dewey{{green}}"
+            Say "What music are you guys into?{{green}}"
+            Say "I enjoy mostly pop, bubblegum floor are great!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 1/3/12 - User : gage{{green}}"
+            Say "nu-hip-hop for me{{green}}"
+            Say "all though I don't mind some of the older (20th century) rap{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 2/3/12 - User : jpain{{green}}"
+            Say "What is it with you and moronic questions?{{green}}"
+            Say "this isn't some stupid chat message board{{green}}"
+            Say "this is the THC{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 2/3/12 - User : gage{{green}}"
+            Say "ignore jpain, he's an idiot{{green}}"
+            Say "he thinks he's some useful memember of the group yet all he provides is the{{green}}"
+            Say "computer and net liscence to host this site{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 2/3/12 - User : jpain{{green}}"
+            Say "screw you!{{green}}"
+            Say "You think you're so great{{green}}"
+            Say "half this stuff is modded by me{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 3/3/12 - User : gage{{green}}"
+            Say "shut up{{green}}"
+            Say "you're only in this group because the proper members are too paranoid{{green}}"
+            Say "to use their own computers{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Pause
+        ElseIf getkey = "2" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: noname         -         Location : wtf (gendisc)        -         THC Rule!{{green}}"
+            Say ""
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Thread : wtf{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 27/2/12 - User : jpain{{green}}"
+            Say "Why the fugg is my account downgraded{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 27/2/12 - User : hatred{{green}}"
+            Say "You aren't the only one who can mod this thing{{green}}"
+            Say "I borrowed some code from the noname/challenge levels{{green}}"
+            Say "Once you sort your account I'll up the grading{{green}}"
+            Say "you're too much of a security risk for a full account{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 28/2/12 - User : gage{{green}}"
+            Say "Like a Mario Brother I 0wned you{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 28/2/12 - User : jpain{{green}}"
+            Say "what?????{{green}}"
+            Say "what am I supposed to fix{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Pause
+        ElseIf getkey = "3" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: noname         -         Location : modding (gendisc)        -         THC Rule!{{green}}"
+            Say ""
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Thread : modding{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 26/2/12 - User : dewey{{green}}"
+            Say "Hi everyone, I'm new{{green}}"
+            Say "I was just wondering? You guys wrote this bbs{{green}}"
+            Say "can you mod it? I was hoping to use the software myslef{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 27/2/12 - User : jpain{{green}}"
+            Say "yes you can mod it. all though it does take some skill{{green}}"
+            Say "I added a cool new mod yesterday, because I have physical access to this computer{{green}}"
+            Say "I don't need a password{{green}}"
+            Say "all I do is enter my username and the program recognises where I'm coming from{{green}}"
+            Say "and bingo!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Pause
+        ElseIf getkey = "4" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: noname         -         Location : Outpost 0E0A ideas (gendisc)        -         THC Rule!{{green}}"
+            Say ""
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Thread : Outpost 0E0A ideas{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 25/2/12 - User : gage{{green}}"
+            Say "how about a proper thread for this stuff{{green}}"
+            Say "I'm working on a little virus which should ensure pain and suffering for them{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 25/2/12 - User : beater{{green}}"
+            Say "has anyone tried to hack their main servers{{green}}"
+            Say "delete their lists of users{{green}}"
+            Say "or even better, report them all{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 25/2/12 - User : gage{{green}}"
+            Say "their main servers are very well protected{{green}}"
+            Say "however I've found some sub servers to release my virus{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 26/2/12 - User : gage{{green}}"
+            Say "virus released!!!{{green}}"
+            Say "You can find all the info in the virus section{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Pause
+        ElseIf getkey = "5" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: noname         -         Location : Palmer Filehosting Hacked (gendisc)        -         THC Rule!{{green}}"
+            Say ""
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Thread : Palmer Filehosting Hacked{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 23/2/12 - User : beater{{green}}"
+            Say "!!!!!!!!!!!{{green}}"
+            Say "they've reported that they were broken into, hopefully it was some corporate{{green}}"
+            Say "mission for a hacker ring. several companies store important data there{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 23/2/12 - User : jpain{{green}}"
+            Say "is this important? {{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 23/2/12 - User : gage{{green}}"
+            Say "yes.{{green}}"
+            Say "we have accounts on those servers, containing some interesting projects{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 24/2/12 - User : beater{{green}}"
+            Say "it's in the news now (10:30pm){{green}}"
+            Say "goto channel 643{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 25/2/12 - User : hatred{{green}}"
+            Say "It's worse than we thought. I found how they got in and checked logs, our accounts were{{green}}"
+            Say "the ones accessed. Following back IP addresses I traced it to Outpost 0E0A, a hacker{{green}}"
+            Say "ring.{{green}}"
+            Say "I say, they've bitten off more than they can chew{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 25/2/12 - User : jpain{{green}}"
+            Say "how are we going to get them back? I vote we report all their users to the police{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Date : 25/2/12 - User : gage{{green}}"
+            Say "and how do you suggest that? have you tried to hack their main servers?{{green}}"
+            Say "anyway. I've made a proper thread for all this{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Pause
+        End If
+    Wend
+End Sub
+
+Sub JPChalMenu()
+    While True
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "          User: noname         -         Location : jpain's challenge for you        -         THC Rule!{green}}"
+        Say "____________________________________________________________________________________{{green}}"
+        Say "hey noname{{green}}"
+        Say "try my extra challenge. if you pass it you will receive a code word{{green}}"
+        Say "include that with your application and you may receive a higher chance of membership{{green}}"
+        Say "(s)ource code to challenge{{green}}"
+        Say "(c)hallenge{{green}}"
+        Say "(b)ack{{green}}"
+        Dim nnJkey
+        nnJkey = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If nnJkey = "b" Then
+            Exit Sub
+        ElseIf nnJkey = "s" Then
+            Say "Say ""!!!!!!!{{green}}"""
+            Pause
+        ElseIf nnJkey = "c" Then
+            Say "!!!!!!!{{green}}"
+            Pause
+        End If
+    Wend
+End Sub
+
+Sub NoNameMenu()
+    While True
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "          User: noname         -         Location : main menu         -         THC Rule!{green}}"
+        Say "____________________________________________________________________________________{{green}}"
+        Say "(w)hat am I doing here?"
+        Say "(a)pply for a position in THC"
+        Say "(m)essage boards"
+        Say "(j)pain's special challenge"
+        Say "(e)xit"
+        Dim nnGkey
+        nnGkey = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If nnGkey = "w" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: noname         -         Location : introduction         -         THC Rule!{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "you've beaten the challenges{{green}}"
+            Say "now you have the noname accounts{{green}}"
+            Say "you've proved that you might fit in THC{{green}}"
+            Say "why not apply for a position?{{green}}"
+            Say "and there are a few more tastes of what THC can offer, to keep you occupied{{green}}"
+            Pause
+        ElseIf nnGkey = "a" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: noname         -         Location : Apply to be in THC         -         THC Rule!{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Dim nnNick, nnEmail, nnOffer, nnEvidence
+            nnNick = QReadLine("Nick Name:{{green}}")
+            nnEmail = QReadLine("E-Mail Address:{{green}}")
+            nnOffer = QReadLine("Please list what you can offer us:{{green}}")
+            nnEvidence = QReadLine("List evidence for what you can offer us:{{green}}")
+            Say "Thank you - you may hear from us sometime{{green}}"
+            Pause
+        ElseIf nnGkey = "m" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: noname         -         Location : Message Board         -         THC Rule!{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "When you become a member you will have a special message board ID and password{{green}}"
+            Say "why not use the user and password guest to have a look round general chat{{green}}"
+            Dim nnMBUser, nnMBPass
+            nnMBUser = QReadLine("Message Board Username:{{green}}")
+            nnMBPass = QReadLine("Message Board Passwd:{{green}}")
+            If nnMBUser = "guest" And nnMBPass = "guest" Then
+                MessageBoardMenu
+            Else
+                SaySlow 100, "Wrong!!!", "green"
+                Pause
+                Exit Sub
+            End If
+        ElseIf nnGkey = "j" Then
+            JPChalMenu
+        ElseIf nnGkey = "e" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+Say "____________________________________________________________________________________{{green}}"
+Say ""
+Say "                                                                   The THC HQ{{green}}"
+Say "____________________________________________________________________________________{{green}}"
+
+Say "Login for noname acct.{{green}}"
+Dim userinput, passwd
+userinput = QReadLine("Username:")
+passwd = QReadLine("Password:")
+
+If userinput = "noname" And passwd = "usermanual" Then
+    NoNameMenu
+    Quit
+End If
+
+If userinput = "jpain" Or userinput = "beater" Or userinput = "gage" Or userinput = "hatred" Or userinput = "dewey" Then
+    Say "Real accounts can log in on port 300{{green}}"
+    Quit
+End If
+
+SaySlow 100, "Wrong!!!", "green"
+Quit
