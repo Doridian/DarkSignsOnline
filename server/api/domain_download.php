@@ -23,9 +23,6 @@ $res = $stmt->get_result();
 $row = $res->fetch_assoc();
 if (!empty($row)) {
 	$script = $row['code'];
-
-	$script = str_replace("\n", "*- -*", $script);
-	$script = str_replace("\r", "", $script);
 	die("$filename:$script");
 } else {
 	die("No Script Found: " . strtoupper($d) . ":$port");

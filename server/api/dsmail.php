@@ -4,37 +4,37 @@ require_once('function.php');
 
 print_returnwith('7000', -1);
 
+function filter_subject($subj) {
+	$idx = strpos($subj, "\r");
+	if ($idx !== false) {
+		$subj = substr($subj, 0, $idx);
+	}
+	$idx = strpos($subj, "\n");
+	if ($idx !== false) {
+		$subj = substr($subj, 0, $idx);
+	}
+	return $subj;
+}
+
 $action = $_REQUEST['action'];
 if ($action === 'inbox')
 {
 	$last = (int)$_REQUEST['last'];
-	$stmt = $db->prepare('SELECT dsmail.id AS id, from_user_tbl.username AS from_user, dsmail.subject AS subject, dsmail.message AS message, dsmail.time AS time FROM dsmail LEFT JOIN users from_user_tbl ON from_user_tbl.id = dsmail.from_user WHERE dsmail.to_user = ? AND dsmail.id > ? ORDER BY dsmail.id ASC');
+	$stmt = $db->prepare('SELECT id, from_addr, subject, message, time FROM dsmail WHERE to_user = ? AND id > ? ORDER BY id ASC');
 	$stmt->bind_param('ii', $user['id'], $last);
 	$stmt->execute();
 	$result = $stmt->get_result();
 	while ($mail = $result->fetch_assoc())
 	{
-		echo 'X_'.$mail['id'].':--:'.$mail['from_user'].':--:'.dso_b64_encode($mail['subject']).':--:'.dso_b64_encode($mail['message']).':--:'.date('d.m.Y H:i:s', $mail['time'])."\r\n";
+		echo 'X_'.$mail['id'].':--:'.$mail['from_addr'].':--:'.dso_b64_encode($mail['subject']).':--:'.dso_b64_encode($mail['message']).':--:'.date('d.m.Y H:i:s', $mail['time'])."\r\n";
 	}
 	exit;
 }
-/*else if ($action === 'outbox')
-{
-	$last = (int)$_REQUEST['last'];
-	$stmt = $db->prepare('SELECT dsmail.id AS id, to_user_tbl.username AS to_user, dsmail.subject AS subject, dsmail.message AS message, dsmail.time AS time FROM dsmail LEFT JOIN users to_user_tbl ON to_user_tbl.id = dsmail.to_user WHERE dsmail.from_user = ? AND dsmail.id > ? ORDER BY dsmail.id ASC');
-	$stmt->bind_param('ii', $user['id'], $last);
-	$stmt->execute();
-	$result = $stmt->get_result();
-	while ($mail = $result->fetch_assoc())
-	{
-		echo 'X_'.$mail['id'].':--:'.$mail['to_user'].':--:'.dso_b64_encode($mail['subject']).':--:'.dso_b64_encode($mail['message']).':--:'.$mail['time']."\r\n";
-	}
-	exit;
-}*/
 else if ($action === 'send')
 {
-	$from = $user['id'];
 	$to = $_REQUEST['to'];
+	$sub = filter_subject($_REQUEST['subject']);
+	$msg = $_REQUEST['message'];
 	$toArr = explode(',', $to);
 	
 	if (sizeof($toArr) > 10)
@@ -55,13 +55,48 @@ else if ($action === 'send')
 
 	$time = time();
 
+	$uEmail = $user['username'] . '@users';
 	foreach ($nameID AS $id)
 	{
-		$stmt = $db->prepare("INSERT INTO dsmail (from_user, to_user, subject, message, time) VALUES (?, ?, ?, ?, ?)");
-		$stmt->bind_param('iissi', $user['id'], $id, $sub, $msg, $time);
+		$stmt = $db->prepare("INSERT INTO dsmail (from_addr, to_user, subject, message, time) VALUES (?, ?, ?, ?, ?)");
+		$stmt->bind_param('sissi', $uEmail, $id, $sub, $msg, $time);
 		$stmt->execute();
 	}
 	die('success');
 }
+else if ($action === 'script_send_to_self')
+{
+	$server = $_REQUEST['server'];
+	if (empty($server)) {
+		$server = $user['username'] . '.usr';
+	}
+	$sInfo = getDomainInfo($server);
+	if ($sInfo === false) {
+		die_error('Invalid server');
+	}
+	
+	$from = $_REQUEST['from'];
+	$to = $user['id'];
+	$subject = filter_subject($_REQUEST['subject']);
+	$message = $_REQUEST['message'];
 
-die('No request sent');
+	$emlsplit = explode('@', $from);
+	if (sizeof($emlsplit) !== 2) {
+		die_error('Invalid email');
+	}
+
+	$dInfo = getDomainInfo($emlsplit[1]);
+	if ($dInfo === false || $dInfo['owner'] !== $sInfo['owner']) {
+		die_error('Server owner not matched');
+	}
+
+	if (preg_match('/[^a-zA-Z0-9_-]/', $emlsplit[0]) || strlen($emlsplit[0]) > 32) {
+		die_error('Invalid from name');
+	}
+
+	$time = time();
+	$stmt = $db->prepare("INSERT INTO dsmail (from_addr, to_user, subject, message, time) VALUES (?, ?, ?, ?, ?)");
+	$stmt->bind_param('sissi', $from, $to, $subject, $message, $time);
+	$stmt->execute() or die_error($db->error);
+}
+die_error('No request sent');

@@ -1126,9 +1126,10 @@ Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal sFileDa
     Dim HttpResponse As clsHttpResponse
     Set HttpResponse = WaitFor_Internal(GetDomain(Domain))
     Domain = HttpResponse.Response
-
+    
     Dim tempStrA As String
-    tempStrA = EncodeBase64Str(sFileData)
+    tempStrA = DSOCompileScript(sFileData, "dso://" & Domain & ":" & Port)
+    tempStrA = EncodeBase64Str(tempStrA)
 
     Dim PostData As String
     PostData = "port=" & EncodeURLParameter(Port) & _
@@ -1488,7 +1489,10 @@ Public Function DLOpen(ByVal Library As String)
         Exit Function
     End If
 
-    Include "/system/libs/" & Library & ".ds"
+    Dim SData As String
+    SData = GetFile("/system/libs/" & Library & ".ds")
+
+    SControl.AddCode SData
 End Function
 
 Public Function Run(ParamArray XArr() As Variant)
@@ -1924,10 +1928,22 @@ Public Function SpoofLocalConnectingIP(ByVal NewValue As String)
     PrivSpoofedLocalConnectingIP = NewValue
 End Function
 
+Public Function SendMailToUser(ByVal sFrom As String, ByVal sSubject As String, ByVal sMessage As String)
+    Dim ReqIdx As String
+    ReqIdx = DoDownloadAPI("dsmail.php", True, "action=script_send_to_self" & _
+                                                "&server=" & EncodeURLParameter(PrivServerIP) & _
+                                                "&from=" & EncodeURLParameter(sFrom) & _
+                                                "subject=" & EncodeURLParameter(sSubject) & _
+                                                "&message=" & EncodeURLParameter(sMessage), "")
+    WaitFor ReqIdx
+    SayCOMM "You got a new DSMail from " & sFrom
+End Function
+
 ' TODO: Synchronize mission from server first time it is read or written after client launch
 ' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
 ' maybe use client launch time VS file modify time?
+
 ' TODO: Hash storage fetch, like OpenHashData("abcdef0123456789"), will download to /system/hashstore/abcdef0123456789 if doesnt exist, verify actual data hash!
 ' TODO: Hash storage upload, like UploadHashData("abcdef0123456789", "data here"), server should verify hash before storing!
 ' TODO: DLOpenHash("abcdef0123456789") to open a library from the hash store
-' TODO: Allow scripts to send E-Mails from domains with the same owner (make user emails come from @users to make it easy to tell)
+

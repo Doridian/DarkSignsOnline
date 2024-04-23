@@ -152,16 +152,22 @@ def dso_regdomains():
 def dso_uploadscript():
     for server in servers:
         for port, script in server.ports.items():
-            print(f"PrintVar UPLOAD(\"{server.ip}\", {port}, \"/darksigns/mission_scripts/{script.name}.ds\")")
+            print(f"Say \"Uploading {script.name}.ds to {server.ip}:{port}\"")
+            print(f"Run \"UPLOAD\", \"{server.ip}\", {port}, \"/darksigns/mission_scripts/{script.name}.ds\"")
+            print(f"Say \"Uploaded {script.name}.ds to {server.ip}:{port}\"")
 
-    bPath = "remotefs"
-    for dom in listdir(bPath):
-        for f in listdir(path_join(bPath, dom)):
-            print(f"Run \"RemoteUpload\", \"{dom}\", \"{f}\", \"/darksigns/remotefs/{dom}/{f}\"")
+    # bPath = "remotefs"
+    # for dom in listdir(bPath):
+    #     for f in listdir(path_join(bPath, dom)):
+    #         print(f"Say \"Uploading {f} to {dom}\"")
+    #         print(f"Run \"RemoteUpload\", \"{dom}\", \"{f}\", \"/darksigns/remotefs/{dom}/{f}\"")
+    #         print(f"Say \"RemoteUploaded {f} to {dom}\"")
 
     bPath = "dso_specific"
     for scr in listdir(bPath):
         host, port = scr.removesuffix(".ds").split("___")
-        print(f"PrintVar UPLOAD(\"{host}\", {port}, \"/darksigns/dso_specific/{scr}\")")
+        print(f"Say \"Uploading {scr} to {host}:{port}\"")
+        print(f"Run \"UPLOAD\", \"{host}\", {port}, \"/darksigns/dso_specific/{scr}\"")
+        print(f"Say \"Uploaded {scr} to {host}:{port}\"")
 
 dso_uploadscript()

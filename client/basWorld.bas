@@ -391,28 +391,23 @@ Public Function EncodeURLParameter( _
     Optional ByVal SpacePlus As Boolean = True) As String
     
     Dim cchEscaped As Long
-    Dim hResult As Long
+    Dim HResult As Long
     
     If Url = "" Then
         EncodeURLParameter = ""
         Exit Function
     End If
-    
-    If Len(Url) > INTERNET_MAX_URL_LENGTH Then
-        Err.Raise &H8004D700, "URLUtility.URLEncode", _
-                  "URL parameter too long"
-    End If
-    
+
     cchEscaped = Len(Url)
     
     EncodeURLParameter = String$(cchEscaped, 0)
-    hResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
-    If hResult = E_POINTER Then
+    HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+    If HResult = E_POINTER Then
         EncodeURLParameter = String$(cchEscaped, 0)
-        hResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+        HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
     End If
 
-    If hResult <> S_OK Then
+    If HResult <> S_OK Then
         Err.Raise Err.LastDllError, "URLUtility.URLEncode", _
                   "System error"
     End If

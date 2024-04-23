@@ -95,13 +95,6 @@ Function ConsoleUnescape(Str)
     ConsoleUnescape = Replace(Str, ConsoleInvisibleChar, "")
 End Function
 
-Sub SendMailToUser(From, Subject, Body)
-    ' TODO: This needs to be implemented in VB6
-    Say "[DEBUG] E-Mail received from " & From
-    Say "[DEBUG] Subject: " & Subject
-    Say "[DEBUG] Body" & vbCrLf & Body
-End Sub
-
 Function QReadLine(Prompt)
     QReadLine = LCase(Trim(ReadLine(Prompt)))
 End Function

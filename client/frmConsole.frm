@@ -1103,9 +1103,7 @@ Private Sub txtPrivMsg_GotFocus()
 End Sub
 
 Private Sub txtPromptInput_LostFocus()
-    If txtPromptInput.Visible Then
-        txtPromptInput.SetFocus
-    End If
+    ' TODO: Maybe?
 End Sub
 
 'Private Sub txtStatus_DblClick()

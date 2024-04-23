@@ -4,4 +4,4 @@ Dim strContents, strDomain, strPort
 strDomain = ArgV(1)
 strPort = ArgV(2)
 strContents = Display(ArgV(3))
-Upload strDomain, strPort, CompileScript(strContents, "dso://" & strDomain & ":" & strPort, False)
+Upload strDomain, strPort, strContents
