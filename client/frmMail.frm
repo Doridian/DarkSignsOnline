@@ -84,7 +84,7 @@ Public Sub reloadInbox()
 
     Dim tmpFile As String
     On Error GoTo NoEntries
-    tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    tmpFile = GetFile("/system/mail.dat")
     On Error GoTo 0
 
     Dim AllResults() As String
@@ -123,7 +123,7 @@ Private Sub btnRefresh_Click()
 
     Dim tmpFile As String
     On Error GoTo NoEntries
-    tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    tmpFile = GetFile("/system/mail.dat")
     On Error GoTo 0
     
     Dim AllResults() As String
@@ -212,7 +212,7 @@ Private Sub inbox_DblClick()
     Dim tmpFile As String
     tmpFile = ""
     On Error Resume Next
-    tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    tmpFile = GetFile("/system/mail.dat")
     On Error GoTo 0
     
     Dim AllResults() As String
@@ -244,9 +244,9 @@ End Sub
 Private Sub markAsRead(k As String)
     Dim tmpFile As String
     On Error GoTo NoResults
-    tmpFile = GetFileUnsafe(App.Path & "/mail.dat")
+    tmpFile = GetFile("/system/mail.dat")
     On Error GoTo 0
-    
+
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbCrLf)
     For n = UBound(AllResults) To 0 Step -1
@@ -262,9 +262,8 @@ Private Sub markAsRead(k As String)
             End If
         End If
     Next n
-    
-    WriteFileUnsafe App.Path & "/mail.dat", Join(AllResults, vbCrLf)
-    
+
+    WriteFile "/system/mail.dat", Join(AllResults, vbCrLf)
 NoResults:
 End Sub
 

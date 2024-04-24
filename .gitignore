@@ -2,7 +2,7 @@
 /client/dist
 /logs
 /client.zip
-/client/mail.dat
+/client/user/system/mail.dat
 /client/user/downloads
 !/client/user/downloads/README.txt
 /client/user/home
