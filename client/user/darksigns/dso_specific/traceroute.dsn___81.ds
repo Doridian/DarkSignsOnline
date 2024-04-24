@@ -1,0 +1,64 @@
+Option Explicit
+
+DLOpen "termlib"
+
+If ArgC() < 1 Then
+    Err.Raise vbObjectError + 1110, , "Usage: connect traceroute.dsn 81 <hostname or IP address>"
+    Quit
+End If
+
+' Well, we dont have traceroutes in DSO, so this fakes them in for DS classic
+
+Function IsIP(sCand)
+    Dim sSplit
+    sSplit = Split(sCand, ".")
+    If UBound(sSplit) <> 3 Then
+        IsIP = False
+        Exit Function
+    End If
+    Dim j, sSpl, sNum
+    For j = 0 To 3
+        sSpl = sSplit(j)
+        If Not IsNumeric(sSpl) Then
+            IsIP = False
+            Exit Function
+        End If
+        sNum = CInt(sSpl)
+        If sNum < 0 Or sNum > 255 Then
+            IsIP = False
+            Exit Function
+        End If
+    Next
+    IsIP = True
+End Function
+
+Dim sIp, sInput
+sInput = Trim(ArgV(1))
+If IsIP(sInput) Then
+    sIp = sInput
+Else
+    sIp = WaitFor(GetIP(sInput))
+    If sIp = "" Then
+        Err.Raise vbObjectError + 1111, , "Failed to resolve IP address for " & sInput
+        Quit
+    End If
+End If
+
+Dim sTraceFile
+sTraceFile = sIp & ".trace"
+If IsLocal() Then
+    sTraceFile = RemoteView("traceroute.dsn", sTraceFile, 2)
+Else
+    sTraceFile = FileServer(sTraceFile, 2)
+End If
+Dim sTraceRes
+sTraceRes = ""
+On Error Resume Next
+sTraceRes = WaitFor(sTraceFile)
+On Error GoTo 0
+If sTraceRes = "" Then
+    Err.Raise vbObjectError + 1112, , "Traceroute failed."
+    Quit
+End If
+
+Say TrimWithNewline(sTraceRes)

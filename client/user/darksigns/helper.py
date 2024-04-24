@@ -180,4 +180,4 @@ def dso_upload_traceroutes():
             print(f"sTrace = sTrace & \"{trace}\" & vbCrLf")
         print(f"PrintVar RemoteWrite(\"traceroute.dsn\", \"{server.ip}.trace\", sTrace)")
 
-dso_upload_traceroutes()
+dso_uploadscript()

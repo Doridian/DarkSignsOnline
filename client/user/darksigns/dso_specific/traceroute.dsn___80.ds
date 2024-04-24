@@ -29,8 +29,8 @@ End Function
 
 Say "Welcome to DarkSigns traceroute service."
 Say "NEW: We now have an API service. You can request our traceroutes via:{{blue}}"
-Say "         SomeVar = WaitFor(RemoteView(""traceroute.dsn"", ""1.2.3.4.trace"", 2)){{green}}"
-Say "         Just remember to replace 1.2.3.4 with the IP you want to trace!{{blue}}"
+Say "         SomeVar = Fetch(""traceroute.dsn"", 81, ""1.2.3.4""){{green}}"
+Say "         Just remember to replace 1.2.3.4 with the IP or domain you want to trace!{{blue}}"
 Say ""
 Say "Please enter the IP address or domain you would like to traceroute to{{blue}}"
 Dim sInput
