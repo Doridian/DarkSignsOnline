@@ -67,9 +67,6 @@ Public Property Get ConsoleInvisibleChar() As String
 End Property
 
 Public Sub SetDisableFlashing(ByVal NewValue As Boolean)
-    If NewValue = DisableFlashing Then
-        Exit Sub
-    End If
     DisableFlashing = NewValue
     If NewValue Then
         RegSave "DisableFlashing", "true"
@@ -277,9 +274,9 @@ DontDraw:
         If Not DisableFlashing Then
             Dim HideLine As Boolean
             HideLine = False
-            If Console(ActiveConsole, n).Flash And Flash Then HideLine = True: UsedFlash = True
-            If Console(ActiveConsole, n).FlashFast And FlashFast Then HideLine = True: UsedFlash = True
-            If Console(ActiveConsole, n).FlashSlow And FlashSlow Then HideLine = True: UsedFlash = True
+            If Console(ActiveConsole, n).Flash Then HideLine = Flash: UsedFlash = True
+            If Console(ActiveConsole, n).FlashFast Then HideLine = FlashFast: UsedFlash = True
+            If Console(ActiveConsole, n).FlashSlow Then HideLine = FlashSlow: UsedFlash = True
             If HideLine Then
                 frmConsole.Print "  "
                 GoTo NextOne

@@ -121,6 +121,17 @@ Public Property Get ExternalEditor() As Boolean
     ExternalEditor = RegLoad("externaleditor", False)
 End Property
 
+Public Property Let DisableFlashing(ByVal NewValue As Boolean)
+    AssertLocalOnly
+
+    SayCOMM "Setting disable flashing = " & NewValue
+    SetDisableFlashing NewValue
+End Property
+
+Public Property Get DisableFlashing() As Boolean
+    DisableFlashing = basConsole.DisableFlashing
+End Property
+
 Public Property Get IsOutputDisabled() As Boolean
     IsOutputDisabled = PrivDisableOutput
 End Property
@@ -294,8 +305,8 @@ Public Function Cls()
     Clear
 End Function
 
-Public Function Delete(ByVal File As String)
-    Del File
+Public Function Delete(ByVal file As String)
+    Del file
 End Function
 
 Private Sub AddCustomDownload(ByVal ResIndex As Long)
@@ -352,11 +363,11 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
     Next
 End Sub
 
-Private Function DoDownloadAPI(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal ResponseType As String) As String
-    DoDownloadAPI = DoDownload(API_Server & API_Path & Url, UsePost, PostData, False, ResponseType)
+Private Function DoDownloadAPI(ByVal url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal ResponseType As String) As String
+    DoDownloadAPI = DoDownload(API_Server & API_Path & url, UsePost, PostData, False, ResponseType)
 End Function
 
-Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean, ByVal ResponseType As String) As String
+Private Function DoDownload(ByVal url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean, ByVal ResponseType As String) As String
     Dim ResIndex As Long
     DoDownload = ""
     For ResIndex = 1 To 99
@@ -376,7 +387,7 @@ Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal
 
     AddCustomDownload ResIndex
 
-    RunPage Url, PrivConsoleID, UsePost, PostData, ResIndex, NoAuth
+    RunPage url, PrivConsoleID, UsePost, PostData, ResIndex, NoAuth
     If NoAuth Then
         Yield
     End If
@@ -474,7 +485,7 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     Dim Res() As Variant
 
     Dim Attr As Long
-    Dim FileName As String
+    Dim filename As String
     Dim IsFirst As Boolean
     IsFirst = True
 
@@ -490,8 +501,8 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     
     Path = Path & "/"
     
-    FileName = FileSystem.DIR(Path, vbNormal + vbDirectory)
-    While FileName <> ""
+    filename = FileSystem.DIR(Path, vbNormal + vbDirectory)
+    While filename <> ""
         If IsFirst Then
             ReDim Res(0 To 0)
             IsFirst = False
@@ -499,13 +510,13 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
             ReDim Preserve Res(0 To UBound(Res) + 1)
         End If
 
-        Attr = GetAttr(Path & FileName)
+        Attr = GetAttr(Path & filename)
         If (Attr And vbDirectory) = vbDirectory Then
-            FileName = FileName & "/"
+            filename = filename & "/"
         End If
         
-        Res(UBound(Res)) = FileName
-        FileName = FileSystem.DIR()
+        Res(UBound(Res)) = filename
+        filename = FileSystem.DIR()
     Wend
 
     If IsFirst Then
@@ -519,7 +530,7 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     Yield
 End Function
 
-Public Function RESTART()
+Public Function restart()
     If PrivDisableOutput Then
         Yield
         Exit Function
@@ -529,11 +540,11 @@ Public Function RESTART()
     Yield
 End Function
 
-Public Function EDIT(ByVal File As String)
+Public Function EDIT(ByVal file As String)
     AssertLocalOnly
 
     Yield
-    EditFile ResolvePath(File), PrivConsoleID
+    EditFile ResolvePath(file), PrivConsoleID
     Yield
 End Function
 
@@ -561,15 +572,15 @@ Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1, Opt
     Yield
 End Function
 
-Public Function PrintVar(ParamArray Param() As Variant)
-    If UBound(Param) < 0 Then
+Public Function PrintVar(ParamArray param() As Variant)
+    If UBound(param) < 0 Then
         Say "No arguments to print{{orange}}"
         Exit Function
     End If
 
-    If LBound(Param) = UBound(Param) And VarType(Param(UBound(Param))) = vbString Then
+    If LBound(param) = UBound(param) And VarType(param(UBound(param))) = vbString Then
         Dim StrParam As String
-        StrParam = Param(LBound(Param))
+        StrParam = param(LBound(param))
         Dim PossibleReqIndex As Long
         PossibleReqIndex = ParseReqIDStr(StrParam)
         If PossibleReqIndex >= 0 Then
@@ -581,23 +592,23 @@ Public Function PrintVar(ParamArray Param() As Variant)
     End If
 
     Dim X As Long
-    For X = LBound(Param) To UBound(Param)
-        PrintVarInt Param(X), "", "ArgV(" & X & ") ", 0
+    For X = LBound(param) To UBound(param)
+        PrintVarInt param(X), "", "ArgV(" & X & ") ", 0
     Next X
 End Function
 
-Public Function PrintVarSingleIfSet(Param As Variant)
-    If VarType(Param) = vbEmpty Then
+Public Function PrintVarSingleIfSet(param As Variant)
+    If VarType(param) = vbEmpty Then
         Exit Function
     End If
 
-    PrintVar Param
+    PrintVar param
 End Function
 
-Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As String, ByVal Depth As String)
+Private Sub PrintVarInt(param As Variant, ByVal Prefix As String, ByVal index As String, ByVal Depth As String)
     Dim TypeName As String
 
-    Select Case (VarType(Param) And (Not vbArray))
+    Select Case (VarType(param) And (Not vbArray))
         Case vbBoolean:
             TypeName = "Boolean"
         Case vbByte:
@@ -636,24 +647,24 @@ Private Sub PrintVarInt(Param As Variant, ByVal Prefix As String, ByVal Index As
     
     Dim MainPrefix As String
     MainPrefix = Prefix
-    If Index <> "" Then
-        MainPrefix = MainPrefix & Index
+    If index <> "" Then
+        MainPrefix = MainPrefix & index
     End If
 
     Yield
-    If (VarType(Param) And vbArray) = vbArray Then
+    If (VarType(param) And vbArray) = vbArray Then
         Dim X As Long
         Dim XV As String
-        Say MainPrefix & "{{yellow}}Array of element type " & TypeName & " from " & LBound(Param) & " to " & UBound(Param)
+        Say MainPrefix & "{{yellow}}Array of element type " & TypeName & " from " & LBound(param) & " to " & UBound(param)
         Dim SubPrefix As String
         SubPrefix = "    " & Prefix
-        For X = LBound(Param) To UBound(Param)
+        For X = LBound(param) To UBound(param)
             Yield
-            PrintVarInt Param(X), SubPrefix, "(" & X & ") ", Depth + 1
+            PrintVarInt param(X), SubPrefix, "(" & X & ") ", Depth + 1
         Next X
     Else
         Dim StrParam As String
-        StrParam = "" & Param
+        StrParam = "" & param
         Dim StrPos As Long
         Dim HadCut As Boolean
         HadCut = False
@@ -793,31 +804,31 @@ Public Function ResolvePathRel(ByVal BasePath As String, ByVal Path As String) A
     End If
 End Function
 
-Public Function HttpRequest(ByVal Url As String, Optional ByVal PostData As String = "") As String
-     HttpRequest = DoDownload(Url, PostData <> "", PostData, True, "")
+Public Function HttpRequest(ByVal url As String, Optional ByVal PostData As String = "") As String
+     HttpRequest = DoDownload(url, PostData <> "", PostData, True, "")
 End Function
 
-Public Function URLEncode(ByVal Param As String) As String
-    URLEncode = basWorld.EncodeURLParameter(Param)
+Public Function URLEncode(ByVal param As String) As String
+    URLEncode = basWorld.EncodeURLParameter(param)
 End Function
 
-Public Function BoolToString(ByVal Param As String) As Boolean
-    Param = LCase(Trim(Param))
-    If Param = "on" Or Param = "true" Or Param = "yes" Then
+Public Function BoolToString(ByVal param As String) As Boolean
+    param = LCase(Trim(param))
+    If param = "on" Or param = "true" Or param = "yes" Then
         BoolToString = True
-    ElseIf Param = "off" Or Param = "false" Or Param = "no" Then
+    ElseIf param = "off" Or param = "false" Or param = "no" Then
         BoolToString = False
     Else
-        RaiseMiscError "Invalid value for boolean: " & Param
+        RaiseMiscError "Invalid value for boolean: " & param
     End If
 End Function
 
-Public Function DRAW(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As String)
+Public Function DRAW(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String)
     If PrivDisableOutput Then
         Yield
         Exit Function
     End If
-    DrawItUp YPos, RGBVal, Mode, PrivConsoleID
+    DrawItUp YPos, RGBVal, mode, PrivConsoleID
     Yield
 End Function
 
@@ -857,30 +868,30 @@ Public Function FormatKB(ToConvert As Long) As String
     FormatKB = basGeneral.FormatKB(ToConvert)
 End Function
 
-Public Function Overwrite(ByVal File As String, ByVal Content As String)
+Public Function Overwrite(ByVal file As String, ByVal Content As String)
     AssertLocalOnly
 
-    basGeneral.WriteFile ResolvePath(File), Content
+    basGeneral.WriteFile ResolvePath(file), Content
 End Function
 
-Public Function Append(ByVal File As String, ByVal Content As String)
+Public Function Append(ByVal file As String, ByVal Content As String)
     AssertLocalOnly
 
-    AppendFile ResolvePath(File), Content
+    AppendFile ResolvePath(file), Content
 End Function
 
-Public Function FileLen(ByVal File As String) As Long
+Public Function FileLen(ByVal file As String) As Long
     AssertLocalOnly
 
-    FileLen = basGeneral.FileLen(ResolvePath(File))
+    FileLen = basGeneral.FileLen(ResolvePath(file))
 End Function
 
-Public Function Del(ByVal File As String)
+Public Function Del(ByVal file As String)
     AssertLocalOnly
 
     Yield
-    File = ResolvePath(File)
-    Kill SafePath(File)
+    file = ResolvePath(file)
+    Kill SafePath(file)
 End Function
 
 Public Function Copy(ByVal Source As String, ByVal Destination As String)
@@ -925,14 +936,14 @@ Public Function RD(ByVal OldDir As String)
     RmDir SafePath(OldDir)
 End Function
 
-Public Function Cat(ByVal File As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
-    Cat = Display(File, StartLine, MaxLines)
+Public Function Cat(ByVal file As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    Cat = Display(file, StartLine, MaxLines)
 End Function
 
-Public Function Display(ByVal File As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+Public Function Display(ByVal file As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     AssertLocalOnly
 
-    File = ResolvePath(File)
+    file = ResolvePath(file)
 
     If StartLine < 1 Then
         StartLine = 1
@@ -949,7 +960,7 @@ Public Function Display(ByVal File As String, Optional ByVal StartLine As Long =
 
     Dim FF As Long
     FF = FreeFile
-    Open SafePath(File) For Input As #FF
+    Open SafePath(file) For Input As #FF
         While Not EOF(FF)
             CurLine = CurLine + 1
             
@@ -1238,29 +1249,29 @@ Private Function DomainFilesystemHelper(ByVal Domain As String, ByVal PostData A
     Yield
 End Function
 
-Public Function RemoteWrite(ByVal Domain As String, ByVal FileName As String, ByVal Contents As String) As String
+Public Function RemoteWrite(ByVal Domain As String, ByVal filename As String, ByVal Contents As String) As String
     AssertLocalOnly
 
-    RemoteWrite = DomainFilesystemHelper(Domain, "write=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents))
+    RemoteWrite = DomainFilesystemHelper(Domain, "write=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
 
-Public Function RemoteAppend(ByVal Domain As String, ByVal FileName As String, ByVal Contents As String) As String
+Public Function RemoteAppend(ByVal Domain As String, ByVal filename As String, ByVal Contents As String) As String
     AssertLocalOnly
 
-    RemoteAppend = DomainFilesystemHelper(Domain, "append=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents))
+    RemoteAppend = DomainFilesystemHelper(Domain, "append=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
-Public Function RemoteSafeAppend(ByVal Domain As String, ByVal FileName As String, ByVal Line As String) As String
+Public Function RemoteSafeAppend(ByVal Domain As String, ByVal filename As String, ByVal Line As String) As String
     AssertLocalOnly
 
-    RemoteSafeAppend = DomainFilesystemHelper(Domain, "safeappend=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Line))
+    RemoteSafeAppend = DomainFilesystemHelper(Domain, "safeappend=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Line))
 End Function
 
-Public Function RemoteDelete(ByVal Domain As String, ByVal FileName As String) As String
+Public Function RemoteDelete(ByVal Domain As String, ByVal filename As String) As String
     AssertLocalOnly
     
-    RemoteDelete = DomainFilesystemHelper(Domain, "delete=" & EncodeURLParameter(FileName))
+    RemoteDelete = DomainFilesystemHelper(Domain, "delete=" & EncodeURLParameter(filename))
 End Function
 
 Public Function RemoteDir(ByVal Domain As String) As String
@@ -1269,32 +1280,32 @@ Public Function RemoteDir(ByVal Domain As String) As String
     RemoteDir = DomainFilesystemHelper(Domain, "dir=/", "lines")
 End Function
 
-Public Function RemoteView(ByVal Domain As String, ByVal FileName As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
-    RemoteView = DomainFilesystemHelper(Domain, "fileserver=" & EncodeURLParameter(FileName) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
+Public Function RemoteView(ByVal Domain As String, ByVal filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    RemoteView = DomainFilesystemHelper(Domain, "fileserver=" & EncodeURLParameter(filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
 End Function
 
-Public Function ServerWrite(ByVal FileName As String, ByVal Contents As String) As String
+Public Function ServerWrite(ByVal filename As String, ByVal Contents As String) As String
     AssertRemoteOnly
 
-    ServerWrite = DomainFilesystemHelper(ServerDomain, "write=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents))
+    ServerWrite = DomainFilesystemHelper(ServerDomain, "write=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
-Public Function ServerAppend(ByVal FileName As String, ByVal Contents As String) As String
+Public Function ServerAppend(ByVal filename As String, ByVal Contents As String) As String
     AssertRemoteOnly
 
-    ServerAppend = DomainFilesystemHelper(ServerDomain, "append=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents))
+    ServerAppend = DomainFilesystemHelper(ServerDomain, "append=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
-Public Function ServerSafeAppend(ByVal FileName As String, ByVal Line As String) As String
+Public Function ServerSafeAppend(ByVal filename As String, ByVal Line As String) As String
     AssertRemoteOnly
 
-    ServerSafeAppend = DomainFilesystemHelper(ServerDomain, "safeappend=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Line))
+    ServerSafeAppend = DomainFilesystemHelper(ServerDomain, "safeappend=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Line))
 End Function
 
-Public Function ServerDelete(ByVal FileName As String) As String
+Public Function ServerDelete(ByVal filename As String) As String
     AssertRemoteOnly
     
-    ServerDelete = DomainFilesystemHelper(ServerDomain, "delete=" & EncodeURLParameter(FileName))
+    ServerDelete = DomainFilesystemHelper(ServerDomain, "delete=" & EncodeURLParameter(filename))
 End Function
 
 Public Function ServerDir() As String
@@ -1303,14 +1314,14 @@ Public Function ServerDir() As String
     ServerDir = DomainFilesystemHelper(ServerDomain, "dir=/", "lines")
 End Function
 
-Public Function ServerView(ByVal FileName As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+Public Function ServerView(ByVal filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     AssertRemoteOnly
     
-    ServerView = DomainFilesystemHelper(ServerDomain, "fileserver=" & EncodeURLParameter(FileName) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
+    ServerView = DomainFilesystemHelper(ServerDomain, "fileserver=" & EncodeURLParameter(filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
 End Function
 
-Public Function FileServer(ByVal FileName As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
-    FileServer = ServerView(FileName, StartLine, MaxLines)
+Public Function FileServer(ByVal filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    FileServer = ServerView(filename, StartLine, MaxLines)
 End Function
 
 Public Function MyDomains() As String
@@ -1802,31 +1813,31 @@ Public Function DecodeBase64Str(ByVal strData As String) As String
     DecodeBase64Str = basConsole.DecodeBase64Str(strData)
 End Function
 
-Private Function WriteINI_Internal(ByVal File As String, ByVal Section As String, ByVal Key As String, ByVal Value As String)
+Private Function WriteINI_Internal(ByVal file As String, ByVal Section As String, ByVal key As String, ByVal value As String)
     Yield
-    WritePrivateProfileString Section, Key, Value, SafePath(File)
+    WritePrivateProfileString Section, key, value, SafePath(file)
     Yield
 End Function
 
-Private Function ReadINI_Internal(ByVal File As String, ByVal Section As String, ByVal Key As String) As String
+Private Function ReadINI_Internal(ByVal file As String, ByVal Section As String, ByVal key As String) As String
     Yield
     Dim Result As String * 4096
     Dim ResultLen As Long
-    ResultLen = GetPrivateProfileString(Section, Key, "", Result, 4096, SafePath(File))
+    ResultLen = GetPrivateProfileString(Section, key, "", Result, 4096, SafePath(file))
     ReadINI_Internal = Left(Result, ResultLen)
     Yield
 End Function
 
-Public Function WriteINI(ByVal File As String, ByVal Section As String, ByVal Key As String, ByVal Value As String)
+Public Function WriteINI(ByVal file As String, ByVal Section As String, ByVal key As String, ByVal value As String)
     AssertLocalOnly
 
-    WriteINI_Internal ResolvePath(File), Section, Key, Value
+    WriteINI_Internal ResolvePath(file), Section, key, value
 End Function
 
-Public Function ReadINI(ByVal File As String, ByVal Section As String, ByVal Key As String, ByVal Value As String) As String
+Public Function ReadINI(ByVal file As String, ByVal Section As String, ByVal key As String, ByVal value As String) As String
     AssertLocalOnly
 
-    ReadINI = ReadINI_Internal(ResolvePath(File), Section, Key)
+    ReadINI = ReadINI_Internal(ResolvePath(file), Section, key)
 End Function
 
 Public Function GetMissionFile(ByVal MissionID As String)
@@ -1836,12 +1847,12 @@ Public Function GetMissionFile(ByVal MissionID As String)
     GetMissionFile = "/system/missions/" & PrivScriptOwner & "_" & MissionID & ".ini"
 End Function
 
-Public Function GetMissionData(ByVal MissionID As String, ByVal Section As String, ByVal Key As String) As String
-    GetMissionData = ReadINI_Internal(GetMissionFile(MissionID), Section, Key)
+Public Function GetMissionData(ByVal MissionID As String, ByVal Section As String, ByVal key As String) As String
+    GetMissionData = ReadINI_Internal(GetMissionFile(MissionID), Section, key)
 End Function
 
-Public Function SetMissionData(ByVal MissionID As String, ByVal Section As String, ByVal Key As String, ByVal Value As String) As String
-    WriteINI_Internal GetMissionFile(MissionID), Section, Key, Value
+Public Function SetMissionData(ByVal MissionID As String, ByVal Section As String, ByVal key As String, ByVal value As String) As String
+    WriteINI_Internal GetMissionFile(MissionID), Section, key, value
 End Function
 
 Public Function TrimWithNewline(ByVal InputStr As String) As String
@@ -1859,17 +1870,17 @@ Public Function RequestReadFile() As String
     End If
 
     While True
-        Dim FileName As String
-        FileName = Trim(ReadLine("Filename (empty to cancel)?"))
-        If FileName = "" Then
+        Dim filename As String
+        filename = Trim(ReadLine("Filename (empty to cancel)?"))
+        If filename = "" Then
             RaiseMiscError "User cancelled file request"
             Exit Function
         End If
-        FileName = ResolvePath(FileName)
-        If Not FileExists(FileName) Then
+        filename = ResolvePath(filename)
+        If Not FileExists(filename) Then
             Say "{{red}}File not found. Please choose an existing file."
         Else
-            RequestReadFile = basGeneral.GetFile(FileName)
+            RequestReadFile = basGeneral.GetFile(filename)
             Exit Function
         End If
     Wend
@@ -1884,17 +1895,17 @@ Public Function RequestWriteFile(ByVal Data As String)
     End If
 
     While True
-        Dim FileName As String
-        FileName = Trim(ReadLine("Filename (empty to cancel)?"))
-        If FileName = "" Then
+        Dim filename As String
+        filename = Trim(ReadLine("Filename (empty to cancel)?"))
+        If filename = "" Then
             RaiseMiscError "User cancelled file request"
             Exit Function
         End If
-        FileName = ResolvePath(FileName)
-        If FileExists(FileName) Then
+        filename = ResolvePath(filename)
+        If FileExists(filename) Then
             Say "{{red}}File already exists. Please choose a different filename."
         Else
-            basGeneral.WriteFile FileName, Data
+            basGeneral.WriteFile filename, Data
             Exit Function
         End If
     Wend
