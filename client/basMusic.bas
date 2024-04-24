@@ -1,16 +1,21 @@
 Attribute VB_Name = "basMusic"
 Option Explicit
 
+Private Declare Function mciSendString Lib "winmm" Alias "mciSendStringA" (ByVal _
+    lpstrCommand As String, ByVal lpstrReturnString As String, _
+    ByVal uReturnLength As Long, ByVal hwndCallback As Long) As Long
+
 Private MusicFiles() As String
 Public MusicFileIndex As Long
 
 Public Sub StopMusic()
-    frmConsole.mmMusic.Command = "Stop"
-    frmConsole.mmMusic.Command = "Close"
+    mciSendString "close dsomusic", vbNullString, 0, 0
 End Sub
 
 Public Sub CheckMusic()
-    If frmConsole.mmMusic.Mode = mciModePlay Then
+    Dim MusicStatus As String * 128
+    mciSendString "status dsomusic mode", MusicStatus, Len(MusicStatus), 0
+    If LCase(Left(MusicStatus, 7)) = "playing" Then
         Exit Sub
     End If
 
@@ -46,10 +51,8 @@ Public Sub CheckMusic()
     SayCOMM "Next track: " & tmpFileName
 
     StopMusic
-    DoEvents
-    frmConsole.mmMusic.FileName = tmpFile
-    frmConsole.mmMusic.Command = "Open"
-    frmConsole.mmMusic.Command = "Play"
+    mciSendString "open """ & tmpFile & """ type mpegvideo alias dsomusic", vbNullString, 0, 0
+    mciSendString "play dsomusic", vbNullString, 0, 0
 End Sub
 
 Public Sub NextMusicIndex()

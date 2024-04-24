@@ -1,5 +1,4 @@
 VERSION 5.00
-Object = "{C1A8AF28-1257-101B-8FB0-0020AF039CA3}#1.1#0"; "mci32.Ocx"
 Begin VB.Form frmConsole 
    AutoRedraw      =   -1  'True
    BackColor       =   &H001B1410&
@@ -27,18 +26,6 @@ Begin VB.Form frmConsole
    ScaleHeight     =   9705
    ScaleWidth      =   11475
    StartUpPosition =   3  'Windows Default
-   Begin MCI.MMControl mmMusic 
-      Height          =   330
-      Left            =   480
-      TabIndex        =   33
-      Top             =   9120
-      Visible         =   0   'False
-      Width           =   3540
-      _ExtentX        =   6244
-      _ExtentY        =   582
-      _Version        =   393216
-      BorderStyle     =   0
-   End
    Begin VB.TextBox txtPromptInput 
       Appearance      =   0  'Flat
       BackColor       =   &H00000000&
