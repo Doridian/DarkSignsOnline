@@ -131,9 +131,7 @@ End Function
 
 Public Function VBEscapeSimpleQuoted(ByVal Str As String, Optional ByVal ForceQuotes As Boolean = False) As String
     If Not ForceQuotes Then
-        Dim lStr As String
-        lStr = LCase(Str)
-        If lStr = "true" Or lStr = "false" Or lStr = "null" Or lStr = "nothing" Or IsNumeric(Str) Then
+        If IsKeyword(Str) Or IsNumeric(Str) Then
             VBEscapeSimpleQuoted = Str
             Exit Function
         End If
@@ -244,19 +242,25 @@ Public Function ParseCommandLine(ByVal tmpS As String, ByRef OptionDScript As Bo
     End If
 End Function
 
+Public Function IsKeyword(ByVal Candidate As String) As Boolean
+    Dim lCandidate As String
+    lCandidate = LCase(Candidate)
+    IsKeyword = (lCandidate = "true" Or lCandidate = "false" Or lCandidate = "null" Or lCandidate = "nothing")
+End Function
+
 Public Function IsValidVarName(ByVal Candidate As String) As Boolean
     If Candidate = "" Then
         IsValidVarName = False
         Exit Function
     End If
 
-    Dim lCandidate As String
-    lCandidate = LCase(Candidate)
-    If lCandidate = "true" Or lCandidate = "false" Or lCandidate = "null" Or lCandidate = "nothing" Then
+    If IsKeyword(Candidate) Then
         IsValidVarName = False
         Exit Function
     End If
 
+    Dim lCandidate As String
+    lCandidate = LCase(Candidate)
     If IsNumeric(Candidate) Then
         IsValidVarName = False
         Exit Function
@@ -471,17 +475,9 @@ CommandForNext:
     End If
 
     ' First, check if there is a command for it in /system/commands
-    Dim ResolvedCommand As String
     Dim CommandNeedFirstComma As Boolean
-
-    If AllowCommands Then
-        ResolvedCommand = ResolveCommand(0, Command)
-    Else
-        ResolvedCommand = ""
-    End If
-
-    If ResolvedCommand <> "" Then
-        ParseCommandLineInt = "Call Run(""" & ResolvedCommand & """"
+    If AllowCommands And ((ResolveCommand(0, Command) <> "") Or ((Not IsKeyword(Command)) And (Not IsValidVarName(Command)))) Then
+        ParseCommandLineInt = "Call Run(""" & Command & """"
         CommandNeedFirstComma = True
     Else
         ParseCommandLineInt = "PrintVarSingleIfSet " & Command & "("
