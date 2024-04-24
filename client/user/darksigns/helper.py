@@ -150,18 +150,18 @@ def dso_regdomains():
     
 # Call this function to generate a script to upload all the DSO scripts to all the servers...
 def dso_uploadscript():
-    for server in servers:
-        for port, script in server.ports.items():
-            print(f"Say \"Uploading {script.name}.ds to {server.ip}:{port}\"")
-            print(f"Run \"UPLOAD\", \"{server.ip}\", {port}, \"/darksigns/mission_scripts/{script.name}.ds\"")
-            print(f"Say \"Uploaded {script.name}.ds to {server.ip}:{port}\"")
+    # for server in servers:
+    #     for port, script in server.ports.items():
+    #         print(f"Say \"Uploading {script.name}.ds to {server.ip}:{port}\"")
+    #         print(f"Run \"UPLOAD\", \"{server.ip}\", {port}, \"/darksigns/mission_scripts/{script.name}.ds\"")
+    #         print(f"Say \"Uploaded {script.name}.ds to {server.ip}:{port}\"")
 
-    bPath = "remotefs"
-    for dom in listdir(bPath):
-        for f in listdir(path_join(bPath, dom)):
-            print(f"Say \"Uploading {f} to {dom}\"")
-            print(f"Run \"RemoteUpload\", \"{dom}\", \"{f}\", \"/darksigns/remotefs/{dom}/{f}\"")
-            print(f"Say \"RemoteUploaded {f} to {dom}\"")
+    # bPath = "remotefs"
+    # for dom in listdir(bPath):
+    #     for f in listdir(path_join(bPath, dom)):
+    #         print(f"Say \"Uploading {f} to {dom}\"")
+    #         print(f"Run \"RemoteUpload\", \"{dom}\", \"{f}\", \"/darksigns/remotefs/{dom}/{f}\"")
+    #         print(f"Say \"RemoteUploaded {f} to {dom}\"")
 
     bPath = "dso_specific"
     for scr in listdir(bPath):
@@ -179,5 +179,20 @@ def dso_upload_traceroutes():
         for trace in server.trace:
             print(f"sTrace = sTrace & \"{trace}\" & vbCrLf")
         print(f"PrintVar RemoteWrite(\"traceroute.dsn\", \"{server.ip}.trace\", sTrace)")
+
+def dso_upload_ipscans():
+    print("Dim sScan")
+    print(f"sScan = \"allowlist=fileserver\" & vbCrLf")
+    for server in servers:
+        print(f"sScan = sScan & \"{server.ip}\" & vbCrLf")
+    print(f"PrintVar RemoteWrite(\"ipscan.dsn\", \"ip.list\", sScan)")
+
+def dso_upload_portscans():
+    print("Dim sScan")
+    for server in servers:
+        print(f"sScan = \"allowlist=fileserver\" & vbCrLf")
+        for port, dsc in server.ports.items():
+            print(f"sScan = sScan & \"{port}={dsc.name}\"  & vbCrLf")
+        print(f"PrintVar RemoteWrite(\"portscan.dsn\", \"{server.ip}.ports\", sScan)")
 
 dso_uploadscript()

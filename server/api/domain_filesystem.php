@@ -188,7 +188,7 @@ if (!empty($dir)) {
 	verify_keycode('', 'dir', true);
 
 	$stmt = $db->prepare('SELECT filename FROM domain_files WHERE domain = ?');
-	$stmt->bind_param('is', $dInfo['id']);
+	$stmt->bind_param('i', $dInfo['id']);
 	$stmt->execute();
 	$res = $stmt->get_result();
 	while ($row = $res->fetch_assoc()) {
