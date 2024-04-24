@@ -6,6 +6,7 @@ Public MusicFileIndex As Long
 
 Public Sub StopMusic()
     frmConsole.mmMusic.Command = "Stop"
+    frmConsole.mmMusic.Command = "Close"
 End Sub
 
 Public Sub CheckMusic()
@@ -45,6 +46,7 @@ Public Sub CheckMusic()
     SayCOMM "Next track: " & tmpFileName
 
     StopMusic
+    DoEvents
     frmConsole.mmMusic.FileName = tmpFile
     frmConsole.mmMusic.Command = "Open"
     frmConsole.mmMusic.Command = "Play"
