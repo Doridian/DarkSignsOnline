@@ -6,13 +6,15 @@ Public MusicFileIndex As Long
 Private BassChannel As Long
 Private BassAllowPlay As Boolean
 
+Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal length As Long)
+
 Public Sub LoadMusic()
     If BassAllowPlay Then
         Exit Sub
     End If
     BassAllowPlay = True
     BASS_Init -1, 44100, 0, frmConsole.hWnd, 0
-    HandleBassError
+    HandleBassError True
 End Sub
 
 Public Sub UnloadMusic()
@@ -28,9 +30,12 @@ Public Sub StopMusic()
     End If
 End Sub
 
-Private Sub HandleBassError()
+Private Sub HandleBassError(Optional ByVal IgnoreAlready As Boolean = False)
     Dim BErr As Long
     BErr = BASS_ErrorGetCode()
+    If BErr = BASS_ERROR_ALREADY And IgnoreAlready Then
+        Exit Sub
+    End If
     If BErr <> BASS_OK Then
         Err.Raise vbObjectError + 1313, , "BASS error code: " & BErr
     End If
@@ -67,15 +72,50 @@ Public Sub CheckMusic()
 
     Dim tmpFileName As String
     tmpFileName = MusicFiles(MusicFileIndex)
-    SayCOMM "Next track: " & tmpFileName
 
     BassChannel = BASS_StreamCreateFile(False, StrPtr(SafePath("/home/music/" & tmpFileName)), 0, 0, BASS_ASYNCFILE + BASS_STREAM_AUTOFREE)
     HandleBassError
+    Dim TrackTitle As String, TrackArtist As String
+    TrackTitle = ""
+    TrackArtist = ""
+
+    Dim TagPtr As Long
+    TagPtr = BASS_ChannelGetTags(BassChannel, BASS_TAG_ID3)
+    If TagPtr <> 0 Then
+        Dim TagStruct As TAG_ID3
+        Call CopyMemory(TagStruct, ByVal TagPtr, Len(TagStruct))
+        TrackTitle = FixCStr(TagStruct.title)
+        TrackArtist = FixCStr(TagStruct.artist)
+    End If
+
+    Dim SongName As String
+    If TrackTitle <> "" Then
+        If TrackArtist <> "" Then
+            SongName = TrackTitle & " - " & TrackArtist
+        Else
+            SongName = TrackTitle
+        End If
+    Else
+        SongName = "Unknown"
+    End If
+
+    SayCOMM "Next track: " & SongName & " (" & tmpFileName & ")"
+
     BASS_ChannelSetSync BassChannel, BASS_SYNC_ONETIME + BASS_SYNC_FREE, 0, AddressOf OnMusicEnd, 0
     HandleBassError
     BASS_ChannelPlay BassChannel, False
     HandleBassError
 End Sub
+
+Private Function FixCStr(ByVal InputStr As String) As String
+    Dim StrLen As Long
+    StrLen = InStr(InputStr, Chr(0))
+    If StrLen <= 0 Then
+        FixCStr = InputStr
+        Exit Function
+    End If
+    FixCStr = Left(InputStr, StrLen - 1)
+End Function
 
 Public Sub OnMusicEnd(ByVal Handle As Long, ByVal Channel As Long, ByVal Data As Long, ByVal User As Long)
     If Handle = BassChannel Or Channel = BassChannel Then

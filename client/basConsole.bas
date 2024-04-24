@@ -53,15 +53,30 @@ Public RecentCommands(1 To 4, 0 To 99) As String
 Public CurrentPromptVisible(1 To 4) As Boolean
 
 Public yDiv As Integer  'the amount of vertical space between each console line
+Public DisableFlashing As Boolean
 
 Public Const DrawDividerWidth = 24
 Public Const Max_Font_Size = 144
 Public Const ConsoleXSpacing = 360
 Public Const ConsoleXSpacingIndent = 960
 
+Public ConsoleLastRenderFlash As Boolean
+
 Public Property Get ConsoleInvisibleChar() As String
     ConsoleInvisibleChar = Chr(7)
 End Property
+
+Public Sub SetDisableFlashing(ByVal NewValue As Boolean)
+    If NewValue = DisableFlashing Then
+        Exit Sub
+    End If
+    DisableFlashing = NewValue
+    If NewValue Then
+        RegSave "DisableFlashing", "true"
+    Else
+        RegSave "DisableFlashing", "false"
+    End If
+End Sub
 
 Public Sub AddToRecentCommands(ByVal s As String)
     If Trim(s) = "" Then Exit Sub
@@ -170,6 +185,9 @@ Public Sub Print_Console()
 
     frmConsole.Cls
 
+    Dim UsedFlash As Boolean
+    UsedFlash = False
+
     Dim addOn As Long, propertySpace As String
     addOn = ConsoleScrollInt(ActiveConsole) * 2400
     printHeight = frmConsole.Height - 840 + addOn
@@ -189,8 +207,9 @@ Public Sub Print_Console()
             LoadingSpinner = 1
         End If
         frmConsole.Print "Loading... " & Mid(LoadingSpinnerAnim, LoadingSpinner, 1)
+        UsedFlash = True
     End If
-    
+
     Dim ConsumedInputPrompt As Boolean
     ConsumedInputPrompt = False
 
@@ -255,14 +274,16 @@ DontDraw:
 
         tmpS = Console(ActiveConsole, n).Caption
 
-        Dim HideLine As Boolean
-        HideLine = False
-        If Console(ActiveConsole, n).Flash = True And Flash = True Then HideLine = True
-        If Console(ActiveConsole, n).FlashFast = True And FlashFast = True Then HideLine = True
-        If Console(ActiveConsole, n).FlashSlow = True And FlashSlow = True Then HideLine = True
-        If HideLine Then
-            frmConsole.Print "  "
-            GoTo NextOne
+        If Not DisableFlashing Then
+            Dim HideLine As Boolean
+            HideLine = False
+            If Console(ActiveConsole, n).Flash And Flash Then HideLine = True: UsedFlash = True
+            If Console(ActiveConsole, n).FlashFast And FlashFast Then HideLine = True: UsedFlash = True
+            If Console(ActiveConsole, n).FlashSlow And FlashSlow Then HideLine = True: UsedFlash = True
+            If HideLine Then
+                frmConsole.Print "  "
+                GoTo NextOne
+            End If
         End If
 
         frmConsole.CurrentX = ConsoleXSpacing
@@ -286,7 +307,7 @@ DontDraw:
         End If
 
         If n = 1 And CurrentPromptVisible(ActiveConsole) And Not frmConsole.ChatBox.Visible Then
-            frmConsole.txtPromptInput.Top = frmConsole.CurrentY
+            frmConsole.txtPromptInput.top = frmConsole.CurrentY
             frmConsole.txtPromptInput.Left = frmConsole.CurrentX + frmConsole.lfont.Width
             frmConsole.txtPromptInput.Height = frmConsole.lfont.Height
             frmConsole.txtPromptInput.Width = frmConsole.Width - frmConsole.txtPromptInput.Left
@@ -306,6 +327,8 @@ ExitLoop:
     If Not ConsumedInputPrompt Then
         frmConsole.txtPromptInput.Visible = False
     End If
+
+    ConsoleLastRenderFlash = UsedFlash
 End Sub
 
 

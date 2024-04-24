@@ -793,6 +793,8 @@ Public Sub setConnected(value As Boolean)
 End Sub
 
 Private Sub Form_Load()
+    basConsole.DisableFlashing = (RegLoad("DisableFlashing", "false") = "true")
+
     modBass.BASSLoadDLL
     basMusic.LoadMusic
     basCompression.ZstdInit
@@ -807,7 +809,7 @@ Private Sub Form_Load()
 
     curMsg = 0
     connected = False
-    chatToStatus = RegLoad("ChatView", False)
+    chatToStatus = (RegLoad("ChatView", "false") = "true")
     ActiveConsole = 1
     MusicFileIndex = -1
     
@@ -1025,17 +1027,23 @@ End Sub
 
 Private Sub tmrFlash_Timer()
     FlashCounter = FlashCounter + 1
-    
-    FlashFast = Not (FlashFast)
-    If FlashCounter Mod 2 = 1 Then Flash = Not (Flash)
-    If FlashCounter Mod 5 = 1 Then FlashSlow = Not (FlashSlow)
 
     LoadingSpinner = LoadingSpinner + 1
     If LoadingSpinner > Len(LoadingSpinnerAnim) Then
         LoadingSpinner = 1
     End If
+    
+    FlashFast = Not FlashFast
+    If FlashCounter Mod 2 = 1 Then Flash = Not Flash
+    If FlashCounter Mod 5 = 1 Then FlashSlow = Not FlashSlow
+    
+    If FlashCounter >= 100 Then
+        FlashCounter = 0
+    End If
 
-    frmConsole.QueueConsoleRender
+    If ConsoleLastRenderFlash Then
+        frmConsole.QueueConsoleRender
+    End If
 End Sub
 
 
@@ -1564,11 +1572,11 @@ End Sub
 Public Sub ChatView(ByVal enable As Boolean)
     If enable Then
         chatToStatus = True
-        RegSave "CHATVIEW", "True"
+        RegSave "CHATVIEW", "true"
         SayCOMM "Chatview is now enabled."
     Else
         chatToStatus = False
-        RegSave "CHATVIEW", False
+        RegSave "CHATVIEW", "false"
         SayCOMM "Chatview is now disabled."
     End If
 End Sub
