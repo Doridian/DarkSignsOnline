@@ -5,8 +5,20 @@ DLOpen "termlib"
 Dim HasWelcome
 HasWelcome = BoolMissionProgress("DS", "has_welcome")
 
+Sub RemindScanning()
+    Say ""
+    Say "DSO does not have scans the same way the original DarkSigns does (and requires){{orange}}"
+    Say "You can use the following tools to make up for the lack of tooling in DSO:{{orange}}"
+    Say "tracert/traceroute: connect traceroute.dsn 80{{yellow}}"
+    Say "portscan/scan/nmap: connect portscan.dsn 80{{yellow}}"
+    Say "ipscan: connect ipscan.dsn 80{{yellow}}"
+    Say "All of these also run services for script usage on port 81, documented on the port 80 interface{{blue}}"
+    Say ""
+End Sub
+
 If HasWelcome Then
     Say "You are already part of the classic DS storyline!{{yellow}}"
+    RemindScanning
     Quit
 End If
 
@@ -33,3 +45,6 @@ SendMailToUser "terminal@darksigns.com", "Training Mission", "Mission Objective:
     "Dark Signs Administration"
 
 BoolSetMissionProgress "DS", "has_welcome"
+
+RemindScanning
+Quit

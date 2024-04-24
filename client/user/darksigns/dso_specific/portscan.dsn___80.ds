@@ -31,7 +31,8 @@ Say "Welcome to DarkSigns portscan service."
 Say "NEW: We now have an API service. You can request our port scans via:{{blue}}"
 Say "         SomeVar = Fetch(""portscan.dsn"", 81, ""1.2.3.4"", 1, 1024){{green}}"
 Say "         Just remember to replace 1.2.3.4 with the IP or domain you want to trace!{{blue}}"
-Say "         And of course 1 and 1024 with the port range you want"
+Say "         And of course 1 and 1024 with the port range you want{{blue}}"
+Say "         Results are PORT=APP (like 80=http){{blue}}"
 Say ""
 Say "Please enter the IP address or domain and port range you would like to scan{{blue}}"
 Dim sInput
@@ -52,10 +53,6 @@ Else
     Say "Resolved to IP: " & ConsoleEscape(sIp) & "{{blue}}"
 End If
 
-Dim sPortA, sPortB
-sPortA = QReadLine("Starting port>")
-sPortB = QReadLine("Ending port>")
-
 Dim sScanFile
 sScanFile = sIp & ".ports"
 If IsLocal() Then
@@ -63,6 +60,11 @@ If IsLocal() Then
 Else
     sScanFile = FileServer(sScanFile, 2)
 End If
+
+Dim sPortA, sPortB
+sPortA = CInt(QReadLine("Starting port>"))
+sPortB = CInt(QReadLine("Ending port>"))
+
 Dim sScanRes
 sScanRes = ""
 On Error Resume Next
@@ -96,3 +98,8 @@ Do
     End If
     sPortCur = sPortCur + 1
 Loop Until sPortCur > sPortB
+
+If Not inSayLine Then
+    Say ""
+End If
+SayLine "Portscan complete.{{green}}"
