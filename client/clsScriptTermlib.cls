@@ -28,16 +28,15 @@ Private Sub Class_Initialize()
     IsConf = False
 End Sub
 
-
-Sub SayWithBGColor(ByVal RGBVal As String, ByVal Str As String)
+Public Function SayWithBGColor(ByVal RGBVal As String, ByVal Str As String)
     GSF.Say Str
     GSF.DRAW -1, RGBVal, "solid"
-End Sub
+End Function
 
-Sub SaySlowWithBGColor(ByVal RGBVal As String, ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
+Public Function SaySlowWithBGColor(ByVal RGBVal As String, ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
     If GSF.IsOutputDisabled Then
         GSF.Say Str & Style
-        Exit Sub
+        Exit Function
     End If
 
     Dim X As Long
@@ -53,13 +52,13 @@ Sub SaySlowWithBGColor(ByVal RGBVal As String, ByVal Delay As Long, ByVal Str As
         GSF.Wait Delay
         GSF.SayLine Mid(Str, 1, X), -1, True
     Next
-End Sub
+End Function
 
-Sub SaySlow(ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
+Public Function SaySlow(ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
     SaySlowWithBGColor -1, Delay, Str, Style
-End Sub
+End Function
 
-Function GetAsciiWithCPromptBG(ByVal RGBVal As String, ByVal Prompt As String)
+Public Function GetAsciiWithCPromptBG(ByVal RGBVal As String, ByVal Prompt As String)
     GSF.Say "{{noprespace}}" & Prompt & "> [_]"
     If RGBVal >= 0 Then
         GSF.DRAW -1, RGBVal, "solid"
@@ -70,23 +69,23 @@ Function GetAsciiWithCPromptBG(ByVal RGBVal As String, ByVal Prompt As String)
     GetAsciiWithCPromptBG = Choice
 End Function
 
-Function GetAsciiWithCPrompt(ByVal Prompt As String)
+Public Function GetAsciiWithCPrompt(ByVal Prompt As String)
     GetAsciiWithCPrompt = GetAsciiWithCPromptBG(-1, Prompt)
 End Function
 
-Function GetAsciiWithPrompt()
+Public Function GetAsciiWithPrompt()
     GetAsciiWithPrompt = GetAsciiWithCPrompt("")
 End Function
 
-Function SetMissionProgress(ByVal MissionID As String, ByVal Key As String, ByVal Value As String)
+Public Function SetMissionProgress(ByVal MissionID As String, ByVal Key As String, ByVal Value As String)
     GSF.SetMissionData MissionID, "progress", Key, Value
 End Function
 
-Function GetMissionProgress(ByVal MissionID As String, ByVal Key As String)
+Public Function GetMissionProgress(ByVal MissionID As String, ByVal Key As String)
     GetMissionProgress = GSF.GetMissionData(MissionID, "progress", Key)
 End Function
 
-Function IntMissionProgress(ByVal MissionID As String, ByVal Key As String)
+Public Function IntMissionProgress(ByVal MissionID As String, ByVal Key As String)
     Dim Val
     Val = GetMissionProgress(MissionID, Key)
     If Val = "" Then
@@ -96,29 +95,29 @@ Function IntMissionProgress(ByVal MissionID As String, ByVal Key As String)
     End If
 End Function
 
-Function IncMissionProgress(ByVal MissionID As String, ByVal Key As String)
+Public Function IncMissionProgress(ByVal MissionID As String, ByVal Key As String)
     Dim Val
     Val = IntMissionProgress(MissionID, Key)
     SetMissionProgress MissionID, Key, (Val + 1)
 End Function
 
-Function BoolMissionProgress(ByVal MissionID As String, ByVal Key As String)
+Public Function BoolMissionProgress(ByVal MissionID As String, ByVal Key As String)
     BoolMissionProgress = (GetMissionProgress(MissionID, Key) = "1")
 End Function
 
-Function BoolSetMissionProgress(ByVal MissionID As String, ByVal Key As String)
+Public Function BoolSetMissionProgress(ByVal MissionID As String, ByVal Key As String)
     SetMissionProgress MissionID, Key, "1"
 End Function
 
-Function BoolClearMissionProgress(ByVal MissionID As String, ByVal Key As String)
+Public Function BoolClearMissionProgress(ByVal MissionID As String, ByVal Key As String)
     SetMissionProgress MissionID, Key, "0"
 End Function
 
-Function QReadLine(ByVal Prompt As String)
+Public Function QReadLine(ByVal Prompt As String)
     QReadLine = LCase(Trim(GSF.ReadLine(Prompt)))
 End Function
 
-Function QReadLineBG(ByVal RGBVal As String, ByVal Prompt As String)
+Public Function QReadLineBG(ByVal RGBVal As String, ByVal Prompt As String)
     QReadLineBG = LCase(Trim(GSF.ReadLine(Prompt, RGBVal)))
 End Function
 

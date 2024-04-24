@@ -268,9 +268,9 @@ ExitGetASCII:
     Yield
 End Function
 
-Public Function Configure(ByVal NewConsoleID As Integer, ByVal NewScriptFrom As String, ByVal NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, ByVal NewFileKey As String, ByVal NewServerDomain As String, ByVal NewServerPort As Long, ByVal NewRedirect As Boolean, NewDisableOutput As Boolean, ByVal NewAllowUnAbort As Boolean, ByVal NewScriptOwner As String, ByVal NewServerIP As String, ByVal NewServerConnectingIP As String)
+Public Sub Configure(ByVal NewConsoleID As Integer, ByVal NewScriptFrom As String, ByVal NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, ByVal NewFileKey As String, ByVal NewServerDomain As String, ByVal NewServerPort As Long, ByVal NewRedirect As Boolean, NewDisableOutput As Boolean, ByVal NewAllowUnAbort As Boolean, ByVal NewScriptOwner As String, ByVal NewServerIP As String, ByVal NewServerConnectingIP As String)
     If IsConfigured Then
-        Exit Function
+        Exit Sub
     End If
     IsConfigured = True
     PrivConsoleID = NewConsoleID
@@ -288,7 +288,7 @@ Public Function Configure(ByVal NewConsoleID As Integer, ByVal NewScriptFrom As 
     PrivServerIP = NewServerIP
     PrivServerConnectingIP = NewServerConnectingIP
     PrivSpoofedLocalConnectingIP = PrivServerConnectingIP
-End Function
+End Sub
 
 Public Function Cls()
     Clear
