@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 23, 2024 at 11:35 PM
+-- Generation Time: Apr 24, 2024 at 07:28 AM
 -- Server version: 10.6.17-MariaDB
 -- PHP Version: 7.4.33
 
@@ -102,6 +102,20 @@ CREATE TABLE `file_database` (
   `category` varchar(255) NOT NULL,
   `ver` int(11) NOT NULL,
   `filedata` longtext NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `libraries`
+--
+
+CREATE TABLE `libraries` (
+  `id` int(11) NOT NULL,
+  `hash` varchar(255) NOT NULL,
+  `data` longtext NOT NULL,
+  `owner` int(11) NOT NULL,
+  `time` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -209,6 +223,14 @@ ALTER TABLE `file_database`
   ADD KEY `ver` (`ver`);
 
 --
+-- Indexes for table `libraries`
+--
+ALTER TABLE `libraries`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `hash` (`hash`),
+  ADD KEY `owner` (`owner`);
+
+--
 -- Indexes for table `textspace`
 --
 ALTER TABLE `textspace`
@@ -269,6 +291,12 @@ ALTER TABLE `file_database`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `libraries`
+--
+ALTER TABLE `libraries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `textspace`
 --
 ALTER TABLE `textspace`
@@ -320,6 +348,12 @@ ALTER TABLE `dsmail`
 --
 ALTER TABLE `file_database`
   ADD CONSTRAINT `file_database_ibfk_1` FOREIGN KEY (`owner`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `libraries`
+--
+ALTER TABLE `libraries`
+  ADD CONSTRAINT `libraries_ibfk_1` FOREIGN KEY (`owner`) REFERENCES `users` (`id`);
 
 --
 -- Constraints for table `textspace`
