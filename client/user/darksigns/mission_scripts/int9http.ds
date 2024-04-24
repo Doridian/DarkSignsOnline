@@ -21,4 +21,5 @@ SendMailToUser "noreply@find.com", "Newsletter", "Hi " & Username & "," & vbCrLf
                                                 "Barry Simons" & vbCrLf & _
                                                 "FIND.com President"
 BoolSetMissionProgress "DS", "int9http_visited"
+' showimagenowplz zerofour.bmp
 Disconnect

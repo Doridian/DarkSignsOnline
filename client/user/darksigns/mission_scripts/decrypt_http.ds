@@ -21,6 +21,7 @@ Function MGotFile(Name)
 End Function
 
 Sub Got8MAnd9MEnc()
+    ' showimagenowplz zerotwo.bmp
     SendMailToUser "zrio@zrio.org", "Good...", "I see that we have developed a good working relationship." & vbCrLf & _
                                                 "This is the way it should always be." & vbCrLf & _
                                                 "See what else you can find around biolabs..." & vbCrLf & _

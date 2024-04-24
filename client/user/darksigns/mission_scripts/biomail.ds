@@ -59,6 +59,7 @@ Sub EmailMenu(EmailID)
                                             "We have the IP address of a computer close to this location, so close, it" & vbCrLf & _
                                             "might even be at the potential base itself." & vbCrLf & _
                                             "66.1.22.2... keep searching."
+                            ' showimagenowplz zerothree.bmp
                         Case 3
                             ReplySubject = "ZRIO Re:Email We got the email you sent us, but what good is it to us?"
                             ReplyEmail = "Some spam email about insurance?" & vbCrLf & _
