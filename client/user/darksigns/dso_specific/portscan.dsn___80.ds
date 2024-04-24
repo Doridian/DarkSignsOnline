@@ -1,0 +1,98 @@
+Option Explicit
+
+DLOpen "termlib"
+
+' Well, we dont have portscans in DSO, so this fakes them in for DS classic
+
+Function IsIP(sCand)
+    Dim sSplit
+    sSplit = Split(sCand, ".")
+    If UBound(sSplit) <> 3 Then
+        IsIP = False
+        Exit Function
+    End If
+    Dim j, sSpl, sNum
+    For j = 0 To 3
+        sSpl = sSplit(j)
+        If Not IsNumeric(sSpl) Then
+            IsIP = False
+            Exit Function
+        End If
+        sNum = CInt(sSpl)
+        If sNum < 0 Or sNum > 255 Then
+            IsIP = False
+            Exit Function
+        End If
+    Next
+    IsIP = True
+End Function
+
+Say "Welcome to DarkSigns portscan service."
+Say "NEW: We now have an API service. You can request our port scans via:{{blue}}"
+Say "         SomeVar = Fetch(""portscan.dsn"", 81, ""1.2.3.4"", 1, 1024){{green}}"
+Say "         Just remember to replace 1.2.3.4 with the IP or domain you want to trace!{{blue}}"
+Say "         And of course 1 and 1024 with the port range you want"
+Say ""
+Say "Please enter the IP address or domain and port range you would like to scan{{blue}}"
+Dim sInput
+sInput = QReadLine("IP/Domain>")
+
+Dim sIp
+If IsIP(sInput) Then
+    sIp = sInput
+Else
+    Dim sIpTr
+    sIpTr = GetIP(sInput)
+    SaySlow 10, "Got domain, resolving to IP...", "blue"
+    sIp = WaitFor(sIpTr)
+    If sIp = "" Then
+        Say "Could not resolve the IP address of that domain.{{red}}"
+        Quit
+    End If
+    Say "Resolved to IP: " & ConsoleEscape(sIp) & "{{blue}}"
+End If
+
+Dim sPortA, sPortB
+sPortA = QReadLine("Starting port>")
+sPortB = QReadLine("Ending port>")
+
+Dim sScanFile
+sScanFile = sIp & ".ports"
+If IsLocal() Then
+    sScanFile = RemoteView("portscan.dsn", sScanFile, 2)
+Else
+    sScanFile = FileServer(sScanFile, 2)
+End If
+Dim sScanRes
+sScanRes = ""
+On Error Resume Next
+sScanRes = WaitFor(sScanFile)
+On Error GoTo 0
+If sScanRes = "" Then
+    Say "Portscan failed.{{red}}"
+    Quit
+End If
+
+Dim sPortCur, inSayLine, sCPos, sPreLen, sEPos
+inSayLine = False
+sPortCur = sPortA
+Do
+    Wait 10
+    sCPos = InStr(sScanRes, vbCrLf & sPortCur & "=")
+    If sCPos > 0 Then
+        If Not inSayLine Then
+            Say ""
+        End If
+        sPreLen = Len(vbCrLf & sPortCur & "=")
+        sEPos = InStr(sCPos + sPreLen, sScanRes, vbCrLf)
+        inSayLine = False
+        SayLine "{{yellow}}Port: " & sPortCur & " responded [" & Mid(sScanRes, sCPos + sPreLen, (sEPos - sCPos) - sPreLen) & "]"
+    Else
+        If Not inSayLine Then
+            Say ""
+            inSayLine = True
+        End If
+        SayLine "{{blue}}Scanning port: " & sPortCur
+    End If
+    sPortCur = sPortCur + 1
+Loop Until sPortCur > sPortB

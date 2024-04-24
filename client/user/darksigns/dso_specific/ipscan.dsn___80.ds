@@ -1,0 +1,108 @@
+Option Explicit
+
+DLOpen "termlib"
+
+' Well, we dont have ipscan in DSO, so this fakes them in for DS classic
+
+Function IsIP(sCand)
+    Dim sSplit
+    sSplit = Split(sCand, ".")
+    If UBound(sSplit) <> 3 Then
+        IsIP = False
+        Exit Function
+    End If
+    Dim j, sSpl, sNum
+    For j = 0 To 3
+        sSpl = sSplit(j)
+        If Not IsNumeric(sSpl) Then
+            IsIP = False
+            Exit Function
+        End If
+        sNum = CInt(sSpl)
+        If sNum < 0 Or sNum > 255 Then
+            IsIP = False
+            Exit Function
+        End If
+    Next
+    IsIP = True
+End Function
+
+Function IncIP(sInIP)
+    Dim sSplit
+    sSplit = Split(sInIP, ".")
+    Dim j, sSpl, sNum
+    For j = 3 To 0 Step -1
+        sSpl = sSplit(j)
+        sNum = CInt(sSpl)
+        If sNum < 255 Then
+            sSplit(j) = CStr(sNum + 1)
+            Exit For
+        End If
+        sSplit(j) = "0"
+    Next
+    IncIP = Join(sSplit, ".")
+End Function
+
+Say "Welcome to DarkSigns IPScan service."
+Say "NEW: We now have an API service. You can request our IP scans via:{{blue}}"
+Say "         SomeVar = Fetch(""ipscan.dsn"", 81, ""1.2.3.4"", ""2.3.4.5""){{green}}"
+Say "         Just remember to replace 1.2.3.4 and 2.3.4.5 with the IP range you want to search!{{blue}}"
+Say ""
+Say "Please enter the IP range{{blue}}"
+Dim sInput, sInput2
+sInput = QReadLine("Starting IP>")
+If Not IsIP(sInput) Then
+    Say "Invalid IP address.{{red}}"
+    Quit
+End If
+sInput2 = QReadLine("Ending IP>")
+If Not IsIP(sInput2) Then
+    Say "Invalid IP address.{{red}}"
+    Quit
+End If
+
+Dim sScanFile
+If IsLocal() Then
+    sScanFile = RemoteView("ipscan.dsn", "ip.list", 2)
+Else
+    sScanFile = FileServer("ip.list", 2)
+End If
+Dim sScanRes
+sScanRes = ""
+On Error Resume Next
+sScanRes = WaitFor(sScanFile)
+On Error GoTo 0
+If sScanRes = "" Then
+    Say "IPScan failed.{{red}}"
+    Quit
+End If
+
+sInput2 = IncIp(sInput2)
+
+Dim sIp, inSayLine
+sIp = sInput
+inSayLine = False
+Do
+    Wait 10
+    If InStr(sScanRes, vbCrLf & sIp & vbCrLf) > 0 Then
+        If inSayLine Then
+            SayLine "{{yellow}}IP: " & sIp & " responded"
+            inSayLine = False
+        Else
+            Say "{{yellow}}IP: " & sIp & " responded"
+        End If
+    Else
+        If Not inSayLine Then
+            Say ""
+            inSayLine = True
+        End If
+        SayLine "{{blue}}Scanning IP: " & sIp
+    End If
+    sIp = IncIP(sIp)
+Loop Until sIp = sInput2
+
+If inSayLine Then
+    SayLine "Scan complete{{green}}"
+Else
+    Say "Scan complete{{green}}"
+End If
