@@ -56,6 +56,7 @@ Module=basScriptCrypto; basScriptCrypto.bas
 Module=basCompression; basCompression.bas
 Module=basAesCtr; basAesCtr.bas
 Class=clsScriptTermlib; clsScriptTermlib.cls
+Object={C1A8AF28-1257-101B-8FB0-0020AF039CA3}#1.1#0; mci32.Ocx
 IconForm="frmConsole"
 Startup="frmConsole"
 HelpFile=""
