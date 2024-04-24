@@ -1,0 +1,18 @@
+Option Explicit
+
+Dim LibFile
+LibFile = ResolvePath(ArgV(1))
+
+Dim LibData
+LibData = Display(LibFile)
+
+Dim LibHash
+LibHash = SHA256(LibData)
+
+Say "Uploading hash library " & LibHash & " to the server"
+
+DLPutHash LibHash, LibData
+
+Say "Uploaded hash library " & LibHash & " to the server"
+
+Append "/system/libs/putlib.log", LibFile & " -> " & LibHash & vbCrLf

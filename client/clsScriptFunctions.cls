@@ -1951,15 +1951,81 @@ Public Function ConsoleEscape(ByVal tmpS As String) As String
     ConsoleEscape = basCommands.ConsoleEscape(tmpS)
 End Function
  
- Public Function ConsoleUnescape(ByVal tmpS As String) As String
-     ConsoleUnescape = Replace(tmpS, ConsoleInvisibleChar, "")
- End Function
+Public Function ConsoleUnescape(ByVal tmpS As String) As String
+    ConsoleUnescape = Replace(tmpS, ConsoleInvisibleChar, "")
+End Function
+
+Public Function IsHex(ByVal Hash As String) As Boolean
+    Dim Chr0 As Integer, Chr9 As Integer, ChrA As Integer, ChrF As Integer
+    Chr0 = Asc("0")
+    Chr9 = Asc("9")
+    ChrA = Asc("A")
+    ChrF = Asc("F")
+
+    Dim X As Long
+    Hash = UCase(Hash)
+    For X = 1 To Len(Hash)
+        Dim C As Integer
+        C = Asc(Mid(Hash, X, 1))
+        If C >= Chr0 And C <= Chr9 Then
+        ElseIf C >= ChrA And C <= ChrF Then
+        Else
+            IsHex = False
+            Exit Function
+        End If
+    Next
+    IsHex = True
+End Function
+
+Public Function DLOpenHash(ByVal Hash As String)
+    If Not IsHex(Hash) Then
+        RaiseMiscError "Invalid hash"
+        Exit Function
+    End If
+    Hash = LCase(Hash)
+    Dim FName As String
+    FName = "/system/libs/hash_" & Hash & ".ds"
+    
+    Dim FData As String
+    FData = ""
+    On Error Resume Next
+    FData = GetFile(FName)
+    On Error GoTo 0
+    If SHA256(FData) <> Hash Then
+        On Error Resume Next
+        Kill SafePath(FName)
+        On Error GoTo 0
+        
+        Dim DomReq As String
+        DomReq = DoDownloadAPI("libraries.php", True, "get=" & URLEncode(Hash), "")
+        FData = WaitFor(DomReq)
+        If SHA256(FData) <> Hash Then
+            RaiseMiscError "Could not download hash library correctly :("
+        End If
+        WriteFile FName, FData
+    End If
+    
+    Yield
+
+    FData = DSODecryptScript(FData, "local")
+    SControl.AddCode FData
+End Function
+
+Public Function DLPutHash(ByVal Hash As String, ByVal Data As String)
+    AssertLocalOnly
+
+    If Not IsHex(Hash) Then
+        RaiseMiscError "Invalid hash"
+        Exit Function
+    End If
+    Hash = LCase(Hash)
+    
+    Dim DomReq As String
+    DomReq = DoDownloadAPI("libraries.php", True, "put=" & URLEncode(Hash) & "&data=" & URLEncode(Data), "")
+    WaitFor DomReq
+End Function
+
  
 ' TODO: Synchronize mission from server first time it is read or written after client launch
 ' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
 ' maybe use client launch time VS file modify time?
-
-' TODO: Hash storage fetch, like OpenHashData("abcdef0123456789"), will download to /system/hashstore/abcdef0123456789 if doesnt exist, verify actual data hash!
-' TODO: Hash storage upload, like UploadHashData("abcdef0123456789", "data here"), server should verify hash before storing!
-' TODO: DLOpenHash("abcdef0123456789") to open a library from the hash store
-

@@ -8,6 +8,7 @@
 /client/user/temp
 !/client/user/temp/README.txt
 /client/user/home
+/client/user/system/libs/hash_*.ds
 /client/user/system/missions/*.ini
 !/client/user/home/README.txt
 !/client/user/home/music/README.txt
@@ -15,4 +16,3 @@
 /client/user/darksigns/DS_scr
 /client/user/darksigns/DS_scr_todo
 /client/user/darksigns/DS_srv
-
