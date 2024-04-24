@@ -20,7 +20,7 @@ if (!empty($putlib)) {
     $data = $_REQUEST['data'];
     $myhash = dso_hash($data);
     if ($myhash !== $putlib) {
-        die_error('hash mismatch', 409);
+        die_error('hash mismatch (got ' . $putlib . '; expected ' . $myhash . ')', 409);
     }
     $time = time();
     $stmt = $db->prepare('INSERT INTO libraries (hash, data, owner, time) VALUES (?, ?, ?, ?);');
