@@ -194,6 +194,7 @@ if (!empty($dir)) {
 	while ($row = $res->fetch_assoc()) {
 		echo $row['filename'] . "\r\n";
 	}
+	exit;
 }
 
 die_error('No action selected');
