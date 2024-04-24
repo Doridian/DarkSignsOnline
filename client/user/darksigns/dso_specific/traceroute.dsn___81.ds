@@ -1,7 +1,5 @@
 Option Explicit
 
-DLOpen "termlib"
-
 If ArgC() < 1 Then
     Err.Raise vbObjectError + 1110, , "Usage: connect traceroute.dsn 81 <hostname or IP address>"
     Quit
