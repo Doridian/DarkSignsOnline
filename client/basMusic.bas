@@ -5,6 +5,7 @@ Private MusicFiles() As String
 Public MusicFileIndex As Long
 Private BassChannel As Long
 Private BassAllowPlay As Boolean
+Private BassInitialized As Boolean
 
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal length As Long)
 
@@ -13,8 +14,6 @@ Public Sub LoadMusic()
         Exit Sub
     End If
     BassAllowPlay = True
-    BASS_Init -1, 44100, 0, frmConsole.hWnd, 0
-    HandleBassError True
 End Sub
 
 Public Sub UnloadMusic()
@@ -72,6 +71,13 @@ Public Sub CheckMusic()
 
     Dim tmpFileName As String
     tmpFileName = MusicFiles(MusicFileIndex)
+
+    If Not BassInitialized Then
+        BASS_Init -1, 44100, 0, frmConsole.hWnd, 0
+        HandleBassError True
+        BassInitialized = True
+        DoEvents
+    End If
 
     BassChannel = BASS_StreamCreateFile(False, StrPtr(SafePath("/home/music/" & tmpFileName)), 0, 0, BASS_ASYNCFILE + BASS_STREAM_AUTOFREE)
     HandleBassError
