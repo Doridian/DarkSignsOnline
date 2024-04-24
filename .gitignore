@@ -5,8 +5,6 @@
 /client/mail.dat
 /client/user/downloads
 !/client/user/downloads/README.txt
-/client/user/temp
-!/client/user/temp/README.txt
 /client/user/home
 /client/user/system/libs/hash_*.ds
 /client/user/system/missions/*.ini

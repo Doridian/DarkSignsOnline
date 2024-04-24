@@ -112,7 +112,8 @@ jobs:
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Build failure?", $path))
         }
         cd ".\client\dist"
-        Copy-Item ..\user .\ -Recurse -Force
+        Copy-Item -Recurse -Force ..\user .\
+        Remove-Item -Recurse -Force .\user\darksigns
         Copy-Item ..\libs\VbAsyncSocket\LICENSE .\LICENSE-VbAsyncSocket.txt
         Copy-Item ..\libs\VBCCR\LICENSE.md .\LICENSE-VBCCR.txt
         Copy-Item ..\libs\runtime\*.dll .\
