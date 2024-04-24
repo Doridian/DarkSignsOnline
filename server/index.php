@@ -1,6 +1,13 @@
 <?php require('_top.php'); ?>
 <span class="style5"><br />- News - <br /><br />
 
+  <strong>April 23rd 2024</strong><br /><span class="style9">
+    Well, it is done. The entire original DarkSigns 0.96.1 server list ported.<br />
+    To try it out the way it would have been in DarkSigns, just<br />
+    "connect darksigns.com 80" in game (without quotes)<br />
+    This will send you the two initial mission DSMails.<br />
+    Which you can use "mail" to view</span><br /><br />
+
   <strong>April 15th 2024</strong><br /><span class="style9">
     Re-added script compilation / "encryption", just because.<br />
     If you find ANY content related to the old DSO, let me know.<br />
