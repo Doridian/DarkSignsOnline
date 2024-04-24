@@ -1,26 +1,47 @@
 Attribute VB_Name = "basMusic"
 Option Explicit
 
-Private Declare Function mciSendString Lib "winmm" Alias "mciSendStringA" (ByVal _
-    lpstrCommand As String, ByVal lpstrReturnString As String, _
-    ByVal uReturnLength As Long, ByVal hwndCallback As Long) As Long
-
 Private MusicFiles() As String
 Public MusicFileIndex As Long
+Private BassChannel As Long
+Private BassAllowPlay As Boolean
+
+Public Sub LoadMusic()
+    If BassAllowPlay Then
+        Exit Sub
+    End If
+    BassAllowPlay = True
+    BASS_Init -1, 44100, 0, frmConsole.hWnd, 0
+    HandleBassError
+End Sub
+
+Public Sub UnloadMusic()
+    BassAllowPlay = False
+    StopMusic
+End Sub
 
 Public Sub StopMusic()
-    mciSendString "close dsomusic", vbNullString, 0, 0
+    If BassChannel <> 0 Then
+        BASS_ChannelPause BassChannel
+        BASS_ChannelStop BassChannel
+        BassChannel = 0
+    End If
+End Sub
+
+Private Sub HandleBassError()
+    Dim BErr As Long
+    BErr = BASS_ErrorGetCode()
+    If BErr <> BASS_OK Then
+        Err.Raise vbObjectError + 1313, , "BASS error code: " & BErr
+    End If
 End Sub
 
 Public Sub CheckMusic()
-    Dim MusicStatus As String * 128
-    mciSendString "status dsomusic mode", MusicStatus, Len(MusicStatus), 0
-    If LCase(Left(MusicStatus, 7)) = "playing" Then
+    If (Not BassAllowPlay) Or BassChannel <> 0 Then
         Exit Sub
     End If
 
     If i(RegLoad("music", "on") = "off") Then
-        StopMusic
         Exit Sub
     End If
 
@@ -43,16 +64,23 @@ Public Sub CheckMusic()
     If Not FileFound Then Exit Sub
 
     NextMusicIndex
-    
-    Dim tmpFile As String
+
     Dim tmpFileName As String
     tmpFileName = MusicFiles(MusicFileIndex)
-    tmpFile = App.Path & "/user/home/music/" & tmpFileName
     SayCOMM "Next track: " & tmpFileName
 
-    StopMusic
-    mciSendString "open """ & tmpFile & """ type mpegvideo alias dsomusic", vbNullString, 0, 0
-    mciSendString "play dsomusic", vbNullString, 0, 0
+    BassChannel = BASS_StreamCreateFile(False, StrPtr(SafePath("/home/music/" & tmpFileName)), 0, 0, BASS_ASYNCFILE + BASS_STREAM_AUTOFREE)
+    HandleBassError
+    BASS_ChannelSetSync BassChannel, BASS_SYNC_ONETIME + BASS_SYNC_FREE, 0, AddressOf OnMusicEnd, 0
+    HandleBassError
+    BASS_ChannelPlay BassChannel, False
+    HandleBassError
+End Sub
+
+Public Sub OnMusicEnd(ByVal Handle As Long, ByVal Channel As Long, ByVal Data As Long, ByVal User As Long)
+    If Handle = BassChannel Or Channel = BassChannel Then
+        BassChannel = 0
+    End If
 End Sub
 
 Public Sub NextMusicIndex()

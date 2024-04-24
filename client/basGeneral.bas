@@ -92,62 +92,75 @@ Public Function VersionStr() As String
     End If
 End Function
 
-Public Function FileLenUnsafe(ByVal FileName As String) As Long
-    GetAttr FileName
+Public Function FileLenUnsafe(ByVal filename As String) As Long
+    GetAttr filename
     
     Dim Handle As Long
     Handle = FreeFile
-    Open FileName$ For Binary Access Read As #Handle
+    Open filename$ For Binary Access Read As #Handle
         FileLenUnsafe = LOF(Handle)
     Close #Handle
 End Function
 
-Public Function GetFileUnsafe(ByVal FileName As String) As String
-    GetAttr FileName
+Public Function GetFileUnsafe(ByVal filename As String) As String
+    GetAttr filename
 
     Dim Handle As Long
     Handle = FreeFile
-    Open FileName$ For Binary Access Read As #Handle
+    Open filename$ For Binary Access Read As #Handle
         GetFileUnsafe = Space$(LOF(Handle))
         Get #Handle, , GetFileUnsafe
     Close #Handle
 End Function
 
-Public Function WriteFileUnsafe(ByVal FileName As String, ByVal Contents As String)
+Public Function WriteFileUnsafe(ByVal filename As String, ByVal Contents As String)
     On Error Resume Next
-    Kill FileName$
+    Kill filename$
     On Error GoTo 0
 
     Dim Handle As Long
     Handle = FreeFile
-    Open FileName$ For Binary Access Write As #Handle
+    Open filename$ For Binary Access Write As #Handle
         Put #Handle, , Contents
     Close #Handle
 End Function
 
-Public Function AppendFileUnsafe(ByVal FileName As String, ByVal Contents As String)
+Public Function AppendFileUnsafe(ByVal filename As String, ByVal Contents As String)
     Dim Handle As Long
     Handle = FreeFile
-    Open FileName For Binary Access Write As #Handle
+    Open filename For Binary Access Write As #Handle
         Seek #Handle, LOF(Handle) + 1
         Put #Handle, , Contents
     Close #Handle
 End Function
 
-Public Function WriteFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
-    WriteFileUnsafe SafePath(FileName, Prefix), Contents
+Public Function WriteFile(ByVal filename As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+    WriteFileUnsafe SafePath(filename, Prefix), Contents
 End Function
 
-Public Function AppendFile(ByVal FileName As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
-    AppendFileUnsafe SafePath(FileName, Prefix), Contents
+Public Function AppendFile(ByVal filename As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+    AppendFileUnsafe SafePath(filename, Prefix), Contents
 End Function
 
-Public Function FileLen(ByVal FileName As String, Optional ByVal Prefix As String = "") As Long
-    FileLen = FileLenUnsafe(SafePath(FileName, Prefix))
+Public Function FileLen(ByVal filename As String, Optional ByVal Prefix As String = "") As Long
+    FileLen = FileLenUnsafe(SafePath(filename, Prefix))
 End Function
 
-Public Function GetFile(ByVal FileName As String, Optional ByVal Prefix As String = "") As String
-    GetFile = GetFileUnsafe(SafePath(FileName, Prefix))
+Public Function GetFile(ByVal filename As String, Optional ByVal Prefix As String = "") As String
+    GetFile = GetFileUnsafe(SafePath(filename, Prefix))
+End Function
+
+Public Function GetFileBinaryUnsafe(ByVal filename As String, Optional ByVal Prefix As String = "") As Byte()
+    Dim Handle As Long
+    Handle = FreeFile
+    Open filename$ For Binary Access Read As #Handle
+        ReDim GetFileBinaryUnsafe(0 To LOF(Handle) - 1)
+        Get #Handle, , GetFileBinaryUnsafe
+    Close #Handle
+End Function
+
+Public Function GetFileBinary(ByVal filename As String, Optional ByVal Prefix As String = "") As Byte()
+    GetFileBinary = GetFileBinaryUnsafe(SafePath(filename, Prefix))
 End Function
 
 Public Function i(ByVal s As String) As String
@@ -192,7 +205,7 @@ Public Sub RegSave(ByVal sCat As String, ByVal sVal As String)
     SettingsCollection.Remove sCat
     On Error GoTo 0
     SettingsCollection.Add sVal, sCat
-    SaveSetting App.Title, "Settings", sCat, sVal
+    SaveSetting App.title, "Settings", sCat, sVal
 End Sub
 
 Public Function RegLoad(ByVal sCat As String, ByVal sDefault As String) As String
@@ -204,7 +217,7 @@ Public Function RegLoad(ByVal sCat As String, ByVal sDefault As String) As Strin
     Exit Function
 
 NoSuchItem:
-    RegLoad = GetSetting(App.Title, "Settings", sCat, sDefault)
+    RegLoad = GetSetting(App.title, "Settings", sCat, sDefault)
     SettingsCollection.Add RegLoad, sCat
 End Function
 
@@ -236,11 +249,11 @@ Public Function FormatKB(ByVal Amount As Long) _
     As String
     'changes bytes to KB if the amount is high enough,
     'KB to MB, etc, etc
-    Dim Buffer As String
+    Dim buffer As String
     Dim Result As String
-    Buffer = Space$(255)
-    Result = StrFormatByteSize(Amount, Buffer, _
-    Len(Buffer))
+    buffer = Space$(255)
+    Result = StrFormatByteSize(Amount, buffer, _
+    Len(buffer))
 
 
     If InStr(Result, vbNullChar) > 1 Then

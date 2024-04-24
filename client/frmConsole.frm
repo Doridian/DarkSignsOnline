@@ -560,7 +560,7 @@ Dim curMsg As Integer
 Dim chatToStatus As Boolean
 Dim oldnick$    'the backup if the nick change failed
 Dim nick$       'our global nickname var
-Dim channel$    'our channel var
+Dim Channel$    'our channel var
 Dim Data$       'the var that will hold the data of a single command
 Dim MyRandNum$
 Dim connected As Boolean  'this var will be used to check if we timed out, and will be set to true if get connected
@@ -572,8 +572,8 @@ Dim autoILast(1 To 4) As Integer
 
 Private Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hWnd As Long, ByVal lpOperation As String, ByVal lpFile As String, ByVal lpParameters As String, ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
 
-Public Sub OpenFileDefault(ByVal File As String)
-    ShellExecute hWnd, "open", SafePath(File), vbNullString, vbNullString, 1
+Public Sub OpenFileDefault(ByVal file As String)
+    ShellExecute hWnd, "open", SafePath(file), vbNullString, vbNullString, 1
 End Sub
 
 Sub CommLarger()
@@ -599,7 +599,7 @@ End Sub
 Sub SetConsoleActive(ByVal ConsoleID As Integer)
     consoleShape.Width = 120
     consoleShape.Height = 60
-    consoleShape.Top = MiniMenu.Height - consoleShape.Height - 60
+    consoleShape.top = MiniMenu.Height - consoleShape.Height - 60
     
     Select Case ConsoleID
         Case 1: consoleShape.Left = 90
@@ -788,11 +788,13 @@ Public Function getConnected()
     getConnected = connected
 End Function
 
-Public Sub setConnected(Value As Boolean)
-    connected = Value
+Public Sub setConnected(value As Boolean)
+    connected = value
 End Sub
 
 Private Sub Form_Load()
+    modBass.BASSLoadDLL
+    basMusic.LoadMusic
     basCompression.ZstdInit
     basCommands.InitBasCommands
 
@@ -849,7 +851,7 @@ Sub LoadIRC()
     ChatBox.Move 0, Stats.Height
     MyRandNum$ = (Int((99 - 10 + 1) * Rnd) + 10)
     'nick$ = MyIRCName 'fetch the nickname from the dialog
-    channel$ = "#darksignsonline"  'fetch the channel form the dialog
+    Channel$ = "#darksignsonline"  'fetch the channel form the dialog
     
     
     
@@ -894,17 +896,17 @@ Sub IRCChatResize()
     txtChat.Width = ((Me.Width / 5) * 4) - 230
     
     txtChat.Left = 120
-    lstUsers.Move txtChat.Left + txtChat.Width + 120, txtChat.Top
+    lstUsers.Move txtChat.Left + txtChat.Width + 120, txtChat.top
     
-    txtChat.Height = Me.Height - txtChat.Top - 1200
+    txtChat.Height = Me.Height - txtChat.top - 1200
     
     lstUsers.Height = txtChat.Height
     
     
-    IRC.Move txtChat.Left, txtChat.Top, txtChat.Width, txtChat.Height
-    IRC.Height = ChatBox.Height - TBox.Height - IRC.Top - 480
+    IRC.Move txtChat.Left, txtChat.top, txtChat.Width, txtChat.Height
+    IRC.Height = ChatBox.Height - TBox.Height - IRC.top - 480
     
-    TBox.Top = IRC.Top + IRC.Height + 120
+    TBox.top = IRC.top + IRC.Height + 120
     TBox.Left = IRC.Left
     
     TBox.Width = txtChat.Width
@@ -913,10 +915,10 @@ Sub IRCChatResize()
     txtChatMsg.Left = 240
     txtChatMsg.Width = cmdChat.Left - 240 - txtChatMsg.Left
     
-    s1.Move txtTarget.Left - 60, txtTarget.Top - 60, txtTarget.Width + 120, txtTarget.Height + 120
-    s2.Move txtPrivMsg.Left - 60, txtPrivMsg.Top - 60, txtPrivMsg.Width + 120, txtPrivMsg.Height + 120
+    s1.Move txtTarget.Left - 60, txtTarget.top - 60, txtTarget.Width + 120, txtTarget.Height + 120
+    s2.Move txtPrivMsg.Left - 60, txtPrivMsg.top - 60, txtPrivMsg.Width + 120, txtPrivMsg.Height + 120
     
-    s3.Move txtChatMsg.Left - 60, txtChatMsg.Top - 60, txtChatMsg.Width + 130, txtChatMsg.Height + 130
+    s3.Move txtChatMsg.Left - 60, txtChatMsg.top - 60, txtChatMsg.Width + 130, txtChatMsg.Height + 130
     
     
     
@@ -925,7 +927,7 @@ Sub IRCChatResize()
 End Sub
 
 Private Sub Form_Terminate()
-    basMusic.StopMusic
+    basMusic.UnloadMusic
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -946,7 +948,7 @@ Private Sub Form_Unload(Cancel As Integer)
     End If
     '------------------------------------------
 
-    basMusic.StopMusic
+    basMusic.UnloadMusic
     End
 End Sub
 
@@ -1004,9 +1006,9 @@ Private Sub lblUsername_Click()
     End If
 End Sub
 
-Private Sub lConsole_Click(Index As Integer)
+Private Sub lConsole_Click(index As Integer)
     ChatBox.Visible = False
-    SetConsoleActive Index
+    SetConsoleActive index
 End Sub
 
 Private Sub lFull_Click()
@@ -1061,10 +1063,10 @@ Private Sub tmrPrint_Timer()
     tmrPrint.Enabled = False
 End Sub
 
-Private Sub tmrProcessQueue_Timer(Index As Integer)
-    tmrProcessQueue(Index).Enabled = False
-    basWorld.ProcessQueueEntryRun Index
-    tmrProcessQueue(Index).Tag = ""
+Private Sub tmrProcessQueue_Timer(index As Integer)
+    tmrProcessQueue(index).Enabled = False
+    basWorld.ProcessQueueEntryRun index
+    tmrProcessQueue(index).Tag = ""
 End Sub
 
 Private Sub tmrStart_Timer()
@@ -1178,29 +1180,29 @@ Sub processCommand()
     
     'This section processes all other commands
     If Left$(Data$, 1) = ":" Then   'if the message starts with a colon (standard IRC message)
-        Dim Pos%, pos2%    '2 position variables we need to extract the nickname of whoever that issued the command
+        Dim pos%, pos2%    '2 position variables we need to extract the nickname of whoever that issued the command
         Dim from$, rest$    'these will hold the sender of the command and the rest of the message
         Dim Command$        'this will hold the type of the command (eg.: PRIVMSG)
         Params$ = ""        'and the parameters
-        Pos% = InStr(Data$, " ")    'get the position of the first space character
-        If Pos% > 0 Then    'if a space is found
+        pos% = InStr(Data$, " ")    'get the position of the first space character
+        If pos% > 0 Then    'if a space is found
             pos2% = InStr(Data$, "!")   'search for an exclamation mark
-            If Pos% < pos2% Or pos2% <= 0 Then pos2% = Pos%   'if a space is found AFTER the space, it should not be used
+            If pos% < pos2% Or pos2% <= 0 Then pos2% = pos%   'if a space is found AFTER the space, it should not be used
             from$ = Mid$(Data$, 2, pos2% - 2)   'parse the sender, starting from the second character (after the ":")
-            rest$ = Mid$(Data$, Pos% + 1, Len(Data$) - pos2%)  'parse the rest of the message starting from the first character AFTER the first space
+            rest$ = Mid$(Data$, pos% + 1, Len(Data$) - pos2%)  'parse the rest of the message starting from the first character AFTER the first space
             rest$ = Replace(rest$, Chr(2), "")
             
             'IMPORTANT: pos% is now used to hold the first space in (!) rest$ (!), *NOT* in data$
-            Pos% = InStr(rest$, " ")   'get the position of the first space in rest$
-            If Pos% > 0 Then    'if we found a space
-                Command$ = Left$(rest$, Pos% - 1)   'the part before this space is the type of command
-                Params$ = Right$(rest$, Len(rest$) - Pos%)   'the rest are parameters
+            pos% = InStr(rest$, " ")   'get the position of the first space in rest$
+            If pos% > 0 Then    'if we found a space
+                Command$ = Left$(rest$, pos% - 1)   'the part before this space is the type of command
+                Params$ = Right$(rest$, Len(rest$) - pos%)   'the rest are parameters
                 Select Case Command$    'base your actions on the type of command
                     Case "NOTICE"   'if it's a notice
                         displaychat ">> " + from$ + "  " + Params$ 'display it
                     Case "PRIVMSG"  'if it's a private message
                         
-                        If processParam(Params$) = channel$ Then
+                        If processParam(Params$) = Channel$ Then
                             tempStr = processParam(processRest(Params$))
                             If (Mid(tempStr, 2, 6) = "ACTION") Then
                                 displaychat "* " + from$ + " " + Right(tempStr, Len(tempStr) - 8)   'display the message
@@ -1306,7 +1308,7 @@ Sub processCommand()
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "376"    'end of the motd
                         Display "<" + from$ + "> " + rest$ 'display the unprocessed message
-                        Send "JOIN " + channel$ 'join the channel
+                        Send "JOIN " + Channel$ 'join the channel
                     Case "431"  'if we failed to change the nickname
                         nick$ = oldnick$    'change it back to the old one
                         Display "<!> Failed changing nickname (You have to supply a nickname)" 'let them know that it failed
@@ -1418,13 +1420,13 @@ Private Sub cmdChat_Click()
     If Left(Trim(txtChatMsg.Text), 1) = "/" Then
         If Left(Trim(txtChatMsg.Text), 2) = "//" Then
             IRCTxtList Trim(Mid(txtChatMsg.Text, 1))
-            Send "PRIVMSG " + channel$ + " :" + Trim(Mid(txtChatMsg.Text, 2))    'send the message to the channel
+            Send "PRIVMSG " + Channel$ + " :" + Trim(Mid(txtChatMsg.Text, 2))    'send the message to the channel
             displaychat "<" + MyIRCName + ">  " + Trim(Mid(txtChatMsg.Text, 2)) 'display the message
         Else
             IRCCommand = LCase(Left(txtChatMsg.Text, InStr(txtChatMsg.Text, " ")))
             If IRCCommand = "/me " Then
                 IRCTxtList "/me " + Trim(Mid(txtChatMsg.Text, 4))
-                Send "PRIVMSG " + channel$ + " :" + Chr(1) + "ACTION " + Trim(Mid(txtChatMsg.Text, 4)) + Chr(1)
+                Send "PRIVMSG " + Channel$ + " :" + Chr(1) + "ACTION " + Trim(Mid(txtChatMsg.Text, 4)) + Chr(1)
                 displaychat "* " + MyIRCName + " " + Trim(Mid(txtChatMsg.Text, 4))
             ElseIf IRCCommand = "/nick " Then
                 Msg = Trim(Mid(txtChatMsg.Text, 6))
@@ -1453,7 +1455,7 @@ Private Sub cmdChat_Click()
         End If
     Else
         IRCTxtList Trim(txtChatMsg.Text)
-        Send "PRIVMSG " + channel$ + " :" + Trim(txtChatMsg.Text)    'send the message to the channel
+        Send "PRIVMSG " + Channel$ + " :" + Trim(txtChatMsg.Text)    'send the message to the channel
         displaychat "<" + MyIRCName + ">  " + Trim(txtChatMsg.Text) 'display the message
     End If
     
@@ -1554,13 +1556,13 @@ Public Sub ChatSend(ByVal s As String)
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
     s = TrimWithNewline(s)
     If Len(s) > 0 Then
-        Send "PRIVMSG " + channel$ + " :" + s
+        Send "PRIVMSG " + Channel$ + " :" + s
         displaychat "<" + MyIRCName + ">  " + s
     End If
 End Sub
 
-Public Sub ChatView(ByVal Enable As Boolean)
-    If Enable Then
+Public Sub ChatView(ByVal enable As Boolean)
+    If enable Then
         chatToStatus = True
         RegSave "CHATVIEW", "True"
         SayCOMM "Chatview is now enabled."

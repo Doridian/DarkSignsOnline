@@ -42,6 +42,8 @@ Public Function SafePath(ByVal Path As String, Optional ByVal Prefix As String =
     If Right(SafePath, 1) = "/" Then
         SafePath = Mid(SafePath, 1, Len(SafePath) - 1)
     End If
+
+    SafePath = Replace(SafePath, "\", "/")
 End Function
 
 Public Function ResolvePath(ByVal ConsoleID As Integer, ByVal Path As String) As String
@@ -556,7 +558,7 @@ End Function
 
 ' -y r g b mode
 '  SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE
-Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As String, ByVal ConsoleID As Integer)
+Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String, ByVal ConsoleID As Integer)
     Dim sColor As String
     Dim sMode As String
     
@@ -570,9 +572,9 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As Stri
     Dim yIndex As Integer, n As Integer
     yIndex = (YPos * -1)
 
-    Console(ConsoleID, yIndex).DrawMode = Mode
+    Console(ConsoleID, yIndex).DrawMode = mode
     
-    Select Case Mode
+    Select Case mode
     Case "fadecenter":
     
         Console(ConsoleID, yIndex).DrawEnabled = True
