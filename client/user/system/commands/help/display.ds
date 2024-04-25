@@ -1,4 +1,4 @@
 Option Explicit
-Say props & "Function: Display(file [String], StartLine [Long], MaxLines [Long])"
-Say props & "Returns: String"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: Display(file [String], StartLine [Long], MaxLines [Long]) -> String"
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

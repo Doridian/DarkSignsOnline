@@ -1,4 +1,4 @@
 Option Explicit
-Say props & "Function: FileServer(filename [String], StartLine [Long], MaxLines [Long])"
-Say props & "Returns: HTTPRequest"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: FileServer(filename [String], StartLine [Long], MaxLines [Long]) -> HTTPRequest"
 Say "{{lred}}Restriction: Can only be used remotely (on a server/domain)"

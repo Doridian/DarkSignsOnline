@@ -1,4 +1,4 @@
 Option Explicit
-Say props & "Function: ChatSend(Msg [String])"
-Say props & "Returns: Nothing"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: ChatSend(Msg [String]) -> Nothing"
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

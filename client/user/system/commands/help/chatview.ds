@@ -1,6 +1,4 @@
 Option Explicit
 Include "/system/commands/help/_util.ds"
-
-Say props & "Command: CHATVIEW [parameter]"
-Say "{{lgrey}}If set to on, will display chat in the status window."
-Say "{{lgrey}}CHATVIEW parameters are TRUE and FALSE"
+Say props & "Function: ChatView(Enabled [Boolean]) -> Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

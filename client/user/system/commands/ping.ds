@@ -1,11 +1,7 @@
 Option Explicit
 
-Dim tmp
-tmp = Ping(ArgV(1))
-Say "Temp = " & tmp
 Dim Result
-Result = WaitFor(tmp)
-Say "Result = " & Result
+Result = WaitFor(IsDomainOnline(ArgV(1)))
 
 If Result Then
     Say "{{green}}Server " & ArgV(1) & " is online."

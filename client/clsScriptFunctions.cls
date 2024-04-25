@@ -1120,15 +1120,15 @@ Public Function GetDomain(ByVal IP As String) As String
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function PingPort(ByVal Domain As String, ByVal Port As Integer) As String
+Public Function IsPortOpen(ByVal Domain As String, ByVal Port As Integer) As String
     Yield
-    PingPort = DoDownloadAPI("ping.php?domain=" & EncodeURLParameter(Domain) & "&port=" & EncodeURLParameter(Port), False, "", "bool_1")
+    IsPortOpen = DoDownloadAPI("ping.php?domain=" & EncodeURLParameter(Domain) & "&port=" & EncodeURLParameter(Port), False, "", "bool_1")
     Yield
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function Ping(ByVal Domain As String) As String
-    Ping = PingPort(Domain, 0)
+Public Function IsDomainOnline(ByVal Domain As String) As String
+    IsDomainOnline = IsPortOpen(Domain, 0)
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
@@ -1139,7 +1139,7 @@ Public Function GetIP(ByVal Domain As String) As String
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal sFileData As String) As String
+Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFileData As String) As String
     AssertLocalOnly
 
     Yield
@@ -1157,13 +1157,13 @@ Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal sFileDa
     "&d=" & EncodeURLParameter(Domain) & _
     "&filedata=" & EncodeURLParameter(tempStrA)
 
-    UPLOAD = DoDownloadAPI("domain_upload.php", True, PostData, "")
+    UploadStr = DoDownloadAPI("domain_upload.php", True, PostData, "")
 
     Yield
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function DOWNLOAD(ByVal Domain As String, ByVal Port As Long) As String
+Public Function DownloadStr(ByVal Domain As String, ByVal Port As Long) As String
     AssertLocalOnly
     
     Yield
@@ -1172,7 +1172,7 @@ Public Function DOWNLOAD(ByVal Domain As String, ByVal Port As Long) As String
     PostData = "port=" & EncodeURLParameter(Port) & _
     "&d=" & EncodeURLParameter(Domain)
 
-    DOWNLOAD = DoDownloadAPI("domain_download.php", True, PostData, "")
+    DownloadStr = DoDownloadAPI("domain_download.php", True, PostData, "")
 
     Yield
 End Function
@@ -1827,8 +1827,8 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     Yield
 End Function
 
-Public Function CompileScript(ByVal Source As String, Optional ByVal FileKey As String = "") As String
-    CompileScript = DSOCompileScript(Source, FileKey)
+Public Function CompileStr(ByVal Source As String, Optional ByVal FileKey As String = "") As String
+    CompileStr = DSOCompileScript(Source, FileKey)
 End Function
 
 ' Encoding helpers

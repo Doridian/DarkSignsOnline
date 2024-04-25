@@ -1,4 +1,4 @@
 Option Explicit
-Say props & "Function: RemoteSafeAppend(Domain [String], filename [String], Line [String])"
-Say props & "Returns: HTTPRequest"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: RemoteSafeAppend(Domain [String], filename [String], Line [String]) -> HTTPRequest"
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

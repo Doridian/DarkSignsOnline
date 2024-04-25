@@ -1,3 +1,3 @@
 Option Explicit
-Say props & "Function: GetDomain(IP [String])"
-Say props & "Returns: HTTPRequest"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: GetDomain(IP [String]) -> HTTPRequest"

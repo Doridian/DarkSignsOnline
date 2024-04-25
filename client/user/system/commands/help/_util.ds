@@ -1,5 +1,5 @@
 Option Explicit
 
 Dim props, propsforexamples
-props = "{{green 12 underline}}"
+props = "{{green 12}}"
 propsforexamples = "{{lgreen 12}}"

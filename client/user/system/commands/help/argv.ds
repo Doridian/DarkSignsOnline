@@ -1,3 +1,3 @@
 Option Explicit
-Say props & "Function: ArgV(Number [Long])"
-Say props & "Returns: Variant"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: ArgV(Number [Long]) -> Variant"

@@ -178,8 +178,8 @@ def vbesc(instr: str | None) -> str:
 def make_help_file(func: DSFunc) -> str:
     res: list[str] = []
     res.append("Option Explicit")
-    res.append(f'Say props & "Function: {vbesc(func.name)}({vbesc(", ".join([f"{arg.name} [{arg.arg_type}]" for arg in func.args]))})"')
-    res.append(f'Say props & "Returns: {vbesc(func.return_type) or "Nothing"}"')
+    res.append("Include \"/system/commands/help/_util.ds\"")
+    res.append(f'Say props & "Function: {vbesc(func.name)}({vbesc(", ".join([f"{arg.name} [{arg.arg_type}]" for arg in func.args]))}) -> {vbesc(func.return_type) or "Nothing"}"')
     lred = "{{lred}}"
     for limit in func.limitations:
         res.append(f'Say "{lred}Restriction: {vbesc(limit)}"')

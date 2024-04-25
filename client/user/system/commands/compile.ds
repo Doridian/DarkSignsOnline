@@ -5,7 +5,7 @@ strContents = Display(ArgV(1))
 
 Say "Old Data" & vbCrLf & strContents
 
-strCompiled = CompileScript(strContents)
+strCompiled = CompileStr(strContents)
 
 Say "New Data" & vbCrLf & strCompiled
 

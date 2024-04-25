@@ -1,0 +1,3 @@
+Option Explicit
+Include "/system/commands/help/_util.ds"
+Say props & "Function: IsPortOpen(Domain [String], Port [Integer]) -> HTTPRequest"

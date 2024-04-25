@@ -1,4 +1,4 @@
 Option Explicit
-Say props & "Function: ReadDir(RawPath [String])"
-Say props & "Returns: String()"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: ReadDir(RawPath [String]) -> String()"
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

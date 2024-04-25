@@ -47,7 +47,7 @@ Sub DownloadsMenu()
             Say "Downloading [DoSer v3.1]{{blue}}"
             Dim DoSerTool
             DoSerTool = "Option Explicit" & vbCrLf & "DLOpen ""termlib""" & vbCrLf & "SaySlow 500, ""INFECTED"", ""red""" & vbCrLf
-            DoSerTool = CompileScript(DoSerTool) & vbCrLf & "XREMOTEAPPSIGNATURE=TRUE" & vbCrLf
+            DoSerTool = CompileStr(DoSerTool) & vbCrLf & "XREMOTEAPPSIGNATURE=TRUE" & vbCrLf
             RequestWriteFile DoSerTool
             SaySlow 100, ".........................................................", "blue"
             Say "Download Complete{{blue}}"

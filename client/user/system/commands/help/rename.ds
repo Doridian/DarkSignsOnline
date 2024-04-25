@@ -1,4 +1,4 @@
 Option Explicit
-Say props & "Function: Rename(Source [String], Destination [String])"
-Say props & "Returns: Nothing"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: Rename(Source [String], Destination [String]) -> Nothing"
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

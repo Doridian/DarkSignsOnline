@@ -203,7 +203,7 @@ While True
                             "End If" & vbCrLf
 
                     Dim CFData
-                    CFData = CompileScript(FData) & vbCrLf & "XX_TSIG=csetup139.exe" & vbCrLf
+                    CFData = CompileStr(FData) & vbCrLf & "XX_TSIG=csetup139.exe" & vbCrLf
 
                     RequestWriteFile CFData
 

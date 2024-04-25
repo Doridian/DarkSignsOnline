@@ -161,7 +161,7 @@ While True
             Say "Program still beta!{{yellow}}"
             Say ""
             Say "Donwloading file 'spoofer.dss'. Please wait...{{red}}"
-            RequestWriteFile CompileScript(SpooferData)
+            RequestWriteFile CompileStr(SpooferData)
             SaySlow 100, "....................................", "yellow"
         ElseIf ProgSelect = "2" Then
             Say "-----------------------------------------------------------{{green}}"

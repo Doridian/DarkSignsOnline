@@ -1,3 +1,3 @@
 Option Explicit
-Say props & "Function: IncludeCode(Code [String])"
-Say props & "Returns: Nothing"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: IncludeCode(Code [String]) -> Nothing"

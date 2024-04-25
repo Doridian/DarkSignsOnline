@@ -1,4 +1,4 @@
 Option Explicit
 Include "/system/commands/help/_util.ds"
-Say props & "Function: RemoteWrite(Domain [String], filename [String], Contents [String]) -> HTTPRequest"
+Say props & "Function: UploadStr(Domain [String], Port [Long], sFileData [String]) -> HTTPRequest"
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

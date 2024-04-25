@@ -1,3 +1,3 @@
 Option Explicit
-Say props & "Function: WaitForRaw(Req [HTTPRequest])"
-Say props & "Returns: Variant(Long, String)"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: WaitForRaw(Req [HTTPRequest]) -> Variant(Long, String)"

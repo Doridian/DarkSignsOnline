@@ -1,0 +1,3 @@
+Option Explicit
+Include "/system/commands/help/_util.ds"
+Say props & "Function: CompileStr(Source [String], FileKey [String]) -> String"

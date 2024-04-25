@@ -1,3 +1,0 @@
-Option Explicit
-Say props & "Function: CompileScript(Source [String], FileKey [String])"
-Say props & "Returns: String"

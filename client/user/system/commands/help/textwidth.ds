@@ -1,3 +1,3 @@
 Option Explicit
-Say props & "Function: TextWidth(FontName [String], FontSize [String], Text [String])"
-Say props & "Returns: Long"
+Include "/system/commands/help/_util.ds"
+Say props & "Function: TextWidth(FontName [String], FontSize [String], Text [String]) -> Long"
