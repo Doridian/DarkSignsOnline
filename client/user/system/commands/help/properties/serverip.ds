@@ -1,0 +1,4 @@
+Option Explicit
+Say "{{green 12}}Property: ServerIP[String]"
+Say "{{lgreen 12}}Example read: SomeVar = ServerIP"
+Say "{{yellow}}Access level: Read-Only"

@@ -1,0 +1,4 @@
+Option Explicit
+Say "{{green 12}}Property: IsOutputRedirected[Boolean]"
+Say "{{lgreen 12}}Example read: SomeVar = IsOutputRedirected"
+Say "{{yellow}}Access level: Read-Only"

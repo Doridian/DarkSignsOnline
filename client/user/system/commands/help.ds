@@ -1,25 +1,37 @@
 'CommandDefinition(Optional Topic As String)
-'{{lgrey}}Display the available console commands and functions
+'{{lgrey}}Display the available console commands, functions and properties
 Option Explicit
 
 Dim X
 
 Function ResolveHelpFile(QStr)
-    Dim CanBeCommand, CanBeFunction, CommandFile, FunctionFile, QType
+    Dim CanBeCommand, CanBeFunction, CanBeProperty, CommandFile, FunctionFile, PropertyFile, QType
 
     QStr = LCase(Trim(QStr))
+    If QStr = "" Then
+        Say "{{red}}The empty string is not allowed as a help topic"
+        Quit
+    End If
 
     CanBeCommand = True
     CanBeFunction = True
+    CanBeProperty = True
     QType = "any"
     If Left(QStr, 1) = "@" Then
         QStr = Mid(QStr, 2)
         CanBeFunction = False
+        CanBeProperty = False
         QType = "command"
     ElseIf Left(QStr, 1) = "$" Then
         QStr = Mid(QStr, 2)
         CanBeCommand = False
+        CanBeProperty = False
         QType = "function"
+    ElseIf Left(QStr, 1) = "&" Then
+        QStr = Mid(QStr, 2)
+        CanBeCommand = False
+        CanBeFunction = False
+        QType = "property"
     End If
     
     If CanBeCommand Then
@@ -32,10 +44,22 @@ Function ResolveHelpFile(QStr)
         CanBeFunction = FileExists(FunctionFile)
     End If
 
-    If CanBeCommand And CanBeFunction Then
-        Say "{{red}}Ambiguous: " & ConsoleEscape(QStr) & " (could be a command or a function)"
-        Say "{{yellow}}For help with the command, use: HELP @" & ConsoleEscape(QStr)
-        Say "{{yellow}}Alternatively, for the function, use: HELP $" & ConsoleEscape(QStr)
+    If CanBeProperty Then
+        PropertyFile = "/system/commands/help/properties/" & QStr & ".ds"
+        CanBeProperty = FileExists(PropertyFile)
+    End If
+
+    Dim MCnt
+    MCnt = 0
+    If CanBeCommand Then MCnt = MCnt + 1
+    If CanBeFunction Then MCnt = MCnt + 1
+    If CanBeProperty Then MCnt = MCnt + 1
+
+    If MCnt > 1Then
+        Say "{{red}}Ambiguous: " & ConsoleEscape(QStr)
+        If CanBeCommand Then Say "{{yellow}}For the command, use: HELP @" & ConsoleEscape(QStr)
+        If CanBeFunction Then Say "{{yellow}}For the function, use: HELP $" & ConsoleEscape(QStr)
+        If CanBeProperty Then Say "{{yellow}}For the property, use: HELP &" & ConsoleEscape(QStr)
         Quit
     End If
 
@@ -43,6 +67,8 @@ Function ResolveHelpFile(QStr)
         ResolveHelpFile = CommandFile
     ElseIf CanBeFunction Then
         ResolveHelpFile = FunctionFile
+    ElseIf CanBeProperty Then
+        ResolveHelpFile = PropertyFile
     Else
         Say "{{red}}No help available for " & ConsoleEscape(QStr) & " of type " & QType
         Quit
@@ -95,5 +121,7 @@ Say "{{green 12}}Available Commands"
 RenderFolder "/system/commands/help/commands"
 Say "{{green 12}}Available Functions"
 RenderFolder "/system/commands/help/functions"
+Say "{{green 12}}Available Properties"
+RenderFolder "/system/commands/help/properties"
 
-Say "{{grey}}For more specific help, type: HELP [command|function]"
+Say "{{grey}}For more specific help, type: HELP [command|function|property]"

@@ -1,0 +1,7 @@
+Option Explicit
+Say "{{green 12}}Property: ExternalEditor[]"
+Say "{{lgreen 12}}Example read: SomeVar = ExternalEditor"
+Say "{{lgreen 12}}Example write: ExternalEditor = SomeVar"
+Say "{{yellow}}Access level: Read/Write"
+Say "{{lred}}READ restriction: Can only be used locally (local script or CLI)"
+Say "{{lred}}WRITE restriction: Can only be used locally (local script or CLI)"

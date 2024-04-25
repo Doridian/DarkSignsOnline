@@ -24,6 +24,17 @@ class DSArg:
         return res
 
 @dataclass(kw_only=True, eq=True)
+class DSProp:
+    name: str
+    prop_type: str
+    limitations_get: list[str]
+    limitations_let: list[str]
+    docs_get: str
+    docs_let: str
+    has_get: bool
+    has_let: bool
+
+@dataclass(kw_only=True, eq=True)
 class DSFunc:
     name: str
     args: list[DSArg]
@@ -187,15 +198,40 @@ def process_vb_function_decl(prefix: str, i: int, lines: list[str], always_add_l
     return DSFunc(name=name, args=args, return_type=func_return, docs=func_docs, limitations=func_limits)
 
 F_PREFIX = "public function "
-def process_vb_file(file: str, always_add_limits: list[str] | None = None) -> list[DSFunc]:
+PG_PREFIX = "public property get "
+PL_PREFIX = "public property let "
+
+def process_vb_file(file: str, always_add_limits: list[str] | None = None) -> tuple[list[DSFunc], list[DSProp]]:
+    if not always_add_limits:
+        always_add_limits = []
     res: list[DSFunc] = []
+    props: dict[str, DSProp] = {}
     with open(file, "r") as f:
         lines = f.readlines()
     for i in range(len(lines)):
-        func_decl = process_vb_function_decl(F_PREFIX, i, lines, always_add_limits or [])
-        if func_decl:
-            res.append(func_decl)
-    return res
+        line_decl = process_vb_function_decl(F_PREFIX, i, lines, always_add_limits)
+        if line_decl:
+            res.append(line_decl)
+
+        line_decl = process_vb_function_decl(PG_PREFIX, i, lines, always_add_limits)
+        if line_decl:
+            if line_decl.name in props:
+                props[line_decl.name].docs_get = line_decl.docs
+                props[line_decl.name].has_get = True
+                props[line_decl.name].limitations_get = line_decl.limitations
+            else:
+                props[line_decl.name] = DSProp(name=line_decl.name, prop_type=line_decl.return_type, limitations_get=line_decl.limitations, limitations_let=[], docs_get=line_decl.docs, docs_let="", has_get=True, has_let=False)
+
+        line_decl = process_vb_function_decl(PL_PREFIX, i, lines, always_add_limits)
+        if line_decl:
+            if line_decl.name in props:
+                props[line_decl.name].docs_let = line_decl.docs
+                props[line_decl.name].has_let = True
+                props[line_decl.name].limitations_let = line_decl.limitations
+            else:
+                props[line_decl.name] = DSProp(name=line_decl.name, prop_type=line_decl.return_type, limitations_let=line_decl.limitations, limitations_get=[], docs_get="", docs_let=line_decl.docs, has_get=False, has_let=True)
+
+    return res, list(props.values())
 
 def vbesc(instr: str | None) -> str:
     if instr is None:
@@ -237,15 +273,69 @@ def make_command_help_file(func: DSFunc) -> str:
 
     return "\r\n".join(res) + "\r\n"
 
+E_PROPS = "{{lgreen 12}}"
+
+def make_prop_help_file(prop: DSProp) -> str:
+    res: list[str] = []
+    res.append("Option Explicit")
+    res.append(f'Say "{B_PROPS}Property: {vbesc(prop.name)}[{vbesc(prop.prop_type)}]"')
+    if prop.has_get:
+        res.append(f'Say "{E_PROPS}Example read: SomeVar = {vbesc(prop.name)}"')
+    if prop.has_let:
+        res.append(f'Say "{E_PROPS}Example write: {vbesc(prop.name)} = SomeVar"')
+
+    yellow = "{{yellow}}"
+    lgreen = "{{lgreen}}"
+    lred = "{{lred}}"
+
+    mode_name = ""
+    if prop.has_get and prop.has_let:
+        mode_name = "Read/Write"
+    elif prop.has_get:
+        mode_name = "Read-Only"
+    elif prop.has_let:
+        mode_name = "Write-Only"
+
+    if prop.has_get:
+        res.append(f"Say \"{yellow}Access level: {mode_name}\"")
+
+    for limit in prop.limitations_get:
+        res.append(f'Say "{lred}READ restriction: {vbesc(limit)}"')
+    for limit in prop.limitations_let:
+        res.append(f'Say "{lred}WRITE restriction: {vbesc(limit)}"')
+
+    if prop.has_get and prop.docs_get:
+        res.append(f"Say \"{lgreen}Help for reading\"")
+        for doc in prop.docs_get.strip().split("\r\n"):
+            res.append(f'Say "{vbesc(doc)}"')
+
+    if prop.has_get and prop.docs_let:
+        res.append(f"Say \"{lgreen}Help for writing\"")
+        for doc in prop.docs_get.strip().split("\r\n"):
+            res.append(f'Say "{vbesc(doc)}"')
+
+    return "\r\n".join(res) + "\r\n"
+
 ALL_FUNCS: list[DSFunc] = []
-ALL_FUNCS += process_vb_file("clsScriptFunctions.cls")
-ALL_FUNCS += process_vb_file("clsScriptTermlib.cls", ["Must be loaded with: DLOpen \"termlib\""])
+ALL_PROPS: list[DSProp] = []
+f, p = process_vb_file("clsScriptFunctions.cls")
+ALL_FUNCS += f
+ALL_PROPS += p
+f, p = process_vb_file("clsScriptTermlib.cls", ["Must be loaded with: DLOpen \"termlib\""])
+ALL_FUNCS += f
+ALL_PROPS += p
 
 for func in ALL_FUNCS:
     lfunc = func.name.lower()
 
     with open(f"./user/system/commands/help/functions/{lfunc}.ds", "wb") as f:
         f.write(make_func_help_file(func).encode("latin1"))
+
+for prop in ALL_PROPS:
+    lprop = prop.name.lower()
+
+    with open(f"./user/system/commands/help/properties/{lprop}.ds", "wb") as f:
+        f.write(make_prop_help_file(prop).encode("latin1"))
 
 C_PREFIX = "'commanddefinition"
 for cmd in listdir("./user/system/commands"):
