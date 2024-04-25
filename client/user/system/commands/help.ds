@@ -5,6 +5,8 @@ Dim X
 Function ResolveHelpFile(QStr)
     Dim CanBeCommand, CanBeFunction, CommandFile, FunctionFile, QType
 
+    QStr = LCase(Trim(QStr))
+
     CanBeCommand = True
     CanBeFunction = True
     QType = "any"
@@ -30,7 +32,8 @@ Function ResolveHelpFile(QStr)
 
     If CanBeCommand And CanBeFunction Then
         Say "{{red}}Ambiguous: " & ConsoleEscape(QStr) & " (could be a command or a function)"
-        Say "{{yellow}}Hint: Use @[command] for commands and $[function] for functions."
+        Say "{{yellow}}For help with the command, use: HELP @" & ConsoleEscape(QStr)
+        Say "{{yellow}}Alternatively, for the function, use: HELP $" & ConsoleEscape(QStr)
         Quit
     End If
 
