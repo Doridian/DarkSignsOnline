@@ -192,7 +192,7 @@ def make_help_file(func: DSFunc) -> str:
 
 ALL_FUNCS: list[DSFunc] = []
 ALL_FUNCS += process_vb_file("clsScriptFunctions.cls")
-ALL_FUNCS += process_vb_file("clsScriptTermlib.cls", "Must be loaded with: DLOpen \"termlib\"")
+ALL_FUNCS += process_vb_file("clsScriptTermlib.cls", ["Must be loaded with: DLOpen \"termlib\""])
 
 for func in ALL_FUNCS:
     lfunc = func.name.lower()
