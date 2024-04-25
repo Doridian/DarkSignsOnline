@@ -37,14 +37,18 @@ Public Flash As Boolean
 Public LoadingSpinner As Integer
 Public Const LoadingSpinnerAnim = "/-\|"
 
+Private Type RegSetting
+    name As String
+    value As String
+End Type
+Private RegSettingsCache() As RegSetting
+
 Public cPath(1 To 4) As String
 Public cPrompt(1 To 4) As String
 
 Public EditorFile_Short As String
 Public EditorFile_Long As String
 Public EditorRunFile As String
-
-Private SettingsCollection As New Collection
         
 Public Declare Function GetForegroundWindow Lib "user32" () As Long
 Public Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hWnd As Long, ByVal lpString As String, ByVal cch As Long) As Long
@@ -197,28 +201,77 @@ zz:
     FileTitleOnly = Trim(FileTitleOnly)
 End Function
 
-Public Sub RegSave(ByVal sCat As String, ByVal sVal As String)
-    sCat = i(sCat)
-    sVal = Trim(sVal)
-
-    On Error Resume Next
-    SettingsCollection.Remove sCat
+Private Sub EnsureRegCacheIntact()
+    On Error GoTo RedimRegCache
+    Dim X As Long
+    X = UBound(RegSettingsCache)
     On Error GoTo 0
-    SettingsCollection.Add sVal, sCat
+    If X >= 0 Then
+        Exit Sub
+    End If
+RedimRegCache:
+    ReDim RegSettingsCache(0 To 0)
+    RegSettingsCache(0).name = ""
+    RegSettingsCache(0).value = ""
+End Sub
+
+Private Function FindRegCacheSetting(ByVal sCat As String) As Long
+    FindRegCacheSetting = 0
+
+    EnsureRegCacheIntact
+    If UBound(RegSettingsCache) <= 0 Then
+        Exit Function
+    End If
+
+    Dim X As Long
+    For X = 1 To UBound(RegSettingsCache)
+        If RegSettingsCache(X).name = sCat Then
+            FindRegCacheSetting = X
+            Exit Function
+        End If
+    Next
+End Function
+
+Public Sub RegSave(ByVal sCat As String, ByVal sVal As String)
+    EnsureRegCacheIntact
+
+    Dim X As Long
+    X = FindRegCacheSetting(sCat)
+    If X <= 0 Then
+        If UBound(RegSettingsCache) > 1024 Then
+            Err.Raise vbObjectError + 9199, , "FATAL ERROR: Ran out of settings cache of size 1024 saving: " & sCat
+        End If
+        ReDim Preserve RegSettingsCache(0 To UBound(RegSettingsCache) + 1)
+        X = UBound(RegSettingsCache)
+    End If
     SaveSetting App.title, "Settings", sCat, sVal
+    Dim NewSettings As RegSetting
+    NewSettings.name = sCat
+    NewSettings.value = sVal
+    RegSettingsCache(X) = NewSettings
 End Sub
 
 Public Function RegLoad(ByVal sCat As String, ByVal sDefault As String) As String
-    sCat = i(sCat)
-    sDefault = Trim(sDefault)
+    EnsureRegCacheIntact
 
-    On Error GoTo NoSuchItem
-    RegLoad = SettingsCollection.Item(sCat)
-    Exit Function
+    Dim X As Long
+    X = FindRegCacheSetting(sCat)
+    If X > 0 Then
+        RegLoad = RegSettingsCache(X).value
+        Exit Function
+    End If
 
 NoSuchItem:
     RegLoad = GetSetting(App.title, "Settings", sCat, sDefault)
-    SettingsCollection.Add RegLoad, sCat
+    If UBound(RegSettingsCache) > 1024 Then
+        Err.Raise vbObjectError + 9199, , "FATAL ERROR: Ran out of settings cache of size 1024 loading: " & sCat
+    End If
+    ReDim Preserve RegSettingsCache(0 To UBound(RegSettingsCache) + 1)
+    X = UBound(RegSettingsCache)
+    Dim NewSettings As RegSetting
+    NewSettings.name = sCat
+    NewSettings.value = RegLoad
+    RegSettingsCache(X) = NewSettings
 End Function
 
 Public Function ReverseString(s As String) As String

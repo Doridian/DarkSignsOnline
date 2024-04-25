@@ -502,7 +502,7 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     
     Attr = GetAttr(Path)
     If (Attr And vbDirectory) <> vbDirectory Then
-        Err.Raise 9301, , "Can only list directories"
+        Err.Raise vbObjectError + 9301, , "Can only list directories"
         Exit Function
     End If
     
@@ -2094,3 +2094,4 @@ End Function
 ' TODO: Synchronize mission from server first time it is read or written after client launch
 ' TODO: Synchronize mission to server whenever it is written (after the potential read from the server)
 ' maybe use client launch time VS file modify time?
+

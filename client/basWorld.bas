@@ -35,6 +35,10 @@ Private ProcessQueue(1 To 30) As ProcessQueueEntry
 
 Public LoginInProgress As Boolean
 
+Public Sub LoadBasicFunctions(SControl As ScriptControl)
+
+End Sub
+
 Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Long, Optional NoAuth As Boolean) As clsHttpRequestor
     If Not NoAuth And InStr(i(sUrl), "auth.php") = 0 And Not Authorized Then
         SayRaw ConsoleID, "You must be logged in to do that!{{36 center orange impact nobold}}"
@@ -81,7 +85,7 @@ Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Option
         Requestor.Password = myPassword
     End If
     
-    Requestor.Url = sUrl
+    Requestor.url = sUrl
 
     If UsePost = True Then
         Requestor.Method = "POST"
@@ -127,11 +131,11 @@ Public Sub SayCOMM(s As String)
     For n = 1 To UBound(Comms)
         tmpY = tmpY - 210
         
-        frmConsole.lComm(n).Top = tmpY
-        frmConsole.lCommTime(n).Top = tmpY
+        frmConsole.lComm(n).top = tmpY
+        frmConsole.lCommTime(n).top = tmpY
         
         frmConsole.lComm(1).Caption = Comms(1)
-        frmConsole.lCommTime(1).Caption = Format(Time, "h:mm AMPM")
+        frmConsole.lCommTime(1).Caption = Format(time, "h:mm AMPM")
 
         If tmpY < 0 Then
             frmConsole.lCommTime(n).Visible = False
@@ -194,18 +198,18 @@ Public Sub OnLoginFailure()
 End Sub
 
 
-Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
+Public Sub ProcessQueueEntryRun(ByVal index As Integer)
     Dim s As String
     Dim sSource As String
     Dim ConsoleID As Integer
     Dim IsCustomDownload As Long
     Dim Code As Integer
 
-    s = ProcessQueue(Index).Data
-    Code = ProcessQueue(Index).Code
-    sSource = ProcessQueue(Index).DataSource
-    ConsoleID = ProcessQueue(Index).ConsoleID
-    IsCustomDownload = ProcessQueue(Index).IsCustomDownload
+    s = ProcessQueue(index).Data
+    Code = ProcessQueue(index).Code
+    sSource = ProcessQueue(index).DataSource
+    ConsoleID = ProcessQueue(index).ConsoleID
+    IsCustomDownload = ProcessQueue(index).IsCustomDownload
     
 
     If IsCustomDownload > 0 Then
@@ -387,24 +391,24 @@ End Sub
 
 
 Public Function EncodeURLParameter( _
-    ByVal Url As String, _
+    ByVal url As String, _
     Optional ByVal SpacePlus As Boolean = True) As String
     
     Dim cchEscaped As Long
     Dim HResult As Long
     
-    If Url = "" Then
+    If url = "" Then
         EncodeURLParameter = ""
         Exit Function
     End If
 
-    cchEscaped = Len(Url)
+    cchEscaped = Len(url)
     
     EncodeURLParameter = String$(cchEscaped, 0)
-    HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+    HResult = UrlEscape(StrPtr(url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
     If HResult = E_POINTER Then
         EncodeURLParameter = String$(cchEscaped, 0)
-        HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+        HResult = UrlEscape(StrPtr(url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
     End If
 
     If HResult <> S_OK Then

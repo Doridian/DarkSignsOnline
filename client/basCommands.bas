@@ -22,6 +22,7 @@ Public Sub InitBasCommands()
         scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False, True, "", "", ""
 
         scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
+        LoadBasicFunctions scrConsole(X)
 
         scrConsoleDScript(X) = True
     Next
@@ -156,35 +157,26 @@ Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer, Op
 
     CancelScript(ConsoleID) = False
 
+    Dim ErrNumber As Long
+    Dim ErrDescription As String
+
+    Dim CodeFaulted As Boolean
+    CodeFaulted = False
+    On Error GoTo OnCodeFaulted
+
     scrConsoleContext(ConsoleID).UnAbort
     scrConsole(ConsoleID).Error.Clear
-
-    On Error GoTo EvalError
 
     Dim RunStr As String
     Dim OptionDScript As Boolean
     OptionDScript = scrConsoleDScript(ConsoleID)
     RunStr = ParseCommandLine(tmpS, OptionDScript, False, ConsoleID, True)
     scrConsoleDScript(ConsoleID) = OptionDScript
-
     scrConsole(ConsoleID).AddCode RunStr
-
     On Error GoTo 0
-
-    GoTo ScriptEnd
-
-EvalError:
-    Dim ErrNumber As Long
-    Dim ErrDescription As String
-    ErrNumber = Err.Number
-    ErrDescription = scrConsole(ConsoleID).Error.Description
-    If scrConsole(ConsoleID).Error.Number = 0 Or ErrDescription = "" Then
-        ErrDescription = Err.Description
+    If Not CodeFaulted Then
+        GoTo ScriptEnd
     End If
-
-    scrConsole(ConsoleID).Error.Clear
-    Err.Clear
-    On Error GoTo 0
 
     Dim ObjectErrNumber As Long
     ObjectErrNumber = ErrNumber - vbObjectError
@@ -207,7 +199,7 @@ EvalError:
     Else
         ErrNumberStr = "(E#" & ErrNumber & ")"
     End If
-    
+
     SayRaw ConsoleID, "Error processing CLI input: " & ConsoleEscape(ErrDescription) & " " & ErrNumberStr & " " & ErrHelp & "{{red}}"
     GoTo ScriptEnd
 
@@ -215,6 +207,18 @@ ScriptCancelled:
     SayRaw ConsoleID, "Script Stopped by User (CTRL + B){{orange}}"
 ScriptEnd:
     scrConsoleContext(ConsoleID).CleanupScriptTasks
+    Exit Function
+
+OnCodeFaulted:
+    ErrNumber = scrConsole(ConsoleID).Error.Number
+    ErrDescription = scrConsole(ConsoleID).Error.Description
+    If ErrNumber = 0 Or ErrDescription = "" Then
+        ErrNumber = Err.Number
+        ErrDescription = Err.Description
+    End If
+
+    CodeFaulted = True
+    Resume Next
 End Function
 
 Public Function ConsoleEscape(ByVal tmpS As String) As String
@@ -508,20 +512,34 @@ CommandForNext:
         If Not IsValidVarName(ArgVal) Then
             GoTo ArgIsNotVar
         End If
-        
+
+        If FileExists("/system/commands/help/" & ArgVal & ".ds") Or FileExists("/system/commands/" & ArgVal & ".ds") Then
+            GoTo ArgIsNotVar
+        End If
+
         Dim EvalFaulted As Boolean
-        EvalFaulted = True
-        On Error GoTo EvalFaultTrue
-        scrConsole(AutoVariablesFrom).Eval ArgVal
+
+        Dim RefFound As Boolean
+        RefFound = False
         EvalFaulted = False
-EvalFaultTrue:
+        On Error Resume Next
+        RefFound = scrConsole(AutoVariablesFrom).Eval("Not (GetRef(" & VBEscapeSimpleQuoted(ArgVal, True) & ") Is Nothing)")
+        On Error GoTo 0
+
+        If RefFound Then
+            GoTo ArgIsNotVar
+        End If
+
+        EvalFaulted = False
+        On Error GoTo EvalErrorHandler
+        scrConsole(AutoVariablesFrom).AddCode "Option Explicit : VarType " & ArgVal
         On Error GoTo 0
 
         If EvalFaulted Then
             GoTo ArgIsNotVar
         End If
 
-        ParseCommandLineInt = ParseCommandLineInt & "Coalesce(Eval(" & VBEscapeSimpleQuoted(ArgVal, True) & "), " & VBEscapeSimpleQuoted(ArgVal) & ")"
+        ParseCommandLineInt = ParseCommandLineInt & VBEscapeSimple(ArgVal)
         GoTo NextCLIFor
 ArgIsNotVar:
         ParseCommandLineInt = ParseCommandLineInt & VBEscapeSimpleQuoted(ArgVal, CLIArgsQuoted(X))
@@ -548,6 +566,11 @@ RunSplitCommand:
     End If
 
     ParseCommandLineInt = ParseCommandLineInt & RestSplit
+    Exit Function
+    
+EvalErrorHandler:
+    EvalFaulted = True
+    Resume Next
 End Function
 
 Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef b As Long)

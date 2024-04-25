@@ -28,39 +28,33 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
 
     CancelScript(ConsoleID) = False
 
-    Dim s As New ScriptControl
-    s.AllowUI = False
-    s.Timeout = -1
-    s.UseSafeSubset = True
-    s.Language = "VBScript"
+    Dim SCT As ScriptControl
+    Set SCT = New ScriptControl
+    SCT.AllowUI = False
+    SCT.Timeout = -1
+    SCT.UseSafeSubset = True
+    SCT.Language = "VBScript"
 
     Dim G As clsScriptFunctions
     Set G = New clsScriptFunctions
-    G.Configure ConsoleID, ScriptFrom, False, s, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False, ScriptOwner, ServerIP, ConnectingIP
-    s.AddObject "DSO", G, True
+    G.Configure ConsoleID, ScriptFrom, False, SCT, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False, ScriptOwner, ServerIP, ConnectingIP
+    SCT.AddObject "DSO", G, True
+    LoadBasicFunctions SCT
 
     tmpAll = DSODecryptScript(tmpAll, ScriptKey)
     tmpAll = ParseCommandLineOptional(tmpAll, ConsoleID, ServerPort <= 0)
 
-    On Error GoTo EvalError
-    s.AddCode tmpAll
-    On Error GoTo 0
-
-    GoTo ScriptEnd
-    Exit Function
-EvalError:
     Dim ErrNumber As Long
     Dim ErrDescription As String
-    ErrNumber = Err.Number
-    ErrDescription = s.Error.Description
-    If s.Error.Number = 0 Or ErrDescription = "" Then
-        ErrNumber = Err.Number
-        ErrDescription = Err.Description
-    End If
 
-    s.Error.Clear
-    Err.Clear
+    Dim CodeFaulted As Boolean
+    CodeFaulted = False
+    On Error GoTo OnCodeFaulted
+    SCT.AddCode tmpAll
     On Error GoTo 0
+    If Not CodeFaulted Then
+        GoTo ScriptEnd
+    End If
 
     Dim ObjectErrNumber As Long
     ObjectErrNumber = ErrNumber - vbObjectError
@@ -97,21 +91,33 @@ ScriptEnd:
     Run_Script_Code = G.ScriptGetOutput()
     G.CleanupScriptTasks
     cPath(ConsoleID) = OldPath
+    Exit Function
+
+OnCodeFaulted:
+    ErrNumber = SCT.Error.Number
+    ErrDescription = SCT.Error.Description
+    If ErrNumber = 0 Or ErrDescription = "" Then
+        ErrNumber = Err.Number
+        ErrDescription = Err.Description
+    End If
+
+    CodeFaulted = True
+    Resume Next
 End Function
 
-Public Function Run_Script(ByVal FileName As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal ScriptKey As String, ByVal ConnectingIP As String) As String
+Public Function Run_Script(ByVal filename As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal ErrorHandling As Boolean, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal ScriptKey As String, ByVal ConnectingIP As String) As String
     If ScriptParameters(0) = "" Then
-        ScriptParameters(0) = FileName
+        ScriptParameters(0) = filename
     End If
     
     DoEvents
 
     Dim ShortFileName As String
     'file name should be from local dir, i.e: /system/startup.ds
-    ShortFileName = FileName
+    ShortFileName = filename
 
     Dim tmpAll As String
-    tmpAll = GetFile(FileName)
+    tmpAll = GetFile(filename)
     Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, "", ConnectingIP, ErrorHandling, RedirectOutput, DisableOutput, ScriptKey, "local")
 End Function
 
