@@ -201,5 +201,5 @@ for func in ALL_FUNCS:
         print("Skipping docs for", func.name)
         continue
 
-    with open(f"./user/system/commands/help/{lfunc}.ds", "wb") as f:
+    with open(f"./user/system/commands/help/functions/{lfunc}.ds", "wb") as f:
         f.write(make_help_file(func).encode("latin1"))
