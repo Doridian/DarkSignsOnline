@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: RGBSplit(lColor [Long])"
+Say props & "Returns: Long()"

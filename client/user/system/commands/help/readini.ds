@@ -1,0 +1,4 @@
+Option Explicit
+Say props & "Function: ReadINI(file [String], Section [String], key [String], value [String])"
+Say props & "Returns: String"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

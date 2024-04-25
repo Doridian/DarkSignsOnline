@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: FormatKB(ToConvert [Long])"
+Say props & "Returns: String"

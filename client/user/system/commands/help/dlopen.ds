@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: DLOpen(Library [String])"
+Say props & "Returns: Nothing"

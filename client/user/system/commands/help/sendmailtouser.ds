@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: SendMailToUser(sFrom [String], sSubject [String], sMessage [String])"
+Say props & "Returns: Nothing"

@@ -1,7 +1,3 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: RUN file"
-Say propsforexamples & "Example #1: RUN myscript.ds"
-Say "{{lgrey}}Run the specified file as script in the console."
-Say "{{lgrey}}Files not designed to be run as scripts may cause random errors to be displayed."
+Say props & "Function: Run(XArr... [Variant()])"
+Say props & "Returns: Nothing"

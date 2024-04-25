@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: Coalesce(VarValues... [Variant()])"
+Say props & "Returns: Variant"

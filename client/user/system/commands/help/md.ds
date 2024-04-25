@@ -1,7 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: MD directory-name"
-Say propsforexamples & "Example #1: MD myfiles"
-Say "{{lgrey}}Create a new empty directory with the specified name."
-Say "{{lorange}}The name of the directory should not contain space characters."
+Say props & "Function: MD(NewDir [String])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

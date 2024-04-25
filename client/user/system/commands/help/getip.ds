@@ -1,7 +1,3 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: GETIP domain-or-ip-server"
-Say propsforexamples & "Example #1: GETIP birds.com"
-Say "{{lgrey}}Get the IP address of the specified server."
-Say "{{lorange}}You can modify this command in the file /system/commands/getip.ds"
+Say props & "Function: GetIP(Domain [String])"
+Say props & "Returns: HTTPRequest"

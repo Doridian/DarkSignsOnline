@@ -1,0 +1,4 @@
+Option Explicit
+Say props & "Function: RunA(Script [String], XArr [Variant()])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

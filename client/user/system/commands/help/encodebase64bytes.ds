@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: EncodeBase64Bytes(XArr [Byte()])"
+Say props & "Returns: String"

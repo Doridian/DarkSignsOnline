@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: Encrypt(Data [String], Password [String], NoWrap [Boolean])"
+Say props & "Returns: String"

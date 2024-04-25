@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: SetMissionData(MissionID [String], Section [String], key [String], value [String])"
+Say props & "Returns: String"

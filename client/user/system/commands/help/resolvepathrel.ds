@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: ResolvePathRel(BasePath [String], Path [String])"
+Say props & "Returns: String"

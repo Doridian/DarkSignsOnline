@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: TextHeight(FontName [String], FontSize [String])"
+Say props & "Returns: Long"

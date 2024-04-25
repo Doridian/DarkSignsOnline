@@ -1,13 +1,3 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: SAY text {"&ConsoleInvisibleChar&"{optional-properties}"&ConsoleInvisibleChar&"}"
-Say propsforexamples & "Example #1: SAY ConsoleID, hello, this is green {"&ConsoleInvisibleChar&"{green}"&ConsoleInvisibleChar&"}"
-Say propsforexamples & "Example #2: SAY ConsoleID, this is bold and very large {"&ConsoleInvisibleChar&"{bold, 36}"&ConsoleInvisibleChar&"}"
-Say "{{lgrey}}Display the specified text in the console."
-Say "{{lgrey}}Text properties can be modified by adding any number of the following keywords in bewtween {"&ConsoleInvisibleChar&"{ }"&ConsoleInvisibleChar&"}, in any order."
-Say "{{lgreen}}Colors: Type SHOWCOLORS the display a list of colors."
-Say "{{lgreen}}Fonts: Arial, Arial Black, Comic Sans MS, Courier New, Georgia, Impact,"
-Say "{{lgreen}}Fonts: Lucida Console, Tahoma, Times New Roman, Trebuchet MS, Verdana, Wingdings."
-Say "{{lgreen}}Attributes: Bold, NoBold, Italic, NoItalic, Underline, NoUnderline, Strikethru, NoStrikethru."
-Say "{{lgreen}}Extras: Flash, Flashfast, FlashSlow."
+Say props & "Function: Say(Params... [Variant()])"
+Say props & "Returns: Nothing"

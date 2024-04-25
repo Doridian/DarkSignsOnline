@@ -1,6 +1,3 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: SAYCOMM text"
-Say propsforexamples & "Example #1: SAYCOMM Connected to server"
-Say "{{lgrey}}Display the specified text in the COMM window."
+Say props & "Function: SayCOMM(Params... [Variant()])"
+Say props & "Returns: Nothing"

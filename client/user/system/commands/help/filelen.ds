@@ -1,0 +1,4 @@
+Option Explicit
+Say props & "Function: FileLen(file [String])"
+Say props & "Returns: Long"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

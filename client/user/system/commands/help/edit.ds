@@ -1,7 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: EDIT file"
-Say propsforexamples & "Example #1: EDIT myscript.ds"
-Say "{{lgrey}}Edit the specified file in the editing window. The console will pause while the editor is active."
-Say "{{lorange}}Files in the editor are saved automatically."
+Say props & "Function: EDIT(file [String])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

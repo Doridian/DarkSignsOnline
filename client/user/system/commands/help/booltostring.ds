@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: BoolToString(param [String])"
+Say props & "Returns: Boolean"

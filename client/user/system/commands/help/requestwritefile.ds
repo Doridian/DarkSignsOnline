@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: RequestWriteFile(Data [String])"
+Say props & "Returns: Nothing"

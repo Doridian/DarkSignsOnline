@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: RunCode(XArr... [Variant()])"
+Say props & "Returns: Nothing"

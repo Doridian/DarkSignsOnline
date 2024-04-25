@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: Fetch(Params... [Variant()])"
+Say props & "Returns: HTTPRequest"

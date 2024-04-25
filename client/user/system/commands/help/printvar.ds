@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: PrintVar(param... [Variant()])"
+Say props & "Returns: Nothing"

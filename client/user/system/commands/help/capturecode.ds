@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: CaptureCode(XArr... [Variant()])"
+Say props & "Returns: String"

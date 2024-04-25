@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: Delete(file [String])"
+Say props & "Returns: Nothing"

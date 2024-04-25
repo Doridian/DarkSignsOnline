@@ -1,0 +1,4 @@
+Option Explicit
+Say props & "Function: Include(Script [String])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: IsHex(Hash [String])"
+Say props & "Returns: Boolean"

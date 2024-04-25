@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: HttpRequest(url [String], PostData [String])"
+Say props & "Returns: HTTPRequest"

@@ -1,8 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: CHATSEND Message to be sent to the chat."
-Say propsforexamples & "Example #1: CHATSEND Hello World!"
-Say "{{lgrey}}A simple way to send messages to the chat from your console."
-
-
+Say props & "Function: ChatSend(Msg [String])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

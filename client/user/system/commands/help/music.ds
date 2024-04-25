@@ -1,6 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: MUSIC [parameter]"
-Say propsforexamples & "Example #1: MUSIC NEXT"
-Say "{{lgrey}}Music parameters are START, STOP, NEXT, and PREV."
+Say props & "Function: MUSIC(Command [String])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

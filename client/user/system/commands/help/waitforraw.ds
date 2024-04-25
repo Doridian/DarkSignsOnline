@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: WaitForRaw(Req [HTTPRequest])"
+Say props & "Returns: Variant(Long, String)"

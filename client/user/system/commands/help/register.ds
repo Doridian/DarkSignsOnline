@@ -1,10 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: REGISTER domain-name"
-Say propsforexamples & "Example #1: REGISTER mynewwebsite.com"
-Say "{{lgrey}}Register a domain name on the Dark Signs Network."
-Say "{{lgrey}}This command requires that you have the required amount of money (DS$) in your account."
-Say ""
-Say "{{center orange nobold 14}}- Check the latest prices in the COMM window. -"
-RunPage "domain_register.php?returnwith=2000&prices=1", ConsoleID
+Say props & "Function: Register(Domain [String])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

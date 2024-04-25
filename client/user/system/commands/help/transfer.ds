@@ -1,7 +1,3 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: TRANSFER recipient-username amount description"
-Say propsforexamples & "Example #1: TRANSFER admin 5 A payment for you"
-Say "{{lgrey}}Transfer an amount of money (DS$) to the specified username."
-Say "{{lorange}}Each transfer requires manual authorization from the sender."
+Say props & "Function: Transfer(Target [String], Amount [Long], Description [String])"
+Say props & "Returns: HTTPRequest"

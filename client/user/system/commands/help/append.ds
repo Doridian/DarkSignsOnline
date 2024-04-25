@@ -1,8 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: APPEND file text"
-Say propsforexamples & "Example #1: APPEND myfile.txt new data"
-Say "{{lgrey}}Append (add) text or data to the specified file."
-Say "{{lgrey}}Data will be added to the end of the file."
-Say "{{lorange}}If the specified file doesn't exist, it will be created."
+Say props & "Function: Append(file [String], Content [String])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

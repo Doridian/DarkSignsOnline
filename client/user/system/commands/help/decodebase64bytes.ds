@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: DecodeBase64Bytes(strData [String])"
+Say props & "Returns: Byte()"

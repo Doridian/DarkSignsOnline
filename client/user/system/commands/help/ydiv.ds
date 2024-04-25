@@ -1,7 +1,3 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: YDIV height"
-Say propsforexamples & "Example #1: YDIV 240"
-Say "{{lgrey}}Change the default space between each console line."
-Say "{{lorange}}The default YDIV is set to 60."
+Say props & "Function: yDiv(setValue [Integer])"
+Say props & "Returns: Nothing"

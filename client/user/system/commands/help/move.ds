@@ -1,9 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: MOVE source-file destination-file"
-Say propsforexamples & "Example #1: MOVE myoldfile.ds mynewfile.ds"
-Say propsforexamples & "Example #2: MOVE /home/myoldfile.ds  /home/dir2/mynewfile.ds"
-Say "{{lgrey}}Rename the specified file."
-Say "{{lgrey}}You can also move the file to a new directory, as shown in example #2."
-Say "{{lorange}}File names should not contain space characters."
+Say props & "Function: Move(Source [String], Destination [String])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

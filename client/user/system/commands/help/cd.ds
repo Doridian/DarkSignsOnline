@@ -1,6 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: CD directory-name"
-Say propsforexamples & "Example #1: CD myfiles"
-Say "{{lgrey}}Change the active path to the specified directory."
+Say props & "Function: CD(DIR [String])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

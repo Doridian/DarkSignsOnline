@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: TextWidth(FontName [String], FontSize [String], Text [String])"
+Say props & "Returns: Long"

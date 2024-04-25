@@ -1,7 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: REMOTEAPPEND domain file data here"
-Say propsforexamples & "Example #1: REMOTEAPPEND matrix.com Hello World"
-Say "{{lgrey}}Append (add) some data to a file on your domain name file system."
-Say "{{lorange}}You must own the domain, or have subowner privileges on the domain."
+Say props & "Function: RemoteAppend(Domain [String], filename [String], Contents [String])"
+Say props & "Returns: HTTPRequest"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

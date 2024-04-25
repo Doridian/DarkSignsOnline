@@ -1,0 +1,4 @@
+Option Explicit
+Say props & "Function: ServerAppend(filename [String], Contents [String])"
+Say props & "Returns: HTTPRequest"
+Say "{{lred}}Restriction: Can only be used remotely (on a server/domain)"

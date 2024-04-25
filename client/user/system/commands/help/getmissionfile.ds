@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: GetMissionFile(MissionID [String])"
+Say props & "Returns: Nothing"

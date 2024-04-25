@@ -1,8 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: OVERWRITE file text"
-Say propsforexamples & "Example #1: OVERWRITE myfile.txt new data"
-Say "{{lgrey}}Write text or data to the specified file."
-Say "{{lorange}}If the specified file already exists, it will be overwritten."
-Say "{{lorange}}Use APPEND to add data to an existing file."
+Say props & "Function: Overwrite(file [String], Content [String])"
+Say props & "Returns: Nothing"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

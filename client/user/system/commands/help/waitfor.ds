@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: WaitFor(Req [HTTPRequest])"
+Say props & "Returns: String"

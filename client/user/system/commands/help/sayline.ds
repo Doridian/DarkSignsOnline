@@ -1,7 +1,3 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: SAYLINE text {"&ConsoleInvisibleChar&"{optional-properties}"&ConsoleInvisibleChar&"}"
-Say propsforexamples & "Example #1: SAYLINE hello"
-Say "{{lgrey}}Same as the SAY command, except text will be printed on the same line, without moving down."
-Say "{{lorange}}Type HELP SAY for more information."
+Say props & "Function: SayLine(s [String], YPos [Long], NoReset [Boolean])"
+Say props & "Returns: Nothing"

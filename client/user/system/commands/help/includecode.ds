@@ -1,0 +1,3 @@
+Option Explicit
+Say props & "Function: IncludeCode(Code [String])"
+Say props & "Returns: Nothing"
