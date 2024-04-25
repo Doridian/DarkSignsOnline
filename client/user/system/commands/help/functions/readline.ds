@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: ReadLine(Prompt [String], RGBVal [Long]) -> String"
+Say "{{green 12}}Function: ReadLine(Prompt [String], RGBVal [Long]) -> String"

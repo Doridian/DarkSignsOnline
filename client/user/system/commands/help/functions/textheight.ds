@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: TextHeight(FontName [String], FontSize [String]) -> Long"
+Say "{{green 12}}Function: TextHeight(FontName [String], FontSize [String]) -> Long"

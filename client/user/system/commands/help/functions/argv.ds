@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: ArgV(Number [Long]) -> Variant"
+Say "{{green 12}}Function: ArgV(Number [Long]) -> Variant"

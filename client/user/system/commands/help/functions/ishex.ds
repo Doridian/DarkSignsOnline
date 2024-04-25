@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: IsHex(Hash [String]) -> Boolean"
+Say "{{green 12}}Function: IsHex(Hash [String]) -> Boolean"

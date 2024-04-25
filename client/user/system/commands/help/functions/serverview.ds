@@ -1,4 +1,3 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: ServerView(filename [String], StartLine [Long], MaxLines [Long]) -> HTTPRequest"
+Say "{{green 12}}Function: ServerView(filename [String], StartLine [Long], MaxLines [Long]) -> HTTPRequest"
 Say "{{lred}}Restriction: Can only be used remotely (on a server/domain)"

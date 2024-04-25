@@ -1,4 +1,3 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: WriteINI(file [String], Section [String], key [String], value [String]) -> Nothing"
+Say "{{green 12}}Function: WriteINI(file [String], Section [String], key [String], value [String]) -> Nothing"
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

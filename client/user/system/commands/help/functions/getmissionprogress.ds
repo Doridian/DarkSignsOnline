@@ -1,4 +1,3 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: GetMissionProgress(MissionID [String], Key [String]) -> Nothing"
+Say "{{green 12}}Function: GetMissionProgress(MissionID [String], Key [String]) -> Nothing"
 Say "{{lred}}Restriction: Must be loaded with: DLOpen ""termlib"""

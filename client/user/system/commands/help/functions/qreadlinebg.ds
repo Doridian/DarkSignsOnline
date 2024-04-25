@@ -1,4 +1,3 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: QReadLineBG(RGBVal [Long], Prompt [String]) -> Nothing"
+Say "{{green 12}}Function: QReadLineBG(RGBVal [Long], Prompt [String]) -> Nothing"
 Say "{{lred}}Restriction: Must be loaded with: DLOpen ""termlib"""

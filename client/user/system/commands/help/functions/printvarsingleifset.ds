@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: PrintVarSingleIfSet(param [Variant]) -> Nothing"
+Say "{{green 12}}Function: PrintVarSingleIfSet(param [Variant]) -> Nothing"

@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: Coalesce(VarValues(... [Variant]) -> Variant)"
+Say "{{green 12}}Function: Coalesce(VarValues(... [Variant]) -> Variant)"

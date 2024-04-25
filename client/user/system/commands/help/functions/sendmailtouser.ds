@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: SendMailToUser(sFrom [String], sSubject [String], sMessage [String]) -> Nothing"
+Say "{{green 12}}Function: SendMailToUser(sFrom [String], sSubject [String], sMessage [String]) -> Nothing"

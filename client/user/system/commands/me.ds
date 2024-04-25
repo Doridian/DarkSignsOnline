@@ -1,3 +1,7 @@
+'CommandDefinition()
+'Example #1: ME
+'{{lgrey}}Do nothing at all!
+'{{lorange}}This is a useless secret command.
 Option Explicit
 
 ' Do nothing

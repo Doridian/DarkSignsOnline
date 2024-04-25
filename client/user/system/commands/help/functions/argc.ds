@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: ArgC() -> Long"
+Say "{{green 12}}Function: ArgC() -> Long"

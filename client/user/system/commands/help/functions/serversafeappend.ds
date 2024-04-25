@@ -1,4 +1,3 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: ServerSafeAppend(filename [String], Line [String]) -> HTTPRequest"
+Say "{{green 12}}Function: ServerSafeAppend(filename [String], Line [String]) -> HTTPRequest"
 Say "{{lred}}Restriction: Can only be used remotely (on a server/domain)"

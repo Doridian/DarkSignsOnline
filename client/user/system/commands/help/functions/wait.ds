@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: Wait(Milliseconds [Long]) -> Nothing"
+Say "{{green 12}}Function: Wait(Milliseconds [Long]) -> Nothing"

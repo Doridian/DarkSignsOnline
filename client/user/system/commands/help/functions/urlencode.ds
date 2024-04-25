@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: URLEncode(param [String]) -> String"
+Say "{{green 12}}Function: URLEncode(param [String]) -> String"

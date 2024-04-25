@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: Yield() -> Nothing"
+Say "{{green 12}}Function: Yield() -> Nothing"

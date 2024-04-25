@@ -1,4 +1,3 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: GetAsciiWithPrompt() -> Nothing"
+Say "{{green 12}}Function: GetAsciiWithPrompt() -> Nothing"
 Say "{{lred}}Restriction: Must be loaded with: DLOpen ""termlib"""

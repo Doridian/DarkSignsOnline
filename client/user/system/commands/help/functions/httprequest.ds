@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: HttpRequest(url [String], PostData [String]) -> HTTPRequest"
+Say "{{green 12}}Function: HttpRequest(url [String], PostData [String]) -> HTTPRequest"

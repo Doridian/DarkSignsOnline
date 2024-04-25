@@ -1,5 +1,4 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: SayWithBGColor(RGBVal [Long], Str [String]) -> Nothing"
+Say "{{green 12}}Function: SayWithBGColor(RGBVal [Long], Str [String]) -> Nothing"
 Say "{{lred}}Restriction: Must be loaded with: DLOpen ""termlib"""
 Say "Just like ""Say"", except you can pass a background color for the line"

@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: PrintVar(param(... [Variant]) -> Variant)"
+Say "{{green 12}}Function: PrintVar(param(... [Variant]) -> Variant)"

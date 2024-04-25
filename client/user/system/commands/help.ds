@@ -64,7 +64,6 @@ ElseIf ArgC() > 0 Then
     Quit
 End If
 
-Include "/system/commands/help/util.ds"
 Dim propsforcommands
 propsforcommands = "{{lgrey 8}}"
 
@@ -90,9 +89,9 @@ Sub RenderFolder(TheDir)
     If Str <> "" Then Say propsforcommands & ConsoleEscape(Str)
 End Sub
 
-Say props & "Available Commands"
+Say "{{green 12}}Available Commands"
 RenderFolder "/system/commands/help/commands"
-Say props & "Available Functions"
+Say "{{green 12}}Available Functions"
 RenderFolder "/system/commands/help/functions"
 
 Say "{{grey}}For more specific help, type: HELP [command|function]"

@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: GetASCII() -> Long"
+Say "{{green 12}}Function: GetASCII() -> Long"

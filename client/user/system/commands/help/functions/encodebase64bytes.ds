@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: EncodeBase64Bytes(XArr [Byte()]) -> String"
+Say "{{green 12}}Function: EncodeBase64Bytes(XArr [Byte()]) -> String"

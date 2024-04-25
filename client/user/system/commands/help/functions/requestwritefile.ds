@@ -1,3 +1,2 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-Say props & "Function: RequestWriteFile(Data [String]) -> Nothing"
+Say "{{green 12}}Function: RequestWriteFile(Data [String]) -> Nothing"
