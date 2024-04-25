@@ -180,7 +180,7 @@ Private Sub Class_Initialize()
     PrivOutput = ""
 End Sub
 
-Public Function CleanupScriptTasks()
+Public Sub CleanupScriptTasks()
     If UBound(PendingCustomDownloads) > 0 Then
         Dim X As Long
         For X = 1 To UBound(PendingCustomDownloads)
@@ -193,13 +193,13 @@ Public Function CleanupScriptTasks()
     GetAsciiWaiting(ConsoleID) = 0
     WaitingForInput(ConsoleID) = False
     WaitingForInputReturn(ConsoleID) = ""
-End Function
+End Sub
 
-Public Function UnAbort()
+Public Sub UnAbort()
     If PrivAllowUnAbort Then
         Aborted = False
     End If
-End Function
+End Sub
 
 Public Function Quit()
     Aborted = True
@@ -290,8 +290,7 @@ Public Sub Configure(ByVal NewConsoleID As Integer, ByVal NewScriptFrom As Strin
     Set SControl = NewScriptControl
     PrivParameters = NewPrivParameters
     FileKey = NewFileKey
-    PrivDisableOutput = NewDisableOutput
-    PrivRedirectOutput = NewRedirect
+
     PrivServerDomain = NewServerDomain
     PrivServerPort = NewServerPort
     PrivAllowUnAbort = NewAllowUnAbort
@@ -299,6 +298,9 @@ Public Sub Configure(ByVal NewConsoleID As Integer, ByVal NewScriptFrom As Strin
     PrivServerIP = NewServerIP
     PrivServerConnectingIP = NewServerConnectingIP
     PrivSpoofedLocalConnectingIP = PrivServerConnectingIP
+
+    PrivDisableOutput = NewDisableOutput
+    PrivRedirectOutput = NewRedirect
 End Sub
 
 Public Function Cls()
@@ -363,10 +365,12 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
     Next
 End Sub
 
+' VBTYPE: _RETURN=HTTPRequest
 Private Function DoDownloadAPI(ByVal url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal ResponseType As String) As String
     DoDownloadAPI = DoDownload(API_Server & API_Path & url, UsePost, PostData, False, ResponseType)
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Private Function DoDownload(ByVal url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean, ByVal ResponseType As String) As String
     Dim ResIndex As Long
     DoDownload = ""
@@ -408,11 +412,8 @@ InvalidNumber:
     ParseReqIDStr = -1
 End Function
 
-Public Function WaitFor(ByVal Req As Variant) As Variant
-    If VarType(Req) <> vbString Then
-        WaitFor = Req
-        Exit Function
-    End If
+' VBTYPE: Req=HTTPRequest
+Public Function WaitFor(ByVal Req As String) As String
     Dim Resp As clsHttpResponse
     Set Resp = WaitFor_Internal(Req)
     If Resp Is Nothing Then
@@ -422,7 +423,9 @@ Public Function WaitFor(ByVal Req As Variant) As Variant
     WaitFor = Resp.Response
 End Function
 
-Public Function WaitForRaw(ByVal Req As String) As Variant
+' VBTYPE: Req=HTTPRequest
+' VBTYPE: _RETURN=Variant(Long, String)
+Public Function WaitForRaw(ByVal Req As String) As Variant()
     Dim Resp As clsHttpResponse
     Set Resp = WaitFor_Internal(Req)
 
@@ -433,6 +436,7 @@ Public Function WaitForRaw(ByVal Req As String) As Variant
     WaitForRaw = Res
 End Function
 
+' VBTYPE: ReqS=HTTPRequest
 Private Function WaitFor_Internal(ByVal ReqS As String, Optional ByVal NoYield As Boolean = False) As clsHttpResponse
     Set WaitFor_Internal = Nothing
 
@@ -476,9 +480,12 @@ WaitForExit:
 End Function
 
 Public Function CD(ByVal DIR As String)
+    AssertLocalOnly
+
     CWD = DIR
 End Function
 
+' VBTYPE: _RETURN=String()
 Public Function ReadDir(ByVal RawPath As String) As Variant()
     AssertLocalOnly
     
@@ -531,6 +538,8 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
 End Function
 
 Public Function restart()
+    AssertLocalOnly
+
     If PrivDisableOutput Then
         Yield
         Exit Function
@@ -770,18 +779,6 @@ Public Function Coalesce(ParamArray VarValues() As Variant) As Variant
     Coalesce = Null
 End Function
 
-Public Function CLIParse(ByVal Src As String, ByVal Dest As String)
-    AssertLocalOnly
-
-    Dim SrcStr As String
-    SrcStr = GetFile(ResolvePath(Src))
-
-    Dim DestStr As String
-    DestStr = ParseCommandLineOptional(SrcStr, PrivConsoleID)
-
-    WriteFile ResolvePath(Dest), DestStr
-End Function
-
 Public Function ResolveCommand(ByVal Command As String) As String
     AssertLocalOnly
 
@@ -804,6 +801,7 @@ Public Function ResolvePathRel(ByVal BasePath As String, ByVal Path As String) A
     End If
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function HttpRequest(ByVal url As String, Optional ByVal PostData As String = "") As String
      HttpRequest = DoDownload(url, PostData <> "", PostData, True, "")
 End Function
@@ -905,6 +903,8 @@ Public Function Copy(ByVal Source As String, ByVal Destination As String)
 End Function
 
 Public Function Rename(ByVal Source As String, ByVal Destination As String)
+    AssertLocalOnly
+
     Move Source, Destination
 End Function
 
@@ -937,6 +937,8 @@ Public Function RD(ByVal OldDir As String)
 End Function
 
 Public Function Cat(ByVal file As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    AssertLocalOnly
+
     Cat = Display(file, StartLine, MaxLines)
 End Function
 
@@ -1096,40 +1098,47 @@ Public Function LOGOUT()
     Yield
 End Function
 
-Public Function Stats(ByVal setValue As Integer) As String
+' VBTYPE: _RETURN=HTTPRequest
+Public Function Stats() As String
     Yield
     Stats = DoDownloadAPI("get_user_stats.php", False, "", "")
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function Lookup(ByVal Domain As String) As String
     Yield
     Lookup = DoDownloadAPI("lookup.php?d=" & EncodeURLParameter(Domain), False, "", "")
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function GetDomain(ByVal IP As String) As String
     Yield
     GetDomain = DoDownloadAPI("domain_meta.php?getdomain=" & EncodeURLParameter(IP), False, "", "")
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function PingPort(ByVal Domain As String, ByVal Port As Integer) As String
     Yield
     PingPort = DoDownloadAPI("ping.php?domain=" & EncodeURLParameter(Domain) & "&port=" & EncodeURLParameter(Port), False, "", "bool_1")
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function Ping(ByVal Domain As String) As String
     Ping = PingPort(Domain, 0)
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function GetIP(ByVal Domain As String) As String
     Yield
     GetIP = DoDownloadAPI("domain_meta.php?getip=" & EncodeURLParameter(Domain), False, "", "")
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal sFileData As String) As String
     AssertLocalOnly
 
@@ -1153,6 +1162,7 @@ Public Function UPLOAD(ByVal Domain As String, ByVal Port As Long, ByVal sFileDa
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function DOWNLOAD(ByVal Domain As String, ByVal Port As Long) As String
     AssertLocalOnly
     
@@ -1201,6 +1211,7 @@ Public Function Register(ByVal Domain As String)
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function RegisterPrices() As String
     AssertLocalOnly
 
@@ -1209,6 +1220,7 @@ Public Function RegisterPrices() As String
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function ClosePort(ByVal Domain As String, ByVal Port As Long) As String
     AssertLocalOnly
 
@@ -1223,14 +1235,14 @@ Public Function ClosePort(ByVal Domain As String, ByVal Port As Long) As String
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Private Function MyDomainsHelper(ByVal DomainType As String) As String
-    AssertLocalOnly
-    
     Yield
     MyDomainsHelper = DoDownloadAPI("my_domains.php?type=" & EncodeURLParameter(DomainType), False, "", "lines")
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Private Function DomainFilesystemHelper(ByVal Domain As String, ByVal PostData As String, Optional ByVal ResponseType As String = "") As String
     Yield
 
@@ -1249,93 +1261,119 @@ Private Function DomainFilesystemHelper(ByVal Domain As String, ByVal PostData A
     Yield
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function RemoteWrite(ByVal Domain As String, ByVal filename As String, ByVal Contents As String) As String
     AssertLocalOnly
 
     RemoteWrite = DomainFilesystemHelper(Domain, "write=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
-
+' VBTYPE: _RETURN=HTTPRequest
 Public Function RemoteAppend(ByVal Domain As String, ByVal filename As String, ByVal Contents As String) As String
     AssertLocalOnly
 
     RemoteAppend = DomainFilesystemHelper(Domain, "append=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function RemoteSafeAppend(ByVal Domain As String, ByVal filename As String, ByVal Line As String) As String
     AssertLocalOnly
 
     RemoteSafeAppend = DomainFilesystemHelper(Domain, "safeappend=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Line))
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function RemoteDelete(ByVal Domain As String, ByVal filename As String) As String
     AssertLocalOnly
     
     RemoteDelete = DomainFilesystemHelper(Domain, "delete=" & EncodeURLParameter(filename))
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function RemoteDir(ByVal Domain As String) As String
     AssertLocalOnly
     
     RemoteDir = DomainFilesystemHelper(Domain, "dir=/", "lines")
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function RemoteView(ByVal Domain As String, ByVal filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    AssertLocalOnly
+
     RemoteView = DomainFilesystemHelper(Domain, "fileserver=" & EncodeURLParameter(filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function ServerWrite(ByVal filename As String, ByVal Contents As String) As String
     AssertRemoteOnly
 
     ServerWrite = DomainFilesystemHelper(ServerDomain, "write=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function ServerAppend(ByVal filename As String, ByVal Contents As String) As String
     AssertRemoteOnly
 
     ServerAppend = DomainFilesystemHelper(ServerDomain, "append=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function ServerSafeAppend(ByVal filename As String, ByVal Line As String) As String
     AssertRemoteOnly
 
     ServerSafeAppend = DomainFilesystemHelper(ServerDomain, "safeappend=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Line))
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function ServerDelete(ByVal filename As String) As String
     AssertRemoteOnly
     
     ServerDelete = DomainFilesystemHelper(ServerDomain, "delete=" & EncodeURLParameter(filename))
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function ServerDir() As String
     AssertRemoteOnly
 
     ServerDir = DomainFilesystemHelper(ServerDomain, "dir=/", "lines")
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function ServerView(ByVal filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     AssertRemoteOnly
     
     ServerView = DomainFilesystemHelper(ServerDomain, "fileserver=" & EncodeURLParameter(filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function FileServer(ByVal filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+    AssertRemoteOnly
+
     FileServer = ServerView(filename, StartLine, MaxLines)
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function MyDomains() As String
+    AssertLocalOnly
+
     MyDomains = MyDomainsHelper("domain")
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function MySubdomains() As String
+    AssertLocalOnly
+
     MySubdomains = MyDomainsHelper("subdomain")
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function MyIPs() As String
-   MyIPs = MyDomainsHelper("ip")
+    AssertLocalOnly
+
+    MyIPs = MyDomainsHelper("ip")
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function Transfer(ByVal Target As String, ByVal Amount As Long, ByVal Description As String) As String
     Yield
 
@@ -1429,6 +1467,7 @@ End Function
 
 ' RUN CODE FROM FILE
 
+' VBTYPE: XArr=Variant()
 Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Script As String, Optional XArr As Variant) As String
     AssertLocalOnly
 
@@ -1451,6 +1490,7 @@ Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOu
     Yield
 End Function
 
+' VBTYPE: XArr=Variant()
 Public Function CaptureA(ByVal Script As String, Optional XArr As Variant) As String
     CaptureA = RawRunCaptureA(True, True, Script, XArr)
 End Function
@@ -1476,7 +1516,10 @@ Public Function Capture(ParamArray XArr() As Variant) As String
     Capture = CaptureA(Script, SParamArr)
 End Function
 
+' VBTYPE: XArr=Variant()
 Public Function RunA(ByVal Script As String, Optional XArr As Variant)
+    AssertLocalOnly
+    
     Dim Output As String
     Output = RawRunCaptureA(PrivDisableOutput And PrivRedirectOutput, PrivDisableOutput, Script, XArr)
     If PrivDisableOutput And PrivRedirectOutput Then
@@ -1494,6 +1537,7 @@ Public Function Include(ByVal Script As String)
 End Function
 
 ' This allows remote/domain calls on purpose!
+
 Public Function DLOpen(ByVal Library As String)
     If LCase(Trim(Library)) = "termlib" Then
         If PrivTermlibObject Is Nothing Then
@@ -1521,6 +1565,9 @@ Public Function Run(ParamArray XArr() As Variant)
 
     Dim Script As String
     Script = XArr(0)
+    
+    MsgBox Script
+    
     If UBound(XArr) = 0 Then
         RunA Script
         Exit Function
@@ -1532,6 +1579,7 @@ Public Function Run(ParamArray XArr() As Variant)
     For X = 0 To UBound(SParamArr)
         SParamArr(X) = XArr(X + 1)
     Next
+    
     RunA Script, SParamArr
 End Function
 
@@ -1551,9 +1599,9 @@ Public Function ChatView(ByVal Enabled As Boolean)
     frmConsole.ChatView Enabled
 End Function
 
-
 ' RUN CODE FROM STRING
 
+' VBTYPE: XArr=Variant()
 Private Function RawRunCaptureCodeA(ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Code As String, Optional XArr As Variant) As String
     Dim X As Long
     
@@ -1574,6 +1622,7 @@ Private Function RawRunCaptureCodeA(ByVal RedirectOutput As Boolean, ByVal Disab
     Yield
 End Function
 
+' VBTYPE: XArr=Variant()
 Public Function CaptureCodeA(ByVal Code As String, Optional XArr As Variant) As String
     CaptureCodeA = RawRunCaptureCodeA(True, True, Code, XArr)
 End Function
@@ -1599,6 +1648,7 @@ Public Function CaptureCode(ParamArray XArr() As Variant) As String
     CaptureCode = CaptureCodeA(Script, SParamArr)
 End Function
 
+' VBTYPE: XArr=Variant()
 Public Function RunCodeA(ByVal Code As String, Optional XArr As Variant)
     Dim Output As String
     Output = RawRunCaptureCodeA(PrivDisableOutput And PrivRedirectOutput, PrivDisableOutput, Code, XArr)
@@ -1634,6 +1684,7 @@ End Function
 
 ' RUN CODE FROM DSO DOMAIN
 
+' VBTYPE: _RETURN=HTTPRequest
 Public Function Fetch(ParamArray Params() As Variant) As String
     If UBound(Params) < 1 Then
         RaiseMiscError "Fetch needs at least two parameters (domain and port)"
@@ -1657,9 +1708,10 @@ Public Function Fetch(ParamArray Params() As Variant) As String
     Fetch = ConnectRaw(False, True, True, Domain, Port, DParams)
 End Function
 
-' Params is an array
-Public Function FetchA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
-    FetchA = ConnectRaw(False, True, True, Domain, Port, Params)
+' VBTYPE: XArr=Variant()
+' VBTYPE: _RETURN=HTTPRequest
+Public Function FetchA(ByVal Domain As String, ByVal Port As Long, Optional XArr As Variant) As String
+    FetchA = ConnectRaw(False, True, True, Domain, Port, XArr)
 End Function
 
 Public Function Connect(ParamArray Params() As Variant)
@@ -1692,15 +1744,16 @@ HandleRes:
     End If
 End Function
 
-' Params is an array
-Public Function ConnectA(ByVal Domain As String, ByVal Port As Long, Optional Params As Variant)
+' VBTYPE: XArr=Variant()
+Public Function ConnectA(ByVal Domain As String, ByVal Port As Long, Optional XArr As Variant)
     Dim Res As String
-    Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port, Params)
+    Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port, XArr)
     If PrivRedirectOutput And PrivDisableOutput Then
         Say Res
     End If
 End Function
 
+' VBTYPE: _RETURN=HTTPRequest
 Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Domain As String, ByVal Port As Long, Optional Params As Variant) As String
     Yield
     If Port < 1 Or Port > 65535 Then
@@ -1781,13 +1834,15 @@ Public Function CompileScript(ByVal Source As String, Optional ByVal FileKey As 
 End Function
 
 ' Encoding helpers
-Public Function EncodeBase64Bytes(arrData As Variant) As String
+
+' VBTYPE: XArr=Byte()
+Public Function EncodeBase64Bytes(XArr As Variant) As String
     Dim typedArrData() As Byte
     Dim X As Long
 
-    ReDim typedArrData(LBound(arrData) To UBound(arrData))
-    For X = LBound(arrData) To UBound(arrData)
-        typedArrData(X) = arrData(X)
+    ReDim typedArrData(LBound(XArr) To UBound(XArr))
+    For X = LBound(XArr) To UBound(XArr)
+        typedArrData(X) = XArr(X)
     Next
     EncodeBase64Bytes = basConsole.EncodeBase64Bytes(typedArrData)
 End Function
@@ -1796,6 +1851,7 @@ Public Function EncodeBase64Str(ByVal strData As String) As String
     EncodeBase64Str = basConsole.EncodeBase64Str(strData)
 End Function
 
+' VBTYPE: _RETURN=Byte()
 Public Function DecodeBase64Bytes(ByVal strData As String) As Variant()
     Dim Res() As Byte
     Dim ResVar() As Variant
@@ -1856,9 +1912,7 @@ Public Function SetMissionData(ByVal MissionID As String, ByVal Section As Strin
 End Function
 
 Public Function TrimWithNewline(ByVal InputStr As String) As String
-    Yield
     TrimWithNewline = basGeneral.TrimWithNewline(InputStr)
-    Yield
 End Function
 
 Public Function RequestReadFile() As String
@@ -1915,12 +1969,14 @@ Public Function SHA256(ByVal Data As String) As String
     SHA256 = basAesCtr.SHA256(Data)
 End Function
 
-Public Function RGBJoin(ByVal Val As Variant) As Long
-    RGBJoin = RGB(Val(0), Val(1), Val(2))
+' VBTYPE: XArr=Long()
+Public Function RGBJoin(ByVal XArr As Variant) As Long
+    RGBJoin = RGB(XArr(0), XArr(1), XArr(2))
 End Function
 
-Public Function RGBSplit(ByVal lColor As Long) As Variant
-    Dim Ret() As Long
+' VBTYPE: _RETURN=Long()
+Public Function RGBSplit(ByVal lColor As Long) As Variant()
+    Dim Ret() As Variant
     ReDim Ret(0 To 2)
     Ret(0) = lColor And &HFF ' mask the low byte
     Ret(1) = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte

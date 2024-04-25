@@ -28,12 +28,13 @@ Private Sub Class_Initialize()
     IsConf = False
 End Sub
 
-Public Function SayWithBGColor(ByVal RGBVal As String, ByVal Str As String)
+' Just like "Say", except you can pass a background color for the line
+Public Function SayWithBGColor(ByVal RGBVal As Long, ByVal Str As String)
     GSF.Say Str
     GSF.DRAW -1, RGBVal, "solid"
 End Function
 
-Public Function SaySlowWithBGColor(ByVal RGBVal As String, ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
+Public Function SaySlowWithBGColor(ByVal RGBVal As Long, ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
     If GSF.IsOutputDisabled Then
         GSF.Say Str & Style
         Exit Function
@@ -58,7 +59,7 @@ Public Function SaySlow(ByVal Delay As Long, ByVal Str As String, ByVal Style As
     SaySlowWithBGColor -1, Delay, Str, Style
 End Function
 
-Public Function GetAsciiWithCPromptBG(ByVal RGBVal As String, ByVal Prompt As String)
+Public Function GetAsciiWithCPromptBG(ByVal RGBVal As Long, ByVal Prompt As String)
     GSF.Say "{{noprespace}}" & Prompt & "> [_]"
     If RGBVal >= 0 Then
         GSF.DRAW -1, RGBVal, "solid"
@@ -117,7 +118,7 @@ Public Function QReadLine(ByVal Prompt As String)
     QReadLine = LCase(Trim(GSF.ReadLine(Prompt)))
 End Function
 
-Public Function QReadLineBG(ByVal RGBVal As String, ByVal Prompt As String)
+Public Function QReadLineBG(ByVal RGBVal As Long, ByVal Prompt As String)
     QReadLineBG = LCase(Trim(GSF.ReadLine(Prompt, RGBVal)))
 End Function
 
