@@ -1,5 +1,5 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
+Include "/system/commands/help/util.ds"
 
 Say props & "Command: LOGOUT"
 Say "{{lgrey}}Log out of Dark Signs."

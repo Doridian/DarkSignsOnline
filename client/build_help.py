@@ -39,18 +39,22 @@ def process_vb_file(file: str, always_add_limits: list[str] | None = None) -> li
 
         funcdef = line[len(F_PREFIX):].strip()
 
-        funcdef = funcdef.replace("()", "[]")
         idx = funcdef.find("(")
         if idx == -1:
+            print("Skipping ", line)
             continue
         name = funcdef[:idx]
         args: list[DSArg] = []
         argstr = funcdef[idx+1:]
         idx = argstr.find(")")
         if idx == -1:
+            print("Skipping ", line)
             continue
         funcdef = argstr[idx+1:]
         argstr = argstr[:idx].strip()
+
+        funcdef = funcdef.replace("()", "[]")
+        argstr = argstr.replace("()", "[]")
 
         func_limits: list[str] = []
         if always_add_limits:
@@ -178,7 +182,7 @@ def vbesc(instr: str | None) -> str:
 def make_help_file(func: DSFunc) -> str:
     res: list[str] = []
     res.append("Option Explicit")
-    res.append("Include \"/system/commands/help/_util.ds\"")
+    res.append("Include \"/system/commands/help/util.ds\"")
     res.append(f'Say props & "Function: {vbesc(func.name)}({vbesc(", ".join([f"{arg.name} [{arg.arg_type}]" for arg in func.args]))}) -> {vbesc(func.return_type) or "Nothing"}"')
     lred = "{{lred}}"
     for limit in func.limitations:
@@ -196,10 +200,6 @@ ALL_FUNCS += process_vb_file("clsScriptTermlib.cls", ["Must be loaded with: DLOp
 
 for func in ALL_FUNCS:
     lfunc = func.name.lower()
-
-    if exists(f"./user/system/commands/{lfunc}.ds"):
-        print("Skipping docs for", func.name)
-        continue
 
     with open(f"./user/system/commands/help/functions/{lfunc}.ds", "wb") as f:
         f.write(make_help_file(func).encode("latin1"))

@@ -177,8 +177,7 @@ End Function
 
 Public Function FileExists(s As String) As Boolean
     On Error GoTo zxc
-    Dim n As Long
-    n = basGeneral.FileLen(s)
+    GetAttr SafePath(s)
     FileExists = True
     Exit Function
 zxc:

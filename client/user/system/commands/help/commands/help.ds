@@ -1,5 +1,5 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
+Include "/system/commands/help/util.ds"
 
 Say props & "Command: HELP"
 Say "{{lgrey}}Display the available console commands."

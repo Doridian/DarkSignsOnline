@@ -1,0 +1,4 @@
+Option Explicit
+Include "/system/commands/help/util.ds"
+Say props & "Function: DirExists(TheDir [String]) -> Boolean"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

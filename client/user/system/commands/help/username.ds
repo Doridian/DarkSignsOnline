@@ -1,8 +1,0 @@
-Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: USERNAME your-username"
-Say propsforexamples & "Example #1: USERNAME jsmith"
-Say "{{lgrey}}Set or change your Dark Signs username."
-Say "{{lorange}}If your username and password are invalid or not set, the majority of features will be disabled."
-Say "{{lorange}}If you do not have an account, visit the website to create one."

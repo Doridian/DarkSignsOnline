@@ -1,5 +1,0 @@
-Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: NOW"
-Say "{{lgrey}}Display the current system date and time."

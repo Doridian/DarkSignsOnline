@@ -1,0 +1,3 @@
+Option Explicit
+Include "/system/commands/help/util.ds"
+Say props & "Function: ConsoleWidth() -> Long"

@@ -1,6 +1,0 @@
-Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: MYSUBDOMAINS"
-Say propsforexamples & "Example #1: MYSUBDOMAINS mySite.com"
-Say "{{lgrey}}List subdomains to a domain that is registed to you."

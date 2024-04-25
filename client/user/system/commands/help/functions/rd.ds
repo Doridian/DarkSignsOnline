@@ -1,4 +1,4 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
+Include "/system/commands/help/util.ds"
 Say props & "Function: RD(OldDir [String]) -> Nothing"
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

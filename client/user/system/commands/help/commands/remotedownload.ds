@@ -1,5 +1,5 @@
 Option Explicit
-Include "/system/commands/help/_util.ds"
+Include "/system/commands/help/util.ds"
 
 Say props & "Command: REMOTEDOWNLOAD domain filename targetname"
 Say propsforexamples & "Example #1: REMOTEDOWNLOAD matrix.com remotefile.ds localfile.ds"

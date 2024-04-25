@@ -513,7 +513,7 @@ CommandForNext:
             GoTo ArgIsNotVar
         End If
 
-        If FileExists("/system/commands/help/" & ArgVal & ".ds") Or FileExists("/system/commands/" & ArgVal & ".ds") Then
+        If FileExists("/system/commands/help/functions/" & ArgVal & ".ds") Then
             GoTo ArgIsNotVar
         End If
 

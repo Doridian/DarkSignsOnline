@@ -1,5 +1,0 @@
-Option Explicit
-Include "/system/commands/help/_util.ds"
-
-Say props & "Command: MYDOMAINS"
-Say "{{lgrey}}List the domain names currently registered to you."

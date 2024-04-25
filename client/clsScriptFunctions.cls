@@ -866,6 +866,18 @@ Public Function FormatKB(ToConvert As Long) As String
     FormatKB = basGeneral.FormatKB(ToConvert)
 End Function
 
+Public Function FileExists(ByVal TheFile As String) As Boolean
+    AssertLocalOnly
+
+    FileExists = basGeneral.FileExists(ResolvePath(TheFile))
+End Function
+
+Public Function DirExists(ByVal TheDir As String) As Boolean
+    AssertLocalOnly
+
+    DirExists = basGeneral.DirExists(ResolvePath(TheDir))
+End Function
+
 Public Function Overwrite(ByVal file As String, ByVal Content As String)
     AssertLocalOnly
 
@@ -1929,7 +1941,7 @@ Public Function RequestReadFile() As String
             Exit Function
         End If
         filename = ResolvePath(filename)
-        If Not FileExists(filename) Then
+        If Not basGeneral.FileExists(filename) Then
             Say "{{red}}File not found. Please choose an existing file."
         Else
             RequestReadFile = basGeneral.GetFile(filename)
@@ -1954,7 +1966,7 @@ Public Function RequestWriteFile(ByVal Data As String)
             Exit Function
         End If
         filename = ResolvePath(filename)
-        If FileExists(filename) Then
+        If basGeneral.FileExists(filename) Then
             Say "{{red}}File already exists. Please choose a different filename."
         Else
             basGeneral.WriteFile filename, Data

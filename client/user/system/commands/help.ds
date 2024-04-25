@@ -2,43 +2,94 @@ Option Explicit
 
 Dim X
 
+Function ResolveHelpFile(QStr)
+    Dim CanBeCommand, CanBeFunction, CommandFile, FunctionFile, QType
+
+    CanBeCommand = True
+    CanBeFunction = True
+    QType = "any"
+    If Left(QStr, 1) = "@" Then
+        QStr = Mid(QStr, 2)
+        CanBeFunction = False
+        QType = "command"
+    ElseIf Left(QStr, 1) = "$" Then
+        QStr = Mid(QStr, 2)
+        CanBeCommand = False
+        QType = "function"
+    End If
+    
+    If CanBeCommand Then
+        CommandFile = "/system/commands/help/commands/" & QStr & ".ds"
+        CanBeCommand = FileExists(CommandFile)
+    End If
+
+    If CanBeFunction Then
+        FunctionFile = "/system/commands/help/functions/" & QStr & ".ds"
+        CanBeFunction = FileExists(FunctionFile)
+    End If
+
+    If CanBeCommand And CanBeFunction Then
+        Say "{{red}}Ambiguous: " & ConsoleEscape(QStr) & " (could be a command or a function)"
+        Say "{{yellow}}Hint: Use @[command] for commands and $[function] for functions."
+        Quit
+    End If
+
+    If CanBeCommand Then
+        ResolveHelpFile = CommandFile
+    ElseIf CanBeFunction Then
+        ResolveHelpFile = FunctionFile
+    Else
+        Say "{{red}}No help available for " & ConsoleEscape(QStr) & " of type " & QType
+        Quit
+    End If
+End Function
+
+Dim HelpFile
 If ArgC() > 1 Then
+    HelpFile = ResolveHelpFile(ArgV(1))
+
     Dim ArgsPass()
     ReDim ArgsPass(ArgC() - 2)
     For X = 2 To ArgC()
         ArgsPass(X - 2) = ArgV(X)
     Next
-    RunEx "/system/commands/help/" & ArgV(1) & ".ds", ArgsPass
+    RunA HelpFile, ArgsPass
     Quit
 ElseIf ArgC() > 0 Then
-    Run "/system/commands/help/" & ArgV(1) & ".ds"
+    HelpFile = ResolveHelpFile(ArgV(1))
+    Run HelpFile
     Quit
 End If
 
-Include "/system/commands/help/_util.ds"
+Include "/system/commands/help/util.ds"
 Dim propsforcommands
 propsforcommands = "{{lgrey 8}}"
 
-Dim HelpFiles
-HelpFiles = ReadDir("/system/commands/help")
+Sub RenderFolder(TheDir)
+    Dim HelpFiles
+    HelpFiles = ReadDir(TheDir)
+
+    Dim XName
+    Dim Str
+    Str = ""
+    For X = 0 To UBound(HelpFiles)
+        XName = HelpFiles(X)
+        If Left(XName, 1) <> "_" And Right(Xname, 3) = ".ds" Then
+            If Str <> "" Then Str = Str & ", "
+            Str = Str & Left(Xname, Len(Xname) - 3)
+
+            If Len(Str) > 80 Then
+                Say propsforcommands & ConsoleEscape(Str)
+                Str = ""
+            End If
+        End If
+    Next
+    If Str <> "" Then Say propsforcommands & ConsoleEscape(Str)
+End Sub
 
 Say props & "Available Commands"
+RenderFolder "/system/commands/help/commands"
+Say props & "Available Functions"
+RenderFolder "/system/commands/help/functions"
 
-Dim XName
-Dim Str
-Str = ""
-For X = 0 To UBound(HelpFiles)
-    XName = HelpFiles(X)
-    If Left(XName, 1) <> "_" And Right(Xname, 3) = ".ds" Then
-        If Str <> "" Then Str = Str & ", "
-        Str = Str & Left(Xname, Len(Xname) - 3)
-
-        If Len(Str) > 80 Then
-            Say propsforcommands & Str
-            Str = ""
-        End If
-    End If
-Next
-If Str <> "" Then Say propsforcommands & Str
-
-Say "{{grey}}For more specific help on a command, type: HELP [command]"
+Say "{{grey}}For more specific help, type: HELP [command|function]"
