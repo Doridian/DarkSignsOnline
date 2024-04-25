@@ -29,7 +29,7 @@ Dim Str
 Str = ""
 For X = 0 To UBound(HelpFiles)
     XName = HelpFiles(X)
-    If Right(Xname, 3) = ".ds" Then
+    If Left(XName, 1) <> "_" And Right(Xname, 3) = ".ds" Then
         If Str <> "" Then Str = Str & ", "
         Str = Str & Left(Xname, Len(Xname) - 3)
 
