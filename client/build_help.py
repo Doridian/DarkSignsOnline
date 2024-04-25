@@ -185,7 +185,7 @@ def make_help_file(func: DSFunc) -> str:
         res.append(f'Say "{lred}Restriction: {vbesc(limit)}"')
 
     if func.docs:
-        for doc in func.docs.split("\r\n"):
+        for doc in func.docs.strip().split("\r\n"):
             res.append(f'Say "{vbesc(doc)}"')
 
     return "\r\n".join(res) + "\r\n"
