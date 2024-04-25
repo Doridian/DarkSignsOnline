@@ -1565,9 +1565,7 @@ Public Function Run(ParamArray XArr() As Variant)
 
     Dim Script As String
     Script = XArr(0)
-    
-    MsgBox Script
-    
+
     If UBound(XArr) = 0 Then
         RunA Script
         Exit Function
