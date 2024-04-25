@@ -1,3 +1,5 @@
+'CommandDefinition(Optional Topic As String)
+'{{lgrey}}Display the available console commands and functions
 Option Explicit
 
 Dim X

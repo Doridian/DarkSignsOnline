@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: WaitFor(Req [HTTPRequest]) -> String"
+Say "{{green 12}}Function: WaitFor(Req[HTTPRequest]) -> String"

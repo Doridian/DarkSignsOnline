@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: RGBSplit(lColor [Long]) -> Long()"
+Say "{{green 12}}Function: RGBSplit(lColor[Long]) -> Long()"

@@ -1,3 +1,5 @@
+'CommandDefinition()
+'{{lgrey}}Display the available shortcut keys and their actions in the console.
 Option Explicit
 
 Dim ss

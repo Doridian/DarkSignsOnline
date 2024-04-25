@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: ConsoleEscape(tmpS [String]) -> String"
+Say "{{green 12}}Function: ConsoleEscape(tmpS[String]) -> String"

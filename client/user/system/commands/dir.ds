@@ -1,3 +1,5 @@
+'CommandDefinition(Optional Target As String = ".")"
+'{{lgrey}}Display files and folders in the active or given directory.
 Option Explicit
 
 Dim LSArg

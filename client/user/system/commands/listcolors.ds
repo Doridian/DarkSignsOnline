@@ -1,3 +1,5 @@
+'CommandDefinition()
+'{{lgrey}}Display the available colors and color codes in the console.
 Option Explicit
 
 Sub ShowCol(ByVal Color)

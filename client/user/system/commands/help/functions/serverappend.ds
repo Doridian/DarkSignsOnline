@@ -1,3 +1,3 @@
 Option Explicit
-Say "{{green 12}}Function: ServerAppend(filename [String], Contents [String]) -> HTTPRequest"
+Say "{{green 12}}Function: ServerAppend(filename[String], Contents[String]) -> HTTPRequest"
 Say "{{lred}}Restriction: Can only be used remotely (on a server/domain)"

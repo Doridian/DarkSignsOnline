@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: Transfer(Target [String], Amount [Long], Description [String]) -> HTTPRequest"
+Say "{{green 12}}Function: Transfer(Target[String], Amount[Long], Description[String]) -> HTTPRequest"

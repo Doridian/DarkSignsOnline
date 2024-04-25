@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: GetIP(Domain [String]) -> HTTPRequest"
+Say "{{green 12}}Function: GetIP(Domain[String]) -> HTTPRequest"

@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: DLOpenHash(Hash [String]) -> Nothing"
+Say "{{green 12}}Function: DLOpenHash(Hash[String]) -> Nothing"

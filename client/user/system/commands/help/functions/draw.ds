@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: DRAW(YPos [Long], RGBVal [Long], mode [String]) -> Nothing"
+Say "{{green 12}}Function: DRAW(YPos[Long], RGBVal[Long], mode[String]) -> Nothing"

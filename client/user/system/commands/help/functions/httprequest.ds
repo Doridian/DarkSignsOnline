@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: HttpRequest(url [String], PostData [String]) -> HTTPRequest"
+Say "{{green 12}}Function: HttpRequest(url[String], <PostData[String,Default=""""]>) -> HTTPRequest"

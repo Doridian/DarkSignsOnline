@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: CompileStr(Source [String], FileKey [String]) -> String"
+Say "{{green 12}}Function: CompileStr(Source[String], <FileKey[String,Default=""""]>) -> String"

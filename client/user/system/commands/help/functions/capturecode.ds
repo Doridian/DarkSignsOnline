@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: CaptureCode(XArr(... [Variant]) -> Variant)"
+Say "{{green 12}}Function: CaptureCode(XArr(...) -> Variant)"

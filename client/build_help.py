@@ -12,12 +12,16 @@ class DSArg:
 
     def format(self) -> str:
         res = self.name
-        if self.default_value:
-            res += " = " + self.default_value
+        attribs = []
         if self.arg_type.lower() != "variant":
-            res += " [" + self.arg_type + "]"
+            attribs.append(self.arg_type)
+        if self.default_value:
+            attribs.append("Default=" + self.default_value)
+        if attribs:
+            res += "[" + ",".join(attribs) + "]"
         if self.optional:
             res = "<" + res + ">"
+        return res
 
 @dataclass(kw_only=True, eq=True)
 class DSFunc:
@@ -205,7 +209,7 @@ B_PROPS = "{{green 12}}"
 def make_func_help_file(func: DSFunc) -> str:
     res: list[str] = []
     res.append("Option Explicit")
-    res.append(f'Say "{B_PROPS}Function: {vbesc(func.name)}({vbesc(", ".join([f"{arg.name} [{arg.arg_type}]" for arg in func.args]))}) -> {vbesc(func.return_type) or "Nothing"}"')
+    res.append(f'Say "{B_PROPS}Function: {vbesc(func.name)}({vbesc(", ".join([arg.format() for arg in func.args]))}) -> {vbesc(func.return_type) or "Nothing"}"')
     lred = "{{lred}}"
     for limit in func.limitations:
         res.append(f'Say "{lred}Restriction: {vbesc(limit)}"')
@@ -220,7 +224,7 @@ def make_command_help_file(func: DSFunc) -> str:
     res: list[str] = []
     res.append("Option Explicit")
     if func.args:
-        res.append(f'Say "{B_PROPS}Command: {vbesc(func.name)} {vbesc(" ".join([f"{arg.name} [{arg.arg_type}]" for arg in func.args]))}"')
+        res.append(f'Say "{B_PROPS}Command: {vbesc(func.name)} {vbesc(" ".join([arg.format() for arg in func.args]))}"')
     else:
         res.append(f'Say "{B_PROPS}Command: {vbesc(func.name)}"')
     lred = "{{lred}}"

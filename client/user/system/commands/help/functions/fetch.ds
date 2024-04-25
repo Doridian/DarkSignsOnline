@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: Fetch(Params(... [Variant]) -> HTTPRequest"
+Say "{{green 12}}Function: Fetch(Params(...) -> HTTPRequest"

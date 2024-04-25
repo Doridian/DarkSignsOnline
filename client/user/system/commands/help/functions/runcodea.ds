@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: RunCodeA(Code [String], XArr [Variant()]) -> Nothing"
+Say "{{green 12}}Function: RunCodeA(Code[String], <XArr[Variant()]>) -> Nothing"

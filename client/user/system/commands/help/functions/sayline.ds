@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: SayLine(s [String], YPos [Long], NoReset [Boolean]) -> Nothing"
+Say "{{green 12}}Function: SayLine(s[String], <YPos[Long,Default=-1]>, <NoReset[Boolean,Default=False]>) -> Nothing"

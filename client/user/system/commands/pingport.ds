@@ -1,3 +1,7 @@
+'CommandDefinition(IPOrDomain As String, Port As Integer)
+'Example #1: PINGPORT birds.com 80
+'{{lgrey}}Check if a script is runnning on the server at the specified port number.
+'{{lorange}}You can modify this command in the file /system/commands/pingport.ds
 Option Explicit
 
 Dim Result

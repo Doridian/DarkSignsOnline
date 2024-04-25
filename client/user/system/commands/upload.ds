@@ -1,3 +1,8 @@
+'CommandDefinition(Server As String, Port As Integer, FileName As String)
+'Example #1: UPLOAD mywebsite.com 80 newscript.ds
+'{{lgrey}}Upload a file to your domain name on the specified port.
+'{{lgrey}}This script will then become connectable to all players.
+'{{lorange}}You can only upload and download scripts to domain names (servers) which you own.
 Option Explicit
 
 Dim strContents, strDomain, strPort

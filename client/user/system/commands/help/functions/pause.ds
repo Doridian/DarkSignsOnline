@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: PAUSE(Prompt [String], RGBVal [Long]) -> Nothing"
+Say "{{green 12}}Function: PAUSE(<Prompt[String,Default=""""]>, <RGBVal[Long,Default=-1]>) -> Nothing"

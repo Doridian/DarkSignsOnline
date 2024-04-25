@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: FormatKB(ToConvert [Long]) -> String"
+Say "{{green 12}}Function: FormatKB(ToConvert[Long]) -> String"

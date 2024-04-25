@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: Decrypt(Data [String], Password [String]) -> String"
+Say "{{green 12}}Function: Decrypt(Data[String], Password[String]) -> String"

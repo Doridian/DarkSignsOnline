@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: Say(Params(... [Variant]) -> Variant)"
+Say "{{green 12}}Function: Say(Params(...) -> Variant)"

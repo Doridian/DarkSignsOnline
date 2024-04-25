@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: EncodeBase64Str(strData [String]) -> String"
+Say "{{green 12}}Function: EncodeBase64Str(strData[String]) -> String"

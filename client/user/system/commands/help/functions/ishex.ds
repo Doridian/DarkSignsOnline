@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: IsHex(Hash [String]) -> Boolean"
+Say "{{green 12}}Function: IsHex(Hash[String]) -> Boolean"

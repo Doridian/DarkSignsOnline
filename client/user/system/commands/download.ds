@@ -1,3 +1,7 @@
+'CommandDefinition(Server As String, Port As Integer, FileName As String)
+'Example #1: DOWNLOAD mywebsite.com 80 thescript.ds
+'{{lgrey}}Download a script file from a sever that you own.
+'{{lorange}}You can only upload and download scripts to domain names (servers) which you own.
 Option Explicit
 
 Dim Contents

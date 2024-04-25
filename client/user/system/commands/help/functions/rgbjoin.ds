@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: RGBJoin(XArr [Long()]) -> Long"
+Say "{{green 12}}Function: RGBJoin(XArr[Long()]) -> Long"

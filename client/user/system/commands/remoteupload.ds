@@ -1,3 +1,7 @@
+'CommandDefinition(Domain As String, RemoteFileName As String, LocalFileName As String)
+'Example #1: REMOTEUPLOAD matrix.com remotefile.ds localfile.ds
+'{{lgrey}}Upload a file from your local file system to your domain name file system.
+'{{lorange}}You must own the domain, or have subowner privileges on the domain.
 Option Explicit
 
 Dim Contents

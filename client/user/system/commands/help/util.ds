@@ -1,5 +1,0 @@
-Option Explicit
-
-Dim props, propsforexamples
-props = "{{green 12}}"
-propsforexamples = "{{lgreen 12}}"

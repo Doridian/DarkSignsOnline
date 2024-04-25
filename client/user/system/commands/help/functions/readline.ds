@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: ReadLine(Prompt [String], RGBVal [Long]) -> String"
+Say "{{green 12}}Function: ReadLine(Prompt[String], <RGBVal[Long,Default=-1]>) -> String"

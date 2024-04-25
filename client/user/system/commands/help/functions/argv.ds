@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: ArgV(Number [Long]) -> Variant"
+Say "{{green 12}}Function: ArgV(Number[Long]) -> Variant"

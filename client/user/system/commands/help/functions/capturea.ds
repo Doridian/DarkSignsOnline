@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: CaptureA(Script [String], XArr [Variant()]) -> String"
+Say "{{green 12}}Function: CaptureA(Script[String], <XArr[Variant()]>) -> String"

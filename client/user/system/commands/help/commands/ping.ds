@@ -1,7 +1,5 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-
-Say props & "Command: PING domain-or-ip-server"
-Say propsforexamples & "Example #1: PING birds.com"
+Say "{{green 12}}Command: PING IPOrDomain[String]"
+Say "{{lgreen 12}}Example #1: PING birds.com"
 Say "{{lgrey}}Check if the specified server exist on the network."
 Say "{{lorange}}You can modify this command in the file /system/commands/ping.ds"

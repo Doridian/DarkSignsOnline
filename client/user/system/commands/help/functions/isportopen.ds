@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: IsPortOpen(Domain [String], Port [Integer]) -> HTTPRequest"
+Say "{{green 12}}Function: IsPortOpen(Domain[String], Port[Integer]) -> HTTPRequest"

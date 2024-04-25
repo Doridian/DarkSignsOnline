@@ -1,3 +1,3 @@
 Option Explicit
-Say "{{green 12}}Function: Cat(file [String], StartLine [Long], MaxLines [Long]) -> String"
+Say "{{green 12}}Function: Cat(file[String], <StartLine[Long,Default=0]>, <MaxLines[Long,Default=0]>) -> String"
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

@@ -1,5 +1,3 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-
-Say props & "Command: LISTCOLORS"
+Say "{{green 12}}Command: LISTCOLORS"
 Say "{{lgrey}}Display the available colors and color codes in the console."

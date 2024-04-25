@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: IncludeCode(Code [String]) -> Nothing"
+Say "{{green 12}}Function: IncludeCode(Code[String]) -> Nothing"

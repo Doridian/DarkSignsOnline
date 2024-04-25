@@ -1,8 +1,6 @@
 Option Explicit
-Include "/system/commands/help/util.ds"
-
-Say props & "Command: UPLOAD server port-number file"
-Say propsforexamples & "Example #1: UPLOAD mywebsite.com 80 newscript.ds"
+Say "{{green 12}}Command: UPLOAD Server[String] Port[Integer] FileName[String]"
+Say "{{lgreen 12}}Example #1: UPLOAD mywebsite.com 80 newscript.ds"
 Say "{{lgrey}}Upload a file to your domain name on the specified port."
 Say "{{lgrey}}This script will then become connectable to all players."
 Say "{{lorange}}You can only upload and download scripts to domain names (servers) which you own."

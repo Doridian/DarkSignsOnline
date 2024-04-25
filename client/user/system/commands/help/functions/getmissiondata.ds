@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: GetMissionData(MissionID [String], Section [String], key [String]) -> String"
+Say "{{green 12}}Function: GetMissionData(MissionID[String], Section[String], key[String]) -> String"

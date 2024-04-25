@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: WaitForRaw(Req [HTTPRequest]) -> Variant(Long, String)"
+Say "{{green 12}}Function: WaitForRaw(Req[HTTPRequest]) -> Variant(Long, String)"

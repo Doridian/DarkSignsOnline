@@ -1,3 +1,7 @@
+'CommandDefinition(IPOrDomain As String)
+'Example #1: PING birds.com
+'{{lgrey}}Check if the specified server exist on the network.
+'{{lorange}}You can modify this command in the file /system/commands/ping.ds
 Option Explicit
 
 Dim Result
