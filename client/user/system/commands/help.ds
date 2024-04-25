@@ -55,7 +55,7 @@ Function ResolveHelpFile(QStr)
     If CanBeFunction Then MCnt = MCnt + 1
     If CanBeProperty Then MCnt = MCnt + 1
 
-    If MCnt > 1Then
+    If MCnt > 1 Then
         Say "{{red}}Ambiguous: " & ConsoleEscape(QStr)
         If CanBeCommand Then Say "{{yellow}}For the command, use: HELP @" & ConsoleEscape(QStr)
         If CanBeFunction Then Say "{{yellow}}For the function, use: HELP $" & ConsoleEscape(QStr)
