@@ -21,6 +21,8 @@ Public Type ConsoleLineSegment
     
     AlignTop As Boolean
     AlighBottom As Boolean
+    VerticalOffset As Long
+    VPos As Long
 
     FontColor As Long
     FontName As String
@@ -95,6 +97,26 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
         W = Font_Width(CLine.Segments(X))
         CLine.TotalWidth = CLine.TotalWidth + W
         CLine.Segments(X).TotalWidth = W
+    Next
+
+    Dim HeightDiff As Long
+    For X = 0 To UBound(CLine.Segments)
+        HeightDiff = CLine.Height - CLine.Segments(X).Height
+        Dim VPos As Long
+        If CLine.Segments(X).AlighBottom Then
+            VPos = HeightDiff
+        ElseIf CLine.Segments(X).AlignTop Then
+            VPos = 0
+        Else
+            VPos = HeightDiff / 2
+        End If
+        VPos = VPos + CLine.Segments(X).VerticalOffset
+        If VPos > HeightDiff Then
+            VPos = HeightDiff
+        ElseIf VPos < 0 Then
+            VPos = 0
+        End If
+        CLine.Segments(X).VPos = VPos
     Next
 End Sub
 
@@ -319,13 +341,7 @@ Public Sub Print_Console()
                 If SegVal.FlashSlow Then HideLine = FlashSlow: UsedFlash = True
             End If
 
-            If SegVal.AlighBottom Then
-                frmConsole.CurrentY = printHeight + (Console(ActiveConsole, n).Height - SegVal.Height)
-            ElseIf SegVal.AlignTop Then
-                frmConsole.CurrentY = printHeight
-            Else
-                frmConsole.CurrentY = printHeight + ((Console(ActiveConsole, n).Height - SegVal.Height) / 2)
-            End If
+            frmConsole.CurrentY = printHeight + SegVal.VPos
 
             If Seg = SegMax And n = 1 And CurrentPromptVisible(ActiveConsole) And Not frmConsole.ChatBox.Visible Then
                 frmConsole.txtPromptInput.top = frmConsole.CurrentY
@@ -531,6 +547,17 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
             ElseIf Array_Has(pSplit, "bottom") Then
                 CLineSeg.AlighBottom = True
                 CLineSeg.AlignTop = False
+            End If
+            
+            Dim PIdx As Integer
+            PIdx = Array_IndexOf(pSplit, "voff:", True)
+            If PIdx >= 0 Then
+                Dim subPSplit() As String
+                subPSplit = Split(pSplit(PIdx), ":")
+                Dim VertOff As Long
+                VertOff = subPSplit(1)
+
+                CLineSeg.VerticalOffset = VertOff
             End If
 
             If Seg = 0 Then
@@ -754,10 +781,13 @@ End Function
 
 Public Function propertySpace_Size(s() As String, BaseSeg As ConsoleLineSegment) As String
     propertySpace_Size = BaseSeg.FontSize
-    Dim n As Integer
-    For n = 1 To 144
-        If Array_Has(s, "" & n) Then
-            propertySpace_Size = n
+    Dim n As Integer, tmpS As String
+
+    For n = 0 To UBound(s)
+        tmpS = s(n)
+        If IsNumeric(tmpS) Then
+            propertySpace_Size = tmpS
+            Exit For
         End If
     Next n
 
