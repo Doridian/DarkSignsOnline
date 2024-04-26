@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from os import listdir
 
+DOT_DS = ".ds"
+
 @dataclass(kw_only=True, eq=True)
 class DSArg:
     name: str
@@ -339,7 +341,7 @@ for prop in ALL_PROPS:
 
 C_PREFIX = "'commanddefinition"
 for cmd in listdir("./user/system/commands"):
-    if not cmd.endswith(".ds"):
+    if not cmd.endswith(DOT_DS):
         continue
     with open(f"./user/system/commands/{cmd}", "r") as f:
         lines = f.readlines()
@@ -349,7 +351,7 @@ for cmd in listdir("./user/system/commands"):
     if not line.lower().startswith(C_PREFIX):
         continue
 
-    line = f"{C_PREFIX} {cmd.removesuffix(".ds").upper()}{line[len(C_PREFIX):].strip()}"
+    line = f"{C_PREFIX} {cmd.removesuffix(DOT_DS).upper()}{line[len(C_PREFIX):].strip()}"
     lines[0] = line
     dfnc = process_vb_function_decl(C_PREFIX, 0, lines, [], True)
 

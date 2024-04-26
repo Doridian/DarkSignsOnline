@@ -840,7 +840,7 @@ Public Function TextWidth(ByVal Text As String) As Long
     TextWidth = DummyCLine.TotalWidth
 End Function
 
-Public Function TextHeight(ByVal Text As String, ByVal FontName As String, ByVal FontSize As String) As Long
+Public Function TextHeight(ByVal Text As String) As Long
     Dim DummyCLine As ConsoleLine
     DummyCLine = Parse_Console_Line(DummyCLine, Text)
     TextHeight = DummyCLine.Height

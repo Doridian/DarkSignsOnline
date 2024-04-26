@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: TextHeight(FontName[String], FontSize[String]) -> Long"
+Say "{{green 12}}Function: TextHeight(Text[String]) -> Long"
