@@ -836,10 +836,10 @@ End Sub
 
 Public Function TextWidth(ByVal FontName As String, ByVal FontSize As String, ByVal Text As String) As Long
     If FontName = "" Then
-        FontName = basConsole.Console_Line_Defaults.FontName
+        FontName = basConsole.Console_Line_Defaults.Segments(0).FontName
     End If
     If FontSize = "" Then
-        FontSize = basConsole.Console_Line_Defaults.FontSize
+        FontSize = basConsole.Console_Line_Defaults.Segments(0).FontSize
     End If
 
     frmConsole.lfont.FontName = FontName
@@ -850,10 +850,10 @@ End Function
 
 Public Function TextHeight(ByVal FontName As String, ByVal FontSize As String) As Long
     If FontName = "" Then
-        FontName = basConsole.Console_Line_Defaults.FontName
+        FontName = basConsole.Console_Line_Defaults.Segments(0).FontName
     End If
     If FontSize = "" Then
-        FontSize = basConsole.Console_Line_Defaults.FontSize
+        FontSize = basConsole.Console_Line_Defaults.Segments(0).FontSize
     End If
     TextHeight = Font_Height(FontName, FontSize)
 End Function

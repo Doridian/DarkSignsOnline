@@ -16,9 +16,8 @@ Public ConsoleWaitingOnRemote(1 To 4) As Boolean
 
 Private Base64 As New clsBase64
 
-Public Type ConsoleLine
+Public Type ConsoleLineSegment
     Caption As String
-    PreSpace As Boolean
     
     FontColor As Long
     FontName As String
@@ -31,10 +30,24 @@ Public Type ConsoleLine
     Flash As Boolean
     FlashFast As Boolean
     FlashSlow As Boolean
-    
+
+    StandardHeight As Long
+    MaxHeight As Long
+    TotalWidth As Long
+End Type
+
+Public Type ConsoleLine
+    Segments() As ConsoleLineSegment
+
+    StandardHeight As Long
+    MaxHeight As Long
+    TotalWidth As Long
+
+    PreSpace As Boolean
+
     Center As Boolean
     Right As Boolean
-    
+
     DrawEnabled As Boolean
     DrawColors(1 To 48) As Long
     DrawMode As String
@@ -65,6 +78,35 @@ Public ConsoleLastRenderFlash As Boolean
 Public Property Get ConsoleInvisibleChar() As String
     ConsoleInvisibleChar = Chr(7)
 End Property
+
+Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
+    Dim X As Integer, W As Long, H As Long
+    CLine.MaxHeight = 0
+    CLine.StandardHeight = 0
+    CLine.TotalWidth = 0
+    For X = 0 To UBound(CLine.Segments)
+        If CLine.Segments(X).FontName = "" Then
+            CLine.Segments(X).FontName = Console_Line_Defaults.Segments(0).FontName
+        End If
+        If CLine.Segments(X).FontSize = "" Then
+            CLine.Segments(X).FontSize = Console_Line_Defaults.Segments(0).FontSize
+        End If
+
+        H = Font_Height(CLine.Segments(X).FontName, CLine.Segments(X).FontSize)
+        CLine.Segments(X).StandardHeight = H
+        If H > CLine.StandardHeight Then
+            CLine.StandardHeight = H
+        End If
+        H = Font_Height(CLine.Segments(X).FontName, CLine.Segments(X).FontSize, CLine.Segments(X).Caption)
+        CLine.Segments(X).MaxHeight = H
+        If H > CLine.MaxHeight Then
+            CLine.MaxHeight = H
+        End If
+        W = Font_Width(CLine.Segments(X).FontName, CLine.Segments(X).FontSize, CLine.Segments(X).Caption)
+        CLine.TotalWidth = CLine.TotalWidth + W
+        CLine.Segments(X).TotalWidth = W
+    Next
+End Sub
 
 Public Sub SetDisableFlashing(ByVal NewValue As Boolean)
     DisableFlashing = NewValue
@@ -111,21 +153,12 @@ Public Sub RefreshCommandLinePrompt(ByVal ConsoleID As Integer)
     Dim PromptStr As String
     If WaitingForInput(ConsoleID) Then
         PromptStr = cPrompt(ConsoleID)
-        If Has_Property_Space(cPrompt(ConsoleID)) Then
-            Console(ConsoleID, 1) = Console_Line_Defaults
-            Console(ConsoleID, 1).PreSpace = False
-            Console(ConsoleID, 1) = Load_Property_Space(Get_Property_Space(PromptStr), Replace(Remove_Property_Space(PromptStr), ConsoleInvisibleChar, "") & " ")
-            frmConsole.QueueConsoleRender
-            Exit Sub
-        End If
-        PromptStr = Replace(PromptStr, ConsoleInvisibleChar, "")
     Else
-        PromptStr = cPath(ConsoleID) & ">"
+        PromptStr = cPath(ConsoleID) & ">{{lblue}}{{|}}{{white}}"
     End If
 
-    Console(ConsoleID, 1) = Console_Line_Defaults
-    Console(ConsoleID, 1).PreSpace = False
-    Console(ConsoleID, 1).Caption = PromptStr & " "
+    SayRaw ConsoleID, "{{noprespace}}" & PromptStr & " ", -1
+    CurrentPromptVisible(ConsoleID) = True
 
     frmConsole.QueueConsoleRender
 End Sub
@@ -155,7 +188,8 @@ Public Sub Shift_Console_Lines(ByVal ConsoleID As Integer)
     Next n
 
     Console(ConsoleID, 1) = Console_Line_Defaults
-    Console(ConsoleID, 1).Caption = ""
+    Console(ConsoleID, 1).Segments(0).Caption = ""
+    CalculateConsoleLine Console(ConsoleID, 1)
 
     frmConsole.QueueConsoleRender
 End Sub
@@ -190,13 +224,13 @@ Public Sub Print_Console()
     printHeight = frmConsole.Height - 840 + addOn
     frmConsole.CurrentY = printHeight
 
-    frmConsole.FontBold = Console_Line_Defaults.FontBold
-    frmConsole.FontItalic = Console_Line_Defaults.FontItalic
-    frmConsole.FontUnderline = Console_Line_Defaults.FontUnderline
-    frmConsole.FontStrikethru = Console_Line_Defaults.FontStrikethru
-    frmConsole.FontSize = Console_Line_Defaults.FontSize
-    frmConsole.FontName = Console_Line_Defaults.FontName
-    frmConsole.ForeColor = Console_Line_Defaults.FontColor
+    frmConsole.FontBold = Console_Line_Defaults.Segments(0).FontBold
+    frmConsole.FontItalic = Console_Line_Defaults.Segments(0).FontItalic
+    frmConsole.FontUnderline = Console_Line_Defaults.Segments(0).FontUnderline
+    frmConsole.FontStrikethru = Console_Line_Defaults.Segments(0).FontStrikethru
+    frmConsole.FontSize = Console_Line_Defaults.Segments(0).FontSize
+    frmConsole.FontName = Console_Line_Defaults.Segments(0).FontName
+    frmConsole.ForeColor = Console_Line_Defaults.Segments(0).FontColor
 
     If ConsoleWaitingOnRemote(ActiveConsole) Then
         frmConsole.CurrentX = ConsoleXSpacing
@@ -209,115 +243,117 @@ Public Sub Print_Console()
 
     Dim ConsumedInputPrompt As Boolean
     ConsumedInputPrompt = False
+    
+    Dim Seg As Integer, SegMax As Integer
 
     frmConsole.CurrentX = ConsoleXSpacing
     n = 0
     Do
         n = n + 1
-
-        frmConsole.FontBold = Console(ActiveConsole, n).FontBold
-        frmConsole.FontItalic = Console(ActiveConsole, n).FontItalic
-        frmConsole.FontUnderline = Console(ActiveConsole, n).FontUnderline
-        frmConsole.FontStrikethru = Console(ActiveConsole, n).FontStrikethru
-
-        frmConsole.FontSize = Console_FontSize(n, ActiveConsole)
         
-        frmConsole.FontName = Console_FontName(n, ActiveConsole)
-        frmConsole.ForeColor = Console_FontColor(n, ActiveConsole)
-
+        Dim NextX As Long
         Dim FontHeight As Long
-        FontHeight = Font_Height(Console_FontName(n, ActiveConsole), Console_FontSize(n, ActiveConsole))
-
+        FontHeight = Console(ActiveConsole, n).StandardHeight + yDiv
         printHeight = printHeight - FontHeight
 
-        frmConsole.CurrentY = printHeight
-
-        Dim LineBackColor As Long
-        LineBackColor = frmConsole.BackColor
-
-        '--------------- DRAW ------------------------------------------
-        '--------------- DRAW ------------------------------------------
-        If Console(ActiveConsole, n).DrawEnabled = True Then
-            tmpY = frmConsole.CurrentY
-            tmpY2 = tmpY - (yDiv / 2)
-            
-            frmConsole.CurrentY = tmpY
-            
-            If i(Console(ActiveConsole, n).DrawMode) = "solid" Then
-                LineBackColor = Console(ActiveConsole, n).DrawColors(1)
-                'draw it all in one, much faster
-                frmConsole.Line _
-                (((frmConsole.Width / DrawDividerWidth) * 0), tmpY2)- _
-                ((frmConsole.Width / DrawDividerWidth) * _
-                (DrawDividerWidth), _
-                (tmpY2 + FontHeight)), _
-                LineBackColor, BF
-            Else
-                For n2 = 1 To DrawDividerWidth
-                    frmConsole.Line _
-                    (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
-                    ((frmConsole.Width / DrawDividerWidth) * _
-                    (n2), _
-                    (tmpY2 + FontHeight)), _
-                    Console(ActiveConsole, n).DrawColors(n2), BF
-                Next n2
-            End If
-        
-            frmConsole.CurrentY = tmpY
-        End If
-DontDraw:
-        '--------------- DRAW ------------------------------------------
-        '--------------- DRAW ------------------------------------------
-
-        tmpS = Console(ActiveConsole, n).Caption
-
-        If Not DisableFlashing Then
-            Dim HideLine As Boolean
-            HideLine = False
-            If Console(ActiveConsole, n).Flash Then HideLine = Flash: UsedFlash = True
-            If Console(ActiveConsole, n).FlashFast Then HideLine = FlashFast: UsedFlash = True
-            If Console(ActiveConsole, n).FlashSlow Then HideLine = FlashSlow: UsedFlash = True
-            If HideLine Then
-                frmConsole.Print "  "
-                GoTo NextOne
-            End If
-        End If
-
-        frmConsole.CurrentX = ConsoleXSpacing
-
         isAligned = False
-        
-        frmConsole.lfont.FontSize = Console_FontName(n, ActiveConsole)
-        frmConsole.lfont.FontName = Console_FontSize(n, ActiveConsole)
-        frmConsole.lfont.Caption = tmpS
+
+        NextX = ConsoleXSpacing
         If Console(ActiveConsole, n).Center = True Then
-            frmConsole.CurrentX = (frmConsole.Width / 2) - (frmConsole.lfont.Width / 2)
+            NextX = (frmConsole.Width / 2) - (Console(ActiveConsole, n).TotalWidth / 2)
             isAligned = True
         End If
         If Console(ActiveConsole, n).Right = True Then
-            frmConsole.CurrentX = (frmConsole.Width) - (frmConsole.lfont.Width) - ConsoleXSpacing
+            NextX = (frmConsole.Width) - (Console(ActiveConsole, n).TotalWidth) - ConsoleXSpacing
             isAligned = True
         End If
         
         If Console(ActiveConsole, n).PreSpace Then
-            If isAligned <> True Then frmConsole.CurrentX = ConsoleXSpacingIndent
+            If isAligned <> True Then NextX = ConsoleXSpacingIndent
         End If
 
-        If n = 1 And CurrentPromptVisible(ActiveConsole) And Not frmConsole.ChatBox.Visible Then
-            frmConsole.txtPromptInput.top = frmConsole.CurrentY
-            frmConsole.txtPromptInput.Left = frmConsole.CurrentX + frmConsole.lfont.Width
-            frmConsole.txtPromptInput.Height = frmConsole.lfont.Height
-            frmConsole.txtPromptInput.Width = frmConsole.Width - frmConsole.txtPromptInput.Left
-            frmConsole.txtPromptInput.FontSize = frmConsole.lfont.FontSize
-            frmConsole.txtPromptInput.FontName = frmConsole.lfont.FontName
-            frmConsole.txtPromptInput.ForeColor = Console_FontColor(n, ActiveConsole)
-            frmConsole.txtPromptInput.BackColor = LineBackColor
-            frmConsole.txtPromptInput.Visible = True
-            frmConsole.txtPromptInput.SetFocus
-            ConsumedInputPrompt = True
-        End If
+        SegMax = UBound(Console(ActiveConsole, n).Segments)
+        For Seg = 0 To SegMax
+            frmConsole.FontBold = Console(ActiveConsole, n).Segments(Seg).FontBold
+            frmConsole.FontItalic = Console(ActiveConsole, n).Segments(Seg).FontItalic
+            frmConsole.FontUnderline = Console(ActiveConsole, n).Segments(Seg).FontUnderline
+            frmConsole.FontStrikethru = Console(ActiveConsole, n).Segments(Seg).FontStrikethru
+    
+            frmConsole.FontSize = Console(ActiveConsole, n).Segments(Seg).FontSize
+            
+            frmConsole.FontName = Console(ActiveConsole, n).Segments(Seg).FontName
+            frmConsole.ForeColor = Console(ActiveConsole, n).Segments(Seg).FontColor
 
-        frmConsole.Print tmpS
+            frmConsole.CurrentY = printHeight
+
+            Dim LineBackColor As Long
+            LineBackColor = frmConsole.BackColor
+    
+            If Seg = 0 Then
+                '--------------- DRAW ------------------------------------------
+                '--------------- DRAW ------------------------------------------
+                If Console(ActiveConsole, n).DrawEnabled = True Then
+                    tmpY = frmConsole.CurrentY
+                    tmpY2 = tmpY - (yDiv / 2)
+
+                    If i(Console(ActiveConsole, n).DrawMode) = "solid" Then
+                        LineBackColor = Console(ActiveConsole, n).DrawColors(1)
+                        'draw it all in one, much faster
+                        frmConsole.Line _
+                        (((frmConsole.Width / DrawDividerWidth) * 0), tmpY2)- _
+                        ((frmConsole.Width / DrawDividerWidth) * _
+                        (DrawDividerWidth), _
+                        (tmpY2 + FontHeight)), _
+                        LineBackColor, BF
+                    Else
+                        For n2 = 1 To DrawDividerWidth
+                            frmConsole.Line _
+                            (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
+                            ((frmConsole.Width / DrawDividerWidth) * _
+                            (n2), _
+                            (tmpY2 + FontHeight)), _
+                            Console(ActiveConsole, n).DrawColors(n2), BF
+                        Next n2
+                    End If
+
+                    frmConsole.CurrentY = tmpY
+                End If
+                '--------------- DRAW ------------------------------------------
+                '--------------- DRAW ------------------------------------------
+            End If
+            tmpS = Console(ActiveConsole, n).Segments(Seg).Caption
+
+            If Not DisableFlashing Then
+                Dim HideLine As Boolean
+                HideLine = False
+                If Console(ActiveConsole, n).Segments(Seg).Flash Then HideLine = Flash: UsedFlash = True
+                If Console(ActiveConsole, n).Segments(Seg).FlashFast Then HideLine = FlashFast: UsedFlash = True
+                If Console(ActiveConsole, n).Segments(Seg).FlashSlow Then HideLine = FlashSlow: UsedFlash = True
+                If HideLine Then
+                    frmConsole.CurrentX = frmConsole.CurrentX + Console(ActiveConsole, n).Segments(Seg).TotalWidth
+                    GoTo NextOne
+                End If
+            End If
+
+            frmConsole.CurrentX = NextX
+            NextX = NextX + Console(ActiveConsole, n).Segments(Seg).TotalWidth
+
+            If Seg = SegMax And n = 1 And CurrentPromptVisible(ActiveConsole) And Not frmConsole.ChatBox.Visible Then
+                frmConsole.txtPromptInput.top = frmConsole.CurrentY
+                frmConsole.txtPromptInput.Left = NextX
+                frmConsole.txtPromptInput.Height = frmConsole.lfont.Height
+                frmConsole.txtPromptInput.Width = frmConsole.Width - frmConsole.txtPromptInput.Left
+                frmConsole.txtPromptInput.FontSize = frmConsole.lfont.FontSize
+                frmConsole.txtPromptInput.FontName = frmConsole.lfont.FontName
+                frmConsole.txtPromptInput.ForeColor = Console(ActiveConsole, n).Segments(Seg).FontColor
+                frmConsole.txtPromptInput.BackColor = LineBackColor
+                frmConsole.txtPromptInput.Visible = True
+                frmConsole.txtPromptInput.SetFocus
+                ConsumedInputPrompt = True
+            End If
+    
+            frmConsole.Print tmpS
+        Next
 NextOne:
     Loop Until printHeight < 0 Or n >= 299
 ExitLoop:
@@ -328,67 +364,37 @@ ExitLoop:
     ConsoleLastRenderFlash = UsedFlash
 End Sub
 
-
-Public Function Console_FontSize(ByVal consoleIndex As Integer, ByVal ConsoleID As Integer) As String
-    Console_FontSize = Trim(Console(ConsoleID, consoleIndex).FontSize)
-    
-    'if not specified, get the defaul
-    If Console_FontSize = "" Then
-        Console_FontSize = Console_Line_Defaults.FontSize
-        Exit Function
-    End If
-    
-    'don't allow a smaller font size than 8
-    If Console_FontSize < 8 Then Console_FontSize = 8
-    
-    'don't allow a larger font size than Max_Font_Size
-    If Console_FontSize > Max_Font_Size Then Console_FontSize = Max_Font_Size
-End Function
-
-Public Function Console_FontColor(ByVal consoleIndex As Integer, ByVal ConsoleID As Integer) As Long
-    Console_FontColor = Trim(Console(ConsoleID, consoleIndex).FontColor)
-    
-    If Console_FontColor = 0 Then
-        'if no color is specified, make it white
-        Console_FontColor = Console_Line_Defaults.FontColor
-    End If
-
-End Function
-
-Public Function Console_FontName(ByVal consoleIndex As Integer, ByVal ConsoleID As Integer) As String
-    Console_FontName = Trim(Console(ConsoleID, consoleIndex).FontName)
-    
-    'only allow certain fonts that exist on all computers
-    If Is_Valid_Font(Console_FontName) = True Then
-        'the font name is ok
-        Console_FontName = Trim(Console_FontName)
-        Exit Function
-    Else
-        Console_FontName = Console_Line_Defaults.FontName
-    End If
-End Function
-
 Public Function Console_Line_Defaults() As ConsoleLine
-    Console_Line_Defaults.Caption = ""
-    Console_Line_Defaults.FontBold = RegLoad("Default_FontBold", "True")
-    Console_Line_Defaults.FontItalic = RegLoad("Default_FontItalic", "False")
-    Console_Line_Defaults.FontName = RegLoad("Default_FontName", "Verdana")
-    Console_Line_Defaults.FontSize = RegLoad("Default_FontSize", "10")
-    Console_Line_Defaults.FontUnderline = RegLoad("Default_FontUnderline", "False")
-    Console_Line_Defaults.FontColor = RegLoad("Default_FontColor", RGB(255, 255, 255))
+    ReDim Console_Line_Defaults.Segments(0 To 0)
+    Console_Line_Defaults.Segments(0).Caption = ""
+    Console_Line_Defaults.Segments(0).FontBold = RegLoad("Default_FontBold", "True")
+    Console_Line_Defaults.Segments(0).FontItalic = RegLoad("Default_FontItalic", "False")
+    Console_Line_Defaults.Segments(0).FontName = RegLoad("Default_FontName", "Verdana")
+    Console_Line_Defaults.Segments(0).FontSize = RegLoad("Default_FontSize", "10")
+    Console_Line_Defaults.Segments(0).FontUnderline = RegLoad("Default_FontUnderline", "False")
+    Console_Line_Defaults.Segments(0).FontColor = RegLoad("Default_FontColor", RGB(255, 255, 255))
+    Console_Line_Defaults.Segments(0).Flash = False
+    Console_Line_Defaults.Segments(0).FlashFast = False
+    Console_Line_Defaults.Segments(0).FlashSlow = False
+    CalculateConsoleLine Console_Line_Defaults
+
     Console_Line_Defaults.DrawEnabled = False
-    Console_Line_Defaults.Flash = False
-    Console_Line_Defaults.FlashFast = False
-    Console_Line_Defaults.FlashSlow = False
     Console_Line_Defaults.Center = False
     Console_Line_Defaults.Right = False
 End Function
 
-Public Function Font_Height(ByVal theFontName As String, ByVal theFontSize As String) As Long
+Public Function Font_Height(ByVal theFontName As String, ByVal theFontSize As String, Optional ByVal tmpS As String = "this is to check the height OF FONTS") As Long
     frmConsole.lfont.FontName = theFontName
     frmConsole.lfont.FontSize = theFontSize
-    frmConsole.lfont.Caption = "this is to check the height OF FONTS"
-    Font_Height = frmConsole.lfont.Height + yDiv
+    frmConsole.lfont.Caption = tmpS
+    Font_Height = frmConsole.lfont.Height
+End Function
+
+Public Function Font_Width(ByVal theFontName As String, ByVal theFontSize As String, ByVal tmpS As String) As Long
+    frmConsole.lfont.FontName = theFontName
+    frmConsole.lfont.FontSize = theFontSize
+    frmConsole.lfont.Caption = tmpS
+    Font_Width = frmConsole.lfont.Width
 End Function
 
 
@@ -411,7 +417,10 @@ Public Function StripAfterNewline(ByVal s As String) As String
 End Function
 
 Public Function RenderPromptInput(ByVal ConsoleID As Integer)
-    Console(ConsoleID, 1).Caption = Console(ConsoleID, 1).Caption & Replace(CurrentPromptInput(ConsoleID), ConsoleInvisibleChar, "")
+    Dim Seg As Integer
+    Seg = UBound(Console(ConsoleID, 1).Segments)
+    Console(ConsoleID, 1).Segments(Seg).Caption = Console(ConsoleID, 1).Segments(Seg).Caption & Replace(CurrentPromptInput(ConsoleID), ConsoleInvisibleChar, "")
+    CalculateConsoleLine Console(ConsoleID, 1)
     CurrentPromptSelStart(ConsoleID) = 0
     CurrentPromptSelLength(ConsoleID) = 0
     CurrentPromptInput(ConsoleID) = ""
@@ -435,59 +444,61 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
 
     s = StripAfterNewline(s)
 
+    Dim sSplit() As String
+    sSplit = Split(s, "{{|}}")
+    If UBound(sSplit) < 0 Then
+        ReDim sSplit(0 To 0)
+        sSplit(0) = ""
+    End If
+
     Dim propertySpace As String
 
-    If Not NoReset Then
+    Dim SegReinitAt As Integer
+    If NoReset Then
+        SegReinitAt = UBound(Console(ConsoleID, OverwriteLineIndex).Segments) + 1
+        ReDim Preserve Console(ConsoleID, OverwriteLineIndex).Segments(0 To UBound(sSplit))
+    Else
         Console(ConsoleID, OverwriteLineIndex) = Console_Line_Defaults
         Console(ConsoleID, OverwriteLineIndex).PreSpace = True
+        SegReinitAt = 0
+        ReDim Console(ConsoleID, OverwriteLineIndex).Segments(0 To UBound(sSplit))
     End If
+    
+    Dim Seg As Integer
 
-    If Has_Property_Space(s) = True Then
-        propertySpace = i(Get_Property_Space(s)) & " "
-        propertySpace = Replace(propertySpace, ",", " ")
-        If InStr(propertySpace, "noprespace") > 0 Then Console(ConsoleID, OverwriteLineIndex).PreSpace = False
-        If InStr(propertySpace, "forceprespace") > 0 Then Console(ConsoleID, OverwriteLineIndex).PreSpace = True
-        Console(ConsoleID, OverwriteLineIndex).FontColor = propertySpace_Color(propertySpace)
-        Console(ConsoleID, OverwriteLineIndex).FontSize = propertySpace_Size(propertySpace)
-        Console(ConsoleID, OverwriteLineIndex).FontName = propertySpace_Name(propertySpace)
-        Console(ConsoleID, OverwriteLineIndex).FontBold = propertySpace_Bold(propertySpace)
-        Console(ConsoleID, OverwriteLineIndex).FontItalic = propertySpace_Italic(propertySpace)
-        Console(ConsoleID, OverwriteLineIndex).FontUnderline = propertySpace_Underline(propertySpace)
-        Console(ConsoleID, OverwriteLineIndex).FontStrikethru = propertySpace_Strikethru(propertySpace)
-        If InStr(propertySpace, "flash ") > 0 Then Console(ConsoleID, 1).Flash = True Else Console(ConsoleID, 1).Flash = False
-        If InStr(propertySpace, "flashfast ") > 0 Then Console(ConsoleID, 1).FlashFast = True Else Console(ConsoleID, 1).FlashFast = False
-        If InStr(propertySpace, "flashslow ") > 0 Then Console(ConsoleID, 1).FlashSlow = True Else Console(ConsoleID, 1).FlashSlow = False
-        If InStr(propertySpace, "center ") > 0 Then Console(ConsoleID, 1).Center = True Else Console(ConsoleID, 1).Center = False
-        If InStr(propertySpace, "right ") > 0 Then Console(ConsoleID, 1).Right = True Else Console(ConsoleID, 1).Right = False
-    End If
+    For Seg = 0 To UBound(sSplit)
+        If Seg >= SegReinitAt Then
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg) = Console_Line_Defaults.Segments(0)
+        End If
 
-    s = Remove_Property_Space(s)
-    s = Replace(s, ConsoleInvisibleChar, "")
-    Console(ConsoleID, OverwriteLineIndex).Caption = s
+        s = sSplit(Seg)
+
+        If Has_Property_Space(s) = True Then
+            propertySpace = i(Get_Property_Space(s)) & " "
+            propertySpace = Replace(propertySpace, ",", " ")
+            If InStr(propertySpace, "noprespace") > 0 Then Console(ConsoleID, OverwriteLineIndex).PreSpace = False
+            If InStr(propertySpace, "forceprespace") > 0 Then Console(ConsoleID, OverwriteLineIndex).PreSpace = True
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontColor = propertySpace_Color(propertySpace)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontSize = propertySpace_Size(propertySpace)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontName = propertySpace_Name(propertySpace)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontBold = propertySpace_Bold(propertySpace)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontItalic = propertySpace_Italic(propertySpace)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontUnderline = propertySpace_Underline(propertySpace)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontStrikethru = propertySpace_Strikethru(propertySpace)
+            If InStr(propertySpace, "flash ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).Flash = True Else Console(ConsoleID, OverwriteLineIndex).Segments(Seg).Flash = False
+            If InStr(propertySpace, "flashfast ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashFast = True Else Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashFast = False
+            If InStr(propertySpace, "flashslow ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashSlow = True Else Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashSlow = False
+            If InStr(propertySpace, "center ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Center = True Else Console(ConsoleID, OverwriteLineIndex).Center = False
+            If InStr(propertySpace, "right ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Right = True Else Console(ConsoleID, OverwriteLineIndex).Right = False
+        End If
+    
+        s = Remove_Property_Space(s)
+        s = Replace(s, ConsoleInvisibleChar, "")
+        Console(ConsoleID, OverwriteLineIndex).Segments(Seg).Caption = s
+        CalculateConsoleLine Console(ConsoleID, OverwriteLineIndex)
+    Next
 
     frmConsole.QueueConsoleRender
-    DoEvents
-End Function
-
-Public Function Load_Property_Space(ByVal propertySpace As String, sCaption As String) As ConsoleLine
-    propertySpace = " " & Replace(propertySpace, ",", " ") & " "
-
-    Load_Property_Space = Console_Line_Defaults
-    Load_Property_Space.Caption = sCaption
-    If InStr(propertySpace, "noprespace") > 0 Then Load_Property_Space.PreSpace = False
-    If InStr(propertySpace, "forceprespace") > 0 Then Load_Property_Space.PreSpace = True
-    Load_Property_Space.FontColor = propertySpace_Color(propertySpace)
-    Load_Property_Space.FontSize = propertySpace_Size(propertySpace)
-    Load_Property_Space.FontName = propertySpace_Name(propertySpace)
-    Load_Property_Space.FontBold = propertySpace_Bold(propertySpace)
-    Load_Property_Space.FontItalic = propertySpace_Italic(propertySpace)
-    Load_Property_Space.FontUnderline = propertySpace_Underline(propertySpace)
-    Load_Property_Space.FontStrikethru = propertySpace_Strikethru(propertySpace)
-    If InStr(propertySpace, "flash ") > 0 Then Load_Property_Space.Flash = True Else Load_Property_Space.Flash = False
-    If InStr(propertySpace, "flashfast ") > 0 Then Load_Property_Space.FlashFast = True Else Load_Property_Space.FlashFast = False
-    If InStr(propertySpace, "flashslow ") > 0 Then Load_Property_Space.FlashSlow = True Else Load_Property_Space.FlashSlow = False
-    If InStr(propertySpace, "center ") > 0 Then Load_Property_Space.Center = True Else Load_Property_Space.Center = False
-    If InStr(propertySpace, "right ") > 0 Then Load_Property_Space.Right = True Else Load_Property_Space.Right = False
 End Function
 
 Public Function Is_Valid_Font(ByVal s As String) As Boolean
@@ -589,9 +600,9 @@ Public Function Has_Property_Space(ByVal s As String) As Boolean
 End Function
 
 Public Function propertySpace_Name(ByVal s As String) As String
-    propertySpace_Name = Console_Line_Defaults.FontName
+    propertySpace_Name = Console_Line_Defaults.Segments(0).FontName
     s = i(s)
-    
+
     If InStr(s, "arial") > 0 Then propertySpace_Name = "Arial"
     If InStr(s, "arial black") > 0 Then propertySpace_Name = "Arial Black"
     If InStr(s, "comic sans ms") > 0 Then propertySpace_Name = "Comic Sans MS"
@@ -724,7 +735,7 @@ Public Function propertySpace_Color(ByVal s As String) As Long
         End If
     End If
     
-    If propertySpace_Color = 777 Then propertySpace_Color = Console_Line_Defaults.FontColor
+    If propertySpace_Color = 777 Then propertySpace_Color = Console_Line_Defaults.Segments(0).FontColor
 End Function
 
 Public Function propertySpace_Size(ByVal s As String) As String
@@ -740,7 +751,7 @@ Public Function propertySpace_Size(ByVal s As String) As String
     Next n
     
 
-    If propertySpace_Size = 777 Then propertySpace_Size = Console_Line_Defaults.FontSize
+    If propertySpace_Size = 777 Then propertySpace_Size = Console_Line_Defaults.Segments(0).FontSize
 
     If propertySpace_Size < 8 Then propertySpace_Size = 8
     If propertySpace_Size > Max_Font_Size Then propertySpace_Size = Max_Font_Size
