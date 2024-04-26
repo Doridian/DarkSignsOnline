@@ -12,7 +12,7 @@ If Answer <> "h4ck3r" Then
 End If
 
 Dim Style
-Style = "{{rgb:0,153,0}}"
+Style = "{{rgb:0:153:0}}"
 
 Sub ViewBackdoor()
     Say "Hello i've just been fired of internetprovider.com, but i just had the time" & Style

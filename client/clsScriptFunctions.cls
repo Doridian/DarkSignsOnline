@@ -222,7 +222,7 @@ Public Function ReadLine(ByVal Prompt As String, Optional ByVal RGBVal As Long =
     CurrentPromptSelStart(PrivConsoleID) = 0
     CurrentPromptSelLength(PrivConsoleID) = 0
     WaitingForInput(PrivConsoleID) = True
-    
+
     New_Console_Line PrivConsoleID
     If RGBVal >= 0 Then
         DRAW -1, RGBVal, "solid"

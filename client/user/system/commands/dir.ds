@@ -64,7 +64,7 @@ Sub EndSaySubStr()
 End Sub
 
 If UBound(Dirs) > 0 Then
-	StartSaySubStr "{{1yellow}}"
+	StartSaySubStr "{{yellow}}"
 	For X = 1 To UBound(Dirs)
 		SaySubStr "[" & UCase(Dirs(X)) & "]", "    "
 	Next

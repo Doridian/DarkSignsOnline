@@ -918,7 +918,6 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer, Optional 
     End If
 
     s = "{{" & propSpace & "}}" & s
-
     SayRaw ConsoleID, s
     If RGBVal >= 0 Then
         DrawItUp -1, RGBVal, "solid", ConsoleID

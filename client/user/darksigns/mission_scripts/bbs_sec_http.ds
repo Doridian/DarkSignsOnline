@@ -7,7 +7,7 @@ OldgamesVisited = BoolMissionProgress("DS", "oldgames_visited")
 
 Dim InKey
 Dim Style
-Style = "{{rgb:0,153,0}}"
+Style = "{{rgb:0:153:0}}"
 Dim SubStyle
 SubStyle = "{{blue}}"
 

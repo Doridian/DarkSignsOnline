@@ -443,6 +443,27 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
     frmConsole.QueueConsoleRender
 End Function
 
+Public Function Array_Has(XArr() As String, ByVal XVal As String) As Boolean
+    Array_Has = (Array_IndexOf(XArr, XVal) >= 0)
+End Function
+
+Public Function Array_IndexOf(XArr() As String, ByVal XVal As String, Optional MatchPrefix As Boolean = False) As Integer
+    Dim X As Integer
+    For X = LBound(XArr) To UBound(XArr)
+        If XArr(X) = XVal Then
+            Array_IndexOf = X
+            Exit Function
+        End If
+        If MatchPrefix Then
+            If Left(XArr(X), Len(XVal)) = XVal Then
+                Array_IndexOf = X
+                Exit Function
+            End If
+        End If
+    Next
+    Array_IndexOf = -1
+End Function
+
 Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String, Optional ByVal NoReset As Boolean = False) As ConsoleLine
     s = StripAfterNewline(s)
 
@@ -453,7 +474,7 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
         sSplit(0) = ""
     End If
 
-    Dim propertySpace As String
+    Dim propertySpace As String, pSplit() As String
 
     Dim SegReinitAt As Integer
     If NoReset Then
@@ -484,36 +505,40 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
         s = sSplit(Seg)
 
         If Has_Property_Space(s) Then
-            propertySpace = i(Get_Property_Space(s)) & " "
+            propertySpace = i(Get_Property_Space(s))
             propertySpace = Replace(propertySpace, ",", " ")
-            CLineSeg.FontColor = propertySpace_Color(propertySpace, BaseSeg)
-            CLineSeg.FontSize = propertySpace_Size(propertySpace, BaseSeg)
-            CLineSeg.FontName = propertySpace_Name(propertySpace, BaseSeg)
-            CLineSeg.FontBold = propertySpace_Bold(propertySpace, BaseSeg)
-            CLineSeg.FontItalic = propertySpace_Italic(propertySpace, BaseSeg)
-            CLineSeg.FontUnderline = propertySpace_Underline(propertySpace, BaseSeg)
-            CLineSeg.FontStrikethru = propertySpace_Strikethru(propertySpace, BaseSeg)
-            If InStr(propertySpace, "flashoff ") > 0 Then
+            While InStr(propertySpace, "  ") > 0
+                propertySpace = Replace(propertySpace, "  ", " ")
+            Wend
+            pSplit = Split(propertySpace, " ")
+            CLineSeg.FontColor = propertySpace_Color(pSplit, BaseSeg)
+            CLineSeg.FontSize = propertySpace_Size(pSplit, BaseSeg)
+            CLineSeg.FontName = propertySpace_Name(pSplit, BaseSeg)
+            CLineSeg.FontBold = propertySpace_Bold(pSplit, BaseSeg)
+            CLineSeg.FontItalic = propertySpace_Italic(pSplit, BaseSeg)
+            CLineSeg.FontUnderline = propertySpace_Underline(pSplit, BaseSeg)
+            CLineSeg.FontStrikethru = propertySpace_Strikethru(pSplit, BaseSeg)
+            If Array_Has(pSplit, "noflash") Then
                 CLineSeg.Flash = False
                 CLineSeg.FlashFast = False
                 CLineSeg.FlashSlow = False
             End If
-            If InStr(propertySpace, "flash ") > 0 Then CLineSeg.Flash = True
-            If InStr(propertySpace, "flashfast ") > 0 Then CLineSeg.FlashFast = True
-            If InStr(propertySpace, "flashslow ") > 0 Then CLineSeg.FlashSlow = True
+            If Array_Has(pSplit, "flash") Then CLineSeg.Flash = True
+            If Array_Has(pSplit, "flashfast") Then CLineSeg.FlashFast = True
+            If Array_Has(pSplit, "flashslow") Then CLineSeg.FlashSlow = True
 
-            If InStr(propertySpace, "middle ") > 0 Then
+            If Array_Has(pSplit, "middle") Then
                 CLineSeg.AlignTop = False
                 CLineSeg.AlighBottom = False
             End If
-            If InStr(propertySpace, "top ") > 0 Then CLineSeg.AlignTop = True
-            If InStr(propertySpace, "bottom ") > 0 Then CLineSeg.AlighBottom = True
+            If Array_Has(pSplit, "top") Then CLineSeg.AlignTop = True
+            If Array_Has(pSplit, "bottom") Then CLineSeg.AlighBottom = True
 
             If Seg = 0 Then
-                If InStr(propertySpace, "noprespace") > 0 Then CLine.PreSpace = False
-                If InStr(propertySpace, "forceprespace") > 0 Then CLine.PreSpace = True
-                If InStr(propertySpace, "center ") > 0 Then CLine.Center = True Else CLine.Center = False
-                If InStr(propertySpace, "right ") > 0 Then CLine.Right = True Else CLine.Right = False
+                If Array_Has(pSplit, "noprespace") Then CLine.PreSpace = False
+                If Array_Has(pSplit, "forceprespace") Then CLine.PreSpace = True
+                If Array_Has(pSplit, "center") Then CLine.Center = True Else CLine.Center = False
+                If Array_Has(pSplit, "right") Then CLine.Right = True Else CLine.Right = False
             End If
         Else
             CLineSeg.FontColor = BaseSeg.FontColor
@@ -593,6 +618,7 @@ Public Function Get_Property_Space(ByVal s As String) As String
             Get_Property_Space = Get_Property_Space & Mid(s, n, 1)
         End If
         If Mid(s, n, 2) = "{{" Then
+            Get_Property_Space = Get_Property_Space & " "
             isOn = True
             n = n + 1
         End If
@@ -632,142 +658,131 @@ Public Function Has_Property_Space(ByVal s As String) As Boolean
     End If
 End Function
 
-Public Function propertySpace_Name(ByVal s As String, BaseSeg As ConsoleLineSegment) As String
+Public Function propertySpace_Name(s() As String, BaseSeg As ConsoleLineSegment) As String
     propertySpace_Name = BaseSeg.FontName
 
-    If InStr(s, "arial") > 0 Then propertySpace_Name = "Arial"
-    If InStr(s, "arial black") > 0 Then propertySpace_Name = "Arial Black"
-    If InStr(s, "comic sans ms") > 0 Then propertySpace_Name = "Comic Sans MS"
-    If InStr(s, "courier new") > 0 Then propertySpace_Name = "Courier New"
-    If InStr(s, "georgia") > 0 Then propertySpace_Name = "Georgia"
-    If InStr(s, "impact") > 0 Then propertySpace_Name = "Impact"
-    If InStr(s, "lucida console") > 0 Then propertySpace_Name = "Lucida Console"
-    If InStr(s, "tahoma") > 0 Then propertySpace_Name = "Tahoma"
-    If InStr(s, "times new roman") > 0 Then propertySpace_Name = "Times New Roman"
-    If InStr(s, "trebuchet ms") > 0 Then propertySpace_Name = "Trebuchet MS"
-    If InStr(s, "verdana") > 0 Then propertySpace_Name = "Verdana"
-    If InStr(s, "wingdings") > 0 Then propertySpace_Name = "Wingdings"
+    If Array_Has(s, "arial") Then propertySpace_Name = "Arial"
+    If Array_Has(s, "arial black") Then propertySpace_Name = "Arial Black"
+    If Array_Has(s, "comic sans ms") Then propertySpace_Name = "Comic Sans MS"
+    If Array_Has(s, "courier new") Then propertySpace_Name = "Courier New"
+    If Array_Has(s, "georgia") Then propertySpace_Name = "Georgia"
+    If Array_Has(s, "impact") Then propertySpace_Name = "Impact"
+    If Array_Has(s, "lucida console") Then propertySpace_Name = "Lucida Console"
+    If Array_Has(s, "tahoma") Then propertySpace_Name = "Tahoma"
+    If Array_Has(s, "times new roman") Then propertySpace_Name = "Times New Roman"
+    If Array_Has(s, "trebuchet ms") Then propertySpace_Name = "Trebuchet MS"
+    If Array_Has(s, "verdana") Then propertySpace_Name = "Verdana"
+    If Array_Has(s, "wingdings") Then propertySpace_Name = "Wingdings"
 End Function
 
-Public Function propertySpace_Bold(ByVal s As String, BaseSeg As ConsoleLineSegment) As Boolean
+Public Function propertySpace_Bold(s() As String, BaseSeg As ConsoleLineSegment) As Boolean
     propertySpace_Bold = BaseSeg.FontBold
 
-    If InStr(s, "bold") > 0 Then propertySpace_Bold = True
-    If InStr(s, "nobold") > 0 Then propertySpace_Bold = False
+    If Array_Has(s, "bold") Then propertySpace_Bold = True
+    If Array_Has(s, "nobold") Then propertySpace_Bold = False
 End Function
 
-Public Function propertySpace_Italic(ByVal s As String, BaseSeg As ConsoleLineSegment) As Boolean
+Public Function propertySpace_Italic(s() As String, BaseSeg As ConsoleLineSegment) As Boolean
     propertySpace_Italic = BaseSeg.FontItalic
 
-    If InStr(s, "italic") > 0 Then propertySpace_Italic = True
-    If InStr(s, "noitalic") > 0 Then propertySpace_Italic = False
+    If Array_Has(s, "italic") Then propertySpace_Italic = True
+    If Array_Has(s, "noitalic") Then propertySpace_Italic = False
 End Function
 
-Public Function propertySpace_Strikethru(ByVal s As String, BaseSeg As ConsoleLineSegment) As Boolean
+Public Function propertySpace_Strikethru(s() As String, BaseSeg As ConsoleLineSegment) As Boolean
     propertySpace_Strikethru = BaseSeg.FontStrikethru
 
-    If InStr(s, "strikethru") > 0 Then propertySpace_Strikethru = True
-    If InStr(s, "strikethrough") > 0 Then propertySpace_Strikethru = True
-    If InStr(s, "nostrikethru") > 0 Then propertySpace_Strikethru = False
-    If InStr(s, "nostrikethrough") > 0 Then propertySpace_Strikethru = False
+    If Array_Has(s, "strikethru") Then propertySpace_Strikethru = True
+    If Array_Has(s, "strikethrough") Then propertySpace_Strikethru = True
+    If Array_Has(s, "nostrikethru") Then propertySpace_Strikethru = False
+    If Array_Has(s, "nostrikethrough") Then propertySpace_Strikethru = False
 End Function
 
-Public Function propertySpace_Underline(ByVal s As String, BaseSeg As ConsoleLineSegment) As Boolean
+Public Function propertySpace_Underline(s() As String, BaseSeg As ConsoleLineSegment) As Boolean
     propertySpace_Underline = BaseSeg.FontUnderline
 
-    If InStr(s, "underline") > 0 Then propertySpace_Underline = True
-    If InStr(s, "nounderline") > 0 Then propertySpace_Underline = False
+    If Array_Has(s, "underline") Then propertySpace_Underline = True
+    If Array_Has(s, "nounderline") Then propertySpace_Underline = False
 End Function
 
-Public Function propertySpace_Color(ByVal s As String, BaseSeg As ConsoleLineSegment) As Long
+Public Function propertySpace_Color(s() As String, BaseSeg As ConsoleLineSegment) As Long
     propertySpace_Color = BaseSeg.FontColor
 
-    If InStr(s, "white") Then propertySpace_Color = vbWhite
-    If InStr(s, "black") Then propertySpace_Color = vbBlack + 1
+    If Array_Has(s, "white") Then propertySpace_Color = vbWhite
+    If Array_Has(s, "black") Then propertySpace_Color = vbBlack + 1
     
-    If InStr(s, "purple") Then propertySpace_Color = iPurple
-    If InStr(s, "pink") Then propertySpace_Color = iPink
-    If InStr(s, "orange") Then propertySpace_Color = iOrange
-    If InStr(s, "lorange") Then propertySpace_Color = iLightOrange
+    If Array_Has(s, "purple") Then propertySpace_Color = iPurple
+    If Array_Has(s, "pink") Then propertySpace_Color = iPink
+    If Array_Has(s, "orange") Then propertySpace_Color = iOrange
+    If Array_Has(s, "lorange") Then propertySpace_Color = iLightOrange
     
-    If InStr(s, "blue") Then propertySpace_Color = iBlue
-    If InStr(s, "dblue") Then propertySpace_Color = iDarkBlue
-    If InStr(s, "lblue") Then propertySpace_Color = iLightBlue
+    If Array_Has(s, "blue") Then propertySpace_Color = iBlue
+    If Array_Has(s, "dblue") Then propertySpace_Color = iDarkBlue
+    If Array_Has(s, "lblue") Then propertySpace_Color = iLightBlue
     
-    If InStr(s, "green") Then propertySpace_Color = iGreen
-    If InStr(s, "dgreen") Then propertySpace_Color = iDarkGreen
-    If InStr(s, "lgreen") Then propertySpace_Color = iLightGreen
+    If Array_Has(s, "green") Then propertySpace_Color = iGreen
+    If Array_Has(s, "dgreen") Then propertySpace_Color = iDarkGreen
+    If Array_Has(s, "lgreen") Then propertySpace_Color = iLightGreen
     
-    If InStr(s, "gold") Then propertySpace_Color = iGold
-    If InStr(s, "yellow") Then propertySpace_Color = iYellow
-    If InStr(s, "lyellow") Then propertySpace_Color = iLightYellow
-    If InStr(s, "dyellow") Then propertySpace_Color = iDarkYellow
+    If Array_Has(s, "gold") Then propertySpace_Color = iGold
+    If Array_Has(s, "yellow") Then propertySpace_Color = iYellow
+    If Array_Has(s, "lyellow") Then propertySpace_Color = iLightYellow
+    If Array_Has(s, "dyellow") Then propertySpace_Color = iDarkYellow
     
-    If InStr(s, "brown") Then propertySpace_Color = iBrown
-    If InStr(s, "lbrown") Then propertySpace_Color = iLightBrown
-    If InStr(s, "dbrown") Then propertySpace_Color = iDarkBrown
-    If InStr(s, "maroon") Then propertySpace_Color = iMaroon
+    If Array_Has(s, "brown") Then propertySpace_Color = iBrown
+    If Array_Has(s, "lbrown") Then propertySpace_Color = iLightBrown
+    If Array_Has(s, "dbrown") Then propertySpace_Color = iDarkBrown
+    If Array_Has(s, "maroon") Then propertySpace_Color = iMaroon
     
-    If InStr(s, "grey") Then propertySpace_Color = iGrey
-    If InStr(s, "dgrey") Then propertySpace_Color = iDarkGrey
-    If InStr(s, "lgrey") Then propertySpace_Color = iLightGrey
+    If Array_Has(s, "grey") Then propertySpace_Color = iGrey
+    If Array_Has(s, "dgrey") Then propertySpace_Color = iDarkGrey
+    If Array_Has(s, "lgrey") Then propertySpace_Color = iLightGrey
     
-    If InStr(s, "red") Then propertySpace_Color = iRed
-    If InStr(s, "lred") Then propertySpace_Color = iLightRed
-    If InStr(s, "dred") Then propertySpace_Color = iDarkRed
-    
-    If InStr(s, "rgb:") Then
+    If Array_Has(s, "red") Then propertySpace_Color = iRed
+    If Array_Has(s, "lred") Then propertySpace_Color = iLightRed
+    If Array_Has(s, "dred") Then propertySpace_Color = iDarkRed
+
+    Dim ArrIdx As Integer
+    ArrIdx = Array_IndexOf(s, "rgb:", True)
+    If ArrIdx >= 0 Then
         Dim Error As Boolean
-        Dim R As Long, G As Long, B As Long
+        Dim R As Long, G As Long, b As Long
         Error = False
-        Dim sTmp As String
-        s = Replace(s, ",", " ")
-        sTmp = Mid(s, InStr(s, "rgb:"), Len(s))
-        sTmp = Replace(sTmp, ":", " :") & " "
-        
         Dim sSplit() As String
-        sSplit = Split(sTmp, ":")
+        sSplit = Split(s(ArrIdx), ":")
 
         If UBound(sSplit) < 3 Then
-            RGBSplit Trim(sSplit(1)), R, G, B
+            RGBSplit Trim(sSplit(1)), R, G, b
         Else
             R = Trim(sSplit(1))
             G = Trim(sSplit(2))
-            B = Trim(sSplit(3))
+            b = Trim(sSplit(3))
         End If
 
-        If IsNumeric(R) And IsNumeric(G) And IsNumeric(B) Then
-            R = CInt(R)
-            G = CInt(G)
-            B = CInt(B)
+        If R < 0 Or R > 255 Then
+            Error = True
+        End If
         
-            If R < 0 Or R > 255 Then
-                Error = True
-            End If
-            
-            If G < 0 Or G > 255 Then
-                Error = True
-            End If
-            
-            If B < 0 Or B > 255 Then
-                Error = True
-            End If
-            
-            If Error = False Then
-                propertySpace_Color = RGB(R, G, B)
-            End If
+        If G < 0 Or G > 255 Then
+            Error = True
+        End If
+        
+        If b < 0 Or b > 255 Then
+            Error = True
+        End If
+        
+        If Error = False Then
+            propertySpace_Color = RGB(R, G, b)
         End If
     End If
 End Function
 
-Public Function propertySpace_Size(ByVal s As String, BaseSeg As ConsoleLineSegment) As String
+Public Function propertySpace_Size(s() As String, BaseSeg As ConsoleLineSegment) As String
     propertySpace_Size = BaseSeg.FontSize
-    s = " " & s & " "
-
     Dim n As Integer
     For n = 1 To 144
-        If InStr(s, " " & n & " ") > 0 Then
-            propertySpace_Size = Trim(Str(n))
+        If Array_Has(s, "" & n) Then
+            propertySpace_Size = n
         End If
     Next n
 
