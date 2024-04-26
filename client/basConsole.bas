@@ -457,27 +457,6 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
     frmConsole.QueueConsoleRender
 End Function
 
-Public Function Array_Has(XArr() As String, ByVal XVal As String) As Boolean
-    Array_Has = (Array_IndexOf(XArr, XVal) >= 0)
-End Function
-
-Public Function Array_IndexOf(XArr() As String, ByVal XVal As String, Optional MatchPrefix As Boolean = False) As Integer
-    Dim X As Integer
-    For X = LBound(XArr) To UBound(XArr)
-        If XArr(X) = XVal Then
-            Array_IndexOf = X
-            Exit Function
-        End If
-        If MatchPrefix Then
-            If Left(XArr(X), Len(XVal)) = XVal Then
-                Array_IndexOf = X
-                Exit Function
-            End If
-        End If
-    Next
-    Array_IndexOf = -1
-End Function
-
 Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String) As ConsoleLine
     s = StripAfterNewline(s)
 
@@ -512,68 +491,191 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                 propertySpace = Replace(propertySpace, "  ", " ")
             Wend
             pSplit = Split(propertySpace, " ")
-            CLineSeg.FontColor = propertySpace_Color(pSplit, CLineSeg)
-            CLineSeg.FontSize = propertySpace_Size(pSplit, CLineSeg)
-            CLineSeg.FontName = propertySpace_Name(pSplit, CLineSeg)
-            CLineSeg.FontBold = propertySpace_Bold(pSplit, CLineSeg)
-            CLineSeg.FontItalic = propertySpace_Italic(pSplit, CLineSeg)
-            CLineSeg.FontUnderline = propertySpace_Underline(pSplit, CLineSeg)
-            CLineSeg.FontStrikethru = propertySpace_Strikethru(pSplit, CLineSeg)
 
-            If Array_Has(pSplit, "noflash") Then
-                CLineSeg.Flash = False
-                CLineSeg.FlashFast = False
-                CLineSeg.FlashSlow = False
-            ElseIf Array_Has(pSplit, "flash") Then
-                CLineSeg.Flash = True
-                CLineSeg.FlashFast = False
-                CLineSeg.FlashSlow = False
-            ElseIf Array_Has(pSplit, "flashfast") Then
-                CLineSeg.FlashFast = True
-                CLineSeg.Flash = False
-                CLineSeg.FlashSlow = False
-            ElseIf Array_Has(pSplit, "flashslow") Then
-                CLineSeg.FlashSlow = True
-                CLineSeg.Flash = False
-                CLineSeg.FlashFast = False
-            End If
+            Dim pIdx As Long, pCur As String
+            For pIdx = 0 To UBound(pSplit)
+                pCur = pSplit(pIdx)
 
-            If Array_Has(pSplit, "middle") Then
-                CLineSeg.AlignTop = False
-                CLineSeg.AlighBottom = False
-            ElseIf Array_Has(pSplit, "top") Then
-                CLineSeg.AlignTop = True
-                CLineSeg.AlighBottom = False
-            ElseIf Array_Has(pSplit, "bottom") Then
-                CLineSeg.AlighBottom = True
-                CLineSeg.AlignTop = False
-            End If
+                ' ==== FONTS ====
+                If pCur = "arial" Then
+                    CLineSeg.FontName = "Arial"
+                ElseIf pCur = "arial_black" Then
+                    CLineSeg.FontName = "Arial Black"
+                ElseIf pCur = "comic_sans_ms" Then
+                    CLineSeg.FontName = "Comic Sans MS"
+                ElseIf pCur = "courier_new" Then
+                    CLineSeg.FontName = "Courier New"
+                ElseIf pCur = "georgia" Then
+                    CLineSeg.FontName = "Georgia"
+                ElseIf pCur = "impact" Then
+                    CLineSeg.FontName = "Impact"
+                ElseIf pCur = "lucida_console" Then
+                    CLineSeg.FontName = "Lucida Console"
+                ElseIf pCur = "tahoma" Then
+                    CLineSeg.FontName = "Tahoma"
+                ElseIf pCur = "times_new_roman" Then
+                    CLineSeg.FontName = "Times New Roman"
+                ElseIf pCur = "trebuchet_ms" Then
+                    CLineSeg.FontName = "Trebuchet MS"
+                ElseIf pCur = "verdana" Then
+                    CLineSeg.FontName = "Verdana"
+                ElseIf pCur = "wingdings" Then
+                    CLineSeg.FontName = "Wingdings"
+                ElseIf pCur = "webdings" Then
+                    CLineSeg.FontName = "Webdings"
+                ' ==== FONT ATTRIBUTES ====
+                ElseIf pCur = "strikethrough" Or pCur = "strikethru" Then
+                    CLineSeg.FontStrikethru = True
+                ElseIf pCur = "nostrikethrough" Or pCur = "nostrikethru" Then
+                    CLineSeg.FontStrikethru = False
+                ElseIf pCur = "italic" Or pCur = "italics" Then
+                    CLineSeg.FontItalic = True
+                ElseIf pCur = "noitalic" Or pCur = "noitalics" Then
+                    CLineSeg.FontItalic = False
+                ElseIf pCur = "bold" Then
+                    CLineSeg.FontBold = True
+                ElseIf pCur = "nobold" Then
+                    CLineSeg.FontBold = False
+                ElseIf pCur = "underline" Or pCur = "underlined" Then
+                    CLineSeg.FontUnderline = True
+                ElseIf pCur = "nounderline" Or pCur = "nounderlined" Then
+                    CLineSeg.FontUnderline = False
+                ' ==== FLASHING ====
+                ElseIf pCur = "noflash" Then
+                    CLineSeg.Flash = False
+                    CLineSeg.FlashFast = False
+                    CLineSeg.FlashSlow = False
+                ElseIf pCur = "flash" Then
+                    CLineSeg.Flash = True
+                    CLineSeg.FlashFast = False
+                    CLineSeg.FlashSlow = False
+                ElseIf pCur = "flashfast" Then
+                    CLineSeg.FlashFast = True
+                    CLineSeg.Flash = False
+                    CLineSeg.FlashSlow = False
+                ElseIf pCur = "flashslow" Then
+                    CLineSeg.FlashSlow = True
+                    CLineSeg.Flash = False
+                    CLineSeg.FlashFast = False
+                ' ==== VERTICAL ALIGNMENT ====
+                ElseIf pCur = "middle" Then
+                    CLineSeg.AlignTop = False
+                    CLineSeg.AlighBottom = False
+                ElseIf pCur = "top" Then
+                    CLineSeg.AlignTop = True
+                    CLineSeg.AlighBottom = False
+                ElseIf pCur = "bottom" Then
+                    CLineSeg.AlighBottom = True
+                    CLineSeg.AlignTop = False
+                ElseIf Left(pCur, 5) = "voff:" Then
+                    CLineSeg.VerticalOffset = Mid(pSplit, 6)
+                ElseIf IsNumeric(pCur) Then
+                    CLineSeg.FontSize = pCur
+                    If CLineSeg.FontSize < 8 Then
+                        CLineSeg.FontSize = 8
+                    ElseIf CLineSeg.FontSize > Max_Font_Size Then
+                        CLineSeg.FontSize = Max_Font_Size
+                    End If
+                ' ==== COLORS ====
+                ElseIf pCur = "white" Then
+                    CLineSeg.FontColor = vbWhite
+                ElseIf pCur = "black" Then
+                    CLineSeg.FontColor = vbBlack + 1
+                ElseIf pCur = "purple" Then
+                    CLineSeg.FontColor = iPurple
+                ElseIf pCur = "pink" Then
+                    CLineSeg.FontColor = iPink
+                ElseIf pCur = "orange" Then
+                    CLineSeg.FontColor = iOrange
+                ElseIf pCur = "lorange" Then
+                    CLineSeg.FontColor = iLightOrange
+                ElseIf pCur = "blue" Then
+                    CLineSeg.FontColor = iBlue
+                ElseIf pCur = "dblue" Then
+                    CLineSeg.FontColor = iDarkBlue
+                ElseIf pCur = "lblue" Then
+                    CLineSeg.FontColor = iLightBlue
+                ElseIf pCur = "green" Then
+                    CLineSeg.FontColor = iGreen
+                ElseIf pCur = "dgreen" Then
+                    CLineSeg.FontColor = iDarkGreen
+                ElseIf pCur = "lgreen" Then
+                    CLineSeg.FontColor = iLightGreen
+                ElseIf pCur = "gold" Then
+                    CLineSeg.FontColor = iGold
+                ElseIf pCur = "yellow" Then
+                    CLineSeg.FontColor = iYellow
+                ElseIf pCur = "lyellow" Then
+                    CLineSeg.FontColor = iLightYellow
+                ElseIf pCur = "dyellow" Then
+                    CLineSeg.FontColor = iDarkYellow
+                ElseIf pCur = "brown" Then
+                    CLineSeg.FontColor = iBrown
+                ElseIf pCur = "lbrown" Then
+                    CLineSeg.FontColor = iLightBrown
+                ElseIf pCur = "dbrown" Then
+                    CLineSeg.FontColor = iDarkBrown
+                ElseIf pCur = "maroon" Then
+                    CLineSeg.FontColor = iMaroon
+                ElseIf pCur = "grey" Then
+                    CLineSeg.FontColor = iGrey
+                ElseIf pCur = "dgrey" Then
+                    CLineSeg.FontColor = iDarkGrey
+                ElseIf pCur = "lgrey" Then
+                    CLineSeg.FontColor = iLightGrey
+                ElseIf pCur = "red" Then
+                    CLineSeg.FontColor = iRed
+                ElseIf pCur = "lred" Then
+                    CLineSeg.FontColor = iLightRed
+                ElseIf pCur = "dred" Then
+                    CLineSeg.FontColor = iDarkRed
+                ElseIf Left(pCur, 4) = "rgb:" Then
+                    Dim Error As Boolean
+                    Dim R As Long, G As Long, b As Long
+                    Error = False
+                    Dim pCurSplit() As String
+                    pCurSplit = Split(pCur, ":")
             
-            Dim PIdx As Integer
-            PIdx = Array_IndexOf(pSplit, "voff:", True)
-            If PIdx >= 0 Then
-                Dim subPSplit() As String
-                subPSplit = Split(pSplit(PIdx), ":")
-                Dim VertOff As Long
-                VertOff = subPSplit(1)
+                    If UBound(pCurSplit) < 3 Then
+                        RGBSplit Trim(pCurSplit(1)), R, G, b
+                    Else
+                        R = Trim(pCurSplit(1))
+                        G = Trim(pCurSplit(2))
+                        b = Trim(pCurSplit(3))
+                    End If
 
-                CLineSeg.VerticalOffset = VertOff
-            End If
+                    If R < 0 Or R > 255 Then
+                        Error = True
+                    End If
 
-            If Seg = 0 Then
-                If Array_Has(pSplit, "noprespace") Then CLine.PreSpace = False
-                If Array_Has(pSplit, "forceprespace") Then CLine.PreSpace = True
-                If Array_Has(pSplit, "center") Then
-                    CLine.Center = True
-                    CLine.Right = False
-                ElseIf Array_Has(pSplit, "right") Then
-                    CLine.Right = True
-                    CLine.Center = False
-                ElseIf Array_Has(pSplit, "left") Then
-                    CLine.Right = False
-                    CLine.Center = False
+                    If G < 0 Or G > 255 Then
+                        Error = True
+                    End If
+
+                    If b < 0 Or b > 255 Then
+                        Error = True
+                    End If
+
+                    If Error = False Then
+                        CLineSeg.FontColor = RGB(R, G, b)
+                    End If
+                ElseIf Seg = 0 Then
+                    If pCur = "noprespace" Then
+                        CLine.PreSpace = False
+                    ElseIf pCur = "prespace" Then
+                        CLine.PreSpace = True
+                    ElseIf pCur = "center" Then
+                        CLine.Center = True
+                        CLine.Right = False
+                    ElseIf pCur = "right" Then
+                        CLine.Right = True
+                        CLine.Center = False
+                    ElseIf pCur = "left" Then
+                        CLine.Right = False
+                        CLine.Center = False
+                    End If
                 End If
-            End If
+            Next
         End If
 
         s = Remove_Property_Space(s)
@@ -657,142 +759,6 @@ Public Function Has_Property_Space(ByVal s As String) As Boolean
     Else
         Has_Property_Space = False
     End If
-End Function
-
-Public Function propertySpace_Name(s() As String, BaseSeg As ConsoleLineSegment) As String
-    propertySpace_Name = BaseSeg.FontName
-
-    If Array_Has(s, "arial") Then propertySpace_Name = "Arial"
-    If Array_Has(s, "arial_black") Then propertySpace_Name = "Arial Black"
-    If Array_Has(s, "comic_sans_ms") Then propertySpace_Name = "Comic Sans MS"
-    If Array_Has(s, "courier_new") Then propertySpace_Name = "Courier New"
-    If Array_Has(s, "georgia") Then propertySpace_Name = "Georgia"
-    If Array_Has(s, "impact") Then propertySpace_Name = "Impact"
-    If Array_Has(s, "lucida_console") Then propertySpace_Name = "Lucida Console"
-    If Array_Has(s, "tahoma") Then propertySpace_Name = "Tahoma"
-    If Array_Has(s, "times_new_roman") Then propertySpace_Name = "Times New Roman"
-    If Array_Has(s, "trebuchet_ms") Then propertySpace_Name = "Trebuchet MS"
-    If Array_Has(s, "verdana") Then propertySpace_Name = "Verdana"
-    If Array_Has(s, "wingdings") Then propertySpace_Name = "Wingdings"
-    If Array_Has(s, "webdings") Then propertySpace_Name = "Webdings"
-End Function
-
-Public Function propertySpace_Bold(s() As String, BaseSeg As ConsoleLineSegment) As Boolean
-    propertySpace_Bold = BaseSeg.FontBold
-
-    If Array_Has(s, "bold") Then propertySpace_Bold = True
-    If Array_Has(s, "nobold") Then propertySpace_Bold = False
-End Function
-
-Public Function propertySpace_Italic(s() As String, BaseSeg As ConsoleLineSegment) As Boolean
-    propertySpace_Italic = BaseSeg.FontItalic
-
-    If Array_Has(s, "italic") Then propertySpace_Italic = True
-    If Array_Has(s, "noitalic") Then propertySpace_Italic = False
-End Function
-
-Public Function propertySpace_Strikethru(s() As String, BaseSeg As ConsoleLineSegment) As Boolean
-    propertySpace_Strikethru = BaseSeg.FontStrikethru
-
-    If Array_Has(s, "strikethru") Then propertySpace_Strikethru = True
-    If Array_Has(s, "strikethrough") Then propertySpace_Strikethru = True
-    If Array_Has(s, "nostrikethru") Then propertySpace_Strikethru = False
-    If Array_Has(s, "nostrikethrough") Then propertySpace_Strikethru = False
-End Function
-
-Public Function propertySpace_Underline(s() As String, BaseSeg As ConsoleLineSegment) As Boolean
-    propertySpace_Underline = BaseSeg.FontUnderline
-
-    If Array_Has(s, "underline") Then propertySpace_Underline = True
-    If Array_Has(s, "nounderline") Then propertySpace_Underline = False
-End Function
-
-Public Function propertySpace_Color(s() As String, BaseSeg As ConsoleLineSegment) As Long
-    propertySpace_Color = BaseSeg.FontColor
-
-    If Array_Has(s, "white") Then propertySpace_Color = vbWhite
-    If Array_Has(s, "black") Then propertySpace_Color = vbBlack + 1
-    
-    If Array_Has(s, "purple") Then propertySpace_Color = iPurple
-    If Array_Has(s, "pink") Then propertySpace_Color = iPink
-    If Array_Has(s, "orange") Then propertySpace_Color = iOrange
-    If Array_Has(s, "lorange") Then propertySpace_Color = iLightOrange
-    
-    If Array_Has(s, "blue") Then propertySpace_Color = iBlue
-    If Array_Has(s, "dblue") Then propertySpace_Color = iDarkBlue
-    If Array_Has(s, "lblue") Then propertySpace_Color = iLightBlue
-    
-    If Array_Has(s, "green") Then propertySpace_Color = iGreen
-    If Array_Has(s, "dgreen") Then propertySpace_Color = iDarkGreen
-    If Array_Has(s, "lgreen") Then propertySpace_Color = iLightGreen
-    
-    If Array_Has(s, "gold") Then propertySpace_Color = iGold
-    If Array_Has(s, "yellow") Then propertySpace_Color = iYellow
-    If Array_Has(s, "lyellow") Then propertySpace_Color = iLightYellow
-    If Array_Has(s, "dyellow") Then propertySpace_Color = iDarkYellow
-    
-    If Array_Has(s, "brown") Then propertySpace_Color = iBrown
-    If Array_Has(s, "lbrown") Then propertySpace_Color = iLightBrown
-    If Array_Has(s, "dbrown") Then propertySpace_Color = iDarkBrown
-    If Array_Has(s, "maroon") Then propertySpace_Color = iMaroon
-    
-    If Array_Has(s, "grey") Then propertySpace_Color = iGrey
-    If Array_Has(s, "dgrey") Then propertySpace_Color = iDarkGrey
-    If Array_Has(s, "lgrey") Then propertySpace_Color = iLightGrey
-    
-    If Array_Has(s, "red") Then propertySpace_Color = iRed
-    If Array_Has(s, "lred") Then propertySpace_Color = iLightRed
-    If Array_Has(s, "dred") Then propertySpace_Color = iDarkRed
-
-    Dim ArrIdx As Integer
-    ArrIdx = Array_IndexOf(s, "rgb:", True)
-    If ArrIdx >= 0 Then
-        Dim Error As Boolean
-        Dim R As Long, G As Long, b As Long
-        Error = False
-        Dim sSplit() As String
-        sSplit = Split(s(ArrIdx), ":")
-
-        If UBound(sSplit) < 3 Then
-            RGBSplit Trim(sSplit(1)), R, G, b
-        Else
-            R = Trim(sSplit(1))
-            G = Trim(sSplit(2))
-            b = Trim(sSplit(3))
-        End If
-
-        If R < 0 Or R > 255 Then
-            Error = True
-        End If
-        
-        If G < 0 Or G > 255 Then
-            Error = True
-        End If
-        
-        If b < 0 Or b > 255 Then
-            Error = True
-        End If
-        
-        If Error = False Then
-            propertySpace_Color = RGB(R, G, b)
-        End If
-    End If
-End Function
-
-Public Function propertySpace_Size(s() As String, BaseSeg As ConsoleLineSegment) As String
-    propertySpace_Size = BaseSeg.FontSize
-    Dim n As Integer, tmpS As String
-
-    For n = 0 To UBound(s)
-        tmpS = s(n)
-        If IsNumeric(tmpS) Then
-            propertySpace_Size = tmpS
-            Exit For
-        End If
-    Next n
-
-    If propertySpace_Size < 8 Then propertySpace_Size = 8
-    If propertySpace_Size > Max_Font_Size Then propertySpace_Size = Max_Font_Size
 End Function
 
 Public Function EncodeBase64Bytes(ByRef arrData() As Byte) As String
