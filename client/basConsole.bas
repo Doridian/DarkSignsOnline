@@ -337,7 +337,7 @@ Public Sub Print_Console()
             NextX = NextX + SegVal.TotalWidth
 
             If Seg = SegMax And n = 1 And CurrentPromptVisible(ActiveConsole) And Not frmConsole.ChatBox.Visible Then
-                frmConsole.txtPromptInput.Top = frmConsole.CurrentY
+                frmConsole.txtPromptInput.top = frmConsole.CurrentY
                 frmConsole.txtPromptInput.Left = NextX
                 frmConsole.txtPromptInput.Height = frmConsole.lfont.Height
                 frmConsole.txtPromptInput.Width = frmConsole.Width - frmConsole.txtPromptInput.Left
@@ -468,12 +468,19 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
         SegReinitAt = 0
         ReDim Console(ConsoleID, OverwriteLineIndex).Segments(0 To UBound(sSplit))
     End If
-    
-    Dim Seg As Integer
+
+    Dim Seg As Integer, BaseSeg As ConsoleLineSegment
 
     For Seg = 0 To UBound(sSplit)
         If Seg >= SegReinitAt Then
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg) = Console_Line_Defaults.Segments(0)
+            If Seg > 0 Then
+                BaseSeg = Console(ConsoleID, OverwriteLineIndex).Segments(Seg - 1)
+            Else
+                BaseSeg = Console_Line_Defaults.Segments(0)
+            End If
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg) = BaseSeg
+        Else
+            BaseSeg = Console(ConsoleID, OverwriteLineIndex).Segments(Seg)
         End If
 
         s = sSplit(Seg)
@@ -481,19 +488,28 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
         If Has_Property_Space(s) = True Then
             propertySpace = i(Get_Property_Space(s)) & " "
             propertySpace = Replace(propertySpace, ",", " ")
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontColor = propertySpace_Color(propertySpace)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontSize = propertySpace_Size(propertySpace)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontName = propertySpace_Name(propertySpace)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontBold = propertySpace_Bold(propertySpace)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontItalic = propertySpace_Italic(propertySpace)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontUnderline = propertySpace_Underline(propertySpace)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontStrikethru = propertySpace_Strikethru(propertySpace)
-            If InStr(propertySpace, "flash ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).Flash = True Else Console(ConsoleID, OverwriteLineIndex).Segments(Seg).Flash = False
-            If InStr(propertySpace, "flashfast ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashFast = True Else Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashFast = False
-            If InStr(propertySpace, "flashslow ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashSlow = True Else Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashSlow = False
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontColor = propertySpace_Color(propertySpace, BaseSeg)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontSize = propertySpace_Size(propertySpace, BaseSeg)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontName = propertySpace_Name(propertySpace, BaseSeg)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontBold = propertySpace_Bold(propertySpace, BaseSeg)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontItalic = propertySpace_Italic(propertySpace, BaseSeg)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontUnderline = propertySpace_Underline(propertySpace, BaseSeg)
+            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontStrikethru = propertySpace_Strikethru(propertySpace, BaseSeg)
+            If InStr(propertySpace, "flashoff ") > 0 Then
+                Console(ConsoleID, OverwriteLineIndex).Segments(Seg).Flash = False
+                Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashFast = False
+                Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashSlow = False
+            End If
+            If InStr(propertySpace, "flash ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).Flash = True
+            If InStr(propertySpace, "flashfast ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashFast = True
+            If InStr(propertySpace, "flashslow ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashSlow = True
 
-            If InStr(propertySpace, "top ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlignTop = True Else Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlignTop = False
-            If InStr(propertySpace, "bottom ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlighBottom = True Else Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlighBottom = False
+            If InStr(propertySpace, "middle ") > 0 Then
+                Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlignTop = False
+                Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlighBottom = False
+            End If
+            If InStr(propertySpace, "top ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlignTop = True
+            If InStr(propertySpace, "bottom ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlighBottom = True
 
             If Seg = 0 Then
                 If InStr(propertySpace, "noprespace") > 0 Then Console(ConsoleID, OverwriteLineIndex).PreSpace = False
@@ -610,9 +626,8 @@ Public Function Has_Property_Space(ByVal s As String) As Boolean
     End If
 End Function
 
-Public Function propertySpace_Name(ByVal s As String) As String
-    propertySpace_Name = Console_Line_Defaults.Segments(0).FontName
-    s = i(s)
+Public Function propertySpace_Name(ByVal s As String, BaseSeg As ConsoleLineSegment) As String
+    propertySpace_Name = BaseSeg.FontName
 
     If InStr(s, "arial") > 0 Then propertySpace_Name = "Arial"
     If InStr(s, "arial black") > 0 Then propertySpace_Name = "Arial Black"
@@ -626,49 +641,41 @@ Public Function propertySpace_Name(ByVal s As String) As String
     If InStr(s, "trebuchet ms") > 0 Then propertySpace_Name = "Trebuchet MS"
     If InStr(s, "verdana") > 0 Then propertySpace_Name = "Verdana"
     If InStr(s, "wingdings") > 0 Then propertySpace_Name = "Wingdings"
-    
-
 End Function
 
-Public Function propertySpace_Bold(ByVal s As String) As Boolean
-    propertySpace_Bold = True
-    s = i(s)
-    
+Public Function propertySpace_Bold(ByVal s As String, BaseSeg As ConsoleLineSegment) As Boolean
+    propertySpace_Bold = BaseSeg.FontBold
+
     If InStr(s, "bold") > 0 Then propertySpace_Bold = True
     If InStr(s, "nobold") > 0 Then propertySpace_Bold = False
 End Function
 
-Public Function propertySpace_Italic(ByVal s As String) As Boolean
-    propertySpace_Italic = False
-    s = i(s)
-    
+Public Function propertySpace_Italic(ByVal s As String, BaseSeg As ConsoleLineSegment) As Boolean
+    propertySpace_Italic = BaseSeg.FontItalic
+
     If InStr(s, "italic") > 0 Then propertySpace_Italic = True
     If InStr(s, "noitalic") > 0 Then propertySpace_Italic = False
 End Function
 
-Public Function propertySpace_Strikethru(ByVal s As String) As Boolean
-    propertySpace_Strikethru = False
-    s = i(s)
-    
+Public Function propertySpace_Strikethru(ByVal s As String, BaseSeg As ConsoleLineSegment) As Boolean
+    propertySpace_Strikethru = BaseSeg.FontStrikethru
+
     If InStr(s, "strikethru") > 0 Then propertySpace_Strikethru = True
     If InStr(s, "strikethrough") > 0 Then propertySpace_Strikethru = True
     If InStr(s, "nostrikethru") > 0 Then propertySpace_Strikethru = False
     If InStr(s, "nostrikethrough") > 0 Then propertySpace_Strikethru = False
-    
 End Function
 
-Public Function propertySpace_Underline(ByVal s As String) As Boolean
-    propertySpace_Underline = False
-    s = i(s)
-    
+Public Function propertySpace_Underline(ByVal s As String, BaseSeg As ConsoleLineSegment) As Boolean
+    propertySpace_Underline = BaseSeg.FontUnderline
+
     If InStr(s, "underline") > 0 Then propertySpace_Underline = True
     If InStr(s, "nounderline") > 0 Then propertySpace_Underline = False
 End Function
 
-Public Function propertySpace_Color(ByVal s As String) As Long
-    propertySpace_Color = 777
-    s = i(s)
-    
+Public Function propertySpace_Color(ByVal s As String, BaseSeg As ConsoleLineSegment) As Long
+    propertySpace_Color = BaseSeg.FontColor
+
     If InStr(s, "white") Then propertySpace_Color = vbWhite
     If InStr(s, "black") Then propertySpace_Color = vbBlack + 1
     
@@ -745,24 +752,18 @@ Public Function propertySpace_Color(ByVal s As String) As Long
             End If
         End If
     End If
-    
-    If propertySpace_Color = 777 Then propertySpace_Color = Console_Line_Defaults.Segments(0).FontColor
 End Function
 
-Public Function propertySpace_Size(ByVal s As String) As String
-    propertySpace_Size = 777
-    s = Replace(s, "{{", " "): s = Replace(s, "}}", " ")
-    s = " " & i(Replace(s, ",", " ")) & " "
-    
+Public Function propertySpace_Size(ByVal s As String, BaseSeg As ConsoleLineSegment) As String
+    propertySpace_Size = BaseSeg.FontSize
+    s = " " & s & " "
+
     Dim n As Integer
     For n = 1 To 144
-        If InStr(s, " " & Trim(Str(n)) & " ") > 0 Then
+        If InStr(s, " " & n & " ") > 0 Then
             propertySpace_Size = Trim(Str(n))
         End If
     Next n
-    
-
-    If propertySpace_Size = 777 Then propertySpace_Size = Console_Line_Defaults.Segments(0).FontSize
 
     If propertySpace_Size < 8 Then propertySpace_Size = 8
     If propertySpace_Size > Max_Font_Size Then propertySpace_Size = Max_Font_Size
