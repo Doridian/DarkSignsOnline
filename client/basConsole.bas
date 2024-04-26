@@ -82,23 +82,30 @@ End Property
 
 Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
     Dim X As Integer, W As Long, H As Long
+
+    Dim FontName As String, FontSize As String
+
     CLine.Height = 0
     CLine.TotalWidth = 0
     For X = 0 To UBound(CLine.Segments)
-        If CLine.Segments(X).FontName = "" Then
-            CLine.Segments(X).FontName = Console_Line_Defaults.Segments(0).FontName
+        FontName = CLine.Segments(X).FontName
+        If FontName = "" Then
+            FontName = Console_Line_Defaults.Segments(0).FontName
+            CLine.Segments(X).FontName = FontName
         End If
-        If CLine.Segments(X).FontSize = "" Then
-            CLine.Segments(X).FontSize = Console_Line_Defaults.Segments(0).FontSize
+        FontSize = CLine.Segments(X).FontSize
+        If FontSize = "" Then
+            FontSize = Console_Line_Defaults.Segments(0).FontSize
+            CLine.Segments(X).FontSize = FontSize
         End If
 
-        H = Font_Height(CLine.Segments(X).FontName, CLine.Segments(X).FontSize)
+        H = Font_Height(FontName, FontSize)
         CLine.Segments(X).Height = H
         If H > CLine.Height Then
             CLine.Height = H
         End If
 
-        W = Font_Width(CLine.Segments(X).FontName, CLine.Segments(X).FontSize, CLine.Segments(X).Caption)
+        W = Font_Width(FontName, FontSize, CLine.Segments(X).Caption)
         CLine.TotalWidth = CLine.TotalWidth + W
         CLine.Segments(X).TotalWidth = W
     Next
@@ -388,7 +395,7 @@ Public Function Console_Line_Defaults() As ConsoleLine
     Console_Line_Defaults.Right = False
 End Function
 
-Public Function Font_Height(ByVal theFontName As String, ByVal theFontSize As String, Optional ByVal tmpS As String) As Long
+Public Function Font_Height(ByVal theFontName As String, ByVal theFontSize As String) As Long
     frmConsole.lfont.FontName = theFontName
     frmConsole.lfont.FontSize = theFontSize
     frmConsole.lfont.Caption = "tggggjhis is to check the height OF FONTS"
@@ -712,7 +719,7 @@ Public Function propertySpace_Color(ByVal s As String, BaseSeg As ConsoleLineSeg
     
     If InStr(s, "rgb:") Then
         Dim Error As Boolean
-        Dim R As Long, G As Long, b As Long
+        Dim R As Long, G As Long, B As Long
         Error = False
         Dim sTmp As String
         s = Replace(s, ",", " ")
@@ -723,17 +730,17 @@ Public Function propertySpace_Color(ByVal s As String, BaseSeg As ConsoleLineSeg
         sSplit = Split(sTmp, ":")
 
         If UBound(sSplit) < 3 Then
-            RGBSplit Trim(sSplit(1)), R, G, b
+            RGBSplit Trim(sSplit(1)), R, G, B
         Else
             R = Trim(sSplit(1))
             G = Trim(sSplit(2))
-            b = Trim(sSplit(3))
+            B = Trim(sSplit(3))
         End If
 
-        If IsNumeric(R) And IsNumeric(G) And IsNumeric(b) Then
+        If IsNumeric(R) And IsNumeric(G) And IsNumeric(B) Then
             R = CInt(R)
             G = CInt(G)
-            b = CInt(b)
+            B = CInt(B)
         
             If R < 0 Or R > 255 Then
                 Error = True
@@ -743,12 +750,12 @@ Public Function propertySpace_Color(ByVal s As String, BaseSeg As ConsoleLineSeg
                 Error = True
             End If
             
-            If b < 0 Or b > 255 Then
+            If B < 0 Or B > 255 Then
                 Error = True
             End If
             
             If Error = False Then
-                propertySpace_Color = RGB(R, G, b)
+                propertySpace_Color = RGB(R, G, B)
             End If
         End If
     End If
