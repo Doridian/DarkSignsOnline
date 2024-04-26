@@ -352,7 +352,7 @@ Begin VB.Form frmConsole
       End
    End
    Begin VB.Timer tmrPrint 
-      Interval        =   1
+      Interval        =   16
       Left            =   5280
       Top             =   5280
    End
