@@ -26,7 +26,7 @@ Public Type ConsoleLineSegment
 
     FontColor As Long
     FontName As String
-    FontSize As String
+    FontSize As Long
     FontBold As Boolean
     FontItalic As Boolean
     FontStrikethru As Boolean
