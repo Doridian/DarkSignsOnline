@@ -328,6 +328,9 @@ Public Sub Print_Console()
             End If
             tmpS = SegVal.Caption
 
+            frmConsole.CurrentX = NextX
+            NextX = NextX + SegVal.TotalWidth
+
             If Not DisableFlashing Then
                 Dim HideLine As Boolean
                 HideLine = False
@@ -335,13 +338,17 @@ Public Sub Print_Console()
                 If SegVal.FlashFast Then HideLine = FlashFast: UsedFlash = True
                 If SegVal.FlashSlow Then HideLine = FlashSlow: UsedFlash = True
                 If HideLine Then
-                    frmConsole.CurrentX = frmConsole.CurrentX + SegVal.TotalWidth
                     GoTo NextOne
                 End If
             End If
 
-            frmConsole.CurrentX = NextX
-            NextX = NextX + SegVal.TotalWidth
+            If SegVal.AlighBottom Then
+                frmConsole.CurrentY = printHeight + (Console(ActiveConsole, n).Height - SegVal.Height)
+            ElseIf SegVal.AlignTop Then
+                frmConsole.CurrentY = printHeight
+            Else
+                frmConsole.CurrentY = printHeight + ((Console(ActiveConsole, n).Height - SegVal.Height) / 2)
+            End If
 
             If Seg = SegMax And n = 1 And CurrentPromptVisible(ActiveConsole) And Not frmConsole.ChatBox.Visible Then
                 frmConsole.txtPromptInput.top = frmConsole.CurrentY
@@ -357,13 +364,6 @@ Public Sub Print_Console()
                 ConsumedInputPrompt = True
             End If
 
-            If SegVal.AlighBottom Then
-                frmConsole.CurrentY = printHeight + (Console(ActiveConsole, n).Height - SegVal.Height)
-            ElseIf SegVal.AlignTop Then
-                frmConsole.CurrentY = printHeight
-            Else
-                frmConsole.CurrentY = printHeight + ((Console(ActiveConsole, n).Height - SegVal.Height) / 2)
-            End If
             frmConsole.Print tmpS
         Next
 NextOne:
