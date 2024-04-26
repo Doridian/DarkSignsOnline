@@ -83,29 +83,16 @@ End Property
 Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
     Dim X As Integer, W As Long, H As Long
 
-    Dim FontName As String, FontSize As String
-
     CLine.Height = 0
     CLine.TotalWidth = 0
     For X = 0 To UBound(CLine.Segments)
-        FontName = CLine.Segments(X).FontName
-        If FontName = "" Then
-            FontName = Console_Line_Defaults.Segments(0).FontName
-            CLine.Segments(X).FontName = FontName
-        End If
-        FontSize = CLine.Segments(X).FontSize
-        If FontSize = "" Then
-            FontSize = Console_Line_Defaults.Segments(0).FontSize
-            CLine.Segments(X).FontSize = FontSize
-        End If
-
-        H = Font_Height(FontName, FontSize)
+        H = Font_Height(CLine.Segments(X))
         CLine.Segments(X).Height = H
         If H > CLine.Height Then
             CLine.Height = H
         End If
 
-        W = Font_Width(FontName, FontSize, CLine.Segments(X).Caption)
+        W = Font_Width(CLine.Segments(X))
         CLine.TotalWidth = CLine.TotalWidth + W
         CLine.Segments(X).TotalWidth = W
     Next
@@ -214,7 +201,7 @@ Public Sub Print_Console()
     On Error Resume Next
 
     Dim sText As String * 255
-    Dim n As Integer, n2 As Integer, tmpY2 As Long, printHeight As Long, tmpS As String, isAligned As Boolean
+    Dim n As Integer, n2 As Integer, tmpY2 As Long, printHeight As Long, tmpS As String
     n = 0
 
     frmConsole.Cls
@@ -259,20 +246,13 @@ Public Sub Print_Console()
         FontHeight = Console(ActiveConsole, n).Height + yDiv
         printHeight = printHeight - FontHeight
 
-        isAligned = False
-
         NextX = ConsoleXSpacing
         If Console(ActiveConsole, n).Center = True Then
             NextX = (frmConsole.Width / 2) - (Console(ActiveConsole, n).TotalWidth / 2)
-            isAligned = True
-        End If
-        If Console(ActiveConsole, n).Right = True Then
+        ElseIf Console(ActiveConsole, n).Right = True Then
             NextX = (frmConsole.Width) - (Console(ActiveConsole, n).TotalWidth) - ConsoleXSpacing
-            isAligned = True
-        End If
-        
-        If Console(ActiveConsole, n).PreSpace Then
-            If isAligned <> True Then NextX = ConsoleXSpacingIndent
+        ElseIf Console(ActiveConsole, n).PreSpace Then
+            NextX = ConsoleXSpacingIndent
         End If
 
         SegMax = UBound(Console(ActiveConsole, n).Segments)
@@ -388,24 +368,28 @@ Public Function Console_Line_Defaults() As ConsoleLine
     Console_Line_Defaults.Segments(0).Flash = False
     Console_Line_Defaults.Segments(0).FlashFast = False
     Console_Line_Defaults.Segments(0).FlashSlow = False
-    CalculateConsoleLine Console_Line_Defaults
 
     Console_Line_Defaults.DrawEnabled = False
     Console_Line_Defaults.Center = False
     Console_Line_Defaults.Right = False
 End Function
 
-Public Function Font_Height(ByVal theFontName As String, ByVal theFontSize As String) As Long
-    frmConsole.lfont.FontName = theFontName
-    frmConsole.lfont.FontSize = theFontSize
-    frmConsole.lfont.Caption = "tggggjhis is to check the height OF FONTS"
+Private Sub SetupLFont(LineSeg As ConsoleLineSegment)
+    frmConsole.lfont.FontName = LineSeg.FontName
+    frmConsole.lfont.FontSize = LineSeg.FontSize
+    frmConsole.lfont.FontBold = LineSeg.FontBold
+    frmConsole.lfont.FontItalic = LineSeg.FontItalic
+    frmConsole.lfont.FontUnderline = LineSeg.FontUnderline
+    frmConsole.lfont.Caption = LineSeg.Caption
+End Sub
+
+Public Function Font_Height(LineSeg As ConsoleLineSegment) As Long
+    SetupLFont LineSeg
     Font_Height = frmConsole.lfont.Height
 End Function
 
-Public Function Font_Width(ByVal theFontName As String, ByVal theFontSize As String, ByVal tmpS As String) As Long
-    frmConsole.lfont.FontName = theFontName
-    frmConsole.lfont.FontSize = theFontSize
-    frmConsole.lfont.Caption = tmpS
+Public Function Font_Width(LineSeg As ConsoleLineSegment) As Long
+    SetupLFont LineSeg
     Font_Width = frmConsole.lfont.Width
 End Function
 
@@ -454,6 +438,12 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
         CurrentPromptVisible(ConsoleID) = False
     End If
 
+    Console(ConsoleID, OverwriteLineIndex) = Parse_Console_Line(Console(ConsoleID, OverwriteLineIndex), s, NoReset)
+
+    frmConsole.QueueConsoleRender
+End Function
+
+Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String, Optional ByVal NoReset As Boolean = False) As ConsoleLine
     s = StripAfterNewline(s)
 
     Dim sSplit() As String
@@ -467,72 +457,81 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
 
     Dim SegReinitAt As Integer
     If NoReset Then
-        SegReinitAt = UBound(Console(ConsoleID, OverwriteLineIndex).Segments) + 1
-        ReDim Preserve Console(ConsoleID, OverwriteLineIndex).Segments(0 To UBound(sSplit))
+        SegReinitAt = UBound(CLine.Segments) + 1
+        ReDim Preserve CLine.Segments(0 To UBound(sSplit))
     Else
-        Console(ConsoleID, OverwriteLineIndex) = Console_Line_Defaults
-        Console(ConsoleID, OverwriteLineIndex).PreSpace = True
+        CLine = Console_Line_Defaults
+        CLine.PreSpace = True
         SegReinitAt = 0
-        ReDim Console(ConsoleID, OverwriteLineIndex).Segments(0 To UBound(sSplit))
+        ReDim CLine.Segments(0 To UBound(sSplit))
     End If
 
-    Dim Seg As Integer, BaseSeg As ConsoleLineSegment
+    Dim Seg As Integer, BaseSeg As ConsoleLineSegment, CLineSeg As ConsoleLineSegment
 
     For Seg = 0 To UBound(sSplit)
+        CLineSeg = CLine.Segments(Seg)
         If Seg >= SegReinitAt Then
             If Seg > 0 Then
-                BaseSeg = Console(ConsoleID, OverwriteLineIndex).Segments(Seg - 1)
+                BaseSeg = CLine.Segments(Seg - 1)
             Else
                 BaseSeg = Console_Line_Defaults.Segments(0)
             End If
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg) = BaseSeg
+            CLineSeg = BaseSeg
         Else
-            BaseSeg = Console(ConsoleID, OverwriteLineIndex).Segments(Seg)
+            BaseSeg = CLineSeg
         End If
 
         s = sSplit(Seg)
 
-        If Has_Property_Space(s) = True Then
+        If Has_Property_Space(s) Then
             propertySpace = i(Get_Property_Space(s)) & " "
             propertySpace = Replace(propertySpace, ",", " ")
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontColor = propertySpace_Color(propertySpace, BaseSeg)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontSize = propertySpace_Size(propertySpace, BaseSeg)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontName = propertySpace_Name(propertySpace, BaseSeg)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontBold = propertySpace_Bold(propertySpace, BaseSeg)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontItalic = propertySpace_Italic(propertySpace, BaseSeg)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontUnderline = propertySpace_Underline(propertySpace, BaseSeg)
-            Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FontStrikethru = propertySpace_Strikethru(propertySpace, BaseSeg)
+            CLineSeg.FontColor = propertySpace_Color(propertySpace, BaseSeg)
+            CLineSeg.FontSize = propertySpace_Size(propertySpace, BaseSeg)
+            CLineSeg.FontName = propertySpace_Name(propertySpace, BaseSeg)
+            CLineSeg.FontBold = propertySpace_Bold(propertySpace, BaseSeg)
+            CLineSeg.FontItalic = propertySpace_Italic(propertySpace, BaseSeg)
+            CLineSeg.FontUnderline = propertySpace_Underline(propertySpace, BaseSeg)
+            CLineSeg.FontStrikethru = propertySpace_Strikethru(propertySpace, BaseSeg)
             If InStr(propertySpace, "flashoff ") > 0 Then
-                Console(ConsoleID, OverwriteLineIndex).Segments(Seg).Flash = False
-                Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashFast = False
-                Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashSlow = False
+                CLineSeg.Flash = False
+                CLineSeg.FlashFast = False
+                CLineSeg.FlashSlow = False
             End If
-            If InStr(propertySpace, "flash ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).Flash = True
-            If InStr(propertySpace, "flashfast ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashFast = True
-            If InStr(propertySpace, "flashslow ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).FlashSlow = True
+            If InStr(propertySpace, "flash ") > 0 Then CLineSeg.Flash = True
+            If InStr(propertySpace, "flashfast ") > 0 Then CLineSeg.FlashFast = True
+            If InStr(propertySpace, "flashslow ") > 0 Then CLineSeg.FlashSlow = True
 
             If InStr(propertySpace, "middle ") > 0 Then
-                Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlignTop = False
-                Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlighBottom = False
+                CLineSeg.AlignTop = False
+                CLineSeg.AlighBottom = False
             End If
-            If InStr(propertySpace, "top ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlignTop = True
-            If InStr(propertySpace, "bottom ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Segments(Seg).AlighBottom = True
+            If InStr(propertySpace, "top ") > 0 Then CLineSeg.AlignTop = True
+            If InStr(propertySpace, "bottom ") > 0 Then CLineSeg.AlighBottom = True
 
             If Seg = 0 Then
-                If InStr(propertySpace, "noprespace") > 0 Then Console(ConsoleID, OverwriteLineIndex).PreSpace = False
-                If InStr(propertySpace, "forceprespace") > 0 Then Console(ConsoleID, OverwriteLineIndex).PreSpace = True
-                If InStr(propertySpace, "center ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Center = True Else Console(ConsoleID, OverwriteLineIndex).Center = False
-                If InStr(propertySpace, "right ") > 0 Then Console(ConsoleID, OverwriteLineIndex).Right = True Else Console(ConsoleID, OverwriteLineIndex).Right = False
+                If InStr(propertySpace, "noprespace") > 0 Then CLine.PreSpace = False
+                If InStr(propertySpace, "forceprespace") > 0 Then CLine.PreSpace = True
+                If InStr(propertySpace, "center ") > 0 Then CLine.Center = True Else CLine.Center = False
+                If InStr(propertySpace, "right ") > 0 Then CLine.Right = True Else CLine.Right = False
             End If
+        Else
+            CLineSeg.FontColor = BaseSeg.FontColor
+            CLineSeg.FontSize = BaseSeg.FontSize
+            CLineSeg.FontName = BaseSeg.FontName
+            CLineSeg.FontBold = BaseSeg.FontBold
+            CLineSeg.FontItalic = BaseSeg.FontItalic
+            CLineSeg.FontUnderline = BaseSeg.FontUnderline
+            CLineSeg.FontStrikethru = BaseSeg.FontStrikethru
         End If
 
         s = Remove_Property_Space(s)
         s = Replace(s, ConsoleInvisibleChar, "")
-        Console(ConsoleID, OverwriteLineIndex).Segments(Seg).Caption = s
-        CalculateConsoleLine Console(ConsoleID, OverwriteLineIndex)
+        CLineSeg.Caption = s
+        CLine.Segments(Seg) = CLineSeg
     Next
-
-    frmConsole.QueueConsoleRender
+    CalculateConsoleLine CLine
+    Parse_Console_Line = CLine
 End Function
 
 Public Function Is_Valid_Font(ByVal s As String) As Boolean

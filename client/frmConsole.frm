@@ -533,10 +533,12 @@ Begin VB.Form frmConsole
       Width           =   4335
    End
    Begin VB.Label lfont 
+      Appearance      =   0  'Flat
       AutoSize        =   -1  'True
+      BackColor       =   &H80000005&
       BackStyle       =   0  'Transparent
       Caption         =   "this is to check the height OF FONTS"
-      ForeColor       =   &H007EE084&
+      ForeColor       =   &H80000008&
       Height          =   240
       Left            =   5160
       TabIndex        =   0

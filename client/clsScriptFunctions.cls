@@ -834,28 +834,16 @@ Private Sub RaiseMiscError(ByVal Desc As String)
     Err.Raise vbObjectError + 9666, , Desc
 End Sub
 
-Public Function TextWidth(ByVal FontName As String, ByVal FontSize As String, ByVal Text As String) As Long
-    If FontName = "" Then
-        FontName = basConsole.Console_Line_Defaults.Segments(0).FontName
-    End If
-    If FontSize = "" Then
-        FontSize = basConsole.Console_Line_Defaults.Segments(0).FontSize
-    End If
-
-    frmConsole.lfont.FontName = FontName
-    frmConsole.lfont.FontSize = FontSize
-    frmConsole.lfont.Caption = Text
-    TextWidth = frmConsole.lfont.Width
+Public Function TextWidth(ByVal Text As String) As Long
+    Dim DummyCLine As ConsoleLine
+    DummyCLine = Parse_Console_Line(DummyCLine, Text)
+    TextWidth = DummyCLine.TotalWidth
 End Function
 
-Public Function TextHeight(ByVal FontName As String, ByVal FontSize As String) As Long
-    If FontName = "" Then
-        FontName = basConsole.Console_Line_Defaults.Segments(0).FontName
-    End If
-    If FontSize = "" Then
-        FontSize = basConsole.Console_Line_Defaults.Segments(0).FontSize
-    End If
-    TextHeight = Font_Height(FontName, FontSize)
+Public Function TextHeight(ByVal Text As String, ByVal FontName As String, ByVal FontSize As String) As Long
+    Dim DummyCLine As ConsoleLine
+    DummyCLine = Parse_Console_Line(DummyCLine, Text)
+    TextHeight = DummyCLine.Height
 End Function
 
 Public Function ConsoleWidth() As Long
