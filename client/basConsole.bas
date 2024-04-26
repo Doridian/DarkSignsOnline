@@ -503,27 +503,49 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
             CLineSeg.FontItalic = propertySpace_Italic(pSplit, CLineSeg)
             CLineSeg.FontUnderline = propertySpace_Underline(pSplit, CLineSeg)
             CLineSeg.FontStrikethru = propertySpace_Strikethru(pSplit, CLineSeg)
+
             If Array_Has(pSplit, "noflash") Then
                 CLineSeg.Flash = False
                 CLineSeg.FlashFast = False
                 CLineSeg.FlashSlow = False
+            ElseIf Array_Has(pSplit, "flash") Then
+                CLineSeg.Flash = True
+                CLineSeg.FlashFast = False
+                CLineSeg.FlashSlow = False
+            ElseIf Array_Has(pSplit, "flashfast") Then
+                CLineSeg.FlashFast = True
+                CLineSeg.Flash = False
+                CLineSeg.FlashSlow = False
+            ElseIf Array_Has(pSplit, "flashslow") Then
+                CLineSeg.FlashSlow = True
+                CLineSeg.Flash = False
+                CLineSeg.FlashFast = False
             End If
-            If Array_Has(pSplit, "flash") Then CLineSeg.Flash = True
-            If Array_Has(pSplit, "flashfast") Then CLineSeg.FlashFast = True
-            If Array_Has(pSplit, "flashslow") Then CLineSeg.FlashSlow = True
 
             If Array_Has(pSplit, "middle") Then
                 CLineSeg.AlignTop = False
                 CLineSeg.AlighBottom = False
+            ElseIf Array_Has(pSplit, "top") Then
+                CLineSeg.AlignTop = True
+                CLineSeg.AlighBottom = False
+            ElseIf Array_Has(pSplit, "bottom") Then
+                CLineSeg.AlighBottom = True
+                CLineSeg.AlignTop = False
             End If
-            If Array_Has(pSplit, "top") Then CLineSeg.AlignTop = True
-            If Array_Has(pSplit, "bottom") Then CLineSeg.AlighBottom = True
 
             If Seg = 0 Then
                 If Array_Has(pSplit, "noprespace") Then CLine.PreSpace = False
                 If Array_Has(pSplit, "forceprespace") Then CLine.PreSpace = True
-                If Array_Has(pSplit, "center") Then CLine.Center = True Else CLine.Center = False
-                If Array_Has(pSplit, "right") Then CLine.Right = True Else CLine.Right = False
+                If Array_Has(pSplit, "center") Then
+                    CLine.Center = True
+                    CLine.Right = False
+                ElseIf Array_Has(pSplit, "right") Then
+                    CLine.Right = True
+                    CLine.Center = False
+                ElseIf Array_Has(pSplit, "left") Then
+                    CLine.Right = False
+                    CLine.Center = False
+                End If
             End If
         End If
 
