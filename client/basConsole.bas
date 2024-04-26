@@ -421,7 +421,7 @@ Public Function RenderPromptInput(ByVal ConsoleID As Integer)
     WaitingForInput(ConsoleID) = False
 End Function
 
-Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional ByVal OverwriteLineIndex As Long = 0, Optional ByVal NoReset As Boolean = False)
+Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional ByVal OverwriteLineIndex As Long = 0)
     If ConsoleID > 4 Then Exit Function
     If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
 
@@ -436,7 +436,7 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
         CurrentPromptVisible(ConsoleID) = False
     End If
 
-    Console(ConsoleID, OverwriteLineIndex) = Parse_Console_Line(Console(ConsoleID, OverwriteLineIndex), s, NoReset)
+    Console(ConsoleID, OverwriteLineIndex) = Parse_Console_Line(Console(ConsoleID, OverwriteLineIndex), s)
 
     frmConsole.QueueConsoleRender
 End Function
@@ -462,7 +462,7 @@ Public Function Array_IndexOf(XArr() As String, ByVal XVal As String, Optional M
     Array_IndexOf = -1
 End Function
 
-Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String, Optional ByVal NoReset As Boolean = False) As ConsoleLine
+Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String) As ConsoleLine
     s = StripAfterNewline(s)
 
     Dim sSplit() As String
@@ -474,30 +474,17 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
 
     Dim propertySpace As String, pSplit() As String
 
-    Dim SegReinitAt As Integer
-    If NoReset Then
-        SegReinitAt = UBound(CLine.Segments) + 1
-        ReDim Preserve CLine.Segments(0 To UBound(sSplit))
-    Else
-        CLine = Console_Line_Defaults
-        CLine.PreSpace = True
-        SegReinitAt = 0
-        ReDim CLine.Segments(0 To UBound(sSplit))
-    End If
+    CLine = Console_Line_Defaults
+    CLine.PreSpace = True
+    ReDim CLine.Segments(0 To UBound(sSplit))
 
-    Dim Seg As Integer, BaseSeg As ConsoleLineSegment, CLineSeg As ConsoleLineSegment
+    Dim Seg As Integer, CLineSeg As ConsoleLineSegment
 
     For Seg = 0 To UBound(sSplit)
-        CLineSeg = CLine.Segments(Seg)
-        If Seg >= SegReinitAt Then
-            If Seg > 0 Then
-                BaseSeg = CLine.Segments(Seg - 1)
-            Else
-                BaseSeg = Console_Line_Defaults.Segments(0)
-            End If
-            CLineSeg = BaseSeg
+        If Seg > 0 Then
+            CLineSeg = CLine.Segments(Seg - 1)
         Else
-            BaseSeg = CLineSeg
+            CLineSeg = Console_Line_Defaults.Segments(0)
         End If
 
         s = sSplit(Seg)
@@ -509,13 +496,13 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                 propertySpace = Replace(propertySpace, "  ", " ")
             Wend
             pSplit = Split(propertySpace, " ")
-            CLineSeg.FontColor = propertySpace_Color(pSplit, BaseSeg)
-            CLineSeg.FontSize = propertySpace_Size(pSplit, BaseSeg)
-            CLineSeg.FontName = propertySpace_Name(pSplit, BaseSeg)
-            CLineSeg.FontBold = propertySpace_Bold(pSplit, BaseSeg)
-            CLineSeg.FontItalic = propertySpace_Italic(pSplit, BaseSeg)
-            CLineSeg.FontUnderline = propertySpace_Underline(pSplit, BaseSeg)
-            CLineSeg.FontStrikethru = propertySpace_Strikethru(pSplit, BaseSeg)
+            CLineSeg.FontColor = propertySpace_Color(pSplit, CLineSeg)
+            CLineSeg.FontSize = propertySpace_Size(pSplit, CLineSeg)
+            CLineSeg.FontName = propertySpace_Name(pSplit, CLineSeg)
+            CLineSeg.FontBold = propertySpace_Bold(pSplit, CLineSeg)
+            CLineSeg.FontItalic = propertySpace_Italic(pSplit, CLineSeg)
+            CLineSeg.FontUnderline = propertySpace_Underline(pSplit, CLineSeg)
+            CLineSeg.FontStrikethru = propertySpace_Strikethru(pSplit, CLineSeg)
             If Array_Has(pSplit, "noflash") Then
                 CLineSeg.Flash = False
                 CLineSeg.FlashFast = False

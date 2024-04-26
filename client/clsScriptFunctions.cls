@@ -557,7 +557,7 @@ Public Function EDIT(ByVal file As String)
     Yield
 End Function
 
-Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1, Optional ByVal NoReset As Boolean = False)
+Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
     s = StripAfterNewline(s)
     If s = "" Then
         Yield
@@ -577,7 +577,7 @@ Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1, Opt
         Exit Function
     End If
     Yield
-    basConsole.SayRaw PrivConsoleID, s, YPos, NoReset
+    basConsole.SayRaw PrivConsoleID, s, YPos
     Yield
 End Function
 

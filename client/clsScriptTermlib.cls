@@ -51,7 +51,10 @@ Public Function SaySlowWithBGColor(ByVal RGBVal As Long, ByVal Delay As Long, By
             X = X + 1
         End If
         GSF.Wait Delay
-        GSF.SayLine Mid(Str, 1, X), -1, True
+        GSF.SayLine Mid(Str, 1, X), -1
+        If RGBVal >= 0 Then
+            GSF.DRAW -1, RGBVal, "solid"
+        End If
     Next
 End Function
 
@@ -66,7 +69,10 @@ Public Function GetAsciiWithCPromptBG(ByVal RGBVal As Long, ByVal Prompt As Stri
     End If
     Dim Choice As Long
     Choice = GSF.GetASCII()
-    GSF.SayLine "{{noprespace}}" & Prompt & "> [" & Chr(Choice) & "]", -1, True
+    GSF.SayLine "{{noprespace}}" & Prompt & "> [" & Chr(Choice) & "]", -1
+    If RGBVal >= 0 Then
+        GSF.DRAW -1, RGBVal, "solid"
+    End If
     GetAsciiWithCPromptBG = Choice
 End Function
 
@@ -78,17 +84,17 @@ Public Function GetAsciiWithPrompt()
     GetAsciiWithPrompt = GetAsciiWithCPrompt("")
 End Function
 
-Public Function SetMissionProgress(ByVal MissionID As String, ByVal Key As String, ByVal Value As String)
-    GSF.SetMissionData MissionID, "progress", Key, Value
+Public Function SetMissionProgress(ByVal MissionID As String, ByVal key As String, ByVal value As String)
+    GSF.SetMissionData MissionID, "progress", key, value
 End Function
 
-Public Function GetMissionProgress(ByVal MissionID As String, ByVal Key As String)
-    GetMissionProgress = GSF.GetMissionData(MissionID, "progress", Key)
+Public Function GetMissionProgress(ByVal MissionID As String, ByVal key As String)
+    GetMissionProgress = GSF.GetMissionData(MissionID, "progress", key)
 End Function
 
-Public Function IntMissionProgress(ByVal MissionID As String, ByVal Key As String)
+Public Function IntMissionProgress(ByVal MissionID As String, ByVal key As String)
     Dim Val
-    Val = GetMissionProgress(MissionID, Key)
+    Val = GetMissionProgress(MissionID, key)
     If Val = "" Then
         IntMissionProgress = 0
     Else
@@ -96,22 +102,22 @@ Public Function IntMissionProgress(ByVal MissionID As String, ByVal Key As Strin
     End If
 End Function
 
-Public Function IncMissionProgress(ByVal MissionID As String, ByVal Key As String)
+Public Function IncMissionProgress(ByVal MissionID As String, ByVal key As String)
     Dim Val
-    Val = IntMissionProgress(MissionID, Key)
-    SetMissionProgress MissionID, Key, (Val + 1)
+    Val = IntMissionProgress(MissionID, key)
+    SetMissionProgress MissionID, key, (Val + 1)
 End Function
 
-Public Function BoolMissionProgress(ByVal MissionID As String, ByVal Key As String)
-    BoolMissionProgress = (GetMissionProgress(MissionID, Key) = "1")
+Public Function BoolMissionProgress(ByVal MissionID As String, ByVal key As String)
+    BoolMissionProgress = (GetMissionProgress(MissionID, key) = "1")
 End Function
 
-Public Function BoolSetMissionProgress(ByVal MissionID As String, ByVal Key As String)
-    SetMissionProgress MissionID, Key, "1"
+Public Function BoolSetMissionProgress(ByVal MissionID As String, ByVal key As String)
+    SetMissionProgress MissionID, key, "1"
 End Function
 
-Public Function BoolClearMissionProgress(ByVal MissionID As String, ByVal Key As String)
-    SetMissionProgress MissionID, Key, "0"
+Public Function BoolClearMissionProgress(ByVal MissionID As String, ByVal key As String)
+    SetMissionProgress MissionID, key, "0"
 End Function
 
 Public Function QReadLine(ByVal Prompt As String)
