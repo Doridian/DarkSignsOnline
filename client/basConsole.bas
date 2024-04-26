@@ -240,7 +240,7 @@ Public Sub Print_Console()
     n = 0
     Do
         n = n + 1
-        
+
         Dim NextX As Long
         Dim FontHeight As Long
         FontHeight = Console(ActiveConsole, n).Height + yDiv
@@ -257,6 +257,7 @@ Public Sub Print_Console()
 
         SegMax = UBound(Console(ActiveConsole, n).Segments)
         For Seg = 0 To SegMax
+            Dim HideLine As Boolean
             Dim SegVal As ConsoleLineSegment
             SegVal = Console(ActiveConsole, n).Segments(Seg)
 
@@ -311,15 +312,11 @@ Public Sub Print_Console()
             frmConsole.CurrentX = NextX
             NextX = NextX + SegVal.TotalWidth
 
+            HideLine = False
             If Not DisableFlashing Then
-                Dim HideLine As Boolean
-                HideLine = False
                 If SegVal.Flash Then HideLine = Flash: UsedFlash = True
                 If SegVal.FlashFast Then HideLine = FlashFast: UsedFlash = True
                 If SegVal.FlashSlow Then HideLine = FlashSlow: UsedFlash = True
-                If HideLine Then
-                    GoTo NextOne
-                End If
             End If
 
             If SegVal.AlighBottom Then
@@ -344,9 +341,10 @@ Public Sub Print_Console()
                 ConsumedInputPrompt = True
             End If
 
-            frmConsole.Print tmpS
+            If Not HideLine Then
+                frmConsole.Print tmpS
+            End If
         Next
-NextOne:
     Loop Until printHeight < 0 Or n >= 299
 ExitLoop:
     If Not ConsumedInputPrompt Then
@@ -540,14 +538,6 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                 If Array_Has(pSplit, "center") Then CLine.Center = True Else CLine.Center = False
                 If Array_Has(pSplit, "right") Then CLine.Right = True Else CLine.Right = False
             End If
-        Else
-            CLineSeg.FontColor = BaseSeg.FontColor
-            CLineSeg.FontSize = BaseSeg.FontSize
-            CLineSeg.FontName = BaseSeg.FontName
-            CLineSeg.FontBold = BaseSeg.FontBold
-            CLineSeg.FontItalic = BaseSeg.FontItalic
-            CLineSeg.FontUnderline = BaseSeg.FontUnderline
-            CLineSeg.FontStrikethru = BaseSeg.FontStrikethru
         End If
 
         s = Remove_Property_Space(s)
