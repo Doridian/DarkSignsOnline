@@ -573,8 +573,8 @@ EvalErrorHandler:
     Resume Next
 End Function
 
-Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef b As Long)
-    b = lColor And &HFF ' mask the low byte
+Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef B As Long)
+    B = lColor And &HFF ' mask the low byte
     G = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
     R = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
 End Function
@@ -585,8 +585,9 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
     Dim sColor As String
     Dim sMode As String
     
-    Dim R As Long, G As Long, b As Long
-    RGBSplit RGBVal, R, G, b
+    Dim R As Long, G As Long, B As Long
+    Dim RB As Long, GB As Long, BB As Long
+    RGBSplit RGBVal, R, G, B
 
     If YPos >= 0 Then
         Exit Sub
@@ -596,158 +597,145 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
     yIndex = (YPos * -1)
 
     Console(ConsoleID, yIndex).DrawMode = mode
+    ReDim Console(ConsoleID, yIndex).DrawColors(1 To DrawDividerWidth)
 
     Select Case mode
     Case "fadecenter":
         Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        RB = R
+        GB = G
+        BB = B
         
         For n = ((DrawDividerWidth / 2) + 1) To DrawDividerWidth
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
+            B = B - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
 
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         
-        R = Console(ConsoleID, yIndex).DrawR
-        G = Console(ConsoleID, yIndex).DrawG
-        b = Console(ConsoleID, yIndex).DrawB
+        R = RB
+        G = GB
+        B = BB
 
         For n = (DrawDividerWidth / 2) To 1 Step -1
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
+            B = B - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
 
     Case "fadeinverse":
         Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
+        RB = R
+        GB = G
+        BB = B
 
         For n = DrawDividerWidth To ((DrawDividerWidth / 2) + 1) Step -1
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
+            B = B - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
-
-        R = Console(ConsoleID, yIndex).DrawR
-        G = Console(ConsoleID, yIndex).DrawG
-        b = Console(ConsoleID, yIndex).DrawB
+        
+        R = RB
+        G = GB
+        B = BB
 
         For n = 1 To (DrawDividerWidth / 2)
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
+            B = B - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
 
     Case "fadein":
         Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
         
         For n = 1 To DrawDividerWidth
             R = R - 4
             G = G - 4
-            b = b - 4
+            B = B - 4
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
 
     Case "fadeout":
         Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
 
         For n = DrawDividerWidth To 1 Step -1
             R = R - 4
             G = G - 4
-            b = b - 4
+            B = B - 4
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
+            If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
 
     Case "flow":
         Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
 
         For n = 1 To ((DrawDividerWidth / 4) * 1)
             R = R - 5
             G = G - 5
-            b = b - 5
+            B = B - 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            If B < 1 Then B = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         For n = (((DrawDividerWidth / 4) * 1) + 1) To (((DrawDividerWidth / 4) * 2))
             R = R + 5
             G = G + 5
-            b = b + 5
+            B = B + 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            If B < 1 Then B = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         For n = (((DrawDividerWidth / 4) * 2) + 1) To (((DrawDividerWidth / 4) * 3))
             R = R - 5
             G = G - 5
-            b = b - 5
+            B = B - 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            If B < 1 Then B = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
         For n = (((DrawDividerWidth / 4) * 3) + 1) To (((DrawDividerWidth / 4) * 4))
             R = R + 5
             G = G + 5
-            b = b + 5
+            B = B + 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
+            If B < 1 Then B = 0
+            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, B)
         Next n
 
     Case "solid":
+        ReDim Console(ConsoleID, yIndex).DrawColors(0 To 0)
         Console(ConsoleID, yIndex).DrawEnabled = True
-        Console(ConsoleID, yIndex).DrawR = R
-        Console(ConsoleID, yIndex).DrawG = G
-        Console(ConsoleID, yIndex).DrawB = b
-
-        For n = 1 To DrawDividerWidth
-            Console(ConsoleID, yIndex).DrawColors(n) = RGB(R, G, b)
-        Next n
+        Console(ConsoleID, yIndex).DrawColors(0) = RGB(R, G, B)
 
     End Select
 End Sub

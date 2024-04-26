@@ -52,11 +52,7 @@ Public Type ConsoleLine
     Right As Boolean
 
     DrawEnabled As Boolean
-    DrawColors(1 To 48) As Long
-    DrawMode As String
-    DrawR As Long
-    DrawG As Long
-    DrawB As Long
+    DrawColors() As Long
 End Type
 
 Public CurrentPromptInput(1 To 4) As String
@@ -303,24 +299,23 @@ Public Sub Print_Console()
                 '--------------- DRAW ------------------------------------------
                 If Console(ActiveConsole, n).DrawEnabled = True Then
                     tmpY2 = printHeight - (yDiv / 2)
+                    Dim DrawColors() As Long
+                    DrawColors = Console(ActiveConsole, n).DrawColors
 
-                    If i(Console(ActiveConsole, n).DrawMode) = "solid" Then
-                        LineBackColor = Console(ActiveConsole, n).DrawColors(1)
+                    If LBound(DrawColors) = UBound(DrawColors) Then
+                        LineBackColor = DrawColors(LBound(DrawColors))
                         'draw it all in one, much faster
                         frmConsole.Line _
-                        (((frmConsole.Width / DrawDividerWidth) * 0), tmpY2)- _
-                        ((frmConsole.Width / DrawDividerWidth) * _
-                        (DrawDividerWidth), _
-                        (tmpY2 + FontHeight)), _
+                        (0, tmpY2)-(frmConsole.Width, (tmpY2 + FontHeight)), _
                         LineBackColor, BF
                     Else
-                        For n2 = 1 To DrawDividerWidth
+                        For n2 = LBound(DrawColors) To UBound(DrawColors)
                             frmConsole.Line _
                             (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
                             ((frmConsole.Width / DrawDividerWidth) * _
                             (n2), _
                             (tmpY2 + FontHeight)), _
-                            Console(ActiveConsole, n).DrawColors(n2), BF
+                            DrawColors(n2), BF
                         Next n2
                     End If
 
@@ -631,17 +626,17 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                     CLineSeg.FontColor = iDarkRed
                 ElseIf Left(pCur, 4) = "rgb:" Then
                     Dim Error As Boolean
-                    Dim R As Long, G As Long, b As Long
+                    Dim R As Long, G As Long, B As Long
                     Error = False
                     Dim pCurSplit() As String
                     pCurSplit = Split(pCur, ":")
             
                     If UBound(pCurSplit) < 3 Then
-                        RGBSplit Trim(pCurSplit(1)), R, G, b
+                        RGBSplit Trim(pCurSplit(1)), R, G, B
                     Else
                         R = Trim(pCurSplit(1))
                         G = Trim(pCurSplit(2))
-                        b = Trim(pCurSplit(3))
+                        B = Trim(pCurSplit(3))
                     End If
 
                     If R < 0 Or R > 255 Then
@@ -652,12 +647,12 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                         Error = True
                     End If
 
-                    If b < 0 Or b > 255 Then
+                    If B < 0 Or B > 255 Then
                         Error = True
                     End If
 
                     If Error = False Then
-                        CLineSeg.FontColor = RGB(R, G, b)
+                        CLineSeg.FontColor = RGB(R, G, B)
                     End If
                 ElseIf Seg = 0 Then
                     If pCur = "noprespace" Then
