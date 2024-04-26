@@ -549,31 +549,6 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
     Parse_Console_Line = CLine
 End Function
 
-Public Function Is_Valid_Font(ByVal s As String) As Boolean
-    'this shows the fonts that dark signs accepts as valid
-    s = i(s)
-    If _
-    s = "arial" Or _
-    s = "arial black" Or _
-    s = "comic sans ms" Or _
-    s = "courier new" Or _
-    s = "georgia" Or _
-    s = "impact" Or _
-    s = "lucida console" Or _
-    s = "tahoma" Or _
-    s = "times new roman" Or _
-    s = "trebuchet ms" Or _
-    s = "verdana" Or _
-    s = "wingdings" _
-    Then
-    
-    
-        Is_Valid_Font = True
-    Else
-        Is_Valid_Font = False
-    End If
-End Function
-
 Public Function Remove_Property_Space(ByVal s As String) As String
     Dim n As Integer
     Dim isOn As Boolean
@@ -652,17 +627,18 @@ Public Function propertySpace_Name(s() As String, BaseSeg As ConsoleLineSegment)
     propertySpace_Name = BaseSeg.FontName
 
     If Array_Has(s, "arial") Then propertySpace_Name = "Arial"
-    If Array_Has(s, "arial black") Then propertySpace_Name = "Arial Black"
-    If Array_Has(s, "comic sans ms") Then propertySpace_Name = "Comic Sans MS"
-    If Array_Has(s, "courier new") Then propertySpace_Name = "Courier New"
+    If Array_Has(s, "arial_black") Then propertySpace_Name = "Arial Black"
+    If Array_Has(s, "comic_sans_ms") Then propertySpace_Name = "Comic Sans MS"
+    If Array_Has(s, "courier_new") Then propertySpace_Name = "Courier New"
     If Array_Has(s, "georgia") Then propertySpace_Name = "Georgia"
     If Array_Has(s, "impact") Then propertySpace_Name = "Impact"
-    If Array_Has(s, "lucida console") Then propertySpace_Name = "Lucida Console"
+    If Array_Has(s, "lucida_console") Then propertySpace_Name = "Lucida Console"
     If Array_Has(s, "tahoma") Then propertySpace_Name = "Tahoma"
-    If Array_Has(s, "times new roman") Then propertySpace_Name = "Times New Roman"
-    If Array_Has(s, "trebuchet ms") Then propertySpace_Name = "Trebuchet MS"
+    If Array_Has(s, "times_new_roman") Then propertySpace_Name = "Times New Roman"
+    If Array_Has(s, "trebuchet_ms") Then propertySpace_Name = "Trebuchet MS"
     If Array_Has(s, "verdana") Then propertySpace_Name = "Verdana"
     If Array_Has(s, "wingdings") Then propertySpace_Name = "Wingdings"
+    If Array_Has(s, "webdings") Then propertySpace_Name = "Webdings"
 End Function
 
 Public Function propertySpace_Bold(s() As String, BaseSeg As ConsoleLineSegment) As Boolean
