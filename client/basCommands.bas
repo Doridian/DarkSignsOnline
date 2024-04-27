@@ -595,7 +595,6 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
         ReDim Console(ConsoleID, yIndex).Draw(1 To 1)
         Console(ConsoleID, yIndex).Draw(1).Color = RGBVal
         Console(ConsoleID, yIndex).Draw(1).HPos = 0
-        Console(ConsoleID, yIndex).Draw(1).Transparent = False
         Exit Sub
     End If
 
@@ -606,9 +605,8 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
     ReDim Console(ConsoleID, yIndex).Draw(1 To (DrawDividerWidth + 1))
     For n = 1 To DrawDividerWidth
         Console(ConsoleID, yIndex).Draw(n).HPos = (frmConsole.Width / DrawDividerWidth) * (n - 1)
-        Console(ConsoleID, yIndex).Draw(n).Transparent = False
     Next
-    Console(ConsoleID, yIndex).Draw(DrawDividerWidth + 1).Transparent = True
+    Console(ConsoleID, yIndex).Draw(DrawDividerWidth + 1).Color = -1
     Console(ConsoleID, yIndex).Draw(DrawDividerWidth + 1).HPos = frmConsole.Width
 
     Select Case mode
@@ -740,7 +738,6 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
         ReDim Console(ConsoleID, yIndex).Draw(1 To 1)
         Console(ConsoleID, yIndex).Draw(1).Color = RGB(R, G, b)
         Console(ConsoleID, yIndex).Draw(1).HPos = 0
-        Console(ConsoleID, yIndex).Draw(1).Transparent = False
 
     End Select
 

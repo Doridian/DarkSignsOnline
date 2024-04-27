@@ -857,7 +857,6 @@ Public Function DrawCustomA(ByVal YPos As Long, WidthsAndColors As Variant)
     Y = LBound(WidthsAndColors)
     z = 0
     For X = 1 To (UBound(DrawSegs) - 1)
-        DrawSegs(X).Transparent = False
         DrawSegs(X).HPos = z
         DrawSegs(X).Color = WidthsAndColors(Y + 1)
         If WidthsAndColors(Y) > 1 Then
@@ -867,7 +866,7 @@ Public Function DrawCustomA(ByVal YPos As Long, WidthsAndColors As Variant)
         End If
         Y = Y + 2
     Next
-    DrawSegs(UBound(DrawSegs)).Transparent = True
+    DrawSegs(UBound(DrawSegs)).Color = -1
     DrawSegs(UBound(DrawSegs)).HPos = z
 
     Console(PrivConsoleID, YPos * -1).Draw = DrawSegs
@@ -904,11 +903,10 @@ Public Function DrawEvenA(ByVal YPos As Long, Colors As Variant)
     ReDim DrawSegs(LBound(Colors) To (UBound(Colors) + 1))
     PieceWidth = frmConsole.Width / (1 + (UBound(Colors) - LBound(Colors)))
     For X = LBound(Colors) To UBound(Colors)
-        DrawSegs(X).Transparent = False
         DrawSegs(X).HPos = PieceWidth * (X - LBound(DrawSegs))
         DrawSegs(X).Color = Colors(X)
     Next
-    DrawSegs(UBound(DrawSegs)).Transparent = True
+    DrawSegs(UBound(DrawSegs)).Color = -1
     DrawSegs(UBound(DrawSegs)).HPos = frmConsole.Width
     Console(PrivConsoleID, YPos * -1).Draw = DrawSegs
     Yield

@@ -44,7 +44,6 @@ End Type
 Public Type ConsoleDrawSegment
     Color As Long
     HPos As Long
-    Transparent As Boolean
 End Type
 
 Public Type ConsoleLine
@@ -300,7 +299,7 @@ Public Sub Print_Console()
                 If Pos1 > frmConsole.Width Then
                     GoTo DrawSegmentOffScreen
                 End If
-                If Not DrawSegs(n2).Transparent Then
+                If DrawSegs(n2).Color >= 0 Then
                     LineBackColor = DrawSegs(n2).Color
                     If n2 = UBound(DrawSegs) Then
                         Pos2 = frmConsole.Width
