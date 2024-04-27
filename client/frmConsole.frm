@@ -638,9 +638,6 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
  
     If KeyCode = vbKeyPageDown And Shift = 1 Then CommLarger: Exit Sub
     If KeyCode = vbKeyPageUp And Shift = 1 Then CommSmaller: Exit Sub
-    If KeyCode = vbKeyPageDown And Shift = 0 Then ScrollConsoleDown: Exit Sub
-    If KeyCode = vbKeyPageUp And Shift = 0 Then ScrollConsoleUp: Exit Sub
-    ConsoleScrollInt(ActiveConsole) = 0
 
     If KeyCode = vbKeyF1 Then ChatBox.Visible = False: SetConsoleActive 1: Exit Sub
     If KeyCode = vbKeyF2 Then ChatBox.Visible = False: SetConsoleActive 2: Exit Sub
@@ -665,14 +662,6 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
         Exit Sub
     End If
 
-    autoCompActive(ActiveConsole) = False
-
-    'it's getkey!
-    If GetKeyWaiting(ActiveConsole) = -1 Then
-        GetKeyWaiting(ActiveConsole) = KeyCode: Exit Sub
-    End If
-    If GetAsciiWaiting(ActiveConsole) = -1 Then Exit Sub
-
     If ChatBox.Visible = True Then
         If KeyCode = vbKeyDown Then
             If curMsg > 0 Then
@@ -692,6 +681,22 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
            End If
            Exit Sub
         End If
+        KeyCodeIn = KeyCode
+        QueueConsoleRender
+        Exit Sub
+    End If
+
+    If KeyCode = vbKeyPageDown And Shift = 0 Then ScrollConsoleDown: Exit Sub
+    If KeyCode = vbKeyPageUp And Shift = 0 Then ScrollConsoleUp: Exit Sub
+    ConsoleScrollInt(ActiveConsole) = 0
+
+    autoCompActive(ActiveConsole) = False
+
+    If GetKeyWaiting(ActiveConsole) = -1 Then
+        GetKeyWaiting(ActiveConsole) = KeyCode
+        Exit Sub
+    ElseIf GetAsciiWaiting(ActiveConsole) = -1 Then
+        Exit Sub
     ElseIf KeyCode = vbKeyDown Then
         If RecentCommandsIndex(ActiveConsole) <= 0 Then Exit Sub
         RecentCommandsIndex(ActiveConsole) = RecentCommandsIndex(ActiveConsole) - 1
@@ -712,9 +717,7 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
         RefreshCommandLinePromptInput ActiveConsole
         QueueConsoleRender
         Exit Sub
-    End If
-
-    If KeyCode = vbKeyReturn And CurrentPromptVisible(ActiveConsole) Then
+    ElseIf KeyCode = vbKeyReturn And CurrentPromptVisible(ActiveConsole) Then
         Dim Waiting As Boolean
         Waiting = WaitingForInput(ActiveConsole)
         Dim CommandStr As String
@@ -739,7 +742,6 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
     End If
 
     KeyCodeIn = KeyCode
-
     QueueConsoleRender
 End Sub
 
