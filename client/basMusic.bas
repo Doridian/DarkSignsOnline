@@ -19,6 +19,9 @@ End Sub
 Public Sub UnloadMusic()
     BassAllowPlay = False
     StopMusic
+    BASS_Pause
+    BASS_Stop
+    BASS_Free
 End Sub
 
 Public Sub StopMusic()
@@ -76,7 +79,6 @@ Public Sub CheckMusic()
         BASS_Init -1, 44100, 0, frmConsole.hWnd, 0
         HandleBassError True
         BassInitialized = True
-        DoEvents
     End If
 
     BassChannel = BASS_StreamCreateFile(False, StrPtr(SafePath("/home/music/" & tmpFileName)), 0, 0, BASS_ASYNCFILE + BASS_STREAM_AUTOFREE)

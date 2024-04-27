@@ -21,7 +21,8 @@ Public Type ConsoleLineSegment
     
     AlignTop As Boolean
     AlighBottom As Boolean
-    VerticalOffset As Long
+    VOffset As Long
+    HOffset As Long
     VPos As Long
     HPos As Long
 
@@ -112,7 +113,7 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
         Else
             VPos = HeightDiff / 2
         End If
-        VPos = VPos + CLine.Segments(X).VerticalOffset
+        VPos = VPos + CLine.Segments(X).VOffset
         If VPos > HeightDiff Then
             VPos = HeightDiff
         ElseIf VPos < 0 Then
@@ -133,6 +134,10 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
             End If
         Else
             W = CLine.Segments(X - 1).HPos + CLine.Segments(X - 1).TotalWidth
+        End If
+        W = W + CLine.Segments(X).HOffset
+        If W < ConsoleXSpacing Then
+            W = ConsoleXSpacing
         End If
         CLine.Segments(X).HPos = W
     Next
@@ -561,6 +566,8 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                     CLineSeg.FlashSlow = True
                     CLineSeg.Flash = False
                     CLineSeg.FlashFast = False
+                ElseIf Left(pCur, 5) = "hoff:" Then
+                    CLineSeg.HOffset = Mid(pSplit, 6)
                 ' ==== VERTICAL ALIGNMENT ====
                 ElseIf pCur = "middle" Then
                     CLineSeg.AlignTop = False
@@ -572,7 +579,7 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                     CLineSeg.AlighBottom = True
                     CLineSeg.AlignTop = False
                 ElseIf Left(pCur, 5) = "voff:" Then
-                    CLineSeg.VerticalOffset = Mid(pSplit, 6)
+                    CLineSeg.VOffset = Mid(pSplit, 6)
                 ElseIf IsNumeric(pCur) Then
                     CLineSeg.FontSize = pCur
                     If CLineSeg.FontSize < 8 Then
