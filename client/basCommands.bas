@@ -116,22 +116,37 @@ Public Function ResolvePathRel(ByVal CCPath As String, ByVal Path As String) As 
 End Function
 
 Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As String) As String
-    ResolveCommand = ResolvePath(ConsoleID, Command)
-    If basGeneral.FileExists(ResolveCommand) Then
-        Exit Function
-    End If
-    If basGeneral.FileExists(ResolveCommand & ".ds") Then
-        ResolveCommand = ResolveCommand & ".ds"
-        Exit Function
-    End If
     If InStr(Command, "/") > 0 Or InStr(Command, "\") > 0 Then
+        ResolveCommand = ResolvePath(ConsoleID, Command)
         Exit Function
     End If
 
-    ResolveCommand = "/system/commands/" & Command & ".ds"
-    If Not basGeneral.FileExists(ResolveCommand) Then
-        ResolveCommand = ""
+    Dim CLIPaths() As String
+    If ConsoleID <> 0 Then
+        ReDim CLIPaths(0 To 1)
+        CLIPaths(0) = cPath(ConsoleID)
+    Else
+        ReDim CLIPaths(0 To 0)
     End If
+    CLIPaths(UBound(CLIPaths)) = "/system/commands"
+
+    Dim X As Long
+
+    Dim tmpCommand As String
+    For X = 0 To UBound(CLIPaths)
+        ResolveCommand = ResolvePathRel(CLIPaths(X), Command)
+        If basGeneral.FileExists(ResolveCommand) Then
+            Exit Function
+        End If
+        If LCase(Right(ResolveCommand, 3)) <> ".ds" Then
+            ResolveCommand = ResolveCommand & ".ds"
+            If basGeneral.FileExists(ResolveCommand) Then
+                Exit Function
+            End If
+        End If
+    Next
+
+    ResolveCommand = ""
 End Function
 
 
