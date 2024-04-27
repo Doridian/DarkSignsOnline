@@ -306,6 +306,9 @@ Public Sub Print_Console()
                         Pos2 = frmConsole.Width
                     Else
                         Pos2 = DrawSegs(n2 + 1).HPos
+                        If Pos2 > frmConsole.Width Then
+                            Pos2 = frmConsole.Width
+                        End If
                     End If
                     frmConsole.Line (Pos1, tmpY2)-(Pos2, (tmpY2 + FontHeight)), LineBackColor, BF
                 End If

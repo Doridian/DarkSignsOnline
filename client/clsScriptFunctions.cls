@@ -850,21 +850,25 @@ Public Function DrawCustomA(ByVal YPos As Long, WidthsAndColors As Variant)
         Exit Function
     End If
 
-    Dim X As Long, Y As Long, Z As Long
+    Dim X As Long, Y As Long, z As Long
     Dim DrawSegs() As ConsoleDrawSegment
     X = (UBound(WidthsAndColors) - LBound(WidthsAndColors)) + 1
     ReDim DrawSegs(1 To ((X \ 2) + 1))
     Y = LBound(WidthsAndColors)
-    Z = 0
+    z = 0
     For X = 1 To (UBound(DrawSegs) - 1)
         DrawSegs(X).Transparent = False
-        DrawSegs(X).HPos = Z
+        DrawSegs(X).HPos = z
         DrawSegs(X).Color = WidthsAndColors(Y + 1)
-        Z = Z + WidthsAndColors(Y)
+        If WidthsAndColors(Y) > 1 Then
+            z = z + WidthsAndColors(Y)
+        Else
+            z = z + 1
+        End If
         Y = Y + 2
     Next
     DrawSegs(UBound(DrawSegs)).Transparent = True
-    DrawSegs(UBound(DrawSegs)).HPos = Z
+    DrawSegs(UBound(DrawSegs)).HPos = z
 
     Console(PrivConsoleID, YPos * -1).Draw = DrawSegs
     Yield
