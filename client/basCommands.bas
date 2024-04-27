@@ -573,168 +573,176 @@ EvalErrorHandler:
     Resume Next
 End Function
 
-Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef B As Long)
-    B = lColor And &HFF ' mask the low byte
+Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef b As Long)
+    b = lColor And &HFF ' mask the low byte
     G = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
     R = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
 End Function
 
 ' -y r g b mode
 '  SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE
-Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As String, ByVal ConsoleID As Integer)
+Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String, ByVal ConsoleID As Integer)
     If YPos >= 0 Then
         Exit Sub
     End If
 
-    Dim R As Long, G As Long, B As Long
-    Dim RB As Long, GB As Long, BB As Long
-    RGBSplit RGBVal, R, G, B
-
-    Mode = i(Mode)
+    mode = i(mode)
 
     Dim yIndex As Integer, n As Integer
     yIndex = (YPos * -1)
 
-    If Mode <> "solid" And Mode <> "custom" Then
-        ReDim Console(ConsoleID, yIndex).DRAW(1 To DrawDividerWidth)
-        For n = 1 To DrawDividerWidth
-            Console(ConsoleID, yIndex).DRAW(n).HPos = (frmConsole.Width / DrawDividerWidth) * (n - 1)
-            Console(ConsoleID, yIndex).DRAW(n).Transparent = False
-        Next
+    If mode = "solid" Then
+        ReDim Console(ConsoleID, yIndex).DRAW(1 To 1)
+        Console(ConsoleID, yIndex).DRAW(1).Color = RGBVal
+        Console(ConsoleID, yIndex).DRAW(1).HPos = 0
+        Console(ConsoleID, yIndex).DRAW(1).Transparent = False
+        Exit Sub
     End If
 
-    Select Case Mode
+    Dim R As Long, G As Long, b As Long
+    Dim RB As Long, GB As Long, BB As Long
+    RGBSplit RGBVal, R, G, b
+
+    ReDim Console(ConsoleID, yIndex).DRAW(1 To DrawDividerWidth)
+    For n = 1 To DrawDividerWidth
+        Console(ConsoleID, yIndex).DRAW(n).HPos = (frmConsole.Width / DrawDividerWidth) * (n - 1)
+        Console(ConsoleID, yIndex).DRAW(n).Transparent = False
+    Next
+
+    Select Case mode
     Case "fadecenter":
         RB = R
         GB = G
-        BB = B
+        BB = b
 
         For n = ((DrawDividerWidth / 2) + 1) To DrawDividerWidth
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            B = B - (DrawDividerWidth / 2)
+            b = b - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
 
-            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, b)
         Next n
         
         R = RB
         G = GB
-        B = BB
+        b = BB
 
         For n = (DrawDividerWidth / 2) To 1 Step -1
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            B = B - (DrawDividerWidth / 2)
+            b = b - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, b)
         Next n
 
     Case "fadeinverse":
         RB = R
         GB = G
-        BB = B
+        BB = b
 
         For n = DrawDividerWidth To ((DrawDividerWidth / 2) + 1) Step -1
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            B = B - (DrawDividerWidth / 2)
+            b = b - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, b)
         Next n
         
         R = RB
         G = GB
-        B = BB
+        b = BB
 
         For n = 1 To (DrawDividerWidth / 2)
             R = R - (DrawDividerWidth / 2)
             G = G - (DrawDividerWidth / 2)
-            B = B - (DrawDividerWidth / 2)
+            b = b - (DrawDividerWidth / 2)
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, b)
         Next n
 
     Case "fadein":
         For n = 1 To DrawDividerWidth
             R = R - 4
             G = G - 4
-            B = B - 4
+            b = b - 4
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, b)
         Next n
 
     Case "fadeout":
         For n = DrawDividerWidth To 1 Step -1
             R = R - 4
             G = G - 4
-            B = B - 4
+            b = b - 4
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
+            If b < 1 Then b = 0
         
-            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, b)
         Next n
 
     Case "flow":
         For n = 1 To ((DrawDividerWidth / 4) * 1)
             R = R - 5
             G = G - 5
-            B = B - 5
+            b = b - 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
+            If b < 1 Then b = 0
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, b)
         Next n
         For n = (((DrawDividerWidth / 4) * 1) + 1) To (((DrawDividerWidth / 4) * 2))
             R = R + 5
             G = G + 5
-            B = B + 5
+            b = b + 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
+            If b < 1 Then b = 0
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, b)
         Next n
         For n = (((DrawDividerWidth / 4) * 2) + 1) To (((DrawDividerWidth / 4) * 3))
             R = R - 5
             G = G - 5
-            B = B - 5
+            b = b - 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
+            If b < 1 Then b = 0
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, b)
         Next n
         For n = (((DrawDividerWidth / 4) * 3) + 1) To (((DrawDividerWidth / 4) * 4))
             R = R + 5
             G = G + 5
-            B = B + 5
+            b = b + 5
             If R < 1 Then R = 0
             If G < 1 Then G = 0
-            If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
+            If b < 1 Then b = 0
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, b)
         Next n
 
     Case "solid":
         ReDim Console(ConsoleID, yIndex).DRAW(1 To 1)
-        Console(ConsoleID, yIndex).DRAW(1).Color = RGB(R, G, B)
+        Console(ConsoleID, yIndex).DRAW(1).Color = RGB(R, G, b)
         Console(ConsoleID, yIndex).DRAW(1).HPos = 0
         Console(ConsoleID, yIndex).DRAW(1).Transparent = False
 
     End Select
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub SetYDiv(ByVal n As Integer)
@@ -742,6 +750,8 @@ Public Sub SetYDiv(ByVal n As Integer)
     If n > 720 Then n = 720
     
     yDiv = n
+
+    frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub MusicCommand(ByVal s As String)
@@ -882,7 +892,7 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer, Optional 
     s = "{{" & propSpace & "}}" & s
     SayRaw ConsoleID, s
     If RGBVal >= 0 Then
-        DrawItUp -1, RGBVal, "solid", ConsoleID
+        DrawSimple -1, RGBVal, "solid", ConsoleID
     End If
     Do
         DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents

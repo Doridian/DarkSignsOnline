@@ -826,8 +826,40 @@ Public Function DRAW(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Str
         Yield
         Exit Function
     End If
-    DrawItUp YPos, RGBVal, mode, PrivConsoleID
+    DrawSimple YPos, RGBVal, mode, PrivConsoleID
     Yield
+End Function
+
+Public Function DrawCustom(ByVal YPos As Long, ParamArray XArr() As Variant)
+    If PrivDisableOutput Then
+        Yield
+        Exit Function
+    End If
+
+End Function
+
+Public Function DrawEven(ByVal YPos As Long, ParamArray XArr() As Variant)
+    If PrivDisableOutput Then
+        Yield
+        Exit Function
+    End If
+
+    If YPos >= 0 Then
+        Exit Function
+    End If
+
+    Dim X As Long, PieceWidth As Long
+    Dim DrawSegs() As ConsoleDrawSegment
+    ReDim DrawSegs(LBound(XArr) To UBound(XArr))
+    PieceWidth = frmConsole.Width / (1 + (UBound(XArr) - LBound(XArr)))
+    For X = LBound(DrawSegs) To UBound(DrawSegs)
+        DrawSegs(X).Transparent = False
+        DrawSegs(X).HPos = PieceWidth * (X - LBound(DrawSegs))
+        DrawSegs(X).Color = XArr(X)
+    Next
+    Console(PrivConsoleID, YPos * -1).DRAW = DrawSegs
+    Yield
+    frmConsole.QueueConsoleRender
 End Function
 
 Private Sub RaiseMiscError(ByVal Desc As String)
