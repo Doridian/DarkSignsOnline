@@ -25,6 +25,7 @@ Sub Disconnect()
     SayBG ""
     SaySlowBG 50, "Connection Closed...", FrontStyle
     Wait 600
+    Quit
 End Sub
 
 Dim Department
