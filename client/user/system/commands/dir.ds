@@ -50,7 +50,7 @@ Sub SaySubStr(AddStr, Sep)
 	End If
 	Str =  Str & AddStr
 
-	If TextWidth(Str) > ConsoleWidth() - 4700 Then
+	If TextWidth(Str) > ConsoleWidth() - (PreSpaceWidth() * 2) Then
 		Say Str & StrStyle
 		Str = ""
 	End If

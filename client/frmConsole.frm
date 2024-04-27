@@ -601,7 +601,7 @@ End Sub
 Sub SetConsoleActive(ByVal ConsoleID As Integer)
     consoleShape.Width = 120
     consoleShape.Height = 60
-    consoleShape.Top = MiniMenu.Height - consoleShape.Height - 60
+    consoleShape.top = MiniMenu.Height - consoleShape.Height - 60
     
     Select Case ConsoleID
         Case 1: consoleShape.Left = 90
@@ -887,6 +887,8 @@ End Sub
 
 Private Sub Form_Resize()
     IRCChatResize
+
+    ConsoleResizeAll
 End Sub
 
 Sub IRCChatResize()
@@ -898,17 +900,17 @@ Sub IRCChatResize()
     txtChat.Width = ((Me.Width / 5) * 4) - 230
     
     txtChat.Left = 120
-    lstUsers.Move txtChat.Left + txtChat.Width + 120, txtChat.Top
+    lstUsers.Move txtChat.Left + txtChat.Width + 120, txtChat.top
     
-    txtChat.Height = Me.Height - txtChat.Top - 1200
+    txtChat.Height = Me.Height - txtChat.top - 1200
     
     lstUsers.Height = txtChat.Height
     
     
-    IRC.Move txtChat.Left, txtChat.Top, txtChat.Width, txtChat.Height
-    IRC.Height = ChatBox.Height - TBox.Height - IRC.Top - 480
+    IRC.Move txtChat.Left, txtChat.top, txtChat.Width, txtChat.Height
+    IRC.Height = ChatBox.Height - TBox.Height - IRC.top - 480
     
-    TBox.Top = IRC.Top + IRC.Height + 120
+    TBox.top = IRC.top + IRC.Height + 120
     TBox.Left = IRC.Left
     
     TBox.Width = txtChat.Width
@@ -919,7 +921,7 @@ Sub IRCChatResize()
     
     's1.Move txtTarget.Left - 60, txtTarget.top - 60, txtTarget.Width + 120, txtTarget.Height + 120
     's2.Move txtPrivMsg.Left - 60, txtPrivMsg.top - 60, txtPrivMsg.Width + 120, txtPrivMsg.Height + 120
-    s3.Move txtChatMsg.Left - 60, txtChatMsg.Top - 60, txtChatMsg.Width + 130, txtChatMsg.Height + 130
+    s3.Move txtChatMsg.Left - 60, txtChatMsg.top - 60, txtChatMsg.Width + 130, txtChatMsg.Height + 130
 End Sub
 
 Private Sub Form_Terminate()
@@ -1000,9 +1002,9 @@ Private Sub lblUsername_Click()
     End If
 End Sub
 
-Private Sub lConsole_Click(Index As Integer)
+Private Sub lConsole_Click(index As Integer)
     ChatBox.Visible = False
-    SetConsoleActive Index
+    SetConsoleActive index
 End Sub
 
 Private Sub lFull_Click()
@@ -1063,10 +1065,10 @@ Private Sub tmrPrint_Timer()
     tmrPrint.Enabled = False
 End Sub
 
-Private Sub tmrProcessQueue_Timer(Index As Integer)
-    tmrProcessQueue(Index).Enabled = False
-    basWorld.ProcessQueueEntryRun Index
-    tmrProcessQueue(Index).Tag = ""
+Private Sub tmrProcessQueue_Timer(index As Integer)
+    tmrProcessQueue(index).Enabled = False
+    basWorld.ProcessQueueEntryRun index
+    tmrProcessQueue(index).Tag = ""
 End Sub
 
 Private Sub tmrStart_Timer()
@@ -1173,23 +1175,23 @@ Sub processCommand()
     'This section processes all other commands
     If Left$(Data$, 1) = ":" Then   'if the message starts with a colon (standard IRC message)
         Dim tempStr As String
-        Dim Pos%, Pos2%, X% '2 position variables we need to extract the nickname of whoever that issued the command
+        Dim pos%, Pos2%, X% '2 position variables we need to extract the nickname of whoever that issued the command
         Dim from$, rest$    'these will hold the sender of the command and the rest of the message
         Dim Command$        'this will hold the type of the command (eg.: PRIVMSG)
         Params$ = ""        'and the parameters
-        Pos% = InStr(Data$, " ")    'get the position of the first space character
-        If Pos% > 0 Then    'if a space is found
+        pos% = InStr(Data$, " ")    'get the position of the first space character
+        If pos% > 0 Then    'if a space is found
             Pos2% = InStr(Data$, "!")   'search for an exclamation mark
-            If Pos% < Pos2% Or Pos2% <= 0 Then Pos2% = Pos%   'if a space is found AFTER the space, it should not be used
+            If pos% < Pos2% Or Pos2% <= 0 Then Pos2% = pos%   'if a space is found AFTER the space, it should not be used
             from$ = Mid$(Data$, 2, Pos2% - 2)   'parse the sender, starting from the second character (after the ":")
-            rest$ = Mid$(Data$, Pos% + 1, Len(Data$) - Pos2%)  'parse the rest of the message starting from the first character AFTER the first space
+            rest$ = Mid$(Data$, pos% + 1, Len(Data$) - Pos2%)  'parse the rest of the message starting from the first character AFTER the first space
             rest$ = Replace(rest$, Chr(2), "")
             
             'IMPORTANT: pos% is now used to hold the first space in (!) rest$ (!), *NOT* in data$
-            Pos% = InStr(rest$, " ")   'get the position of the first space in rest$
-            If Pos% > 0 Then    'if we found a space
-                Command$ = Left$(rest$, Pos% - 1)   'the part before this space is the type of command
-                Params$ = Right$(rest$, Len(rest$) - Pos%)   'the rest are parameters
+            pos% = InStr(rest$, " ")   'get the position of the first space in rest$
+            If pos% > 0 Then    'if we found a space
+                Command$ = Left$(rest$, pos% - 1)   'the part before this space is the type of command
+                Params$ = Right$(rest$, Len(rest$) - pos%)   'the rest are parameters
                 Select Case Command$    'base your actions on the type of command
                     Case "NOTICE"   'if it's a notice
                         displaychat ">> " + from$ + "  " + Params$ 'display it
@@ -1536,8 +1538,8 @@ Public Sub ChatSend(ByVal s As String)
     End If
 End Sub
 
-Public Sub ChatView(ByVal Enable As Boolean)
-    If Enable Then
+Public Sub ChatView(ByVal enable As Boolean)
+    If enable Then
         chatToStatus = True
         RegSave "CHATVIEW", "true"
         SayCOMM "Chatview is now enabled."

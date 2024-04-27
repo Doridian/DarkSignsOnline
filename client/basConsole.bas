@@ -178,6 +178,18 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
     Next
 End Sub
 
+Public Sub ConsoleResizeAll()
+    Dim cID As Integer, X As Long
+    For cID = 1 To 4
+        If ConsoleInitialized(cID) Then
+            For X = 0 To 299
+                CalculateConsoleLine Console(cID, X)
+                CalculateConsoleDraw Console(cID, X)
+            Next
+        End If
+    Next
+End Sub
+
 Public Sub SetDisableFlashing(ByVal NewValue As Boolean)
     DisableFlashing = NewValue
     If NewValue Then
@@ -294,8 +306,8 @@ Public Sub Print_Console()
 
     Dim addOn As Long, propertySpace As String
     addOn = ConsoleScrollInt(ActiveConsole) * 2400
-    printHeight = frmConsole.Height - 840 + addOn
-    frmConsole.CurrentY = printHeight
+
+    printHeight = (frmConsole.Height - 840) + addOn
 
     frmConsole.FontBold = Console_Line_Defaults.Segments(0).FontBold
     frmConsole.FontItalic = Console_Line_Defaults.Segments(0).FontItalic
@@ -306,6 +318,7 @@ Public Sub Print_Console()
     frmConsole.ForeColor = Console_Line_Defaults.Segments(0).FontColor
 
     If ConsoleWaitingOnRemote(ActiveConsole) Then
+        frmConsole.CurrentY = printHeight
         frmConsole.CurrentX = ConsoleXSpacing
         If LoadingSpinner < 1 Then
             LoadingSpinner = 1
@@ -331,6 +344,13 @@ Public Sub Print_Console()
 
         FontHeight = Console(ActiveConsole, n).Height + yDiv
         printHeight = printHeight - FontHeight
+
+        If printHeight > frmConsole.Height Then
+            GoTo DontDrawThisOne
+        End If
+        If (printHeight + FontHeight) < 0 Then
+            GoTo ExitLoop
+        End If
 
         LineBackColor = frmConsole.BackColor
         '--------------- DRAW ------------------------------------------
@@ -405,7 +425,8 @@ DrawSegmentOffScreen:
                 frmConsole.Print SegVal.Caption
             End If
         Next
-    Loop Until printHeight < 0 Or n >= 299
+DontDrawThisOne:
+    Loop Until n >= 299
 ExitLoop:
     If Not ConsumedInputPrompt Then
         frmConsole.txtPromptInput.Visible = False
