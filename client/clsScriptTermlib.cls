@@ -28,10 +28,18 @@ Private Sub Class_Initialize()
     IsConf = False
 End Sub
 
+Public Property Get TwipsPerPixelX() As Long
+    TwipsPerPixelX = Screen.TwipsPerPixelX
+End Property
+
+Public Property Get TwipsPerPixelY() As Long
+    TwipsPerPixelY = Screen.TwipsPerPixelY
+End Property
+
 ' Just like "Say", except you can pass a background color for the line
 Public Function SayWithBGColor(ByVal RGBVal As Long, ByVal Str As String)
     GSF.Say Str
-    GSF.DRAW -1, RGBVal, "solid"
+    GSF.Draw -1, RGBVal, "solid"
 End Function
 
 Public Function SaySlowWithBGColor(ByVal RGBVal As Long, ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
@@ -44,7 +52,7 @@ Public Function SaySlowWithBGColor(ByVal RGBVal As Long, ByVal Delay As Long, By
     Style = "{{" & Replace(Replace(Style, "{", ""), "}", "") & "}}"
     GSF.Say Left(Str, 1) & Style
     If RGBVal >= 0 Then
-        GSF.DRAW -1, RGBVal, "solid"
+        GSF.Draw -1, RGBVal, "solid"
     End If
     For X = 2 To Len(Str)
         If Mid(Str, X, 1) = ConsoleInvisibleChar Then
@@ -53,7 +61,7 @@ Public Function SaySlowWithBGColor(ByVal RGBVal As Long, ByVal Delay As Long, By
         GSF.Wait Delay
         GSF.SayLine Mid(Str, 1, X), -1
         If RGBVal >= 0 Then
-            GSF.DRAW -1, RGBVal, "solid"
+            GSF.Draw -1, RGBVal, "solid"
         End If
     Next
 End Function
@@ -65,13 +73,13 @@ End Function
 Public Function GetAsciiWithCPromptBG(ByVal RGBVal As Long, ByVal Prompt As String)
     GSF.Say "{{noprespace}}" & Prompt & "> [_]"
     If RGBVal >= 0 Then
-        GSF.DRAW -1, RGBVal, "solid"
+        GSF.Draw -1, RGBVal, "solid"
     End If
     Dim Choice As Long
     Choice = GSF.GetASCII()
     GSF.SayLine "{{noprespace}}" & Prompt & "> [" & Chr(Choice) & "]", -1
     If RGBVal >= 0 Then
-        GSF.DRAW -1, RGBVal, "solid"
+        GSF.Draw -1, RGBVal, "solid"
     End If
     GetAsciiWithCPromptBG = Choice
 End Function

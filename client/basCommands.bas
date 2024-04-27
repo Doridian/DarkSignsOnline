@@ -668,7 +668,7 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
     If mode = "solid" Then
         ReDim Console(ConsoleID, yIndex).Draw(1 To 1)
         Console(ConsoleID, yIndex).Draw(1).Color = RGBVal
-        Console(ConsoleID, yIndex).Draw(1).HPosPixels = 0
+        Console(ConsoleID, yIndex).Draw(1).HPos = 0
         CalculateConsoleDraw Console(ConsoleID, yIndex)
         frmConsole.QueueConsoleRender
         Exit Sub
@@ -679,10 +679,10 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
 
     ReDim Console(ConsoleID, yIndex).Draw(1 To (Segments + 1))
     For n = 1 To Segments
-        Console(ConsoleID, yIndex).Draw(n).HPosPixels = ((frmConsole.Width \ Segments) * (n - 1)) / Screen.TwipsPerPixelX
+        Console(ConsoleID, yIndex).Draw(n).HPos = (frmConsole.Width \ Segments) * (n - 1)
     Next
     Console(ConsoleID, yIndex).Draw(Segments + 1).Color = -1
-    Console(ConsoleID, yIndex).Draw(Segments + 1).HPosPixels = frmConsole.Width / Screen.TwipsPerPixelX
+    Console(ConsoleID, yIndex).Draw(Segments + 1).HPos = frmConsole.Width
 
     Select Case mode
         Case "fadecenter":
