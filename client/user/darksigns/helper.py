@@ -4,10 +4,12 @@ from dataclasses import dataclass, field
 from os.path import exists, join as path_join
 from os import listdir, getenv
 
+# Change this to where you have DarkSigns installed
 DARKSIGNS_INSTALL_PATH = path_join(getenv("USERPROFILE"), "Applications/Dark Signs")
 
-DARKSIGNS_SOURCE = path_join(DARKSIGNS_INSTALL_PATH, "Data/Profiles/darksigns/Programs/uncompiled")
+# Do not change these unless you know what you're doing
 DARKSIGNS_SERVERS = path_join(DARKSIGNS_INSTALL_PATH, "Data/Profiles/darksigns")
+DARKSIGNS_SOURCE = path_join(DARKSIGNS_SERVERS, "Programs/uncompiled")
 
 all_ds_scripts: dict[str, "DSScript"] = {}
 @dataclass(kw_only=True, frozen=True, eq=True)
