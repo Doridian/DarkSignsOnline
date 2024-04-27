@@ -2,8 +2,8 @@ Option Explicit
 
 DLOpen "termlib"
 
-SayWithBGColor &H03640E, "Berkeley University of California {{rgb:94:235:156}}"
-SayWithBGColor &H03640E, ""
-SayWithBGColor &H03640E, "The public webpage is currently being updated. Students and staff can"
-SayWithBGColor &H03640E, "still access the S/U Interface at port 81."
-Pause "", &H03640E
+SayWithBGColor &H0E6403, "Berkeley University of California {{rgb:94:235:156}}"
+SayWithBGColor &H0E6403, ""
+SayWithBGColor &H0E6403, "The public webpage is currently being updated. Students and staff can"
+SayWithBGColor &H0E6403, "still access the S/U Interface at port 81."
+Pause "", &H0E6403

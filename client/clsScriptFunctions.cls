@@ -366,19 +366,19 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
 End Sub
 
 ' VBTYPE: _RETURN=HTTPRequest
-Private Function DoDownloadAPI(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal ResponseType As String) As String
-    If UserName = "" Or Password = "" And Url <> "auth.php" Then
+Private Function DoDownloadAPI(ByVal url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal ResponseType As String) As String
+    If UserName = "" Or Password = "" And url <> "auth.php" Then
         basConsole.SayRaw PrivConsoleID, "You must be logged in to do that!{{36 center orange impact nobold}}"
         basConsole.SayRaw PrivConsoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{{24 center white impact nobold}}"
         RaiseMiscError "User not logged in"
         Exit Function
     End If
 
-    DoDownloadAPI = DoDownload(API_Server & Url, UsePost, PostData, False, ResponseType)
+    DoDownloadAPI = DoDownload(API_Server & url, UsePost, PostData, False, ResponseType)
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean, ByVal ResponseType As String) As String
+Private Function DoDownload(ByVal url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean, ByVal ResponseType As String) As String
     Dim ResIndex As Long
     DoDownload = ""
     For ResIndex = 1 To 99
@@ -398,7 +398,7 @@ Private Function DoDownload(ByVal Url As String, ByVal UsePost As Boolean, ByVal
 
     AddCustomDownload ResIndex
 
-    RunPage Url, UsePost, PostData, ResIndex, NoAuth
+    RunPage url, UsePost, PostData, ResIndex, NoAuth
     If NoAuth Then
         Yield
     End If
@@ -499,7 +499,7 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     Dim Res() As Variant
 
     Dim Attr As Long
-    Dim FileName As String
+    Dim filename As String
     Dim IsFirst As Boolean
     IsFirst = True
 
@@ -515,8 +515,8 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
     
     Path = Path & "/"
     
-    FileName = FileSystem.DIR(Path, vbNormal + vbDirectory)
-    While FileName <> ""
+    filename = FileSystem.DIR(Path, vbNormal + vbDirectory)
+    While filename <> ""
         If IsFirst Then
             ReDim Res(0 To 0)
             IsFirst = False
@@ -524,13 +524,13 @@ Public Function ReadDir(ByVal RawPath As String) As Variant()
             ReDim Preserve Res(0 To UBound(Res) + 1)
         End If
 
-        Attr = GetAttr(Path & FileName)
+        Attr = GetAttr(Path & filename)
         If (Attr And vbDirectory) = vbDirectory Then
-            FileName = FileName & "/"
+            filename = filename & "/"
         End If
         
-        Res(UBound(Res)) = FileName
-        FileName = FileSystem.DIR()
+        Res(UBound(Res)) = filename
+        filename = FileSystem.DIR()
     Wend
 
     If IsFirst Then
@@ -621,7 +621,7 @@ Public Function PrintVarSingleIfSet(param As Variant)
     PrintVar param
 End Function
 
-Private Sub PrintVarInt(param As Variant, ByVal Prefix As String, ByVal Index As String, ByVal Depth As String)
+Private Sub PrintVarInt(param As Variant, ByVal Prefix As String, ByVal index As String, ByVal Depth As String)
     Dim TypeName As String
 
     Select Case (VarType(param) And (Not vbArray))
@@ -663,8 +663,8 @@ Private Sub PrintVarInt(param As Variant, ByVal Prefix As String, ByVal Index As
     
     Dim MainPrefix As String
     MainPrefix = Prefix
-    If Index <> "" Then
-        MainPrefix = MainPrefix & Index
+    If index <> "" Then
+        MainPrefix = MainPrefix & index
     End If
 
     Yield
@@ -809,8 +809,8 @@ Public Function ResolvePathRel(ByVal BasePath As String, ByVal Path As String) A
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function HttpRequest(ByVal Url As String, Optional ByVal PostData As String = "") As String
-     HttpRequest = DoDownload(Url, PostData <> "", PostData, True, "")
+Public Function HttpRequest(ByVal url As String, Optional ByVal PostData As String = "") As String
+     HttpRequest = DoDownload(url, PostData <> "", PostData, True, "")
 End Function
 
 Public Function URLEncode(ByVal param As String) As String
@@ -1356,31 +1356,31 @@ Private Function DomainFilesystemHelper(ByVal Domain As String, ByVal PostData A
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function RemoteWrite(ByVal Domain As String, ByVal FileName As String, ByVal Contents As String) As String
+Public Function RemoteWrite(ByVal Domain As String, ByVal filename As String, ByVal Contents As String) As String
     AssertLocalOnly
 
-    RemoteWrite = DomainFilesystemHelper(Domain, "write=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents))
+    RemoteWrite = DomainFilesystemHelper(Domain, "write=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function RemoteAppend(ByVal Domain As String, ByVal FileName As String, ByVal Contents As String) As String
+Public Function RemoteAppend(ByVal Domain As String, ByVal filename As String, ByVal Contents As String) As String
     AssertLocalOnly
 
-    RemoteAppend = DomainFilesystemHelper(Domain, "append=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents))
+    RemoteAppend = DomainFilesystemHelper(Domain, "append=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function RemoteSafeAppend(ByVal Domain As String, ByVal FileName As String, ByVal Line As String) As String
+Public Function RemoteSafeAppend(ByVal Domain As String, ByVal filename As String, ByVal Line As String) As String
     AssertLocalOnly
 
-    RemoteSafeAppend = DomainFilesystemHelper(Domain, "safeappend=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Line))
+    RemoteSafeAppend = DomainFilesystemHelper(Domain, "safeappend=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Line))
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function RemoteDelete(ByVal Domain As String, ByVal FileName As String) As String
+Public Function RemoteDelete(ByVal Domain As String, ByVal filename As String) As String
     AssertLocalOnly
     
-    RemoteDelete = DomainFilesystemHelper(Domain, "delete=" & EncodeURLParameter(FileName))
+    RemoteDelete = DomainFilesystemHelper(Domain, "delete=" & EncodeURLParameter(filename))
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
@@ -1391,38 +1391,38 @@ Public Function RemoteDir(ByVal Domain As String) As String
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function RemoteView(ByVal Domain As String, ByVal FileName As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+Public Function RemoteView(ByVal Domain As String, ByVal filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     AssertLocalOnly
 
-    RemoteView = DomainFilesystemHelper(Domain, "fileserver=" & EncodeURLParameter(FileName) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
+    RemoteView = DomainFilesystemHelper(Domain, "fileserver=" & EncodeURLParameter(filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function ServerWrite(ByVal FileName As String, ByVal Contents As String) As String
+Public Function ServerWrite(ByVal filename As String, ByVal Contents As String) As String
     AssertRemoteOnly
 
-    ServerWrite = DomainFilesystemHelper(ServerDomain, "write=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents))
+    ServerWrite = DomainFilesystemHelper(ServerDomain, "write=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function ServerAppend(ByVal FileName As String, ByVal Contents As String) As String
+Public Function ServerAppend(ByVal filename As String, ByVal Contents As String) As String
     AssertRemoteOnly
 
-    ServerAppend = DomainFilesystemHelper(ServerDomain, "append=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Contents))
+    ServerAppend = DomainFilesystemHelper(ServerDomain, "append=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Contents))
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function ServerSafeAppend(ByVal FileName As String, ByVal Line As String) As String
+Public Function ServerSafeAppend(ByVal filename As String, ByVal Line As String) As String
     AssertRemoteOnly
 
-    ServerSafeAppend = DomainFilesystemHelper(ServerDomain, "safeappend=" & EncodeURLParameter(FileName) & "&filedata=" & EncodeURLParameter(Line))
+    ServerSafeAppend = DomainFilesystemHelper(ServerDomain, "safeappend=" & EncodeURLParameter(filename) & "&filedata=" & EncodeURLParameter(Line))
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function ServerDelete(ByVal FileName As String) As String
+Public Function ServerDelete(ByVal filename As String) As String
     AssertRemoteOnly
     
-    ServerDelete = DomainFilesystemHelper(ServerDomain, "delete=" & EncodeURLParameter(FileName))
+    ServerDelete = DomainFilesystemHelper(ServerDomain, "delete=" & EncodeURLParameter(filename))
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
@@ -1433,17 +1433,17 @@ Public Function ServerDir() As String
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function ServerView(ByVal FileName As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+Public Function ServerView(ByVal filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     AssertRemoteOnly
     
-    ServerView = DomainFilesystemHelper(ServerDomain, "fileserver=" & EncodeURLParameter(FileName) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
+    ServerView = DomainFilesystemHelper(ServerDomain, "fileserver=" & EncodeURLParameter(filename) & "&maxlines=" & EncodeURLParameter(MaxLines) & "&startline=" & EncodeURLParameter(StartLine))
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function FileServer(ByVal FileName As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
+Public Function FileServer(ByVal filename As String, Optional ByVal StartLine As Long = 0, Optional ByVal MaxLines As Long = 0) As String
     AssertRemoteOnly
 
-    FileServer = ServerView(FileName, StartLine, MaxLines)
+    FileServer = ServerView(filename, StartLine, MaxLines)
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
@@ -2021,17 +2021,17 @@ Public Function RequestReadFile() As String
     End If
 
     While True
-        Dim FileName As String
-        FileName = Trim(ReadLine("Filename (empty to cancel)?"))
-        If FileName = "" Then
+        Dim filename As String
+        filename = Trim(ReadLine("Filename (empty to cancel)?"))
+        If filename = "" Then
             RaiseMiscError "User cancelled file request"
             Exit Function
         End If
-        FileName = ResolvePath(FileName)
-        If Not basGeneral.FileExists(FileName) Then
+        filename = ResolvePath(filename)
+        If Not basGeneral.FileExists(filename) Then
             Say "{{red}}File not found. Please choose an existing file."
         Else
-            RequestReadFile = basGeneral.GetFile(FileName)
+            RequestReadFile = basGeneral.GetFile(filename)
             Exit Function
         End If
     Wend
@@ -2046,17 +2046,17 @@ Public Function RequestWriteFile(ByVal Data As String)
     End If
 
     While True
-        Dim FileName As String
-        FileName = Trim(ReadLine("Filename (empty to cancel)?"))
-        If FileName = "" Then
+        Dim filename As String
+        filename = Trim(ReadLine("Filename (empty to cancel)?"))
+        If filename = "" Then
             RaiseMiscError "User cancelled file request"
             Exit Function
         End If
-        FileName = ResolvePath(FileName)
-        If basGeneral.FileExists(FileName) Then
+        filename = ResolvePath(filename)
+        If basGeneral.FileExists(filename) Then
             Say "{{red}}File already exists. Please choose a different filename."
         Else
-            basGeneral.WriteFile FileName, Data
+            basGeneral.WriteFile filename, Data
             Exit Function
         End If
     Wend

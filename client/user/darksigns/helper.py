@@ -150,18 +150,18 @@ def dso_regdomains():
     
 # Call this function to generate a script to upload all the DSO scripts to all the servers...
 def dso_uploadscript():
-    # for server in servers:
-    #     for port, script in server.ports.items():
-    #         print(f"Say \"Uploading {script.name}.ds to {server.ip}:{port}\"")
-    #         print(f"Run \"UPLOAD\", \"{server.ip}\", {port}, \"/darksigns/mission_scripts/{script.name}.ds\"")
-    #         print(f"Say \"Uploaded {script.name}.ds to {server.ip}:{port}\"")
+    for server in servers:
+        for port, script in server.ports.items():
+            print(f"Say \"Uploading {script.name}.ds to {server.ip}:{port}\"")
+            print(f"Run \"UPLOAD\", \"{server.ip}\", {port}, \"/darksigns/mission_scripts/{script.name}.ds\"")
+            print(f"Say \"Uploaded {script.name}.ds to {server.ip}:{port}\"")
 
-    # bPath = "remotefs"
-    # for dom in listdir(bPath):
-    #     for f in listdir(path_join(bPath, dom)):
-    #         print(f"Say \"Uploading {f} to {dom}\"")
-    #         print(f"Run \"RemoteUpload\", \"{dom}\", \"{f}\", \"/darksigns/remotefs/{dom}/{f}\"")
-    #         print(f"Say \"RemoteUploaded {f} to {dom}\"")
+    bPath = "remotefs"
+    for dom in listdir(bPath):
+        for f in listdir(path_join(bPath, dom)):
+            print(f"Say \"Uploading {f} to {dom}\"")
+            print(f"Run \"RemoteUpload\", \"{dom}\", \"{f}\", \"/darksigns/remotefs/{dom}/{f}\"")
+            print(f"Say \"RemoteUploaded {f} to {dom}\"")
 
     bPath = "dso_specific"
     for scr in listdir(bPath):

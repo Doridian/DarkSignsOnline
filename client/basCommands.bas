@@ -598,10 +598,10 @@ EvalErrorHandler:
     Resume Next
 End Function
 
-Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef B As Long)
-    B = lColor And &HFF ' mask the low byte
+Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef b As Long)
+    R = lColor And &HFF ' mask the low byte
     G = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
-    R = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
+    b = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
 End Function
 
 Public Function SinLerp(ByVal FromNum As Long, ByVal ToNum As Long, ByVal ValNum As Long) As Double
@@ -632,7 +632,7 @@ Public Function SinLerp(ByVal FromNum As Long, ByVal ToNum As Long, ByVal ValNum
     Debug.Assert SinLerp > 0# And SinLerp < 1#
 End Function
 
-Private Sub LerpDrawSegments(ByVal ConsoleID As Integer, ByVal R As Integer, ByVal G As Integer, ByVal B As Integer, ByVal yIndex As Long, ByVal LoopA As Long, ByVal LoopB As Long)
+Private Sub LerpDrawSegments(ByVal ConsoleID As Integer, ByVal R As Integer, ByVal G As Integer, ByVal b As Integer, ByVal yIndex As Long, ByVal LoopA As Long, ByVal LoopB As Long)
     Dim StepVal As Long, n As Long, Mult As Double
     If LoopA > LoopB Then
         StepVal = -1
@@ -641,7 +641,7 @@ Private Sub LerpDrawSegments(ByVal ConsoleID As Integer, ByVal R As Integer, ByV
     End If
     For n = LoopA To LoopB Step StepVal
         Mult = SinLerp(LoopA, LoopB, n)
-        Console(ConsoleID, yIndex).Draw(n).Color = RGB(R * Mult, G * Mult, B * Mult)
+        Console(ConsoleID, yIndex).Draw(n).Color = RGB(R * Mult, G * Mult, b * Mult)
     Next n
 End Sub
 
@@ -672,8 +672,8 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
         Exit Sub
     End If
 
-    Dim R As Long, G As Long, B As Long
-    RGBSplit RGBVal, R, G, B
+    Dim R As Long, G As Long, b As Long
+    RGBSplit RGBVal, R, G, b
 
     ReDim Console(ConsoleID, yIndex).Draw(1 To (Segments + 1))
     For n = 1 To Segments
@@ -684,28 +684,28 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
 
     Select Case mode
     Case "fadecenter":
-        LerpDrawSegments ConsoleID, R, G, B, yIndex, (SegmentsHalf + 1), Segments
-        LerpDrawSegments ConsoleID, R, G, B, yIndex, SegmentsHalf, 1
+        LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsHalf + 1), Segments
+        LerpDrawSegments ConsoleID, R, G, b, yIndex, SegmentsHalf, 1
 
     Case "fadeinverse":
-        LerpDrawSegments ConsoleID, R, G, B, yIndex, Segments, (SegmentsHalf + 1)
-        LerpDrawSegments ConsoleID, R, G, B, yIndex, 1, SegmentsHalf
+        LerpDrawSegments ConsoleID, R, G, b, yIndex, Segments, (SegmentsHalf + 1)
+        LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, SegmentsHalf
 
     Case "fadein":
-        LerpDrawSegments ConsoleID, R, G, B, yIndex, 1, Segments
+        LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, Segments
 
     Case "fadeout":
-        LerpDrawSegments ConsoleID, R, G, B, yIndex, Segments, 1
+        LerpDrawSegments ConsoleID, R, G, b, yIndex, Segments, 1
 
     Case "flow":
-        LerpDrawSegments ConsoleID, R, G, B, yIndex, 1, SegmentsQuarter
-        LerpDrawSegments ConsoleID, R, G, B, yIndex, (SegmentsQuarter * 2), (SegmentsQuarter + 1)
-        LerpDrawSegments ConsoleID, R, G, B, yIndex, ((SegmentsQuarter * 2) + 1), (SegmentsQuarter * 3)
-        LerpDrawSegments ConsoleID, R, G, B, yIndex, (SegmentsQuarter * 4), ((SegmentsQuarter * 3) + 1)
+        LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, SegmentsQuarter
+        LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsQuarter * 2), (SegmentsQuarter + 1)
+        LerpDrawSegments ConsoleID, R, G, b, yIndex, ((SegmentsQuarter * 2) + 1), (SegmentsQuarter * 3)
+        LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsQuarter * 4), ((SegmentsQuarter * 3) + 1)
 
     Case "solid":
         ReDim Console(ConsoleID, yIndex).Draw(1 To 1)
-        Console(ConsoleID, yIndex).Draw(1).Color = RGB(R, G, B)
+        Console(ConsoleID, yIndex).Draw(1).Color = RGB(R, G, b)
         Console(ConsoleID, yIndex).Draw(1).HPos = 0
 
     End Select

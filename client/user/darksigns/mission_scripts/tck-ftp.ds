@@ -7,23 +7,23 @@ Sub Disconnect()
 End Sub
 
 Sub SayBG(Str)
-    SayWithBGColor &H9C9AE9, Str & "{{white}}"
+    SayWithBGColor &HE99A9C, Str & "{{white}}"
 End Sub
 
 Sub SaySlowBG(Delay, Str)
-    SaySlowWithBGColor &H9C9AE9, Delay, Str, "white"
+    SaySlowWithBGColor &HE99A9C, Delay, Str, "white"
 End Sub
 
 Sub PauseBG()
-    Pause "", &H9C9AE9
+    Pause "", &HE99A9C
 End Sub
 
 Function QReadLineBG(Prompt)
-    QReadLineBG = QReadLine(Prompt & "{{white}}", &H9C9AE9)
+    QReadLineBG = QReadLine(Prompt & "{{white}}", &HE99A9C)
 End Function
 
 Function GetAsciiBG(Prompt)
-    GetAsciiBG = GetAsciiWithCPromptBG(&H9C9AE9, Prompt & "{{white}}")
+    GetAsciiBG = GetAsciiWithCPromptBG(&HE99A9C, Prompt & "{{white}}")
 End Function
 
 Sub DownloadTCKLogin()

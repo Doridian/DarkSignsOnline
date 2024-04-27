@@ -6,19 +6,19 @@ DLOpen "termlib"
 'port 80 public website unavailable
 
 Sub SayBG(Str)
-    SayWithBGColor &H03640E, Str
+    SayWithBGColor &H0E6403, Str
 End Sub
 
 Sub SaySlowBG(Delay, Str, Style)
-    SaySlowWithBGColor &H03640E, Delay, Str, Style
+    SaySlowWithBGColor &H0E6403, Delay, Str, Style
 End Sub
 
 Sub PauseBG()
-    Pause "", &H03640E
+    Pause "", &H0E6403
 End Sub
 
 Function QReadLineBGMe(Prompt)
-    QReadLineBGMe = QReadLineBG(&H03640E, Prompt)
+    QReadLineBGMe = QReadLineBG(&H0E6403, Prompt)
 End Function
 
 Dim MaxCred
