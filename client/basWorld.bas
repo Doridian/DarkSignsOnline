@@ -1,8 +1,7 @@
 Attribute VB_Name = "basWorld"
 Option Explicit
 
-Public Const API_Server = "https://darksignsonline.com" 'e.g. "https://darksignsonline.com"
-Public Const API_Path = "/api/" 'e.g. "/api/"
+Public Const API_Server = "https://darksignsonline.com/api/" 'e.g. "https://darksignsonline.com/api/"
 
 Public Const IRC_Server = "irc.libera.chat"
 Public Const IRC_Port = "6697"
@@ -70,7 +69,7 @@ Public Function RunPage(ByVal sUrl As String, Optional UsePost As Boolean, Optio
     Requestor.IsCustomDownload = IsCustomDownload
 
     If IsCustomDownload <= 0 Then
-        sUrl = API_Server & API_Path & sUrl
+        sUrl = API_Server & sUrl
     End If
     If NoAuth Then
         Requestor.UserName = ""

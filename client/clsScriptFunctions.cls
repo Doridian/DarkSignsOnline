@@ -374,7 +374,7 @@ Private Function DoDownloadAPI(ByVal Url As String, ByVal UsePost As Boolean, By
         Exit Function
     End If
 
-    DoDownloadAPI = DoDownload(API_Server & API_Path & Url, UsePost, PostData, False, ResponseType)
+    DoDownloadAPI = DoDownload(API_Server & Url, UsePost, PostData, False, ResponseType)
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
