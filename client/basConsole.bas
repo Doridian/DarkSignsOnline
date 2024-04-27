@@ -41,6 +41,12 @@ Public Type ConsoleLineSegment
     TotalWidth As Long
 End Type
 
+Public Type ConsoleDrawSegment
+    Color As Long
+    HPos As Long
+    Transparent As Boolean
+End Type
+
 Public Type ConsoleLine
     Segments() As ConsoleLineSegment
 
@@ -52,8 +58,7 @@ Public Type ConsoleLine
     Center As Boolean
     Right As Boolean
 
-    DrawEnabled As Boolean
-    DrawColors() As Long
+    Draw() As ConsoleDrawSegment
 End Type
 
 Public CurrentPromptInput(1 To 4) As String
@@ -271,6 +276,7 @@ Public Sub Print_Console()
     Dim Seg As Integer, SegMax As Integer
     Dim FontHeight As Long
     Dim LineBackColor As Long
+    Dim Pos1 As Long, Pos2 As Long
 
     n = 0
     Do
@@ -282,27 +288,25 @@ Public Sub Print_Console()
         LineBackColor = frmConsole.BackColor
         '--------------- DRAW ------------------------------------------
         '--------------- DRAW ------------------------------------------
-        If Console(ActiveConsole, n).DrawEnabled = True Then
+        If LBound(Console(ActiveConsole, n).Draw) > 0 Then
             tmpY2 = printHeight - (yDiv / 2)
-            Dim DrawColors() As Long
-            DrawColors = Console(ActiveConsole, n).DrawColors
+            Dim DrawSegs() As ConsoleDrawSegment
+            DrawSegs = Console(ActiveConsole, n).Draw
 
-            If LBound(DrawColors) = UBound(DrawColors) Then
-                LineBackColor = DrawColors(LBound(DrawColors))
-                'draw it all in one, much faster
+            Pos1 = 0
+            For n2 = LBound(DrawSegs) To UBound(DrawSegs)
+                Pos1 = DrawSegs(n2).HPos
+                If n2 = UBound(DrawSegs) Then
+                    Pos2 = frmConsole.Width
+                Else
+                    Pos2 = DrawSegs(n2 + 1).HPos
+                End If
                 frmConsole.Line _
-                (0, tmpY2)-(frmConsole.Width, (tmpY2 + FontHeight)), _
-                LineBackColor, BF
-            Else
-                For n2 = LBound(DrawColors) To UBound(DrawColors)
-                    frmConsole.Line _
-                    (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
-                    ((frmConsole.Width / DrawDividerWidth) * _
-                    (n2), _
-                    (tmpY2 + FontHeight)), _
-                    DrawColors(n2), BF
-                Next n2
-            End If
+                (Pos1, tmpY2)- _
+                (Pos2, (tmpY2 + FontHeight)), _
+                DrawSegs(n2).Color, BF
+            Next
+            LineBackColor = DrawSegs(UBound(DrawSegs)).Color
         End If
         '--------------- DRAW ------------------------------------------
         '--------------- DRAW ------------------------------------------
@@ -372,8 +376,7 @@ Public Function Console_Line_Defaults() As ConsoleLine
     Console_Line_Defaults.Segments(0).Flash = False
     Console_Line_Defaults.Segments(0).FlashFast = False
     Console_Line_Defaults.Segments(0).FlashSlow = False
-
-    Console_Line_Defaults.DrawEnabled = False
+    ReDim Console_Line_Defaults.Draw(-1 To -1)
     Console_Line_Defaults.Center = False
     Console_Line_Defaults.Right = False
 End Function

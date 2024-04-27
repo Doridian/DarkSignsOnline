@@ -49,9 +49,9 @@ Begin VB.Form frmConsole
    Begin DSO.ctxWinsock sockIRC 
       Left            =   960
       Top             =   7080
-      _ExtentX        =   847
-      _ExtentY        =   847
-      Protocol        =   2
+      _extentx        =   847
+      _extenty        =   847
+      protocol        =   2
    End
    Begin VB.PictureBox ChatBox 
       Appearance      =   0  'Flat
@@ -552,7 +552,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-'Option Explicit -- leave this disabled on frmConsole
+Option Explicit '-- leave this disabled on frmConsole
 
 '--------------------------------------------------------------
 'variables for IRC chat
@@ -919,15 +919,9 @@ Sub IRCChatResize()
     txtChatMsg.Left = 240
     txtChatMsg.Width = cmdChat.Left - 240 - txtChatMsg.Left
     
-    s1.Move txtTarget.Left - 60, txtTarget.top - 60, txtTarget.Width + 120, txtTarget.Height + 120
-    s2.Move txtPrivMsg.Left - 60, txtPrivMsg.top - 60, txtPrivMsg.Width + 120, txtPrivMsg.Height + 120
-    
+    's1.Move txtTarget.Left - 60, txtTarget.top - 60, txtTarget.Width + 120, txtTarget.Height + 120
+    's2.Move txtPrivMsg.Left - 60, txtPrivMsg.top - 60, txtPrivMsg.Width + 120, txtPrivMsg.Height + 120
     s3.Move txtChatMsg.Left - 60, txtChatMsg.top - 60, txtChatMsg.Width + 130, txtChatMsg.Height + 130
-    
-    
-    
-    
-    
 End Sub
 
 Private Sub Form_Terminate()
@@ -940,6 +934,7 @@ Private Sub Form_Unload(Cancel As Integer)
     '------------------------------------------
     'for the chat
     If connected Then
+        Dim Response As Integer
         Response = MsgBox("Are you sure you want to disconnect and exit?", vbYesNo + vbQuestion, "Dark Signs Online")  'ask the user if he really wants to quit
         If Not (Response = vbYes) Then  'if he didn't want to quit
             Cancel = 1  'cancel the unload
@@ -1110,14 +1105,6 @@ Private Sub txtChatMsg_GotFocus()
     cmdChat.Default = True  'set the chat button as the default button
 End Sub
 
-Private Sub txtPrivMsg_GotFocus()
-    cmdPriv.Default = True  'set the private button as the default button
-End Sub
-
-Private Sub txtPromptInput_LostFocus()
-    ' TODO: Maybe?
-End Sub
-
 'Private Sub txtStatus_DblClick()
 '    c$ = InputBox("Please enter a command (eg. PRIVMSG Bot :Hello bot)" + vbCrLf + vbCrLf + "Command:", "Custom command")
 '        'let the user enter a command
@@ -1190,16 +1177,17 @@ Sub processCommand()
     
     'This section processes all other commands
     If Left$(Data$, 1) = ":" Then   'if the message starts with a colon (standard IRC message)
-        Dim pos%, pos2%    '2 position variables we need to extract the nickname of whoever that issued the command
+        Dim tempStr As String
+        Dim pos%, Pos2%, X% '2 position variables we need to extract the nickname of whoever that issued the command
         Dim from$, rest$    'these will hold the sender of the command and the rest of the message
         Dim Command$        'this will hold the type of the command (eg.: PRIVMSG)
         Params$ = ""        'and the parameters
         pos% = InStr(Data$, " ")    'get the position of the first space character
         If pos% > 0 Then    'if a space is found
-            pos2% = InStr(Data$, "!")   'search for an exclamation mark
-            If pos% < pos2% Or pos2% <= 0 Then pos2% = pos%   'if a space is found AFTER the space, it should not be used
-            from$ = Mid$(Data$, 2, pos2% - 2)   'parse the sender, starting from the second character (after the ":")
-            rest$ = Mid$(Data$, pos% + 1, Len(Data$) - pos2%)  'parse the rest of the message starting from the first character AFTER the first space
+            Pos2% = InStr(Data$, "!")   'search for an exclamation mark
+            If pos% < Pos2% Or Pos2% <= 0 Then Pos2% = pos%   'if a space is found AFTER the space, it should not be used
+            from$ = Mid$(Data$, 2, Pos2% - 2)   'parse the sender, starting from the second character (after the ":")
+            rest$ = Mid$(Data$, pos% + 1, Len(Data$) - Pos2%)  'parse the rest of the message starting from the first character AFTER the first space
             rest$ = Replace(rest$, Chr(2), "")
             
             'IMPORTANT: pos% is now used to hold the first space in (!) rest$ (!), *NOT* in data$
@@ -1211,7 +1199,6 @@ Sub processCommand()
                     Case "NOTICE"   'if it's a notice
                         displaychat ">> " + from$ + "  " + Params$ 'display it
                     Case "PRIVMSG"  'if it's a private message
-                        
                         If processParam(Params$) = Channel$ Then
                             tempStr = processParam(processRest(Params$))
                             If (Mid(tempStr, 2, 6) = "ACTION") Then
@@ -1322,11 +1309,11 @@ Sub processCommand()
                     Case "431"  'if we failed to change the nickname
                         nick$ = oldnick$    'change it back to the old one
                         Display "<!> Failed changing nickname (You have to supply a nickname)" 'let them know that it failed
-                        txtNick.Text = nick$    'change the content of the nick text field back
+                        'txtNick.Text = nick$    'change the content of the nick text field back
                     Case "432"  'if we failed to change the nickname
                         nick$ = oldnick$    'change it back to the old one
                         Display "<!> Failed changing nickname (The nickname you entered is not valid)" 'let them know that it failed
-                        txtNick.Text = nick$    'change the content of the nick text field back
+                        'txtNick.Text = nick$    'change the content of the nick text field back
                     Case "433"  'if we failed to change the nickname
                         nick$ = oldnick$    'change it back to the old one
                         Display "<!> Failed changing nickname (The nickname is already in use)" 'let them know that it failed
@@ -1366,12 +1353,6 @@ Function processRest(Msg$) As String    'process the rest of the message:
         End If
     End If
 End Function
-
-
-Private Sub txtChannel_GotFocus()
-    cmdChannel.Default = True   'set the channel "change" button as the default button
-End Sub
-
 
 Private Sub lstUsers_DblClick()
     txtChatMsg.SetFocus
@@ -1426,6 +1407,7 @@ Function MyIRCName() As String
 End Function
 
 Private Sub cmdChat_Click()
+    Dim IRCCommand As String, Msg As String, PMName As String, PMMsg As String
     If Trim(txtChatMsg.Text) = "" Then Exit Sub  'if there's no message exit the sub
     If Left(Trim(txtChatMsg.Text), 1) = "/" Then
         If Left(Trim(txtChatMsg.Text), 2) = "//" Then
@@ -1473,17 +1455,6 @@ Private Sub cmdChat_Click()
     txtChatMsg.Text = ""    'clear the field
     txtChatMsg.SetFocus     'give the focus back to the message field
 End Sub
-
-
-Private Sub cmdPriv_Click()
-    If Trim(txtPrivMsg.Text) = "" Or Trim(txtTarget.Text) = "" Then Exit Sub    'if there is no target or message, exit
-    displaychat "    <" + MyIRCName + "> (" + Trim(txtTarget.Text) + ")  " + Trim(txtPrivMsg.Text)
-    Send "PRIVMSG " + Trim(txtTarget.Text) + " :" + Trim(txtPrivMsg.Text)   'send the message
-    txtPrivMsg.Text = ""    'clear the field
-    txtPrivMsg.SetFocus     'give the focus back to the message field
-End Sub
-
-
 
 Sub PrintAll()
     Dim ss() As String
