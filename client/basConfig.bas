@@ -10,6 +10,8 @@ Private ConfigSettingsCache() As ConfigSetting
 Private Declare Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
 Private Declare Function WritePrivateProfileString Lib "kernel32" Alias "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpString As Any, ByVal lpFileName As String) As Long
 
+Private Const ConfigKey = "DSO!#243-9234$@$9ASLDPAS"
+
 Private Sub EnsureConfigCacheIntact()
     On Error GoTo RedimConfigCache
     Dim X As Long
@@ -54,7 +56,7 @@ Public Sub ConfigSave(ByVal sCat As String, ByVal sVal As String, ByVal Encoded 
     
     Dim sValEnc As String
     If Encoded Then
-        sValEnc = EncodeBase64Str(sVal)
+        sValEnc = DSOEncrypt(sVal, ConfigKey, True)
     Else
         sValEnc = sVal
     End If
@@ -77,14 +79,16 @@ Public Function ConfigLoad(ByVal sCat As String, ByVal sDefault As String, ByVal
 NoSuchItem:
     Dim Result As String * 4096
     Dim ResultLen As Long
-    
-    If Encoded Then
-        sDefault = EncodeBase64Str(sDefault)
-    End If
-    ResultLen = GetPrivateProfileString("config", sCat, sDefault, Result, 4096, App.Path & "/dso.ini")
-    ConfigLoad = Left(Result, ResultLen)
-    If Encoded Then
-        ConfigLoad = DecodeBase64Str(ConfigLoad)
+
+    ResultLen = GetPrivateProfileString("config", sCat, "", Result, 4096, App.Path & "/dso.ini")
+    If ResultLen < 1 Then
+        ConfigLoad = sDefault
+        ConfigSave sCat, sDefault, Encoded
+    Else
+        ConfigLoad = Left(Result, ResultLen)
+        If Encoded Then
+            ConfigLoad = DSODecrypt(ConfigLoad, ConfigKey)
+        End If
     End If
 
     If UBound(ConfigSettingsCache) > 1024 Then
