@@ -102,10 +102,9 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
         CLine.Segments(X).TotalWidth = W
     Next
 
-    Dim HeightDiff As Long
+    Dim HeightDiff As Long, VPos As Long, MaxW As Long
     For X = 0 To UBound(CLine.Segments)
         HeightDiff = CLine.Height - CLine.Segments(X).Height
-        Dim VPos As Long
         If CLine.Segments(X).AlighBottom Then
             VPos = HeightDiff
         ElseIf CLine.Segments(X).AlignTop Then
@@ -135,9 +134,13 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
         Else
             W = CLine.Segments(X - 1).HPos + CLine.Segments(X - 1).TotalWidth
         End If
+
+        MaxW = frmConsole.Width - (ConsoleXSpacing + CLine.Segments(X).TotalWidth)
         W = W + CLine.Segments(X).HOffset
         If W < ConsoleXSpacing Then
             W = ConsoleXSpacing
+        ElseIf W > MaxW Then
+            W = MaxW
         End If
         CLine.Segments(X).HPos = W
     Next
