@@ -1554,7 +1554,7 @@ End Function
 Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Script As String, Optional XArr As Variant) As String
     AssertLocalOnly
 
-    Dim X As Long
+    Dim X As Long, ResolvedScript As String
     
     Dim SParamArr() As Variant
 
@@ -1568,8 +1568,13 @@ Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOu
     End If
 
     SParamArr(0) = Script
+    ResolvedScript = basCommands.ResolveCommand(PrivConsoleID, Script)
     Yield
-    RawRunCaptureA = Run_Script(ResolveCommand(Script), PrivConsoleID, SParamArr, "RUN", False, RedirectOutput, DisableOutput, "local", PrivSpoofedLocalConnectingIP)
+    If ResolvedScript = "" Then
+        RaiseMiscError "Could not find script to run for command """ & Script & """"
+        Exit Function
+    End If
+    RawRunCaptureA = Run_Script(ResolvedScript, PrivConsoleID, SParamArr, "RUN", False, RedirectOutput, DisableOutput, "local", PrivSpoofedLocalConnectingIP)
     Yield
 End Function
 

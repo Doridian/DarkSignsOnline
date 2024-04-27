@@ -116,8 +116,15 @@ Public Function ResolvePathRel(ByVal CCPath As String, ByVal Path As String) As 
 End Function
 
 Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As String) As String
+    ResolveCommand = ResolvePath(ConsoleID, Command)
+    If basGeneral.FileExists(ResolveCommand) Then
+        Exit Function
+    End If
+    If basGeneral.FileExists(ResolveCommand & ".ds") Then
+        ResolveCommand = ResolveCommand & ".ds"
+        Exit Function
+    End If
     If InStr(Command, "/") > 0 Or InStr(Command, "\") > 0 Then
-        ResolveCommand = ResolvePath(ConsoleID, Command)
         Exit Function
     End If
 
@@ -482,7 +489,7 @@ CommandForNext:
 
     ' First, check if there is a command for it in /system/commands
     Dim CommandNeedFirstComma As Boolean
-    If AllowCommands And ((ResolveCommand(0, Command) <> "") Or ((Not IsKeyword(Command)) And (Not IsValidVarName(Command)))) Then
+    If AllowCommands And ((ResolveCommand(AutoVariablesFrom, Command) <> "") Or ((Not IsKeyword(Command)) And (Not IsValidVarName(Command)))) Then
         ParseCommandLineInt = "Call Run(""" & Command & """"
         CommandNeedFirstComma = True
     Else
