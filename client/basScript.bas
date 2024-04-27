@@ -121,8 +121,3 @@ Public Function Run_Script(ByVal filename As String, ByVal ConsoleID As Integer,
     Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, "", ConnectingIP, ErrorHandling, RedirectOutput, DisableOutput, ScriptKey, "local")
 End Function
 
-
-Public Function DeleteAFile(sFile As String)
-    On Error Resume Next
-    Kill sFile
-End Function

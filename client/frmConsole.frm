@@ -890,8 +890,6 @@ Private Sub Form_Resize()
 End Sub
 
 Sub IRCChatResize()
-    On Error Resume Next
-    
     ChatBox.BackColor = vbBlack
     TBox.BackColor = vbBlack
     
@@ -953,7 +951,6 @@ End Sub
 
 
 Private Sub IRC_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
-    On Error Resume Next
     txtChatMsg.SetFocus
 End Sub
 
@@ -976,14 +973,12 @@ End Sub
 Sub ShowChat()
     ChatBox.Visible = True
     ChatBox.ZOrder 0
-    
-    
+
     consoleShape.Left = 1600
 
     Me.txtPromptInput.Visible = False
 
     DoEvents
-    On Error Resume Next
     Me.txtChatMsg.SetFocus
 End Sub
 
@@ -1361,7 +1356,6 @@ Private Sub lstUsers_DblClick()
 End Sub
 
 Private Sub sockIRC_Connect()   'as soon as we're connected to the server:
-    On Error Resume Next
     nick$ = RegLoad("ircName", "DSO_" & Trim(myUsername) & "_" & MyRandNum$)
     connected = True    'set connected to true (cancel the timeout procedure)
     Display "> Connected to server !"

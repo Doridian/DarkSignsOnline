@@ -70,7 +70,7 @@ Private Function keyExists(k As String) As Boolean
     Dim n As Long
     For n = 0 To inbox.ListItems.Count Step 1
         If n > 0 Then
-            If inbox.ListItems(n).Key = k Then
+            If inbox.ListItems(n).key = k Then
                 keyExists = True
             End If
         End If
@@ -93,13 +93,13 @@ Public Sub reloadInbox()
     Dim SubResults() As String
 
     Dim n As Long
-    Dim Key As String
+    Dim key As String
 
     For n = 0 To UBound(AllResults) Step 1
         SubResults = Split(AllResults(n), ":--:")
         If UBound(SubResults) = 5 Then
-            Key = SubResults(1)
-            inbox.ListItems.Add , Key, SubResults(2)
+            key = SubResults(1)
+            inbox.ListItems.Add , key, SubResults(2)
             inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , DecodeBase64Str(SubResults(3))
             inbox.ListItems(inbox.ListItems.Count).ListSubItems.Add , , SubResults(5)
             
@@ -194,9 +194,9 @@ Private Sub inbox_DblClick()
     Dim SelectedIndex As Long
     SelectedIndex = 0
     On Error Resume Next
-    SelectedIndex = inbox.SelectedItem.Index
+    SelectedIndex = inbox.SelectedItem.index
     On Error GoTo 0
-    
+
     If SelectedIndex <= 0 Then
         Exit Sub
     End If
@@ -205,29 +205,29 @@ Private Sub inbox_DblClick()
     frmDSOMailRead.msgSubject.Text = inbox.ListItems(SelectedIndex).ListSubItems(1).Text
     frmDSOMailRead.msgBody.Text = "ERROR LOADING MESSAGE BODY"
     
-    inbox.ListItems(inbox.SelectedItem.Index).Bold = False
-    inbox.ListItems(inbox.SelectedItem.Index).ListSubItems(1).Bold = False
-    inbox.ListItems(inbox.SelectedItem.Index).ListSubItems(2).Bold = False
+    inbox.ListItems(inbox.SelectedItem.index).Bold = False
+    inbox.ListItems(inbox.SelectedItem.index).ListSubItems(1).Bold = False
+    inbox.ListItems(inbox.SelectedItem.index).ListSubItems(2).Bold = False
 
     Dim tmpFile As String
     tmpFile = ""
     On Error Resume Next
     tmpFile = GetFile("/system/mail.dat")
     On Error GoTo 0
-    
+
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbCrLf)
     
     Dim SubResults() As String
     Dim n As Long
-    Dim Key As String
-    Key = inbox.ListItems(SelectedIndex).Key
+    Dim key As String
+    key = inbox.ListItems(SelectedIndex).key
     
     For n = 0 To UBound(AllResults) Step 1
         SubResults = Split(AllResults(n), ":--:")
        
         If UBound(SubResults) = 5 Then
-            If SubResults(1) = Key Then
+            If SubResults(1) = key Then
                 frmDSOMailRead.msgBody.Text = DecodeBase64Str(SubResults(4))
                 n = UBound(AllResults)
             End If
@@ -235,7 +235,7 @@ Private Sub inbox_DblClick()
     Next n
 
     If inbox.ListItems(SelectedIndex).Bold = True Then
-        markAsRead Key
+        markAsRead key
     End If
     
     frmDSOMailRead.Show vbModal
@@ -271,7 +271,7 @@ Private Sub inbox_ColumnClick(ByVal ColumnHeader As LvwColumnHeader)
     With inbox '// change to the name of the list view
         Static iLast As Long, iCur As Long
         .Sorted = True
-        iCur = ColumnHeader.Index - 1
+        iCur = ColumnHeader.index - 1
         If iCur = iLast Then .SortOrder = IIf(.SortOrder = 1, 0, 1)
         .SortKey = iCur
         iLast = iCur

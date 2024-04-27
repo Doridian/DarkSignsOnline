@@ -204,8 +204,6 @@ Private Sub Form_Resize()
 End Sub
 
 Sub ResizeMe()
-    On Error Resume Next
-    
     bordr.Move 120, 120
     bordr.Width = Me.Width - 240
     bordr.Height = Me.Height - 240

@@ -329,7 +329,6 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
 End Sub
 
 Sub SetColorBox()
-    On Error Resume Next
     colorbox.BackColor = RGB(tR, tG, tB)
 End Sub
 
@@ -340,9 +339,9 @@ Private Sub Form_Load()
   
     EditorRunFile = ""
     
-    HScroll1.Value = tR
-    HScroll2.Value = tG
-    HScroll3.Value = tB
+    HScroll1.value = tR
+    HScroll2.value = tG
+    HScroll3.value = tB
     
     
     SetColorBox
@@ -460,8 +459,6 @@ Sub AutoSave()
 End Sub
 
 Sub FormatText()
-    On Error Resume Next
-    
     Dim s As String, AselStart As Long
     
     AselStart = RT.SelStart
@@ -488,36 +485,26 @@ End Sub
 
 
 Private Sub Form_Resize()
-    On Error Resume Next
-    
     RT.Move List1.Width + List1.Left + 120, 720, Me.Width - RT.Left - 240, Me.Height - 1560
     List1.Height = RT.Height - colortool.Height - 120
-    colortool.Move List1.Left, List1.Top + List1.Height + 120
-    
+    colortool.Move List1.Left, List1.top + List1.Height + 120
+
     MBox.BackColor = Me.BackColor
     MBox.Left = Me.Width - MBox.Width - 240
-    
-    lParam.Top = RT.Height + RT.Top + 100
-    
+
+    lParam.top = RT.Height + RT.top + 100
 End Sub
 
-
-
-
-
 Private Sub HScroll1_Change()
-    On Error Resume Next
-    tR.Text = HScroll1.Value
+    tR.Text = HScroll1.value
 End Sub
 
 Private Sub HScroll2_Change()
-    On Error Resume Next
-    tG.Text = HScroll2.Value
+    tG.Text = HScroll2.value
 End Sub
 
 Private Sub HScroll3_Change()
-    On Error Resume Next
-    tB.Text = HScroll3.Value
+    tB.Text = HScroll3.value
 End Sub
 
 Private Sub List1_Click()

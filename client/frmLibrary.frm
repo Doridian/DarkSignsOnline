@@ -694,8 +694,6 @@ Private Sub cDownload_Click()
 End Sub
 
 Private Sub Command1_Click()
-    On Error Resume Next
-    
     UploadBox.Visible = True
     RemoveBox.Visible = False
     cDownload.Visible = False
@@ -711,8 +709,6 @@ Private Sub Command2_Click()
     cDownload.Visible = False
     ShareBox.Visible = False
 End Sub
-
-
 
 Private Sub Command3_Click()
     UploadBox.Visible = False
@@ -867,18 +863,16 @@ End Sub
 
 
 Private Sub Form_Resize()
-    On Error Resume Next
-    
     LV.Width = Me.Width - LV.Left - 360
-    LV.Height = Me.Height - LV.Top - 1200
+    LV.Height = Me.Height - LV.top - 1200
     
-    UploadBox.Move LV.Left, LV.Top, LV.Width, LV.Height
-    RemoveBox.Move LV.Left, LV.Top, LV.Width, LV.Height
-    ShareBox.Move LV.Left, LV.Top, LV.Width, LV.Height
+    UploadBox.Move LV.Left, LV.top, LV.Width, LV.Height
+    RemoveBox.Move LV.Left, LV.top, LV.Width, LV.Height
+    ShareBox.Move LV.Left, LV.top, LV.Width, LV.Height
     
     TS.Width = ShareBox.Width - TS.Left - 360
-    TS.Height = ShareBox.Height - TS.Top - 960
-    tsc.Move TS.Left, TS.Top + TS.Height + 120
+    TS.Height = ShareBox.Height - TS.top - 960
+    tsc.Move TS.Left, TS.top + TS.Height + 120
     
     txtDescription.Width = UploadBox.Width - 720
     uplist.Width = txtDescription.Width
@@ -890,12 +884,12 @@ Private Sub Form_Resize()
     
 
     lStatus.Width = Me.Width
-    lStatus.Move Me.LV.Left, LV.Top + LV.Height + 240
+    lStatus.Move Me.LV.Left, LV.top + LV.Height + 240
     
     Picture1.BackColor = UploadBox.BackColor
     Picture2.BackColor = UploadBox.BackColor
     
-    cDownload.Move Me.Width - cDownload.Width - 240, LV.Top + LV.Height + 120
+    cDownload.Move Me.Width - cDownload.Width - 240, LV.top + LV.Height + 120
     
 End Sub
 
@@ -973,7 +967,7 @@ Private Sub LV_ColumnClick(ByVal ColumnHeader As LvwColumnHeader)
     With LV '// change to the name of the list view
         Static iLast As Long, iCur As Long
         .Sorted = True
-        iCur = ColumnHeader.Index - 1
+        iCur = ColumnHeader.index - 1
         If iCur = iLast Then .SortOrder = IIf(.SortOrder = 1, 0, 1)
         .SortKey = iCur
         iLast = iCur
@@ -981,7 +975,6 @@ Private Sub LV_ColumnClick(ByVal ColumnHeader As LvwColumnHeader)
 End Sub
 
 Private Sub tmrStart_Timer()
-    On Error Resume Next
     tmrStart.Enabled = False
     
     Me.List1.ListIndex = 0

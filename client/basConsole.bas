@@ -244,7 +244,6 @@ Public Sub Print_Console()
     If Not ConsoleInitialized(ActiveConsole) Then
         Exit Sub
     End If
-    'On Error Resume Next
 
     Dim n As Integer, n2 As Integer, tmpY2 As Long, printHeight As Long
 
