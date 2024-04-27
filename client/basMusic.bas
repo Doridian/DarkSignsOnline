@@ -48,7 +48,7 @@ Public Sub CheckMusic()
         Exit Sub
     End If
 
-    If i(ConfigLoad("music", "on") = "off") Then
+    If i(ConfigLoad("music", "on", False) = "off") Then
         Exit Sub
     End If
 

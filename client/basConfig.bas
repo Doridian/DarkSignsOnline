@@ -7,6 +7,9 @@ Private Type ConfigSetting
 End Type
 Private ConfigSettingsCache() As ConfigSetting
 
+Private Declare Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
+Private Declare Function WritePrivateProfileString Lib "kernel32" Alias "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpString As Any, ByVal lpFileName As String) As Long
+
 Private Sub EnsureConfigCacheIntact()
     On Error GoTo RedimConfigCache
     Dim X As Long
@@ -38,7 +41,7 @@ Private Function FindConfigCacheSetting(ByVal sCat As String) As Long
     Next
 End Function
 
-Public Sub ConfigSave(ByVal sCat As String, ByVal sVal As String)
+Public Sub ConfigSave(ByVal sCat As String, ByVal sVal As String, ByVal Encoded As Boolean)
     Dim X As Long
     X = FindConfigCacheSetting(sCat)
     If X <= 0 Then
@@ -48,14 +51,22 @@ Public Sub ConfigSave(ByVal sCat As String, ByVal sVal As String)
         ReDim Preserve ConfigSettingsCache(0 To UBound(ConfigSettingsCache) + 1)
         X = UBound(ConfigSettingsCache)
     End If
-    SaveSetting App.title, "Settings", sCat, sVal
+    
+    Dim sValEnc As String
+    If Encoded Then
+        sValEnc = EncodeBase64Str(sVal)
+    Else
+        sValEnc = sVal
+    End If
+    WritePrivateProfileString "config", sCat, sValEnc, App.Path & "/dso.ini"
+
     Dim NewSettings As ConfigSetting
     NewSettings.name = sCat
     NewSettings.value = sVal
     ConfigSettingsCache(X) = NewSettings
 End Sub
 
-Public Function ConfigLoad(ByVal sCat As String, ByVal sDefault As String) As String
+Public Function ConfigLoad(ByVal sCat As String, ByVal sDefault As String, ByVal Encoded As Boolean) As String
     Dim X As Long
     X = FindConfigCacheSetting(sCat)
     If X > 0 Then
@@ -64,7 +75,18 @@ Public Function ConfigLoad(ByVal sCat As String, ByVal sDefault As String) As St
     End If
 
 NoSuchItem:
-    ConfigLoad = GetSetting(App.title, "Settings", sCat, sDefault)
+    Dim Result As String * 4096
+    Dim ResultLen As Long
+    
+    If Encoded Then
+        sDefault = EncodeBase64Str(sDefault)
+    End If
+    ResultLen = GetPrivateProfileString("config", sCat, sDefault, Result, 4096, App.Path & "/dso.ini")
+    ConfigLoad = Left(Result, ResultLen)
+    If Encoded Then
+        ConfigLoad = DecodeBase64Str(ConfigLoad)
+    End If
+
     If UBound(ConfigSettingsCache) > 1024 Then
         Err.Raise vbObjectError + 9199, , "FATAL ERROR: Ran out of settings cache of size 1024 loading: " & sCat
     End If
@@ -75,4 +97,3 @@ NoSuchItem:
     NewSettings.value = ConfigLoad
     ConfigSettingsCache(X) = NewSettings
 End Function
-

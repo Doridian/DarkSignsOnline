@@ -95,11 +95,11 @@ Public Function RunPage(ByVal sUrl As String, Optional UsePost As Boolean, Optio
 End Function
 
 Public Function myUsername() As String
-    myUsername = ConfigLoad("myUsernameDev", "")
+    myUsername = ConfigLoad("username", "", True)
 End Function
 
 Public Function myPassword() As String
-    myPassword = ConfigLoad("myPasswordDev", "")
+    myPassword = ConfigLoad("password", "", True)
 End Function
 
 Public Sub SayCOMM(s As String)

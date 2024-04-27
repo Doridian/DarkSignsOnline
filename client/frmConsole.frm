@@ -795,7 +795,7 @@ Public Sub setConnected(value As Boolean)
 End Sub
 
 Private Sub Form_Load()
-    basConsole.DisableFlashing = (ConfigLoad("DisableFlashing", "false") = "true")
+    basConsole.DisableFlashing = (ConfigLoad("DisableFlashing", "false", False) = "true")
 
     modBass.BASSLoadDLL
     basMusic.LoadMusic
@@ -811,7 +811,7 @@ Private Sub Form_Load()
 
     curMsg = 0
     connected = False
-    chatToStatus = (ConfigLoad("ChatView", "false") = "true")
+    chatToStatus = (ConfigLoad("ChatView", "false", False) = "true")
     ActiveConsole = 1
     MusicFileIndex = -1
     
@@ -1240,7 +1240,7 @@ Sub processCommand()
                     Case "NICK" 'if someone changed his nickname
                         If from$ = nick$ Then
                             nick$ = processParam(Params$)
-                            ConfigSave "ircName", nick$
+                            ConfigSave "ircName", nick$, True
                         End If
                         displaychat "** " + from$ + " changed his nickname to " + processParam(Params$) + " **"    'display it
                         'check if the user is already in the list
@@ -1358,7 +1358,7 @@ Private Sub lstUsers_DblClick()
 End Sub
 
 Private Sub sockIRC_Connect()   'as soon as we're connected to the server:
-    nick$ = ConfigLoad("ircName", "DSO_" & Trim(myUsername) & "_" & MyRandNum$)
+    nick$ = ConfigLoad("ircName", "DSO_" & Trim(myUsername) & "_" & MyRandNum$, True)
     connected = True    'set connected to true (cancel the timeout procedure)
     Display "> Connected to server !"
     
@@ -1541,11 +1541,11 @@ End Sub
 Public Sub ChatView(ByVal enable As Boolean)
     If enable Then
         chatToStatus = True
-        ConfigSave "CHATVIEW", "true"
+        ConfigSave "CHATVIEW", "true", False
         SayCOMM "Chatview is now enabled."
     Else
         chatToStatus = False
-        ConfigSave "CHATVIEW", "false"
+        ConfigSave "CHATVIEW", "false", False
         SayCOMM "Chatview is now disabled."
     End If
 End Sub

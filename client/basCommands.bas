@@ -720,19 +720,17 @@ End Sub
 
 Public Sub MusicCommand(ByVal s As String)
     Select Case i(s)
-
-    Case "start": ConfigSave "music", "on"
-    Case "on": ConfigSave "music", "on"
-
-    Case "stop": ConfigSave "music", "off": basMusic.StopMusic
-    Case "off": ConfigSave "music", "off": basMusic.StopMusic
-
-    Case "next": basMusic.StopMusic
-
-    Case "prev":
-        basMusic.PrevMusicIndex
-        basMusic.PrevMusicIndex
-        basMusic.StopMusic
+        Case "start", "on":
+            ConfigSave "music", "on", False
+        Case "stop", "off":
+            ConfigSave "music", "off", False
+            basMusic.StopMusic
+        Case "next":
+            basMusic.StopMusic
+        Case "prev":
+            basMusic.PrevMusicIndex
+            basMusic.PrevMusicIndex
+            basMusic.StopMusic
     End Select
 End Sub
 
@@ -743,7 +741,7 @@ Public Sub SetUsername(ByVal s As String, ByVal ConsoleID As Integer)
         Exit Sub
     End If
 
-    ConfigSave "myUsernameDev", s
+    ConfigSave "username", s, True
     
     Dim Password As String
     If myPassword = "" Then
@@ -762,8 +760,8 @@ Public Sub SetPassword(ByVal s As String, ByVal ConsoleID As Integer)
         Exit Sub
     End If
 
-    ConfigSave "myPasswordDev", s
-    
+    ConfigSave "password", s, True
+
     Dim Password As String
     If myPassword = "" Then
         Password = ""
@@ -793,7 +791,7 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
     End If
 
     Dim ExternalEditor As Boolean
-    ExternalEditor = ConfigLoad("externaleditor", False)
+    ExternalEditor = ConfigLoad("externaleditor", "false", False) = "true"
 
     If ExternalEditor Then
         SayRaw ConsoleID, "{{green}}Opening external editor for " & s

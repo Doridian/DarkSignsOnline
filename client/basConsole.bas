@@ -183,9 +183,9 @@ End Sub
 Public Sub SetDisableFlashing(ByVal NewValue As Boolean)
     DisableFlashing = NewValue
     If NewValue Then
-        ConfigSave "DisableFlashing", "true"
+        ConfigSave "DisableFlashing", "true", False
     Else
-        ConfigSave "DisableFlashing", "false"
+        ConfigSave "DisableFlashing", "false", False
     End If
 End Sub
 
@@ -428,12 +428,12 @@ End Sub
 Public Function Console_Line_Defaults() As ConsoleLine
     ReDim Console_Line_Defaults.Segments(0 To 0)
     Console_Line_Defaults.Segments(0).Caption = ""
-    Console_Line_Defaults.Segments(0).FontBold = ConfigLoad("Default_FontBold", "True")
-    Console_Line_Defaults.Segments(0).FontItalic = ConfigLoad("Default_FontItalic", "False")
-    Console_Line_Defaults.Segments(0).FontName = ConfigLoad("Default_FontName", "Verdana")
-    Console_Line_Defaults.Segments(0).FontSize = ConfigLoad("Default_FontSize", "10")
-    Console_Line_Defaults.Segments(0).FontUnderline = ConfigLoad("Default_FontUnderline", "False")
-    Console_Line_Defaults.Segments(0).FontColor = ConfigLoad("Default_FontColor", RGB(255, 255, 255))
+    Console_Line_Defaults.Segments(0).FontBold = ConfigLoad("Default_FontBold", "True", False)
+    Console_Line_Defaults.Segments(0).FontItalic = ConfigLoad("Default_FontItalic", "False", False)
+    Console_Line_Defaults.Segments(0).FontName = ConfigLoad("Default_FontName", "Verdana", False)
+    Console_Line_Defaults.Segments(0).FontSize = ConfigLoad("Default_FontSize", "10", False)
+    Console_Line_Defaults.Segments(0).FontUnderline = ConfigLoad("Default_FontUnderline", "False", False)
+    Console_Line_Defaults.Segments(0).FontColor = ConfigLoad("Default_FontColor", RGB(255, 255, 255), False)
     Console_Line_Defaults.Segments(0).Flash = False
     Console_Line_Defaults.Segments(0).FlashFast = False
     Console_Line_Defaults.Segments(0).FlashSlow = False
