@@ -122,19 +122,19 @@ Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As Stri
     End If
 
     Dim CLIPaths() As String
-    If ConsoleID <> 0 Then
-        ReDim CLIPaths(0 To 1)
-        CLIPaths(0) = cPath(ConsoleID)
-    Else
-        ReDim CLIPaths(0 To 0)
-    End If
+    ReDim CLIPaths(0 To 1)
+    CLIPaths(0) = "./"
     CLIPaths(UBound(CLIPaths)) = "/system/commands"
 
     Dim X As Long
 
     Dim tmpCommand As String
     For X = 0 To UBound(CLIPaths)
-        ResolveCommand = ResolvePathRel(CLIPaths(X), Command)
+        ResolveCommand = ResolvePath(ConsoleID, CLIPaths(X) & "/" & Command)
+        If Left(ResolveCommand, 1) <> "/" Then
+            GoTo SkipThisPath
+        End If
+
         If basGeneral.FileExists(ResolveCommand) Then
             Exit Function
         End If
@@ -144,6 +144,7 @@ Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As Stri
                 Exit Function
             End If
         End If
+SkipThisPath:
     Next
 
     ResolveCommand = ""
