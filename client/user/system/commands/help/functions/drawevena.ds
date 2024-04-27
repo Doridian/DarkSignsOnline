@@ -1,0 +1,2 @@
+Option Explicit
+Say "{{green 12}}Function: DrawEvenA(YPos[Long], Colors) -> Nothing"
