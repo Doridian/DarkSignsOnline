@@ -112,13 +112,13 @@ End Property
 Public Property Let ExternalEditor(ByVal NewValue As Boolean)
     AssertLocalOnly
 
-    RegSave "externaleditor", "" & NewValue
+    ConfigSave "externaleditor", "" & NewValue
 End Property
 
 Public Property Get ExternalEditor() As Boolean
     AssertLocalOnly
 
-    ExternalEditor = RegLoad("externaleditor", False)
+    ExternalEditor = ConfigLoad("externaleditor", False)
 End Property
 
 Public Property Let DisableFlashing(ByVal NewValue As Boolean)

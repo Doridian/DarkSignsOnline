@@ -57,6 +57,7 @@ Module=basCompression; basCompression.bas
 Module=basAesCtr; basAesCtr.bas
 Class=clsScriptTermlib; clsScriptTermlib.cls
 Module=modBass; libs\bass.bas
+Module=basConfig; basConfig.bas
 IconForm="frmConsole"
 Startup="frmConsole"
 HelpFile=""
