@@ -23,6 +23,7 @@ Public Type ConsoleLineSegment
     AlighBottom As Boolean
     VerticalOffset As Long
     VPos As Long
+    HPos As Long
 
     FontColor As Long
     FontName As String
@@ -113,6 +114,22 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
             VPos = 0
         End If
         CLine.Segments(X).VPos = VPos
+
+        If X = 0 Then
+            W = ConsoleXSpacing
+            If CLine.PreSpace Then
+                W = ConsoleXSpacingIndent
+            End If
+
+            If CLine.Center Then
+                W = (frmConsole.Width - CLine.TotalWidth) / 2
+            ElseIf CLine.Right Then
+                W = frmConsole.Width - (CLine.TotalWidth + W)
+            End If
+        Else
+            W = CLine.Segments(X - 1).HPos + CLine.Segments(X - 1).TotalWidth
+        End If
+        CLine.Segments(X).HPos = W
     Next
 End Sub
 
@@ -218,8 +235,7 @@ End Sub
 Public Sub Print_Console()
     On Error Resume Next
 
-    Dim sText As String * 255
-    Dim n As Integer, n2 As Integer, tmpY2 As Long, printHeight As Long, tmpS As String
+    Dim n As Integer, n2 As Integer, tmpY2 As Long, printHeight As Long
     n = 0
 
     frmConsole.Cls
@@ -251,27 +267,45 @@ Public Sub Print_Console()
 
     Dim ConsumedInputPrompt As Boolean
     ConsumedInputPrompt = False
-    
-    Dim Seg As Integer, SegMax As Integer
 
-    frmConsole.CurrentX = ConsoleXSpacing
+    Dim Seg As Integer, SegMax As Integer
+    Dim FontHeight As Long
+    Dim LineBackColor As Long
+
     n = 0
     Do
         n = n + 1
 
-        Dim NextX As Long
-        Dim FontHeight As Long
         FontHeight = Console(ActiveConsole, n).Height + yDiv
         printHeight = printHeight - FontHeight
 
-        NextX = ConsoleXSpacing
-        If Console(ActiveConsole, n).Center = True Then
-            NextX = (frmConsole.Width / 2) - (Console(ActiveConsole, n).TotalWidth / 2)
-        ElseIf Console(ActiveConsole, n).Right = True Then
-            NextX = (frmConsole.Width) - (Console(ActiveConsole, n).TotalWidth) - ConsoleXSpacing
-        ElseIf Console(ActiveConsole, n).PreSpace Then
-            NextX = ConsoleXSpacingIndent
+        LineBackColor = frmConsole.BackColor
+        '--------------- DRAW ------------------------------------------
+        '--------------- DRAW ------------------------------------------
+        If Console(ActiveConsole, n).DrawEnabled = True Then
+            tmpY2 = printHeight - (yDiv / 2)
+            Dim DrawColors() As Long
+            DrawColors = Console(ActiveConsole, n).DrawColors
+
+            If LBound(DrawColors) = UBound(DrawColors) Then
+                LineBackColor = DrawColors(LBound(DrawColors))
+                'draw it all in one, much faster
+                frmConsole.Line _
+                (0, tmpY2)-(frmConsole.Width, (tmpY2 + FontHeight)), _
+                LineBackColor, BF
+            Else
+                For n2 = LBound(DrawColors) To UBound(DrawColors)
+                    frmConsole.Line _
+                    (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
+                    ((frmConsole.Width / DrawDividerWidth) * _
+                    (n2), _
+                    (tmpY2 + FontHeight)), _
+                    DrawColors(n2), BF
+                Next n2
+            End If
         End If
+        '--------------- DRAW ------------------------------------------
+        '--------------- DRAW ------------------------------------------
 
         SegMax = UBound(Console(ActiveConsole, n).Segments)
         For Seg = 0 To SegMax
@@ -283,77 +317,38 @@ Public Sub Print_Console()
             frmConsole.FontItalic = SegVal.FontItalic
             frmConsole.FontUnderline = SegVal.FontUnderline
             frmConsole.FontStrikethru = SegVal.FontStrikethru
-    
             frmConsole.FontSize = SegVal.FontSize
-            
             frmConsole.FontName = SegVal.FontName
             frmConsole.ForeColor = SegVal.FontColor
-
-            frmConsole.CurrentY = printHeight
-
-            Dim LineBackColor As Long
-            LineBackColor = frmConsole.BackColor
-    
-            If Seg = 0 Then
-                '--------------- DRAW ------------------------------------------
-                '--------------- DRAW ------------------------------------------
-                If Console(ActiveConsole, n).DrawEnabled = True Then
-                    tmpY2 = printHeight - (yDiv / 2)
-                    Dim DrawColors() As Long
-                    DrawColors = Console(ActiveConsole, n).DrawColors
-
-                    If LBound(DrawColors) = UBound(DrawColors) Then
-                        LineBackColor = DrawColors(LBound(DrawColors))
-                        'draw it all in one, much faster
-                        frmConsole.Line _
-                        (0, tmpY2)-(frmConsole.Width, (tmpY2 + FontHeight)), _
-                        LineBackColor, BF
-                    Else
-                        For n2 = LBound(DrawColors) To UBound(DrawColors)
-                            frmConsole.Line _
-                            (((frmConsole.Width / DrawDividerWidth) * (n2 - 1)), tmpY2)- _
-                            ((frmConsole.Width / DrawDividerWidth) * _
-                            (n2), _
-                            (tmpY2 + FontHeight)), _
-                            DrawColors(n2), BF
-                        Next n2
-                    End If
-
-                    frmConsole.CurrentY = printHeight
-                End If
-                '--------------- DRAW ------------------------------------------
-                '--------------- DRAW ------------------------------------------
-            End If
-            tmpS = SegVal.Caption
-
-            frmConsole.CurrentX = NextX
-            NextX = NextX + SegVal.TotalWidth
 
             HideLine = False
             If Not DisableFlashing Then
                 If SegVal.Flash Then HideLine = Flash: UsedFlash = True
-                If SegVal.FlashFast Then HideLine = FlashFast: UsedFlash = True
-                If SegVal.FlashSlow Then HideLine = FlashSlow: UsedFlash = True
+                ElseIf SegVal.FlashFast Then HideLine = FlashFast: UsedFlash = True
+                ElseIf SegVal.FlashSlow Then HideLine = FlashSlow: UsedFlash = True
             End If
 
             frmConsole.CurrentY = printHeight + SegVal.VPos
 
-            If Seg = SegMax And n = 1 And CurrentPromptVisible(ActiveConsole) And Not frmConsole.ChatBox.Visible Then
-                frmConsole.txtPromptInput.top = frmConsole.CurrentY
-                frmConsole.txtPromptInput.Left = NextX
-                frmConsole.txtPromptInput.Height = frmConsole.lfont.Height
-                frmConsole.txtPromptInput.Width = frmConsole.Width - frmConsole.txtPromptInput.Left
-                frmConsole.txtPromptInput.FontSize = frmConsole.lfont.FontSize
-                frmConsole.txtPromptInput.FontName = frmConsole.lfont.FontName
-                frmConsole.txtPromptInput.ForeColor = SegVal.FontColor
-                frmConsole.txtPromptInput.BackColor = LineBackColor
-                frmConsole.txtPromptInput.Visible = True
-                frmConsole.txtPromptInput.SetFocus
-                ConsumedInputPrompt = True
+            If Seg = SegMax And n = 1 Then
+                If CurrentPromptVisible(ActiveConsole) And Not frmConsole.ChatBox.Visible Then
+                    frmConsole.txtPromptInput.top = frmConsole.CurrentY
+                    frmConsole.txtPromptInput.Left = SegVal.HPos + SegVal.TotalWidth
+                    frmConsole.txtPromptInput.Height = SegVal.Height
+                    frmConsole.txtPromptInput.Width = frmConsole.Width - frmConsole.txtPromptInput.Left
+                    frmConsole.txtPromptInput.FontSize = SegVal.FontSize
+                    frmConsole.txtPromptInput.FontName = SegVal.FontName
+                    frmConsole.txtPromptInput.ForeColor = SegVal.FontColor
+                    frmConsole.txtPromptInput.BackColor = LineBackColor
+                    frmConsole.txtPromptInput.Visible = True
+                    frmConsole.txtPromptInput.SetFocus
+                    ConsumedInputPrompt = True
+                End If
             End If
 
             If Not HideLine Then
-                frmConsole.Print tmpS
+                frmConsole.CurrentX = SegVal.HPos
+                frmConsole.Print SegVal.Caption
             End If
         Next
     Loop Until printHeight < 0 Or n >= 299

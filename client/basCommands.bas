@@ -596,7 +596,6 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
     Dim yIndex As Integer, n As Integer
     yIndex = (YPos * -1)
 
-    Console(ConsoleID, yIndex).DrawMode = mode
     ReDim Console(ConsoleID, yIndex).DrawColors(1 To DrawDividerWidth)
 
     Select Case mode
@@ -734,7 +733,9 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
 
     Case "solid":
         ReDim Console(ConsoleID, yIndex).DrawColors(0 To 0)
+
         Console(ConsoleID, yIndex).DrawEnabled = True
+
         Console(ConsoleID, yIndex).DrawColors(0) = RGB(R, G, B)
 
     End Select
