@@ -830,33 +830,3 @@ End Function
 Public Function SayError(s As String, ByVal ConsoleID As Integer)
     SayRaw ConsoleID, "Error - " & s & " {{orange}}"
 End Function
-
-Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer, Optional ByVal RGBVal As Long = -1)
-    ConsolePaused(ConsoleID) = True
-
-    Dim propSpace As String
-
-    Dim strDefault As Boolean
-    strDefault = False
-
-    If Not Has_Property_Space(s) Then
-        propSpace = "lblue 10 noprespace"
-    Else
-        propSpace = Get_Property_Space(s)
-    End If
-    s = Kill_Property_Space(s)
-
-    If Trim(s) = "" Then
-        s = "Press any key to continue..."
-        strDefault = True
-    End If
-
-    s = "{{" & propSpace & "}}" & s
-    SayRaw ConsoleID, s
-    If RGBVal >= 0 Then
-        DrawSimple ConsoleID, -1, RGBVal
-    End If
-    Do
-        DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
-    Loop Until ConsolePaused(ConsoleID) = False
-End Sub

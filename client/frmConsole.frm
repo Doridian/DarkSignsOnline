@@ -673,11 +673,6 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
     End If
     If GetAsciiWaiting(ActiveConsole) = -1 Then Exit Sub
 
-    If ConsolePaused(ActiveConsole) = True Then
-        ConsolePaused(ActiveConsole) = False
-        Exit Sub
-    End If
-
     If ChatBox.Visible = True Then
         If KeyCode = vbKeyDown Then
             If curMsg > 0 Then
@@ -829,7 +824,6 @@ Private Sub Form_Load()
     
     yDiv = 60
     Authorized = False
-    ConsolePaused(ActiveConsole) = False
     WaitingForInput(1) = False: WaitingForInput(2) = False: WaitingForInput(3) = False: WaitingForInput(4) = False
 
     SetConsoleActive 1

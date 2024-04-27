@@ -10,8 +10,6 @@ Public ConsoleScrollInt(1 To 4) As Integer
 
 Public scrConsoleContext(1 To 4) As clsScriptFunctions
 
-Public ConsolePaused(1 To 4) As Boolean
-
 Public ConsoleWaitingOnRemote(1 To 4) As Boolean
 
 Private Base64 As New clsBase64

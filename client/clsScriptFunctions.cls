@@ -1113,8 +1113,25 @@ Public Function PAUSE(Optional ByVal Prompt As String = "", Optional ByVal RGBVa
         Exit Function
     End If
 
-    PauseConsole Prompt, PrivConsoleID, RGBVal
-    Yield
+    Dim propSpace As String
+    If Not Has_Property_Space(Prompt) Then
+        propSpace = "lblue 10 noprespace"
+    Else
+        propSpace = Get_Property_Space(Prompt)
+    End If
+    Prompt = Kill_Property_Space(Prompt)
+
+    If Trim(Prompt) = "" Then
+        Prompt = "Press any key to continue..."
+    End If
+
+    Prompt = "{{" & propSpace & "}}" & Prompt
+    Say Prompt
+    If RGBVal >= 0 Then
+        Draw -1, RGBVal
+    End If
+
+    GetKey
 End Function
 
 Public Function LOGIN(Optional ByVal Silent As Boolean = False)
