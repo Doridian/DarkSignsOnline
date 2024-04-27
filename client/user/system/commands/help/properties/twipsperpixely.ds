@@ -1,0 +1,5 @@
+Option Explicit
+Say "{{green 12}}Property: TwipsPerPixelY[Long]"
+Say "{{lgreen 12}}Example read: SomeVar = TwipsPerPixelY"
+Say "{{yellow}}Access level: Read-Only"
+Say "{{lred}}READ restriction: Must be loaded with: DLOpen ""termlib"""
