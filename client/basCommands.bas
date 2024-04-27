@@ -121,9 +121,13 @@ Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As Stri
         Exit Function
     End If
 
+    If LCase(Right(Command, 3)) <> ".ds" Then
+        Command = Command & ".ds"
+    End If
+
     Dim CLIPaths() As String
     ReDim CLIPaths(0 To 1)
-    CLIPaths(0) = "./"
+    CLIPaths(0) = "."
     CLIPaths(UBound(CLIPaths)) = "/system/commands"
 
     Dim X As Long
@@ -137,12 +141,6 @@ Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As Stri
 
         If basGeneral.FileExists(ResolveCommand) Then
             Exit Function
-        End If
-        If LCase(Right(ResolveCommand, 3)) <> ".ds" Then
-            ResolveCommand = ResolveCommand & ".ds"
-            If basGeneral.FileExists(ResolveCommand) Then
-                Exit Function
-            End If
         End If
 SkipThisPath:
     Next
