@@ -933,6 +933,10 @@ Public Function ConsoleWidth() As Long
     ConsoleWidth = frmConsole.Width - (ConsoleXSpacing * 2)
 End Function
 
+Public Function PreSpaceWidth() As Long
+    PreSpaceWidth = basConsole.PreSpaceWidth
+End Function
+
 Public Function FormatKB(ToConvert As Long) As String
     FormatKB = basGeneral.FormatKB(ToConvert)
 End Function

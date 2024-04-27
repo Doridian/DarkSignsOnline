@@ -76,7 +76,7 @@ Public DisableFlashing As Boolean
 Public Const DrawDividerWidth = 24
 Public Const Max_Font_Size = 144
 Public Const ConsoleXSpacing = 360
-Public Const ConsoleXSpacingIndent = 960
+Public Const PreSpaceWidth = 600
 
 Public ConsoleLastRenderFlash As Boolean
 
@@ -123,7 +123,7 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
         If X = 0 Then
             W = ConsoleXSpacing
             If CLine.PreSpace Then
-                W = ConsoleXSpacingIndent
+                W = W + PreSpaceWidth
             End If
 
             If CLine.Center Then
