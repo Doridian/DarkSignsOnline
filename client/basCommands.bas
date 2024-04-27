@@ -581,29 +581,29 @@ End Function
 
 ' -y r g b mode
 '  SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE
-
-Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String, ByVal ConsoleID As Integer)
-    Dim sColor As String
-    Dim sMode As String
-    
-    Dim R As Long, G As Long, B As Long
-    Dim RB As Long, GB As Long, BB As Long
-    RGBSplit RGBVal, R, G, B
-
+Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal Mode As String, ByVal ConsoleID As Integer)
     If YPos >= 0 Then
         Exit Sub
     End If
 
+    Dim R As Long, G As Long, B As Long
+    Dim RB As Long, GB As Long, BB As Long
+    RGBSplit RGBVal, R, G, B
+
+    Mode = i(Mode)
+
     Dim yIndex As Integer, n As Integer
     yIndex = (YPos * -1)
 
-    ReDim Console(ConsoleID, yIndex).Draw(1 To DrawDividerWidth)
-    For n = 1 To DrawDividerWidth
-        Console(ConsoleID, yIndex).Draw(n).HPos = (frmConsole.Width / DrawDividerWidth) * (n - 1)
-        Console(ConsoleID, yIndex).Draw(n).Transparent = False
-    Next
+    If Mode <> "solid" And Mode <> "custom" Then
+        ReDim Console(ConsoleID, yIndex).DRAW(1 To DrawDividerWidth)
+        For n = 1 To DrawDividerWidth
+            Console(ConsoleID, yIndex).DRAW(n).HPos = (frmConsole.Width / DrawDividerWidth) * (n - 1)
+            Console(ConsoleID, yIndex).DRAW(n).Transparent = False
+        Next
+    End If
 
-    Select Case mode
+    Select Case Mode
     Case "fadecenter":
         RB = R
         GB = G
@@ -617,7 +617,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
             If G < 1 Then G = 0
             If B < 1 Then B = 0
 
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
         Next n
         
         R = RB
@@ -632,7 +632,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
             If G < 1 Then G = 0
             If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
         Next n
 
     Case "fadeinverse":
@@ -648,7 +648,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
             If G < 1 Then G = 0
             If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
         Next n
         
         R = RB
@@ -663,7 +663,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
             If G < 1 Then G = 0
             If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
         Next n
 
     Case "fadein":
@@ -675,7 +675,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
             If G < 1 Then G = 0
             If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
         Next n
 
     Case "fadeout":
@@ -687,7 +687,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
             If G < 1 Then G = 0
             If B < 1 Then B = 0
         
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
         Next n
 
     Case "flow":
@@ -698,7 +698,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
             If R < 1 Then R = 0
             If G < 1 Then G = 0
             If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
         Next n
         For n = (((DrawDividerWidth / 4) * 1) + 1) To (((DrawDividerWidth / 4) * 2))
             R = R + 5
@@ -707,7 +707,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
             If R < 1 Then R = 0
             If G < 1 Then G = 0
             If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
         Next n
         For n = (((DrawDividerWidth / 4) * 2) + 1) To (((DrawDividerWidth / 4) * 3))
             R = R - 5
@@ -716,7 +716,7 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
             If R < 1 Then R = 0
             If G < 1 Then G = 0
             If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
         Next n
         For n = (((DrawDividerWidth / 4) * 3) + 1) To (((DrawDividerWidth / 4) * 4))
             R = R + 5
@@ -725,14 +725,14 @@ Public Sub DrawItUp(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Stri
             If R < 1 Then R = 0
             If G < 1 Then G = 0
             If B < 1 Then B = 0
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, B)
+            Console(ConsoleID, yIndex).DRAW(n).Color = RGB(R, G, B)
         Next n
 
     Case "solid":
-        ReDim Console(ConsoleID, yIndex).Draw(1 To 1)
-        Console(ConsoleID, yIndex).Draw(1).Color = RGB(R, G, B)
-        Console(ConsoleID, yIndex).Draw(1).HPos = 0
-        Console(ConsoleID, yIndex).Draw(1).Transparent = False
+        ReDim Console(ConsoleID, yIndex).DRAW(1 To 1)
+        Console(ConsoleID, yIndex).DRAW(1).Color = RGB(R, G, B)
+        Console(ConsoleID, yIndex).DRAW(1).HPos = 0
+        Console(ConsoleID, yIndex).DRAW(1).Transparent = False
 
     End Select
 End Sub
