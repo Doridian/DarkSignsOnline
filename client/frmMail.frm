@@ -66,6 +66,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Option Explicit
+
 Private Function keyExists(k As String) As Boolean
     Dim n As Long
     For n = 0 To inbox.ListItems.Count Step 1
@@ -77,7 +79,6 @@ Private Function keyExists(k As String) As Boolean
     Next n
     keyExists = False
 End Function
-
 
 Public Sub reloadInbox()
     inbox.ListItems.Clear
@@ -128,6 +129,7 @@ Private Sub btnRefresh_Click()
     
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbCrLf)
+    Dim n As Long, SubResults() As String
     For n = UBound(AllResults) To 0 Step -1
         SubResults = Split(AllResults(n), ":--:")
         'Mid(inbox.SelectedItem.key, 3)
@@ -147,7 +149,7 @@ NoEntries:
         last = "0"
     End If
     
-    RunPage "dsmail.php?action=inbox&returnwith=7001&last=" & EncodeURLParameter(last), ConsoleID
+    RunPage "dsmail.php?action=inbox&returnwith=7001&last=" & EncodeURLParameter(last)
 End Sub
 
 Private Sub Form_Resize()
@@ -194,7 +196,7 @@ Private Sub inbox_DblClick()
     Dim SelectedIndex As Long
     SelectedIndex = 0
     On Error Resume Next
-    SelectedIndex = inbox.SelectedItem.index
+    SelectedIndex = inbox.SelectedItem.Index
     On Error GoTo 0
 
     If SelectedIndex <= 0 Then
@@ -205,9 +207,9 @@ Private Sub inbox_DblClick()
     frmDSOMailRead.msgSubject.Text = inbox.ListItems(SelectedIndex).ListSubItems(1).Text
     frmDSOMailRead.msgBody.Text = "ERROR LOADING MESSAGE BODY"
     
-    inbox.ListItems(inbox.SelectedItem.index).Bold = False
-    inbox.ListItems(inbox.SelectedItem.index).ListSubItems(1).Bold = False
-    inbox.ListItems(inbox.SelectedItem.index).ListSubItems(2).Bold = False
+    inbox.ListItems(inbox.SelectedItem.Index).Bold = False
+    inbox.ListItems(inbox.SelectedItem.Index).ListSubItems(1).Bold = False
+    inbox.ListItems(inbox.SelectedItem.Index).ListSubItems(2).Bold = False
 
     Dim tmpFile As String
     tmpFile = ""
@@ -249,6 +251,7 @@ Private Sub markAsRead(k As String)
 
     Dim AllResults() As String
     AllResults = Split(tmpFile, vbCrLf)
+    Dim n As Long, SubResults() As String
     For n = UBound(AllResults) To 0 Step -1
         SubResults = Split(AllResults(n), ":--:")
         'Mid(inbox.SelectedItem.key, 3)
@@ -271,7 +274,7 @@ Private Sub inbox_ColumnClick(ByVal ColumnHeader As LvwColumnHeader)
     With inbox '// change to the name of the list view
         Static iLast As Long, iCur As Long
         .Sorted = True
-        iCur = ColumnHeader.index - 1
+        iCur = ColumnHeader.Index - 1
         If iCur = iLast Then .SortOrder = IIf(.SortOrder = 1, 0, 1)
         .SortKey = iCur
         iLast = iCur

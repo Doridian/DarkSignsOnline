@@ -17,7 +17,6 @@ Public Url As String
 Public Method As String
 Public UserName As String
 Public Password As String
-Public ConsoleID As Integer
 Public IsCustomDownload As Long
 Public PostData As String
 
@@ -54,7 +53,7 @@ End Function
 Private Sub SetDoneForever()
     If Not ResponseSent Then
         If IsCustomDownload > 0 Then
-            basWorld.Process "[error]", 666, Url, ConsoleID, IsCustomDownload
+            basWorld.Process "[error]", 666, Url, IsCustomDownload
         End If
         ResponseSent = True
     End If
@@ -136,7 +135,7 @@ Private Sub HttpRequest_OnResponseFinished()
         End If
     End If
 
-    basWorld.Process HttpRequest.ResponseText, HttpRequest.Status, Url, ConsoleID, IsCustomDownload
+    basWorld.Process HttpRequest.ResponseText, HttpRequest.Status, Url, IsCustomDownload
     ResponseSent = True
     SetDoneForever
 End Sub

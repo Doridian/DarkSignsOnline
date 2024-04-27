@@ -64,26 +64,21 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Option Explicit
+
 Private Sub btnSend_Click()
-   'frmDSOMailSend
-   
    Dim toSend As String
 
-   
    toSend = "action=send&returnwith=7002&to=" & EncodeURLParameter(Me.msgTo) & _
         "&subject=" & EncodeURLParameter(Me.msgSubject) & _
         "&message=" & EncodeURLParameter(Me.msgBody.Text)
 
-   RunPage "dsmail.php", ConsoleID, True, toSend
-   
+   RunPage "dsmail.php", True, toSend
+
    DisableAll
-  'RunPage "domain_filesystem.php", ConsoleID, True, sPostData, 0
-    
    
    btnSend.Caption = "Sending..."
    Me.Enabled = False
-   
-   'MsgBox "Sending mail"
 End Sub
 
 Public Sub DisableAll()
@@ -114,9 +109,4 @@ Private Sub Form_Resize()
     Me.btnSend.Left = Me.Width - 1590
     Me.btnSend.Top = Me.Height - 945
     Me.msgBody.Height = Me.Height - 1890
-    'MsgBox Me.Width
-    'MsgBox frmDSOMailSend.Width
-    'MsgBox (Me.Height - Me.msgBody.Height)
-    
-
 End Sub

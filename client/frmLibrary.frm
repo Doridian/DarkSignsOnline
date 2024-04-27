@@ -616,8 +616,9 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Dim ScriptCategories(1 To 25) As String
+Option Explicit
 
+Dim ScriptCategories(1 To 25) As String
 
 Sub DownloadOne()
     Dim sID As String
@@ -629,7 +630,7 @@ Sub DownloadOne()
         Exit Sub
     End If
     lStatus.Caption = "Downloading to /downloads/" & Trim(LV.SelectedItem.ListSubItems(5).Text) & "..."
-    RunPage "file_database.php?returnwith=4304&getfile=" & EncodeURLParameter(sID), 5, False, "", False
+    RunPage "file_database.php?returnwith=4304&getfile=" & EncodeURLParameter(sID), False, "", False
 End Sub
 
 
@@ -686,7 +687,7 @@ Sub UploadIt()
     lStatus.Caption = "Sending data..."
 
 
-    RunPage "file_database.php", 5, True, PostData, False
+    RunPage "file_database.php", True, PostData, False
 End Sub
 
 Private Sub cDownload_Click()
@@ -756,7 +757,7 @@ Private Sub Command8_Click()
     lStatus.Caption = "Removing..."
     
 
-    RunPage "file_database.php?returnwith=4303&removenow=" & EncodeURLParameter(sID), 5, False, "", False
+    RunPage "file_database.php?returnwith=4303&removenow=" & EncodeURLParameter(sID), False, "", False
     
 End Sub
 
@@ -864,15 +865,15 @@ End Sub
 
 Private Sub Form_Resize()
     LV.Width = Me.Width - LV.Left - 360
-    LV.Height = Me.Height - LV.top - 1200
+    LV.Height = Me.Height - LV.Top - 1200
     
-    UploadBox.Move LV.Left, LV.top, LV.Width, LV.Height
-    RemoveBox.Move LV.Left, LV.top, LV.Width, LV.Height
-    ShareBox.Move LV.Left, LV.top, LV.Width, LV.Height
+    UploadBox.Move LV.Left, LV.Top, LV.Width, LV.Height
+    RemoveBox.Move LV.Left, LV.Top, LV.Width, LV.Height
+    ShareBox.Move LV.Left, LV.Top, LV.Width, LV.Height
     
     TS.Width = ShareBox.Width - TS.Left - 360
-    TS.Height = ShareBox.Height - TS.top - 960
-    tsc.Move TS.Left, TS.top + TS.Height + 120
+    TS.Height = ShareBox.Height - TS.Top - 960
+    tsc.Move TS.Left, TS.Top + TS.Height + 120
     
     txtDescription.Width = UploadBox.Width - 720
     uplist.Width = txtDescription.Width
@@ -884,12 +885,12 @@ Private Sub Form_Resize()
     
 
     lStatus.Width = Me.Width
-    lStatus.Move Me.LV.Left, LV.top + LV.Height + 240
+    lStatus.Move Me.LV.Left, LV.Top + LV.Height + 240
     
     Picture1.BackColor = UploadBox.BackColor
     Picture2.BackColor = UploadBox.BackColor
     
-    cDownload.Move Me.Width - cDownload.Width - 240, LV.top + LV.Height + 120
+    cDownload.Move Me.Width - cDownload.Width - 240, LV.Top + LV.Height + 120
     
 End Sub
 
@@ -902,7 +903,7 @@ Sub UpdateResults()
 
     lStatus.Caption = "Updating..."
 
-    RunPage "file_database.php?returnwith=4301&getcategory=" & EncodeURLParameter(sCategory), 5, False, "", False
+    RunPage "file_database.php?returnwith=4301&getcategory=" & EncodeURLParameter(sCategory), False, "", False
 End Sub
 
 
@@ -911,7 +912,7 @@ Sub LoadScriptsToRemove()
     On Error GoTo zxc
     
     List2.Clear
-    RunPage "file_database.php?returnwith=4302&getforremoval=a", 5, False, "", False
+    RunPage "file_database.php?returnwith=4302&getforremoval=a", False, "", False
     
     
     Exit Sub
@@ -959,7 +960,7 @@ Sub LoadList3()
     TS.Text = "Loading..."
     tsl.Caption = ss & "..."
     
-    RunPage "textspace.php?download=" & EncodeURLParameter(Trim(Mid(ss, InStr(ss, " "), 99))), ActiveConsole, False, "", False
+    RunPage "textspace.php?download=" & EncodeURLParameter(Trim(Mid(ss, InStr(ss, " "), 99))), False, "", False
     
 End Sub
 
@@ -967,7 +968,7 @@ Private Sub LV_ColumnClick(ByVal ColumnHeader As LvwColumnHeader)
     With LV '// change to the name of the list view
         Static iLast As Long, iCur As Long
         .Sorted = True
-        iCur = ColumnHeader.index - 1
+        iCur = ColumnHeader.Index - 1
         If iCur = iLast Then .SortOrder = IIf(.SortOrder = 1, 0, 1)
         .SortKey = iCur
         iLast = iCur
@@ -993,5 +994,5 @@ Private Sub tsc_Click()
     
     Dim PostData As String
     PostData = "upload=" & EncodeURLParameter(Trim(Mid(ss, InStr(ss, " "), 99))) & "&textdata=" & EncodeURLParameter(TS.Text)
-    RunPage "textspace.php", ActiveConsole, True, PostData, False
+    RunPage "textspace.php", True, PostData, False
 End Sub

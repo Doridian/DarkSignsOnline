@@ -26,7 +26,6 @@ Private Const URL_ESCAPE_PERCENT As Long = &H1000&
 Private Type ProcessQueueEntry
     Data As String
     DataSource As String
-    ConsoleID As Integer
     IsCustomDownload As Long
     Code As Integer
 End Type
@@ -39,13 +38,10 @@ Public Sub LoadBasicFunctions(SControl As ScriptControl)
 
 End Sub
 
-Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Long, Optional NoAuth As Boolean) As clsHttpRequestor
+Public Function RunPage(ByVal sUrl As String, Optional UsePost As Boolean, Optional PostData As String, Optional IsCustomDownload As Long, Optional NoAuth As Boolean) As clsHttpRequestor
     If Not NoAuth And InStr(i(sUrl), "auth.php") = 0 And Not Authorized Then
-        SayRaw ConsoleID, "You must be logged in to do that!{{36 center orange impact nobold}}"
-        SayRaw ConsoleID, "Set your USERNAME and PASSWORD, then type LOGIN.{{24 center white impact nobold}}"
-
         If IsCustomDownload > 0 Then
-            basWorld.Process "Not logged in", 401, sUrl, ConsoleID, IsCustomDownload
+            basWorld.Process "Not logged in", 401, sUrl, IsCustomDownload
         End If
         Exit Function
     End If
@@ -71,7 +67,6 @@ Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Option
 
     Requestor.Rearm
 
-    Requestor.ConsoleID = ConsoleID
     Requestor.IsCustomDownload = IsCustomDownload
 
     If IsCustomDownload <= 0 Then
@@ -85,7 +80,7 @@ Public Function RunPage(ByVal sUrl As String, ByVal ConsoleID As Integer, Option
         Requestor.Password = myPassword
     End If
     
-    Requestor.url = sUrl
+    Requestor.Url = sUrl
 
     If UsePost = True Then
         Requestor.Method = "POST"
@@ -131,11 +126,11 @@ Public Sub SayCOMM(s As String)
     For n = 1 To UBound(Comms)
         tmpY = tmpY - 210
         
-        frmConsole.lComm(n).top = tmpY
-        frmConsole.lCommTime(n).top = tmpY
+        frmConsole.lComm(n).Top = tmpY
+        frmConsole.lCommTime(n).Top = tmpY
         
         frmConsole.lComm(1).Caption = Comms(1)
-        frmConsole.lCommTime(1).Caption = Format(time, "h:mm AMPM")
+        frmConsole.lCommTime(1).Caption = Format(Time, "h:mm AMPM")
 
         If tmpY < 0 Then
             frmConsole.lCommTime(n).Visible = False
@@ -151,12 +146,11 @@ AllDone:
     frmConsole.CommLowerBorder.Move 0, frmConsole.Comm.Height - frmConsole.CommLowerBorder.Height, frmConsole.Comm.Width
 End Sub
 
-Public Sub Process(ByVal s As String, ByVal Code As Integer, sSource As String, ByVal ConsoleID As Integer, ByVal IsCustomDownload As Long)
+Public Sub Process(ByVal s As String, ByVal Code As Integer, sSource As String, ByVal IsCustomDownload As Long)
     Dim NewEntry As ProcessQueueEntry
     NewEntry.Data = s
     NewEntry.Code = Code
     NewEntry.DataSource = sSource
-    NewEntry.ConsoleID = ConsoleID
     NewEntry.IsCustomDownload = IsCustomDownload
 
     Dim X As Integer
@@ -198,18 +192,16 @@ Public Sub OnLoginFailure()
 End Sub
 
 
-Public Sub ProcessQueueEntryRun(ByVal index As Integer)
+Public Sub ProcessQueueEntryRun(ByVal Index As Integer)
     Dim s As String
     Dim sSource As String
-    Dim ConsoleID As Integer
     Dim IsCustomDownload As Long
     Dim Code As Integer
 
-    s = ProcessQueue(index).Data
-    Code = ProcessQueue(index).Code
-    sSource = ProcessQueue(index).DataSource
-    ConsoleID = ProcessQueue(index).ConsoleID
-    IsCustomDownload = ProcessQueue(index).IsCustomDownload
+    s = ProcessQueue(Index).Data
+    Code = ProcessQueue(Index).Code
+    sSource = ProcessQueue(Index).DataSource
+    IsCustomDownload = ProcessQueue(Index).IsCustomDownload
     
 
     If IsCustomDownload > 0 Then
@@ -238,7 +230,7 @@ Public Sub ProcessQueueEntryRun(ByVal index As Integer)
             ' Ignore this entirely
 
         Case "0001" 'it's the user list
-            LoadUserList s, ConsoleID
+            LoadUserList s
 
         Case "0002" ' saycomm
             SayCOMM s
@@ -338,7 +330,7 @@ Public Sub SayRawMultiLines(ByVal s As String, ConsoleID As Integer)
 End Sub
 
 
-Public Sub LoadUserList(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub LoadUserList(ByVal s As String)
     s = Replace(s, "::", ":")
     s = Replace(s, vbCr, ""): s = Replace(s, vbLf, "")
     
@@ -391,24 +383,24 @@ End Sub
 
 
 Public Function EncodeURLParameter( _
-    ByVal url As String, _
+    ByVal Url As String, _
     Optional ByVal SpacePlus As Boolean = True) As String
     
     Dim cchEscaped As Long
     Dim HResult As Long
     
-    If url = "" Then
+    If Url = "" Then
         EncodeURLParameter = ""
         Exit Function
     End If
 
-    cchEscaped = Len(url)
+    cchEscaped = Len(Url)
     
     EncodeURLParameter = String$(cchEscaped, 0)
-    HResult = UrlEscape(StrPtr(url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+    HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
     If HResult = E_POINTER Then
         EncodeURLParameter = String$(cchEscaped, 0)
-        HResult = UrlEscape(StrPtr(url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
+        HResult = UrlEscape(StrPtr(Url), StrPtr(EncodeURLParameter), cchEscaped, URL_ESCAPE_PERCENT)
     End If
 
     If HResult <> S_OK Then
