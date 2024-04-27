@@ -89,7 +89,6 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
     Dim X As Integer, W As Long, H As Long
 
     CLine.Height = 0
-    CLine.TotalWidth = 0
     For X = 0 To UBound(CLine.Segments)
         H = Font_Height(CLine.Segments(X))
         CLine.Segments(X).Height = H
@@ -97,10 +96,12 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
             CLine.Height = H
         End If
 
-        W = Font_Width(CLine.Segments(X))
-        CLine.TotalWidth = CLine.TotalWidth + W
-        CLine.Segments(X).TotalWidth = W
+        CLine.Segments(X).TotalWidth = Font_Width(CLine.Segments(X))
     Next
+
+    Dim MinX As Long, MaxX As Long
+    MinX = frmConsole.Width + 1
+    MaxX = -1
 
     Dim HeightDiff As Long, VPos As Long, MaxW As Long
     For X = 0 To UBound(CLine.Segments)
@@ -125,24 +126,41 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
             If CLine.PreSpace Then
                 W = W + PreSpaceWidth
             End If
-
-            If CLine.Center Then
-                W = (frmConsole.Width - CLine.TotalWidth) / 2
-            ElseIf CLine.Right Then
-                W = frmConsole.Width - (CLine.TotalWidth + W)
-            End If
         Else
             W = CLine.Segments(X - 1).HPos + CLine.Segments(X - 1).TotalWidth
         End If
 
-        MaxW = frmConsole.Width - (ConsoleXSpacing + CLine.Segments(X).TotalWidth)
         W = W + CLine.Segments(X).HOffset
-        If W < ConsoleXSpacing Then
-            W = ConsoleXSpacing
-        ElseIf W > MaxW Then
-            W = MaxW
-        End If
         CLine.Segments(X).HPos = W
+        If W < MinX Then
+            MinX = W
+        End If
+        W = W + CLine.Segments(X).TotalWidth
+        If W > MaxX Then
+            MaxX = W
+        End If
+    Next
+
+    If MaxX < MinX Then
+        CLine.TotalWidth = 0
+        Exit Sub
+    End If
+    CLine.TotalWidth = MaxX - MinX
+
+    If CLine.Center Then
+        W = (frmConsole.Width - CLine.TotalWidth) / 2
+    ElseIf CLine.Right Then
+        W = ConsoleXSpacing
+        If CLine.PreSpace Then
+            W = W + PreSpaceWidth
+        End If
+        W = frmConsole.Width - (CLine.TotalWidth + W)
+    Else
+        Exit Sub
+    End If
+
+    For X = 0 To UBound(CLine.Segments)
+        CLine.Segments(X).HPos = CLine.Segments(X).HPos + W
     Next
 End Sub
 
