@@ -531,11 +531,7 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
     Dim Seg As Integer, CLineSeg As ConsoleLineSegment
 
     For Seg = 0 To UBound(sSplit)
-        If Seg > 0 Then
-            CLineSeg = CLine.Segments(Seg - 1)
-        Else
-            CLineSeg = Console_Line_Defaults.Segments(0)
-        End If
+        CLineSeg = Console_Line_Defaults.Segments(0)
 
         s = sSplit(Seg)
 
