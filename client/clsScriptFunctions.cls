@@ -821,12 +821,12 @@ Public Function BoolToString(ByVal param As String) As Boolean
     End If
 End Function
 
-Public Function Draw(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String)
+Public Function Draw(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String, Optional ByVal Segments As Long = 0)
     If PrivDisableOutput Then
         Yield
         Exit Function
     End If
-    DrawSimple YPos, RGBVal, mode, PrivConsoleID
+    DrawSimple YPos, RGBVal, mode, PrivConsoleID, Segments
     Yield
 End Function
 

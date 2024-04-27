@@ -9,6 +9,8 @@ Private scrConsoleDScript(1 To 4) As Boolean
 
 Private CLIPaths() As String
 
+Public Const Pi As Double = 3.14159265358979
+
 Public Sub InitBasCommands()
     Dim X As Integer
     For X = 1 To 4
@@ -557,6 +559,7 @@ CommandForNext:
         scrConsole(AutoVariablesFrom).AddCode "Option Explicit : VarType " & ArgVal
         On Error GoTo 0
 
+
         If EvalFaulted Then
             GoTo ArgIsNotVar
         End If
@@ -595,18 +598,67 @@ EvalErrorHandler:
     Resume Next
 End Function
 
-Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef b As Long)
-    b = lColor And &HFF ' mask the low byte
+Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef B As Long)
+    B = lColor And &HFF ' mask the low byte
     G = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
     R = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
 End Function
 
+Public Function SinLerp(ByVal FromNum As Long, ByVal ToNum As Long, ByVal ValNum As Long) As Double
+    If ToNum < FromNum Then
+        ValNum = FromNum - ValNum
+    Else
+        ValNum = ValNum - FromNum
+    End If
+
+    ToNum = Math.Abs(ToNum - FromNum)
+
+    If ValNum <= 0 Then
+        SinLerp = 0
+        Exit Function
+    ElseIf ValNum >= ToNum Then
+        SinLerp = 1
+        Exit Function
+    End If
+
+    Dim SAng As Double
+    SAng = ValNum
+    SAng = SAng / ToNum
+
+    SAng = SAng * Pi * 0.5
+
+    SinLerp = Math.Sin(SAng)
+    ' The edges here should always be caught above for performance
+    Debug.Assert SinLerp > 0# And SinLerp < 1#
+End Function
+
+Private Sub LerpDrawSegments(ByVal ConsoleID As Integer, ByVal R As Integer, ByVal G As Integer, ByVal B As Integer, ByVal yIndex As Long, ByVal LoopA As Long, ByVal LoopB As Long)
+    Dim StepVal As Long, n As Long, Mult As Double
+    If LoopA > LoopB Then
+        StepVal = -1
+    Else
+        StepVal = 1
+    End If
+    For n = LoopA To LoopB Step StepVal
+        Mult = SinLerp(LoopA, LoopB, n)
+        Console(ConsoleID, yIndex).Draw(n).Color = RGB(R * Mult, G * Mult, B * Mult)
+    Next n
+End Sub
+
 ' -y r g b mode
 '  SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE
-Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String, ByVal ConsoleID As Integer)
+Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String, ByVal ConsoleID As Integer, Optional ByVal Segments As Long = 0)
     If YPos >= 0 Then
         Exit Sub
     End If
+
+    If Segments <= 0 Then
+        Segments = DrawDividerWidth
+    End If
+    
+    Dim SegmentsHalf As Long, SegmentsQuarter As Long
+    SegmentsQuarter = Segments \ 4
+    SegmentsHalf = Segments \ 2
 
     mode = i(mode)
 
@@ -620,145 +672,40 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
         Exit Sub
     End If
 
-    Dim R As Long, G As Long, b As Long
-    Dim RB As Long, GB As Long, BB As Long
-    RGBSplit RGBVal, R, G, b
+    Dim R As Long, G As Long, B As Long
+    RGBSplit RGBVal, R, G, B
 
-    ReDim Console(ConsoleID, yIndex).Draw(1 To (DrawDividerWidth + 1))
-    For n = 1 To DrawDividerWidth
-        Console(ConsoleID, yIndex).Draw(n).HPos = (frmConsole.Width / DrawDividerWidth) * (n - 1)
+    ReDim Console(ConsoleID, yIndex).Draw(1 To (Segments + 1))
+    For n = 1 To Segments
+        Console(ConsoleID, yIndex).Draw(n).HPos = (frmConsole.Width \ Segments) * (n - 1)
     Next
-    Console(ConsoleID, yIndex).Draw(DrawDividerWidth + 1).Color = -1
-    Console(ConsoleID, yIndex).Draw(DrawDividerWidth + 1).HPos = frmConsole.Width
+    Console(ConsoleID, yIndex).Draw(Segments + 1).Color = -1
+    Console(ConsoleID, yIndex).Draw(Segments + 1).HPos = frmConsole.Width
 
     Select Case mode
     Case "fadecenter":
-        RB = R
-        GB = G
-        BB = b
-
-        For n = ((DrawDividerWidth / 2) + 1) To DrawDividerWidth
-            R = R - (DrawDividerWidth / 2)
-            G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
-            If R < 1 Then R = 0
-            If G < 1 Then G = 0
-            If b < 1 Then b = 0
-
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, b)
-        Next n
-        
-        R = RB
-        G = GB
-        b = BB
-
-        For n = (DrawDividerWidth / 2) To 1 Step -1
-            R = R - (DrawDividerWidth / 2)
-            G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
-            If R < 1 Then R = 0
-            If G < 1 Then G = 0
-            If b < 1 Then b = 0
-        
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, b)
-        Next n
+        LerpDrawSegments ConsoleID, R, G, B, yIndex, (SegmentsHalf + 1), Segments
+        LerpDrawSegments ConsoleID, R, G, B, yIndex, SegmentsHalf, 1
 
     Case "fadeinverse":
-        RB = R
-        GB = G
-        BB = b
-
-        For n = DrawDividerWidth To ((DrawDividerWidth / 2) + 1) Step -1
-            R = R - (DrawDividerWidth / 2)
-            G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
-            If R < 1 Then R = 0
-            If G < 1 Then G = 0
-            If b < 1 Then b = 0
-        
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, b)
-        Next n
-        
-        R = RB
-        G = GB
-        b = BB
-
-        For n = 1 To (DrawDividerWidth / 2)
-            R = R - (DrawDividerWidth / 2)
-            G = G - (DrawDividerWidth / 2)
-            b = b - (DrawDividerWidth / 2)
-            If R < 1 Then R = 0
-            If G < 1 Then G = 0
-            If b < 1 Then b = 0
-        
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, b)
-        Next n
+        LerpDrawSegments ConsoleID, R, G, B, yIndex, Segments, (SegmentsHalf + 1)
+        LerpDrawSegments ConsoleID, R, G, B, yIndex, 1, SegmentsHalf
 
     Case "fadein":
-        For n = 1 To DrawDividerWidth
-            R = R - 4
-            G = G - 4
-            b = b - 4
-            If R < 1 Then R = 0
-            If G < 1 Then G = 0
-            If b < 1 Then b = 0
-        
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, b)
-        Next n
+        LerpDrawSegments ConsoleID, R, G, B, yIndex, 1, Segments
 
     Case "fadeout":
-        For n = DrawDividerWidth To 1 Step -1
-            R = R - 4
-            G = G - 4
-            b = b - 4
-            If R < 1 Then R = 0
-            If G < 1 Then G = 0
-            If b < 1 Then b = 0
-        
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, b)
-        Next n
+        LerpDrawSegments ConsoleID, R, G, B, yIndex, Segments, 1
 
     Case "flow":
-        For n = 1 To ((DrawDividerWidth / 4) * 1)
-            R = R - 5
-            G = G - 5
-            b = b - 5
-            If R < 1 Then R = 0
-            If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, b)
-        Next n
-        For n = (((DrawDividerWidth / 4) * 1) + 1) To (((DrawDividerWidth / 4) * 2))
-            R = R + 5
-            G = G + 5
-            b = b + 5
-            If R < 1 Then R = 0
-            If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, b)
-        Next n
-        For n = (((DrawDividerWidth / 4) * 2) + 1) To (((DrawDividerWidth / 4) * 3))
-            R = R - 5
-            G = G - 5
-            b = b - 5
-            If R < 1 Then R = 0
-            If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, b)
-        Next n
-        For n = (((DrawDividerWidth / 4) * 3) + 1) To (((DrawDividerWidth / 4) * 4))
-            R = R + 5
-            G = G + 5
-            b = b + 5
-            If R < 1 Then R = 0
-            If G < 1 Then G = 0
-            If b < 1 Then b = 0
-            Console(ConsoleID, yIndex).Draw(n).Color = RGB(R, G, b)
-        Next n
+        LerpDrawSegments ConsoleID, R, G, B, yIndex, 1, SegmentsQuarter
+        LerpDrawSegments ConsoleID, R, G, B, yIndex, (SegmentsQuarter * 2), (SegmentsQuarter + 1)
+        LerpDrawSegments ConsoleID, R, G, B, yIndex, ((SegmentsQuarter * 2) + 1), (SegmentsQuarter * 3)
+        LerpDrawSegments ConsoleID, R, G, B, yIndex, (SegmentsQuarter * 4), ((SegmentsQuarter * 3) + 1)
 
     Case "solid":
         ReDim Console(ConsoleID, yIndex).Draw(1 To 1)
-        Console(ConsoleID, yIndex).Draw(1).Color = RGB(R, G, b)
+        Console(ConsoleID, yIndex).Draw(1).Color = RGB(R, G, B)
         Console(ConsoleID, yIndex).Draw(1).HPos = 0
 
     End Select
