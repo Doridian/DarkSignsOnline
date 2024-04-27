@@ -225,7 +225,7 @@ Public Function ReadLine(ByVal Prompt As String, Optional ByVal RGBVal As Long =
 
     New_Console_Line PrivConsoleID
     If RGBVal >= 0 Then
-        DRAW -1, RGBVal, "solid"
+        Draw -1, RGBVal, "solid"
     End If
 
     While WaitingForInput(ConsoleID)
@@ -821,7 +821,7 @@ Public Function BoolToString(ByVal param As String) As Boolean
     End If
 End Function
 
-Public Function DRAW(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String)
+Public Function Draw(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String)
     If PrivDisableOutput Then
         Yield
         Exit Function
@@ -830,15 +830,62 @@ Public Function DRAW(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As Str
     Yield
 End Function
 
-Public Function DrawCustom(ByVal YPos As Long, ParamArray XArr() As Variant)
+Public Function DrawCustom(ByVal YPos As Long, ParamArray WidthsAndColors() As Variant)
     If PrivDisableOutput Then
         Yield
         Exit Function
     End If
 
+    Dim XArr() As Variant, X As Long
+    ReDim XArr(LBound(WidthsAndColors) To UBound(WidthsAndColors))
+    For X = LBound(XArr) To UBound(XArr)
+        XArr(X) = WidthsAndColors(X)
+    Next
+    DrawCustomA YPos, XArr
 End Function
 
-Public Function DrawEven(ByVal YPos As Long, ParamArray XArr() As Variant)
+Public Function DrawCustomA(ByVal YPos As Long, WidthsAndColors As Variant)
+    If PrivDisableOutput Then
+        Yield
+        Exit Function
+    End If
+
+    Dim X As Long, Y As Long, Z As Long
+    Dim DrawSegs() As ConsoleDrawSegment
+    X = (UBound(WidthsAndColors) - LBound(WidthsAndColors)) + 1
+    ReDim DrawSegs(1 To ((X \ 2) + 1))
+    Y = LBound(WidthsAndColors)
+    Z = 0
+    For X = 1 To (UBound(DrawSegs) - 1)
+        DrawSegs(X).Transparent = False
+        DrawSegs(X).HPos = Z
+        DrawSegs(X).Color = WidthsAndColors(Y + 1)
+        Z = Z + WidthsAndColors(Y)
+        Y = Y + 2
+    Next
+    DrawSegs(UBound(DrawSegs)).Transparent = True
+    DrawSegs(UBound(DrawSegs)).HPos = Z
+
+    Console(PrivConsoleID, YPos * -1).Draw = DrawSegs
+    Yield
+    frmConsole.QueueConsoleRender
+End Function
+
+Public Function DrawEven(ByVal YPos As Long, ParamArray Colors() As Variant)
+    If PrivDisableOutput Then
+        Yield
+        Exit Function
+    End If
+
+    Dim XArr() As Variant, X As Long
+    ReDim XArr(LBound(Colors) To UBound(Colors))
+    For X = LBound(XArr) To UBound(XArr)
+        XArr(X) = Colors(X)
+    Next
+    DrawEvenA YPos, XArr
+End Function
+
+Public Function DrawEvenA(ByVal YPos As Long, Colors As Variant)
     If PrivDisableOutput Then
         Yield
         Exit Function
@@ -850,14 +897,16 @@ Public Function DrawEven(ByVal YPos As Long, ParamArray XArr() As Variant)
 
     Dim X As Long, PieceWidth As Long
     Dim DrawSegs() As ConsoleDrawSegment
-    ReDim DrawSegs(LBound(XArr) To UBound(XArr))
-    PieceWidth = frmConsole.Width / (1 + (UBound(XArr) - LBound(XArr)))
-    For X = LBound(DrawSegs) To UBound(DrawSegs)
+    ReDim DrawSegs(LBound(Colors) To (UBound(Colors) + 1))
+    PieceWidth = frmConsole.Width / (1 + (UBound(Colors) - LBound(Colors)))
+    For X = LBound(Colors) To UBound(Colors)
         DrawSegs(X).Transparent = False
         DrawSegs(X).HPos = PieceWidth * (X - LBound(DrawSegs))
-        DrawSegs(X).Color = XArr(X)
+        DrawSegs(X).Color = Colors(X)
     Next
-    Console(PrivConsoleID, YPos * -1).DRAW = DrawSegs
+    DrawSegs(UBound(DrawSegs)).Transparent = True
+    DrawSegs(UBound(DrawSegs)).HPos = frmConsole.Width
+    Console(PrivConsoleID, YPos * -1).Draw = DrawSegs
     Yield
     frmConsole.QueueConsoleRender
 End Function

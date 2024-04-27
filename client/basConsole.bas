@@ -58,7 +58,7 @@ Public Type ConsoleLine
     Center As Boolean
     Right As Boolean
 
-    DRAW() As ConsoleDrawSegment
+    Draw() As ConsoleDrawSegment
 End Type
 
 Public CurrentPromptInput(1 To 4) As String
@@ -241,7 +241,6 @@ Public Sub Print_Console()
     On Error Resume Next
 
     Dim n As Integer, n2 As Integer, tmpY2 As Long, printHeight As Long
-    n = 0
 
     frmConsole.Cls
 
@@ -291,24 +290,27 @@ Public Sub Print_Console()
         LineBackColor = frmConsole.BackColor
         '--------------- DRAW ------------------------------------------
         '--------------- DRAW ------------------------------------------
-        If LBound(Console(ActiveConsole, n).DRAW) >= 0 Then
+        If LBound(Console(ActiveConsole, n).Draw) >= 0 Then
             tmpY2 = printHeight - (yDiv / 2)
-            DrawSegs = Console(ActiveConsole, n).DRAW
+            DrawSegs = Console(ActiveConsole, n).Draw
 
             Pos1 = 0
             For n2 = LBound(DrawSegs) To UBound(DrawSegs)
                 Pos1 = DrawSegs(n2).HPos
-                If n2 = UBound(DrawSegs) Then
-                    Pos2 = frmConsole.Width
-                Else
-                    Pos2 = DrawSegs(n2 + 1).HPos
+                If Pos1 > frmConsole.Width Then
+                    GoTo DrawSegmentOffScreen
                 End If
-                frmConsole.Line _
-                (Pos1, tmpY2)- _
-                (Pos2, (tmpY2 + FontHeight)), _
-                DrawSegs(n2).Color, BF
+                If Not DrawSegs(n2).Transparent Then
+                    LineBackColor = DrawSegs(n2).Color
+                    If n2 = UBound(DrawSegs) Then
+                        Pos2 = frmConsole.Width
+                    Else
+                        Pos2 = DrawSegs(n2 + 1).HPos
+                    End If
+                    frmConsole.Line (Pos1, tmpY2)-(Pos2, (tmpY2 + FontHeight)), LineBackColor, BF
+                End If
             Next
-            LineBackColor = DrawSegs(UBound(DrawSegs)).Color
+DrawSegmentOffScreen:
         End If
         '--------------- DRAW ------------------------------------------
         '--------------- DRAW ------------------------------------------
@@ -376,7 +378,7 @@ Public Function Console_Line_Defaults() As ConsoleLine
     Console_Line_Defaults.Segments(0).Flash = False
     Console_Line_Defaults.Segments(0).FlashFast = False
     Console_Line_Defaults.Segments(0).FlashSlow = False
-    ReDim Console_Line_Defaults.DRAW(-1 To -1)
+    ReDim Console_Line_Defaults.Draw(-1 To -1)
     Console_Line_Defaults.Center = False
     Console_Line_Defaults.Right = False
 End Function
