@@ -49,9 +49,9 @@ Begin VB.Form frmConsole
    Begin DSO.ctxWinsock sockIRC 
       Left            =   960
       Top             =   7080
-      _extentx        =   847
-      _extenty        =   847
-      protocol        =   2
+      _ExtentX        =   847
+      _ExtentY        =   847
+      Protocol        =   2
    End
    Begin VB.PictureBox ChatBox 
       Appearance      =   0  'Flat

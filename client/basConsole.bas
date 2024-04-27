@@ -60,6 +60,7 @@ Public Type ConsoleLine
     Draw() As ConsoleDrawSegment
 End Type
 
+Public ConsoleInitialized(1 To 4) As Boolean
 Public CurrentPromptInput(1 To 4) As String
 Public CurrentPromptSelStart(1 To 4) As Long
 Public CurrentPromptSelLength(1 To 4) As Long
@@ -233,11 +234,17 @@ Public Sub Reset_Console(ByVal ConsoleID As Integer)
     CurrentPromptSelStart(ConsoleID) = 0
     CurrentPromptSelLength(ConsoleID) = 0
     RefreshCommandLinePrompt ConsoleID
+
+    ConsoleInitialized(ConsoleID) = True
+
     frmConsole.QueueConsoleRender
 End Sub
 
 Public Sub Print_Console()
-    On Error Resume Next
+    If Not ConsoleInitialized(ActiveConsole) Then
+        Exit Sub
+    End If
+    'On Error Resume Next
 
     Dim n As Integer, n2 As Integer, tmpY2 As Long, printHeight As Long
 
@@ -381,6 +388,7 @@ Public Function Console_Line_Defaults() As ConsoleLine
     Console_Line_Defaults.Segments(0).FlashFast = False
     Console_Line_Defaults.Segments(0).FlashSlow = False
     ReDim Console_Line_Defaults.Draw(-1 To -1)
+    Console_Line_Defaults.Draw(-1).Color = -1
     Console_Line_Defaults.Center = False
     Console_Line_Defaults.Right = False
 End Function
