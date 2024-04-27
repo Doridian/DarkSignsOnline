@@ -7,6 +7,8 @@ Private scrConsole(1 To 4) As ScriptControl
 Private scrConsoleContext(1 To 4) As clsScriptFunctions
 Private scrConsoleDScript(1 To 4) As Boolean
 
+Private CLIPaths() As String
+
 Public Sub InitBasCommands()
     Dim X As Integer
     For X = 1 To 4
@@ -26,6 +28,10 @@ Public Sub InitBasCommands()
 
         scrConsoleDScript(X) = True
     Next
+
+    ReDim CLIPaths(0 To 1)
+    CLIPaths(0) = "."
+    CLIPaths(UBound(CLIPaths)) = "/system/commands"
 End Sub
 
 Public Function SafePath(ByVal Path As String, Optional ByVal Prefix As String = "") As String
@@ -124,11 +130,6 @@ Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As Stri
     If LCase(Right(Command, 3)) <> ".ds" Then
         Command = Command & ".ds"
     End If
-
-    Dim CLIPaths() As String
-    ReDim CLIPaths(0 To 1)
-    CLIPaths(0) = "."
-    CLIPaths(UBound(CLIPaths)) = "/system/commands"
 
     Dim X As Long
 
