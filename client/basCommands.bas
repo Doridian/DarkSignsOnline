@@ -668,7 +668,9 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
     If mode = "solid" Then
         ReDim Console(ConsoleID, yIndex).Draw(1 To 1)
         Console(ConsoleID, yIndex).Draw(1).Color = RGBVal
-        Console(ConsoleID, yIndex).Draw(1).HPos = 0
+        Console(ConsoleID, yIndex).Draw(1).HPosPixels = 0
+        CalculateConsoleDraw Console(ConsoleID, yIndex)
+        frmConsole.QueueConsoleRender
         Exit Sub
     End If
 
@@ -677,39 +679,33 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
 
     ReDim Console(ConsoleID, yIndex).Draw(1 To (Segments + 1))
     For n = 1 To Segments
-        Console(ConsoleID, yIndex).Draw(n).HPos = (frmConsole.Width \ Segments) * (n - 1)
+        Console(ConsoleID, yIndex).Draw(n).HPosPixels = ((frmConsole.Width \ Segments) * (n - 1)) / Screen.TwipsPerPixelX
     Next
     Console(ConsoleID, yIndex).Draw(Segments + 1).Color = -1
-    Console(ConsoleID, yIndex).Draw(Segments + 1).HPos = frmConsole.Width
+    Console(ConsoleID, yIndex).Draw(Segments + 1).HPosPixels = frmConsole.Width / Screen.TwipsPerPixelX
 
     Select Case mode
-    Case "fadecenter":
-        LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsHalf + 1), Segments
-        LerpDrawSegments ConsoleID, R, G, b, yIndex, SegmentsHalf, 1
-
-    Case "fadeinverse":
-        LerpDrawSegments ConsoleID, R, G, b, yIndex, Segments, (SegmentsHalf + 1)
-        LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, SegmentsHalf
-
-    Case "fadein":
-        LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, Segments
-
-    Case "fadeout":
-        LerpDrawSegments ConsoleID, R, G, b, yIndex, Segments, 1
-
-    Case "flow":
-        LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, SegmentsQuarter
-        LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsQuarter * 2), (SegmentsQuarter + 1)
-        LerpDrawSegments ConsoleID, R, G, b, yIndex, ((SegmentsQuarter * 2) + 1), (SegmentsQuarter * 3)
-        LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsQuarter * 4), ((SegmentsQuarter * 3) + 1)
-
-    Case "solid":
-        ReDim Console(ConsoleID, yIndex).Draw(1 To 1)
-        Console(ConsoleID, yIndex).Draw(1).Color = RGB(R, G, b)
-        Console(ConsoleID, yIndex).Draw(1).HPos = 0
-
+        Case "fadecenter":
+            LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsHalf + 1), Segments
+            LerpDrawSegments ConsoleID, R, G, b, yIndex, SegmentsHalf, 1
+        Case "fadeinverse":
+            LerpDrawSegments ConsoleID, R, G, b, yIndex, Segments, (SegmentsHalf + 1)
+            LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, SegmentsHalf
+        Case "fadein":
+            LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, Segments
+        Case "fadeout":
+            LerpDrawSegments ConsoleID, R, G, b, yIndex, Segments, 1
+        Case "flow":
+            LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, SegmentsQuarter
+            LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsQuarter * 2), (SegmentsQuarter + 1)
+            LerpDrawSegments ConsoleID, R, G, b, yIndex, ((SegmentsQuarter * 2) + 1), (SegmentsQuarter * 3)
+            LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsQuarter * 4), ((SegmentsQuarter * 3) + 1)
+        Case Else:
+            ReDim Console(ConsoleID, yIndex).Draw(-1 To -1)
+            Err.Raise vbObjectError + 1393, , "Invalid draw mode: " & mode
     End Select
 
+    CalculateConsoleDraw Console(ConsoleID, yIndex)
     frmConsole.QueueConsoleRender
 End Sub
 

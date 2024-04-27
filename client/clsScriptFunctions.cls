@@ -864,7 +864,7 @@ Public Function DrawCustomA(ByVal YPos As Long, WidthsAndColors As Variant)
     Y = LBound(WidthsAndColors)
     z = 0
     For X = 1 To (UBound(DrawSegs) - 1)
-        DrawSegs(X).HPos = z
+        DrawSegs(X).HPosPixels = z
         DrawSegs(X).Color = WidthsAndColors(Y + 1)
         If WidthsAndColors(Y) > 1 Then
             z = z + WidthsAndColors(Y)
@@ -874,9 +874,10 @@ Public Function DrawCustomA(ByVal YPos As Long, WidthsAndColors As Variant)
         Y = Y + 2
     Next
     DrawSegs(UBound(DrawSegs)).Color = -1
-    DrawSegs(UBound(DrawSegs)).HPos = z
+    DrawSegs(UBound(DrawSegs)).HPosPixels = z
 
     Console(PrivConsoleID, YPos * -1).Draw = DrawSegs
+    CalculateConsoleDraw Console(PrivConsoleID, YPos * -1)
     Yield
     frmConsole.QueueConsoleRender
 End Function
@@ -908,14 +909,15 @@ Public Function DrawEvenA(ByVal YPos As Long, Colors As Variant)
     Dim X As Long, PieceWidth As Long
     Dim DrawSegs() As ConsoleDrawSegment
     ReDim DrawSegs(LBound(Colors) To (UBound(Colors) + 1))
-    PieceWidth = frmConsole.Width / (1 + (UBound(Colors) - LBound(Colors)))
+    PieceWidth = (frmConsole.Width / (1 + (UBound(Colors) - LBound(Colors)))) / Screen.TwipsPerPixelX
     For X = LBound(Colors) To UBound(Colors)
-        DrawSegs(X).HPos = PieceWidth * (X - LBound(DrawSegs))
+        DrawSegs(X).HPosPixels = PieceWidth * (X - LBound(DrawSegs))
         DrawSegs(X).Color = Colors(X)
     Next
     DrawSegs(UBound(DrawSegs)).Color = -1
-    DrawSegs(UBound(DrawSegs)).HPos = frmConsole.Width
+    DrawSegs(UBound(DrawSegs)).HPosPixels = frmConsole.Width / Screen.TwipsPerPixelX
     Console(PrivConsoleID, YPos * -1).Draw = DrawSegs
+    CalculateConsoleDraw Console(PrivConsoleID, YPos * -1)
     Yield
     frmConsole.QueueConsoleRender
 End Function
@@ -927,21 +929,21 @@ End Sub
 Public Function TextWidth(ByVal Text As String) As Long
     Dim DummyCLine As ConsoleLine
     DummyCLine = Parse_Console_Line(DummyCLine, Text)
-    TextWidth = DummyCLine.TotalWidth
+    TextWidth = DummyCLine.TotalWidth / Screen.TwipsPerPixelX
 End Function
 
 Public Function TextHeight(ByVal Text As String) As Long
     Dim DummyCLine As ConsoleLine
     DummyCLine = Parse_Console_Line(DummyCLine, Text)
-    TextHeight = DummyCLine.Height
+    TextHeight = DummyCLine.Height / Screen.TwipsPerPixelY
 End Function
 
 Public Function ConsoleWidth() As Long
-    ConsoleWidth = frmConsole.Width - (ConsoleXSpacing * 2)
+    ConsoleWidth = (frmConsole.Width - (ConsoleXSpacing * 2)) / Screen.TwipsPerPixelX
 End Function
 
 Public Function PreSpaceWidth() As Long
-    PreSpaceWidth = basConsole.PreSpaceWidth
+    PreSpaceWidth = basConsole.PreSpaceWidth / Screen.TwipsPerPixelX
 End Function
 
 Public Function FormatKB(ToConvert As Long) As String

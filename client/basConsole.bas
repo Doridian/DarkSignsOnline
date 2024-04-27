@@ -45,6 +45,8 @@ End Type
 Public Type ConsoleDrawSegment
     Color As Long
     HPos As Long
+
+    HPosPixels As Long
 End Type
 
 Public Type ConsoleLine
@@ -85,6 +87,18 @@ Public Property Get ConsoleInvisibleChar() As String
     ConsoleInvisibleChar = Chr(7)
 End Property
 
+Public Sub CalculateConsoleDraw(ByRef CLine As ConsoleLine)
+    Dim X As Integer, W As Long, H As Long
+
+    If UBound(CLine.Draw) < 0 Then
+        Exit Sub
+    End If
+
+    For X = LBound(CLine.Draw) To UBound(CLine.Draw)
+        CLine.Draw(X).HPos = CLine.Draw(X).HPosPixels * Screen.TwipsPerPixelX
+    Next
+End Sub
+
 Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
     Dim X As Integer, W As Long, H As Long
 
@@ -113,7 +127,7 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
         Else
             VPos = HeightDiff / 2
         End If
-        VPos = VPos + CLine.Segments(X).VOffset
+        VPos = VPos + (CLine.Segments(X).VOffset * Screen.TwipsPerPixelY)
         If VPos > HeightDiff Then
             VPos = HeightDiff
         ElseIf VPos < 0 Then
@@ -130,7 +144,7 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
             W = CLine.Segments(X - 1).HPos + CLine.Segments(X - 1).TotalWidth
         End If
 
-        W = W + CLine.Segments(X).HOffset
+        W = W + (CLine.Segments(X).HOffset * Screen.TwipsPerPixelX)
         CLine.Segments(X).HPos = W
         If W < MinX Then
             MinX = W
@@ -588,7 +602,7 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                     CLineSeg.Flash = False
                     CLineSeg.FlashFast = False
                 ElseIf Left(pCur, 5) = "hoff:" Then
-                    CLineSeg.HOffset = Mid(pSplit, 6)
+                    CLineSeg.HOffset = Mid(pCur, 6)
                 ' ==== VERTICAL ALIGNMENT ====
                 ElseIf pCur = "middle" Then
                     CLineSeg.AlignTop = False
@@ -600,7 +614,7 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                     CLineSeg.AlighBottom = True
                     CLineSeg.AlignTop = False
                 ElseIf Left(pCur, 5) = "voff:" Then
-                    CLineSeg.VOffset = Mid(pSplit, 6)
+                    CLineSeg.VOffset = Mid(pCur, 6)
                 ElseIf IsNumeric(pCur) Then
                     CLineSeg.FontSize = pCur
                     If CLineSeg.FontSize < 8 Then
