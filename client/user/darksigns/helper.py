@@ -2,8 +2,12 @@
 
 from dataclasses import dataclass, field
 from os.path import exists, join as path_join
-from os import mkdir, listdir
-from shutil import copy, rmtree
+from os import listdir, getenv
+
+DARKSIGNS_INSTALL_PATH = path_join(getenv("USERPROFILE"), "Applications/Dark Signs")
+
+DARKSIGNS_SOURCE = path_join(DARKSIGNS_INSTALL_PATH, "Data/Profiles/darksigns/Programs/uncompiled")
+DARKSIGNS_SERVERS = path_join(DARKSIGNS_INSTALL_PATH, "Data/Profiles/darksigns")
 
 all_ds_scripts: dict[str, "DSScript"] = {}
 @dataclass(kw_only=True, frozen=True, eq=True)
@@ -19,7 +23,7 @@ class DSScript:
         return all_ds_scripts[name]
 
     def has_ds(self) -> bool:
-        return exists(f"DS_scr/{self.name}.dsu")
+        return exists(path_join(DARKSIGNS_SOURCE, f"{self.name}.dsu"))
 
     def has_dso(self) -> bool:
         return exists(f"mission_scripts/{self.name}.ds")
@@ -33,7 +37,7 @@ class DSServer:
 
     @staticmethod
     def load(ip: str, host: str) -> "DSServer":
-        with open(f"DS_srv/{ip}.svf", "r") as f:
+        with open(path_join(DARKSIGNS_SERVERS, f"{ip}.svf"), "r") as f:
             svf_lines = f.readlines()
 
         ports: dict[int, str] = {}
@@ -63,10 +67,15 @@ class DSServer:
         for v in sorted(raw_trace.keys()):
             trace.append(raw_trace[v])
 
+        if ip == "23.23.1.91" and host == "zrio.org" and 45 not in ports:
+            print(f"Missing port 45 for zrio.org. Adding it in...")
+            print("WARNING: You might want to fix this! Your Dark Signs main mission is unplayable like this")
+            ports[45] = DSScript.get("xcapro")
+
         return DSServer(ip=ip, host=host, ports=ports, trace=trace)
  
 def load_servers() -> list[DSServer]:
-    with open("DS_srv/index.dsh", "r") as f:
+    with open(path_join(DARKSIGNS_SERVERS, "index.dsh"), "r") as f:
         lines = f.readlines()
     
     servers: list[DSServer] = []
@@ -95,6 +104,10 @@ servers = load_servers()
 
 # Call this function to check DS script conversion
 def dso_convert_check():
+    # darksoft_http.dsu is missing from the game, it is only present in compiled form
+    # You can grab the decompiled version from the following link:
+    # https://gist.github.com/Doridian/baeac1e3c80008115fd353c77f3de03b
+
     ds_ok = True
     for ds_script in all_ds_scripts.values():
         if not ds_script.has_ds():
@@ -102,21 +115,20 @@ def dso_convert_check():
             ds_ok = False
 
     if not ds_ok:
-        raise ValueError("DS scripts are missing")
+        raise ValueError(f"DS scripts are missing. Please put them in {DARKSIGNS_SOURCE}")
 
     print("DS scripts are OK")
 
-    try:
-        rmtree("DS_scr_todo")
-    except:
-        pass
-
-    mkdir("DS_scr_todo")
-
+    ds_ok = True
     for ds_script in all_ds_scripts.values():
         if not ds_script.has_dso():
             print("[WARNING] Missing DSO script conversion", ds_script.name)
-            copy(f"DS_scr/{ds_script.name}.dsu", f"DS_scr_todo/{ds_script.name}.dsu")
+            ds_ok = False
+
+    if not ds_ok:
+        raise ValueError("DSO scripts are missing")
+
+    print("DSO scripts are OK")
 
 # Call this function to generate a DScript to register all domains
 def dso_regdomains():
@@ -170,6 +182,7 @@ def dso_uploadscript():
         print(f"Run \"UPLOAD\", \"{host}\", {port}, \"/darksigns/dso_specific/{scr}\"")
         print(f"Say \"Uploaded {scr} to {host}:{port}\"")
 
+# Generate all traceroute files for traceroute.dsn
 def dso_upload_traceroutes():
     print("Dim sTrace")
     for server in servers:
@@ -180,6 +193,7 @@ def dso_upload_traceroutes():
             print(f"sTrace = sTrace & \"{trace}\" & vbCrLf")
         print(f"PrintVar RemoteWrite(\"traceroute.dsn\", \"{server.ip}.trace\", sTrace)")
 
+# Generate all ipscan files for ipscan.dsn
 def dso_upload_ipscans():
     print("Dim sScan")
     print(f"sScan = \"allowlist=fileserver\" & vbCrLf")
@@ -187,6 +201,7 @@ def dso_upload_ipscans():
         print(f"sScan = sScan & \"{server.ip}\" & vbCrLf")
     print(f"PrintVar RemoteWrite(\"ipscan.dsn\", \"ip.list\", sScan)")
 
+# Generate all portscan files for portscan.dsn
 def dso_upload_portscans():
     print("Dim sScan")
     for server in servers:
@@ -195,4 +210,4 @@ def dso_upload_portscans():
             print(f"sScan = sScan & \"{port}={dsc.name}\"  & vbCrLf")
         print(f"PrintVar RemoteWrite(\"portscan.dsn\", \"{server.ip}.ports\", sScan)")
 
-dso_uploadscript()
+dso_convert_check()
