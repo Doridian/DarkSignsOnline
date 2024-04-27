@@ -647,7 +647,7 @@ End Sub
 
 ' -y r g b mode
 '  SOLID, FLOW, FADEIN, FADEOUT, FADECENTER, FADEINVERSE
-Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As String, ByVal ConsoleID As Integer, Optional ByVal Segments As Long = 0)
+Public Sub DrawSimple(ByVal ConsoleID As Integer, ByVal YPos As Long, ByVal RGBVal As Long, Optional ByVal mode As String = "solid", Optional ByVal Segments As Long = 0)
     If YPos >= 0 Then
         Exit Sub
     End If
@@ -665,7 +665,7 @@ Public Sub DrawSimple(ByVal YPos As Long, ByVal RGBVal As Long, ByVal mode As St
     Dim yIndex As Integer, n As Integer
     yIndex = (YPos * -1)
 
-    If mode = "solid" Then
+    If mode = "solid" Or mode = "" Then
         ReDim Console(ConsoleID, yIndex).Draw(1 To 1)
         Console(ConsoleID, yIndex).Draw(1).Color = RGBVal
         Console(ConsoleID, yIndex).Draw(1).HPos = 0
@@ -854,7 +854,7 @@ Public Sub PauseConsole(ByVal s As String, ByVal ConsoleID As Integer, Optional 
     s = "{{" & propSpace & "}}" & s
     SayRaw ConsoleID, s
     If RGBVal >= 0 Then
-        DrawSimple -1, RGBVal, "solid", ConsoleID
+        DrawSimple ConsoleID, -1, RGBVal
     End If
     Do
         DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents: DoEvents
