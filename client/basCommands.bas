@@ -30,8 +30,8 @@ Public Sub InitBasCommands()
     Next
 
     ReDim CLIPaths(0 To 1)
-    CLIPaths(0) = "."
-    CLIPaths(UBound(CLIPaths)) = "/system/commands"
+    CLIPaths(0) = "/system/commands"
+    CLIPaths(1) = "."
 End Sub
 
 Public Function SafePath(ByVal Path As String, Optional ByVal Prefix As String = "") As String
