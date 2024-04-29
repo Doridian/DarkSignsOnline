@@ -1264,19 +1264,11 @@ Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFil
     Dim HttpResponse As clsHttpResponse
     Set HttpResponse = WaitFor_Internal(GetDomain(Domain))
     Domain = HttpResponse.Response
-    
-    Dim tempStrA As String
-    If Uncompiled Then
-        tempStrA = sFileData
-    Else
-        tempStrA = DSOCompileScript(sFileData, "dso://" & Domain & ":" & Port)
-        tempStrA = EncodeBase64Str(tempStrA)
-    End If
 
     Dim PostData As String
     PostData = "port=" & EncodeURLParameter(Port) & _
     "&d=" & EncodeURLParameter(Domain) & _
-    "&filedata=" & EncodeURLParameter(tempStrA)
+    "&filedata=" & EncodeURLParameter(sFileData)
 
     UploadStr = DoDownloadAPI("domain_upload.php", True, PostData, "")
 
