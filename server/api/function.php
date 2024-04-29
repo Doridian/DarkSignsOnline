@@ -4,6 +4,8 @@ require_once('function_base.php');
 
 header('Content-Type: text/plain');
 
+define('DSO_SCRIPT_CRYPTO_HEADER', "Option DSciptCompiled\r\n");
+
 function login_failure($code) {
 	header('WWW-Authenticate: Basic realm="DSO API"');
 	header('HTTP/1.0 401 Unauthorized');

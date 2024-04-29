@@ -27,7 +27,12 @@ $res = $stmt->get_result();
 $row = $res->fetch_assoc();
 if (!empty($row)) {
 	$script = $row['code'];
+
+	if (substr($script, 0, strlen(DSO_SCRIPT_CRYPTO_HEADER)) === DSO_SCRIPT_CRYPTO_HEADER) {
+		die_error("Cannot Download Compiled Script: " . strtoupper($d) . ":$port", 403);
+	}
+
 	die("$filename:$script");
 } else {
-	die("No Script Found: " . strtoupper($d) . ":$port");
+	die_error("No Script Found: " . strtoupper($d) . ":$port", 404);
 }
