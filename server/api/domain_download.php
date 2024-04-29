@@ -13,11 +13,15 @@ print_returnwith();
 
 $dInfo = getDomainInfo($d);
 if ($dInfo === false) {
-	die('Domain does not exist.');
+	die_error('Domain does not exist.', 404);
 }
 
-$stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain=? AND port=? AND owner=? AND ver=?');
-$stmt->bind_param('iiii', $dInfo['id'], $port, $uid, $ver);
+if ($user['id'] !== $dInfo['owner']) {
+	die_error('Restricted access.', 403);
+}
+
+$stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain=? AND port=? AND ver=?');
+$stmt->bind_param('iii', $dInfo['id'], $port, $ver);
 $stmt->execute();
 $res = $stmt->get_result();
 $row = $res->fetch_assoc();
