@@ -78,7 +78,6 @@ Private Declare Function BCryptFinishHash Lib "bcrypt" (ByVal hHash As LongPtr, 
 
 
 Private Const BCRYPT_ALG_HANDLE_HMAC_FLAG   As Long = 8
-Private Const BCRYPT_HASH_REUSABLE_FLAG  As Long = &H20
 Private Const BCRYPT_SHA256_ALGORITHM  As String = "SHA256"
 Private Const BCRYPT_SHA512_ALGORITHM  As String = "SHA512"
 
@@ -189,14 +188,14 @@ EH:
     Err.Raise vErr(0), vErr(1), vErr(2)
 End Function
 
-Public Function AesChunkedInit(Optional Key As Variant, Optional ByVal KeyLen As Long) As Boolean
+Public Function AesChunkedInit(Optional key As Variant, Optional ByVal KeyLen As Long) As Boolean
     Dim baEmpty()       As Byte
     Dim baKey()         As Byte
     
     pvCryptoAesCtrTerminate m_uChunkedCtx
     baEmpty = vbNullString
-    If IsArray(Key) Then
-        baKey = Key
+    If IsArray(key) Then
+        baKey = key
     End If
     If KeyLen <= 0 Then
         KeyLen = AES_KEYLEN
@@ -319,8 +318,8 @@ End Sub
 Private Function pvCryptoAesCtrCrypt( _
             uCtx As UcsCryptoContextType, _
             baData() As Byte, _
-            Optional ByVal Offset As Long, _
-            Optional ByVal Size As Long = -1, _
+            Optional ByVal offset As Long, _
+            Optional ByVal size As Long = -1, _
             Optional ByVal HashBefore As Boolean, _
             Optional ByVal HashAfter As Boolean) As Boolean
     Dim lIdx            As Long
@@ -329,26 +328,26 @@ Private Function pvCryptoAesCtrCrypt( _
     Dim HResult         As Long
     
     With uCtx
-        If Size < 0 Then
-            Size = pvArraySize(baData) - Offset
+        If size < 0 Then
+            size = pvArraySize(baData) - offset
         End If
         If HashBefore Then
-            HResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, Offset), Size, 0)
+            HResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, offset), size, 0)
             If HResult < 0 Then
                 GoTo QH
             End If
         End If
         '--- reuse .EncrData from prev call until next AES_BLOCK_SIZE boundary
-        For lIdx = Offset To Offset + Size - 1
+        For lIdx = offset To offset + size - 1
             If (.EncrPos And (AES_BLOCK_SIZE - 1)) = 0 Then
                 Exit For
             End If
             baData(lIdx) = baData(lIdx) Xor .EncrData(.EncrPos)
             .EncrPos = .EncrPos + 1
         Next
-        If lIdx < Offset + Size Then
+        If lIdx < offset + size Then
             '--- pad remaining input size to AES_BLOCK_SIZE
-            lPadSize = (Offset + Size - lIdx + AES_BLOCK_SIZE - 1) And -AES_BLOCK_SIZE
+            lPadSize = (offset + size - lIdx + AES_BLOCK_SIZE - 1) And -AES_BLOCK_SIZE
             If UBound(.EncrData) + 1 < lPadSize Then
                 ReDim .EncrData(0 To lPadSize - 1) As Byte
             End If
@@ -370,13 +369,13 @@ Private Function pvCryptoAesCtrCrypt( _
                 GoTo QH
             End If
             '--- XOR remaining input and leave anything extra in .EncrData for reuse
-            For .EncrPos = 0 To Offset + Size - lIdx - 1
+            For .EncrPos = 0 To offset + size - lIdx - 1
                 baData(lIdx) = baData(lIdx) Xor .EncrData(.EncrPos)
                 lIdx = lIdx + 1
             Next
         End If
         If HashAfter Then
-            HResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, Offset), Size, 0)
+            HResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, offset), size, 0)
             If HResult < 0 Then
                 GoTo QH
             End If
@@ -410,14 +409,14 @@ Private Function pvInc(lValue As Long) As Boolean
     End If
 End Function
 
-Private Property Get pvArrayPtr(baArray() As Byte, Optional ByVal Index As Long) As LongPtr
+Private Property Get pvArrayPtr(baArray() As Byte, Optional ByVal index As Long) As LongPtr
     Dim lPtr            As LongPtr
     
     '--- peek long at ArrPtr(baArray)
     Call CopyMemory(lPtr, ByVal ArrPtr(baArray), PTR_SIZE)
     If lPtr <> 0 Then
-        If 0 <= Index And Index <= UBound(baArray) - LBound(baArray) Then
-            pvArrayPtr = VarPtr(baArray(LBound(baArray) + Index))
+        If 0 <= index And index <= UBound(baArray) - LBound(baArray) Then
+            pvArrayPtr = VarPtr(baArray(LBound(baArray) + index))
         End If
     End If
 End Property
