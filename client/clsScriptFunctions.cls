@@ -186,9 +186,9 @@ End Sub
 
 Public Sub CleanupScriptTasks()
     If UBound(PendingCustomDownloads) > 0 Then
-        Dim X As Long
-        For X = 1 To UBound(PendingCustomDownloads)
-            DownloadAborted(X) = True
+        Dim x As Long
+        For x = 1 To UBound(PendingCustomDownloads)
+            DownloadAborted(x) = True
         Next
     End If
     ReDim PendingCustomDownloads(0 To 0)
@@ -326,10 +326,10 @@ Private Function HasPendingCustomDownload(ByVal ResIndex As Long) As Boolean
         Exit Function
     End If
 
-    Dim X As Long
+    Dim x As Long
     
-    For X = 1 To UBound(PendingCustomDownloads)
-        If PendingCustomDownloads(X) = ResIndex Then
+    For x = 1 To UBound(PendingCustomDownloads)
+        If PendingCustomDownloads(x) = ResIndex Then
             HasPendingCustomDownload = True
             Exit Function
         End If
@@ -344,14 +344,14 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
     Dim NewPendingCustomDownloads() As Long
     ReDim NewPendingCustomDownloads(1 To UBound(PendingCustomDownloads))
     
-    Dim X As Long
+    Dim x As Long
     Dim y As Long
     y = 0
 
     Dim MadeChanges As Boolean
 
-    For X = 1 To UBound(PendingCustomDownloads)
-        If PendingCustomDownloads(X) = ResIndex Then
+    For x = 1 To UBound(PendingCustomDownloads)
+        If PendingCustomDownloads(x) = ResIndex Then
             MadeChanges = True
         Else
             y = y + 1
@@ -364,8 +364,8 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
     End If
     
     ReDim PendingCustomDownloads(0 To y)
-    For X = 1 To y
-        PendingCustomDownloads(X) = NewPendingCustomDownloads(X)
+    For x = 1 To y
+        PendingCustomDownloads(x) = NewPendingCustomDownloads(x)
     Next
 End Sub
 
@@ -611,10 +611,10 @@ Public Function PrintVar(ParamArray param() As Variant)
         Exit Function
     End If
 
-    Dim X As Long
-    For X = LBound(param) To UBound(param)
-        PrintVarInt param(X), "", "ArgV(" & X & ") ", 0
-    Next X
+    Dim x As Long
+    For x = LBound(param) To UBound(param)
+        PrintVarInt param(x), "", "ArgV(" & x & ") ", 0
+    Next x
 End Function
 
 Public Function PrintVarSingleIfSet(param As Variant)
@@ -673,15 +673,15 @@ Private Sub PrintVarInt(param As Variant, ByVal Prefix As String, ByVal index As
 
     Yield
     If (VarType(param) And vbArray) = vbArray Then
-        Dim X As Long
+        Dim x As Long
         Dim XV As String
         Say MainPrefix & "{{yellow}}Array of element type " & TypeName & " from " & LBound(param) & " to " & UBound(param)
         Dim SubPrefix As String
         SubPrefix = "    " & Prefix
-        For X = LBound(param) To UBound(param)
+        For x = LBound(param) To UBound(param)
             Yield
-            PrintVarInt param(X), SubPrefix, "(" & X & ") ", Depth + 1
-        Next X
+            PrintVarInt param(x), SubPrefix, "(" & x & ") ", Depth + 1
+        Next x
     Else
         Dim StrParam As String
         StrParam = "" & param
@@ -713,18 +713,18 @@ Public Function LineUp()
 End Function
 
 Public Function Say(ParamArray Params() As Variant)
-    Dim X As Long
+    Dim x As Long
     Dim sStr As String
     Dim XV As String
-    For X = LBound(Params) To UBound(Params)
-        XV = "" & Params(X)
+    For x = LBound(Params) To UBound(Params)
+        XV = "" & Params(x)
         If XV <> "" Then
             If sStr <> "" Then
                 sStr = sStr & " "
             End If
             sStr = sStr & XV
         End If
-    Next X
+    Next x
 
     If PrivRedirectOutput Then
         If PrivOutput = "" Then
@@ -748,26 +748,26 @@ Public Function Say(ParamArray Params() As Variant)
 
     Dim ScriptOutSplit() As String
     ScriptOutSplit = Split(sStr, vbCrLf)
-    For X = LBound(ScriptOutSplit) To UBound(ScriptOutSplit)
+    For x = LBound(ScriptOutSplit) To UBound(ScriptOutSplit)
         Yield
-        basConsole.SayRaw PrivConsoleID, ScriptOutSplit(X)
+        basConsole.SayRaw PrivConsoleID, ScriptOutSplit(x)
         Yield
     Next
 End Function
 
 Public Function SayCOMM(ParamArray Params() As Variant)
-    Dim X As Long
+    Dim x As Long
     Dim sStr As String
     Dim XV As String
-    For X = LBound(Params) To UBound(Params)
-        XV = Params(X)
+    For x = LBound(Params) To UBound(Params)
+        XV = Params(x)
         If XV <> "" Then
             If sStr <> "" Then
                 sStr = sStr & " "
             End If
             sStr = sStr & XV
         End If
-    Next X
+    Next x
 
     Yield
     If sStr = "" Then
@@ -778,10 +778,10 @@ Public Function SayCOMM(ParamArray Params() As Variant)
 End Function
 
 Public Function Coalesce(ParamArray VarValues() As Variant) As Variant
-    Dim X As Long
+    Dim x As Long
     Dim VarValue As Variant
-    For X = LBound(VarValues) To UBound(VarValues)
-        VarValue = VarValues(X)
+    For x = LBound(VarValues) To UBound(VarValues)
+        VarValue = VarValues(x)
         If Not IsEmpty(VarValue) Then
             Coalesce = VarValue
             Exit Function
@@ -847,10 +847,10 @@ Public Function DrawCustom(ByVal YPos As Long, ParamArray WidthsAndColors() As V
         Exit Function
     End If
 
-    Dim XArr() As Variant, X As Long
+    Dim XArr() As Variant, x As Long
     ReDim XArr(LBound(WidthsAndColors) To UBound(WidthsAndColors))
-    For X = LBound(XArr) To UBound(XArr)
-        XArr(X) = WidthsAndColors(X)
+    For x = LBound(XArr) To UBound(XArr)
+        XArr(x) = WidthsAndColors(x)
     Next
     DrawCustomA YPos, XArr
 End Function
@@ -861,15 +861,15 @@ Public Function DrawCustomA(ByVal YPos As Long, WidthsAndColors As Variant)
         Exit Function
     End If
 
-    Dim X As Long, y As Long, z As Long
+    Dim x As Long, y As Long, z As Long
     Dim DrawSegs() As ConsoleDrawSegment
-    X = (UBound(WidthsAndColors) - LBound(WidthsAndColors)) + 1
-    ReDim DrawSegs(1 To ((X \ 2) + 1))
+    x = (UBound(WidthsAndColors) - LBound(WidthsAndColors)) + 1
+    ReDim DrawSegs(1 To ((x \ 2) + 1))
     y = LBound(WidthsAndColors)
     z = 0
-    For X = 1 To (UBound(DrawSegs) - 1)
-        DrawSegs(X).HPos = z
-        DrawSegs(X).Color = WidthsAndColors(y + 1)
+    For x = 1 To (UBound(DrawSegs) - 1)
+        DrawSegs(x).HPos = z
+        DrawSegs(x).Color = WidthsAndColors(y + 1)
         If WidthsAndColors(y) > 1 Then
             z = z + WidthsAndColors(y)
         Else
@@ -892,10 +892,10 @@ Public Function DrawEven(ByVal YPos As Long, ParamArray Colors() As Variant)
         Exit Function
     End If
 
-    Dim XArr() As Variant, X As Long
+    Dim XArr() As Variant, x As Long
     ReDim XArr(LBound(Colors) To UBound(Colors))
-    For X = LBound(XArr) To UBound(XArr)
-        XArr(X) = Colors(X)
+    For x = LBound(XArr) To UBound(XArr)
+        XArr(x) = Colors(x)
     Next
     DrawEvenA YPos, XArr
 End Function
@@ -910,13 +910,13 @@ Public Function DrawEvenA(ByVal YPos As Long, Colors As Variant)
         Exit Function
     End If
 
-    Dim X As Long, PieceWidth As Long
+    Dim x As Long, PieceWidth As Long
     Dim DrawSegs() As ConsoleDrawSegment
     ReDim DrawSegs(LBound(Colors) To (UBound(Colors) + 1))
     PieceWidth = (frmConsole.Width / (1 + (UBound(Colors) - LBound(Colors))))
-    For X = LBound(Colors) To UBound(Colors)
-        DrawSegs(X).HPos = PieceWidth * (X - LBound(DrawSegs))
-        DrawSegs(X).Color = Colors(X)
+    For x = LBound(Colors) To UBound(Colors)
+        DrawSegs(x).HPos = PieceWidth * (x - LBound(DrawSegs))
+        DrawSegs(x).Color = Colors(x)
     Next
     DrawSegs(UBound(DrawSegs)).Color = -1
     DrawSegs(UBound(DrawSegs)).HPos = frmConsole.Width
@@ -1256,7 +1256,7 @@ Public Function GetIP(ByVal Domain As String) As String
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFileData As String) As String
+Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFileData As String, Optional ByVal Uncompiled As Boolean = False) As String
     AssertLocalOnly
 
     Yield
@@ -1266,8 +1266,12 @@ Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFil
     Domain = HttpResponse.Response
     
     Dim tempStrA As String
-    tempStrA = DSOCompileScript(sFileData, "dso://" & Domain & ":" & Port)
-    tempStrA = EncodeBase64Str(tempStrA)
+    If Uncompiled Then
+        tempStrA = sFileData
+    Else
+        tempStrA = DSOCompileScript(sFileData, "dso://" & Domain & ":" & Port)
+        tempStrA = EncodeBase64Str(tempStrA)
+    End If
 
     Dim PostData As String
     PostData = "port=" & EncodeURLParameter(Port) & _
@@ -1588,14 +1592,14 @@ End Function
 Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Script As String, Optional XArr As Variant) As String
     AssertLocalOnly
 
-    Dim X As Long, ResolvedScript As String
+    Dim x As Long, ResolvedScript As String
     
     Dim SParamArr() As Variant
 
     If (VarType(XArr) And vbArray) = vbArray Then
         ReDim SParamArr(0 To UBound(XArr) + 1)
-        For X = 0 To UBound(XArr)
-            SParamArr(X + 1) = XArr(X)
+        For x = 0 To UBound(XArr)
+            SParamArr(x + 1) = XArr(x)
         Next
     Else
         ReDim SParamArr(0 To 0)
@@ -1629,11 +1633,11 @@ Public Function Capture(ParamArray XArr() As Variant) As String
         Exit Function
     End If
 
-    Dim X As Long
+    Dim x As Long
     Dim SParamArr() As Variant
     ReDim SParamArr(0 To UBound(XArr) - 1)
-    For X = 0 To UBound(SParamArr)
-        SParamArr(X) = XArr(X + 1)
+    For x = 0 To UBound(SParamArr)
+        SParamArr(x) = XArr(x + 1)
     Next
     Capture = CaptureA(Script, SParamArr)
 End Function
@@ -1693,11 +1697,11 @@ Public Function Run(ParamArray XArr() As Variant)
         Exit Function
     End If
 
-    Dim X As Long
+    Dim x As Long
     Dim SParamArr() As Variant
     ReDim SParamArr(0 To UBound(XArr) - 1)
-    For X = 0 To UBound(SParamArr)
-        SParamArr(X) = XArr(X + 1)
+    For x = 0 To UBound(SParamArr)
+        SParamArr(x) = XArr(x + 1)
     Next
     
     RunA Script, SParamArr
@@ -1723,14 +1727,14 @@ End Function
 
 ' VBTYPE: XArr=Variant()
 Private Function RawRunCaptureCodeA(ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal Code As String, Optional XArr As Variant) As String
-    Dim X As Long
+    Dim x As Long
     
     Dim SParamArr() As Variant
 
     If (VarType(XArr) And vbArray) = vbArray Then
         ReDim SParamArr(0 To UBound(XArr) + 1)
-        For X = 0 To UBound(XArr)
-            SParamArr(X + 1) = XArr(X)
+        For x = 0 To UBound(XArr)
+            SParamArr(x + 1) = XArr(x)
         Next
     Else
         ReDim SParamArr(0 To 0)
@@ -1759,11 +1763,11 @@ Public Function CaptureCode(ParamArray XArr() As Variant) As String
         Exit Function
     End If
 
-    Dim X As Long
+    Dim x As Long
     Dim SParamArr() As Variant
     ReDim SParamArr(0 To UBound(XArr) - 1)
-    For X = 0 To UBound(SParamArr)
-        SParamArr(X) = XArr(X + 1)
+    For x = 0 To UBound(SParamArr)
+        SParamArr(x) = XArr(x + 1)
     Next
     CaptureCode = CaptureCodeA(Script, SParamArr)
 End Function
@@ -1789,11 +1793,11 @@ Public Function RunCode(ParamArray XArr() As Variant)
         Exit Function
     End If
 
-    Dim X As Long
+    Dim x As Long
     Dim SParamArr() As Variant
     ReDim SParamArr(0 To UBound(XArr) - 1)
-    For X = 0 To UBound(SParamArr)
-        SParamArr(X) = XArr(X + 1)
+    For x = 0 To UBound(SParamArr)
+        SParamArr(x) = XArr(x + 1)
     Next
     RunCodeA Script, SParamArr
 End Function
@@ -1821,9 +1825,9 @@ Public Function Fetch(ParamArray Params() As Variant) As String
 
     Dim DParams() As Variant
     ReDim DParams(0 To UBound(Params) - 2)
-    Dim X As Long
-    For X = 0 To UBound(DParams)
-        DParams(X) = Params(X + 2)
+    Dim x As Long
+    For x = 0 To UBound(DParams)
+        DParams(x) = Params(x + 2)
     Next
     Fetch = ConnectRaw(False, True, True, Domain, Port, DParams)
 End Function
@@ -1852,9 +1856,9 @@ Public Function Connect(ParamArray Params() As Variant)
 
     Dim DParams() As Variant
     ReDim DParams(0 To UBound(Params) - 2)
-    Dim X As Long
-    For X = 0 To UBound(DParams)
-        DParams(X) = Params(X + 2)
+    Dim x As Long
+    For x = 0 To UBound(DParams)
+        DParams(x) = Params(x + 2)
     Next
 
     Res = ConnectRaw(True, PrivRedirectOutput And PrivDisableOutput, PrivDisableOutput, Domain, Port, DParams)
@@ -1885,12 +1889,12 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
         Say "{{green}}Connecting to " & UCase(Domain) & ":" & Port & "..."
     End If
 
-    Dim X As Long
+    Dim x As Long
     Dim DomainConnectParams() As Variant
     If (VarType(Params) And vbArray) = vbArray Then
         ReDim DomainConnectParams(0 To UBound(Params) + 1)
-        For X = 1 To UBound(DomainConnectParams)
-            DomainConnectParams(X) = Params(X - 1)
+        For x = 1 To UBound(DomainConnectParams)
+            DomainConnectParams(x) = Params(x - 1)
         Next
     Else
         ReDim DomainConnectParams(0 To 0)
@@ -1958,11 +1962,11 @@ End Function
 ' VBTYPE: XArr=Byte()
 Public Function EncodeBase64Bytes(XArr As Variant) As String
     Dim typedArrData() As Byte
-    Dim X As Long
+    Dim x As Long
 
     ReDim typedArrData(LBound(XArr) To UBound(XArr))
-    For X = LBound(XArr) To UBound(XArr)
-        typedArrData(X) = XArr(X)
+    For x = LBound(XArr) To UBound(XArr)
+        typedArrData(x) = XArr(x)
     Next
     EncodeBase64Bytes = basConsole.EncodeBase64Bytes(typedArrData)
 End Function
@@ -1975,12 +1979,12 @@ End Function
 Public Function DecodeBase64Bytes(ByVal strData As String) As Variant()
     Dim Res() As Byte
     Dim ResVar() As Variant
-    Dim X As Long
+    Dim x As Long
 
     Res = basConsole.DecodeBase64Bytes(strData)
     ReDim ResVar(LBound(Res) To UBound(Res))
-    For X = LBound(Res) To UBound(Res)
-        ResVar(X) = Res(X)
+    For x = LBound(Res) To UBound(Res)
+        ResVar(x) = Res(x)
     Next
     DecodeBase64Bytes = ResVar
 End Function
@@ -2149,11 +2153,11 @@ Public Function IsHex(ByVal HASH As String) As Boolean
     ChrA = Asc("A")
     ChrF = Asc("F")
 
-    Dim X As Long
+    Dim x As Long
     HASH = UCase(HASH)
-    For X = 1 To Len(HASH)
+    For x = 1 To Len(HASH)
         Dim c As Integer
-        c = Asc(Mid(HASH, X, 1))
+        c = Asc(Mid(HASH, x, 1))
         If c >= Chr0 And c <= Chr9 Then
         ElseIf c >= ChrA And c <= ChrF Then
         Else
