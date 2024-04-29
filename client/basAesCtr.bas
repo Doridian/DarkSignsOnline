@@ -10,7 +10,7 @@ DefObj A-Z
 ' API
 '=========================================================================
 
-#If Win64 Then
+#If WIN64 Then
     Private Const PTR_SIZE                  As Long = 8
 #Else
     Private Const PTR_SIZE                  As Long = 4
@@ -77,7 +77,7 @@ Private Declare Function BCryptFinishHash Lib "bcrypt" (ByVal hHash As LongPtr, 
 '=========================================================================
 
 
-Private Const BCRYPT_ALG_HANDLE_HMAC_FLAG   As Long = 8
+Public Const BCRYPT_ALG_HANDLE_HMAC_FLAG   As Long = 8
 Private Const BCRYPT_SHA256_ALGORITHM  As String = "SHA256"
 Private Const BCRYPT_SHA512_ALGORITHM  As String = "SHA512"
 
@@ -94,7 +94,7 @@ Private Const ERR_CHUNKED_NOT_INIT  As String = "AES chunked context not initial
 Private Const HMAC_HASH             As String = BCRYPT_SHA256_ALGORITHM
 Public Const HMAC_HASH_LEN          As Long = (256 / 8)
 
-Private Const MS_PRIMITIVE_PROVIDER         As String = "Microsoft Primitive Provider"
+Public Const MS_PRIMITIVE_PROVIDER         As String = "Microsoft Primitive Provider"
 Private Const WIN32_NULL As Long = 0&
 
 Private Type UcsCryptoContextType
@@ -162,7 +162,7 @@ Public Function AesCryptArray( _
     End If
     If IsArray(Hmac) Then
         baTemp = pvCryptoGetFinalHash(uCtx, UBound(Hmac) + 1)
-        #If Win64 Then
+        #If WIN64 Then
             lPtr = PeekPtr(VarPtr(Hmac) + 8)
         #Else
             lPtr = PeekPtr((VarPtr(Hmac) Xor &H80000000) + 8 Xor &H80000000)
@@ -170,7 +170,7 @@ Public Function AesCryptArray( _
         If (PeekPtr(VarPtr(Hmac)) And VT_BYREF) <> 0 Then
             lPtr = PeekPtr(lPtr)
         End If
-        #If Win64 Then
+        #If WIN64 Then
             lPtr = PeekPtr(lPtr + 16)
         #Else
             lPtr = PeekPtr((lPtr Xor &H80000000) + 12 Xor &H80000000)
@@ -318,8 +318,8 @@ End Sub
 Private Function pvCryptoAesCtrCrypt( _
             uCtx As UcsCryptoContextType, _
             baData() As Byte, _
-            Optional ByVal offset As Long, _
-            Optional ByVal size As Long = -1, _
+            Optional ByVal Offset As Long, _
+            Optional ByVal Size As Long = -1, _
             Optional ByVal HashBefore As Boolean, _
             Optional ByVal HashAfter As Boolean) As Boolean
     Dim lIdx            As Long
@@ -328,26 +328,26 @@ Private Function pvCryptoAesCtrCrypt( _
     Dim HResult         As Long
     
     With uCtx
-        If size < 0 Then
-            size = pvArraySize(baData) - offset
+        If Size < 0 Then
+            Size = pvArraySize(baData) - Offset
         End If
         If HashBefore Then
-            HResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, offset), size, 0)
+            HResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, Offset), Size, 0)
             If HResult < 0 Then
                 GoTo QH
             End If
         End If
         '--- reuse .EncrData from prev call until next AES_BLOCK_SIZE boundary
-        For lIdx = offset To offset + size - 1
+        For lIdx = Offset To Offset + Size - 1
             If (.EncrPos And (AES_BLOCK_SIZE - 1)) = 0 Then
                 Exit For
             End If
             baData(lIdx) = baData(lIdx) Xor .EncrData(.EncrPos)
             .EncrPos = .EncrPos + 1
         Next
-        If lIdx < offset + size Then
+        If lIdx < Offset + Size Then
             '--- pad remaining input size to AES_BLOCK_SIZE
-            lPadSize = (offset + size - lIdx + AES_BLOCK_SIZE - 1) And -AES_BLOCK_SIZE
+            lPadSize = (Offset + Size - lIdx + AES_BLOCK_SIZE - 1) And -AES_BLOCK_SIZE
             If UBound(.EncrData) + 1 < lPadSize Then
                 ReDim .EncrData(0 To lPadSize - 1) As Byte
             End If
@@ -370,13 +370,13 @@ Private Function pvCryptoAesCtrCrypt( _
                 GoTo QH
             End If
             '--- XOR remaining input and leave anything extra in .EncrData for reuse
-            For .EncrPos = 0 To offset + size - lIdx - 1
+            For .EncrPos = 0 To Offset + Size - lIdx - 1
                 baData(lIdx) = baData(lIdx) Xor .EncrData(.EncrPos)
                 lIdx = lIdx + 1
             Next
         End If
         If HashAfter Then
-            HResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, offset), size, 0)
+            HResult = BCryptHashData(.hHmacHash, ByVal pvArrayPtr(baData, Offset), Size, 0)
             If HResult < 0 Then
                 GoTo QH
             End If
@@ -432,77 +432,7 @@ Private Property Get pvArraySize(baArray() As Byte) As Long
     End If
 End Property
 
-Private Function ToHexByte(ByVal Data As Integer) As String
-    Dim tmpS As String
-    tmpS = Hex(Data)
-    If Len(tmpS) = 1 Then
-        ToHexByte = "0" & tmpS
-    ElseIf Len(tmpS) = 0 Then
-        ToHexByte = "00"
-    Else
-        ToHexByte = tmpS
-    End If
-End Function
-
-' meow = 404cdd7bc109c432f8cc2443b45bcfe95980f5107215c645236e577929ac3e52
-Public Function SHA256(ByVal Data As String) As String
-    Dim HResult As Long
-    Dim hashPtr As LongPtr
-    Dim hashAlg As LongPtr
-    Dim hashLen As Long
-    hashPtr = 0
-    hashAlg = 0
-    hashLen = 0
-    
-    Dim bData() As Byte
-    bData = StrConv(Data, vbFromUnicode)
-
-    HResult = BCryptOpenAlgorithmProvider(hashAlg, StrPtr(BCRYPT_SHA256_ALGORITHM), StrPtr(MS_PRIMITIVE_PROVIDER), 0)
-    If HResult < 0 Then
-        GoTo QH
-    End If
-    HResult = BCryptGetProperty(hashAlg, StrPtr("HashDigestLength"), hashLen, 4, 0, 0)
-    If HResult < 0 Then
-        GoTo QH
-    End If
-
-    HResult = BCryptCreateHash(hashAlg, hashPtr, 0, 0, WIN32_NULL, 0, 0)
-    If HResult < 0 Then
-        GoTo QH
-    End If
-
-    HResult = BCryptHashData(hashPtr, ByVal pvArrayPtr(bData, 0), UBound(bData) + 1, 0)
-    If HResult < 0 Then
-        GoTo QH
-    End If
-
-    Dim baResult() As Byte
-    ReDim baResult(0 To hashLen - 1) As Byte
-    HResult = BCryptFinishHash(hashPtr, baResult(0), hashLen, 0)
-    If HResult < 0 Then
-        GoTo QH
-    End If
-
-    SHA256 = ""
-    Dim X As Long
-    For X = 0 To hashLen - 1
-        SHA256 = SHA256 & LCase(ToHexByte(baResult(X)))
-    Next
-
-OnSHA256End:
-    If hashPtr <> 0 Then
-        Call BCryptDestroyHash(hashPtr)
-    End If
-    If hashAlg <> 0 Then
-        Call BCryptCloseAlgorithmProvider(hashAlg, 0)
-    End If
-    Exit Function
-QH:
-    Err.Raise vbObjectError + 9191, , "SHA256 error: " & GetSystemMessage(HResult)
-    GoTo OnSHA256End
-End Function
-
-Private Function GetSystemMessage(ByVal lLastDllError As Long) As String
+Public Function GetSystemMessage(ByVal lLastDllError As Long) As String
     Const FORMAT_MESSAGE_FROM_SYSTEM    As Long = &H1000
     Const FORMAT_MESSAGE_IGNORE_INSERTS As Long = &H200
     Dim lSize            As Long

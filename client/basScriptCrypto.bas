@@ -6,6 +6,40 @@ Public Const EncryptedCanary = "Option DSciptCompiledLoaded" & vbCrLf
 Public Const EncryptedLineLen = 140
 Private Const EncryptedDefaultKey = "DSO$S3cur3_K3y!!111"
 
+Public SHA256 As New clsSHA256
+
+Public Function DeriveKeyFromPassword(baPass() As Byte, baSalt() As Byte) As Byte()
+    Dim strPass As String, strSalt As String
+    strPass = SHA256.SHA256bytes(baPass)
+    strSalt = SHA256.SHA256bytes(baSalt)
+
+    Dim X As Long
+    Dim CurHash As String
+    CurHash = "START"
+    For X = 1 To 100
+        If X Mod 3 = 0 Then
+            CurHash = CurHash & strPass
+        End If
+        If X Mod 5 = 0 Then
+            CurHash = strPass & CurHash
+        End If
+        If X Mod 7 = 0 Then
+            CurHash = CurHash & strSalt
+        End If
+        If X Mod 11 = 0 Then
+            CurHash = strSalt & CurHash
+        End If
+        CurHash = SHA256.SHA256string(CurHash)
+    Next
+    
+    Dim baDerivedKey() As Byte
+    ReDim baDerivedKey(0 To 15)
+    For X = 0 To 15
+        baDerivedKey(X) = Val("&H" & Mid(CurHash, 1 + (X * 2), 2))
+    Next
+    DeriveKeyFromPassword = baDerivedKey
+End Function
+
 Public Function DSOEncrypt(ByVal tmpS As String, ByVal Password As String, ByVal NoWrap As Boolean) As String
     If tmpS = "" Then
         DSOEncrypt = "X"
@@ -17,7 +51,7 @@ Public Function DSOEncrypt(ByVal tmpS As String, ByVal Password As String, ByVal
     Dim X As Long
 
     ' BEGIN encrypt
-    CryptoVer = "5"
+    CryptoVer = "7"
 
     bRaw = StrConv(tmpS, vbFromUnicode)
     If UBound(bRaw) > 128 Then
@@ -27,21 +61,25 @@ Public Function DSOEncrypt(ByVal tmpS As String, ByVal Password As String, ByVal
         End If
     Else
         bProcessed = bRaw
-        CryptoVer = "6"
+        CryptoVer = "8"
     End If
 
     bSalt = AesGenSalt()
     bPass = StrConv(EncryptedDefaultKey & Password & vbNullString, vbFromUnicode)
 
+    Dim bKey() As Byte
+    bKey = DeriveKeyFromPassword(bPass, bSalt)
+
+    Dim bAuxData() As Byte
+    ReDim bAuxData(0 To 0)
+    bAuxData(0) = 0
+
+    Dim uCtx As CryptoAesGcmContext
+    CryptoAesGcmInit uCtx, bKey, bSalt, bAuxData
+    CryptoAesGcmEncrypt uCtx, bProcessed
     ' END encrypt
-    Dim bUnused() As Byte
-    Dim bHMAC() As Byte
-    ReDim bHMAC(0 To HMAC_HASH_LEN - 1)
-    bHMAC(0) = 1 ' encrypt-then-mac
-    If Not AesCryptArray(bProcessed, bPass, bSalt, bUnused, Hmac:=bHMAC) Then
-        Err.Raise vbObjectError + 9090, , "AES engine failure"
-    End If
-    tmpS = EncodeBase64Bytes(bSalt) & ":" & EncodeBase64Bytes(bHMAC) & ":" & EncodeBase64Bytes(bProcessed)
+
+    tmpS = EncodeBase64Bytes(bSalt) & ":" & EncodeBase64Bytes(bProcessed)
 
     DSOEncrypt = ""
     If Not NoWrap Then
@@ -54,11 +92,11 @@ Public Function DSOEncrypt(ByVal tmpS As String, ByVal Password As String, ByVal
 End Function
 
 Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As String, ByVal Password As String) As String
+    Dim sSplit() As String, bSalt() As Byte, bHMAC() As Byte, bHMACOut() As Byte, bPass() As Byte, bRaw() As Byte, bDecompressed() As Byte
     Dim X As Long
 
     Select Case CryptoVer
         Case "5", "6":
-            Dim sSplit() As String, bSalt() As Byte, bHMAC() As Byte, bHMACOut() As Byte, bPass() As Byte, bRaw() As Byte, bDecompressed() As Byte
             sSplit = Split(InputStr, ":")
             bSalt = DecodeBase64Bytes(sSplit(0))
             bHMAC = DecodeBase64Bytes(sSplit(1))
@@ -96,6 +134,32 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As S
             Else
                 bDecompressed = bRaw
             End If
+            DSOSingleDecrypt = StrConv(bDecompressed, vbUnicode)
+        Case "7", "8":
+            sSplit = Split(InputStr, ":")
+            bSalt = DecodeBase64Bytes(sSplit(0))
+            bRaw = DecodeBase64Bytes(sSplit(1))
+            bPass = StrConv(EncryptedDefaultKey & Password & vbNullString, vbFromUnicode)
+
+            Dim bKey() As Byte
+            bKey = DeriveKeyFromPassword(bPass, bSalt)
+
+            Dim bAuxData() As Byte
+            ReDim bAuxData(0 To 0)
+            bAuxData(0) = 0
+
+            Dim uCtx As CryptoAesGcmContext
+            CryptoAesGcmInit uCtx, bKey, bSalt, bAuxData
+            CryptoAesGcmDecrypt uCtx, bRaw
+
+            If CryptoVer = "7" Then
+                If Not ZstdDecompress(bRaw, bDecompressed) Then
+                    Err.Raise vbObjectError + 9223, , "ZSTD decompression error"
+                End If
+            Else
+                bDecompressed = bRaw
+            End If
+
             DSOSingleDecrypt = StrConv(bDecompressed, vbUnicode)
         Case "X":
             ' Empty part

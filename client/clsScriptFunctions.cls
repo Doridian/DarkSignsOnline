@@ -345,8 +345,8 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
     ReDim NewPendingCustomDownloads(1 To UBound(PendingCustomDownloads))
     
     Dim X As Long
-    Dim Y As Long
-    Y = 0
+    Dim y As Long
+    y = 0
 
     Dim MadeChanges As Boolean
 
@@ -354,8 +354,8 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
         If PendingCustomDownloads(X) = ResIndex Then
             MadeChanges = True
         Else
-            Y = Y + 1
-            NewPendingCustomDownloads(Y) = ResIndex
+            y = y + 1
+            NewPendingCustomDownloads(y) = ResIndex
         End If
     Next
     
@@ -363,8 +363,8 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
         Exit Sub
     End If
     
-    ReDim PendingCustomDownloads(0 To Y)
-    For X = 1 To Y
+    ReDim PendingCustomDownloads(0 To y)
+    For X = 1 To y
         PendingCustomDownloads(X) = NewPendingCustomDownloads(X)
     Next
 End Sub
@@ -568,18 +568,18 @@ Public Function EDIT(ByVal file As String)
     Yield
 End Function
 
-Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
-    s = StripAfterNewline(s)
-    If s = "" Then
+Public Function SayLine(ByVal S As String, Optional ByVal YPos As Long = -1)
+    S = StripAfterNewline(S)
+    If S = "" Then
         Yield
         Exit Function
     End If
 
     If PrivRedirectOutput Then
         If PrivOutput = "" Then
-            PrivOutput = s
+            PrivOutput = S
         Else
-            PrivOutput = PrivOutput & vbCrLf & s
+            PrivOutput = PrivOutput & vbCrLf & S
         End If
         Yield
     End If
@@ -588,7 +588,7 @@ Public Function SayLine(ByVal s As String, Optional ByVal YPos As Long = -1)
         Exit Function
     End If
     Yield
-    basConsole.SayRaw PrivConsoleID, s, YPos
+    basConsole.SayRaw PrivConsoleID, S, YPos
     Yield
 End Function
 
@@ -861,21 +861,21 @@ Public Function DrawCustomA(ByVal YPos As Long, WidthsAndColors As Variant)
         Exit Function
     End If
 
-    Dim X As Long, Y As Long, z As Long
+    Dim X As Long, y As Long, z As Long
     Dim DrawSegs() As ConsoleDrawSegment
     X = (UBound(WidthsAndColors) - LBound(WidthsAndColors)) + 1
     ReDim DrawSegs(1 To ((X \ 2) + 1))
-    Y = LBound(WidthsAndColors)
+    y = LBound(WidthsAndColors)
     z = 0
     For X = 1 To (UBound(DrawSegs) - 1)
         DrawSegs(X).HPos = z
-        DrawSegs(X).Color = WidthsAndColors(Y + 1)
-        If WidthsAndColors(Y) > 1 Then
-            z = z + WidthsAndColors(Y)
+        DrawSegs(X).Color = WidthsAndColors(y + 1)
+        If WidthsAndColors(y) > 1 Then
+            z = z + WidthsAndColors(y)
         Else
             z = z + 1
         End If
-        Y = Y + 2
+        y = y + 2
     Next
     DrawSegs(UBound(DrawSegs)).Color = -1
     DrawSegs(UBound(DrawSegs)).HPos = z
@@ -2086,7 +2086,7 @@ Public Function RequestWriteFile(ByVal Data As String)
 End Function
 
 Public Function SHA256(ByVal Data As String) As String
-    SHA256 = basAesCtr.SHA256(Data)
+    SHA256 = basScriptCrypto.SHA256.SHA256string(Data)
 End Function
 
 ' VBTYPE: XArr=Long()
@@ -2142,7 +2142,7 @@ Public Function ConsoleUnescape(ByVal tmpS As String) As String
     ConsoleUnescape = Replace(tmpS, ConsoleInvisibleChar, "")
 End Function
 
-Public Function IsHex(ByVal Hash As String) As Boolean
+Public Function IsHex(ByVal HASH As String) As Boolean
     Dim Chr0 As Integer, Chr9 As Integer, ChrA As Integer, ChrF As Integer
     Chr0 = Asc("0")
     Chr9 = Asc("9")
@@ -2150,12 +2150,12 @@ Public Function IsHex(ByVal Hash As String) As Boolean
     ChrF = Asc("F")
 
     Dim X As Long
-    Hash = UCase(Hash)
-    For X = 1 To Len(Hash)
-        Dim C As Integer
-        C = Asc(Mid(Hash, X, 1))
-        If C >= Chr0 And C <= Chr9 Then
-        ElseIf C >= ChrA And C <= ChrF Then
+    HASH = UCase(HASH)
+    For X = 1 To Len(HASH)
+        Dim c As Integer
+        c = Asc(Mid(HASH, X, 1))
+        If c >= Chr0 And c <= Chr9 Then
+        ElseIf c >= ChrA And c <= ChrF Then
         Else
             IsHex = False
             Exit Function
@@ -2164,29 +2164,29 @@ Public Function IsHex(ByVal Hash As String) As Boolean
     IsHex = True
 End Function
 
-Public Function DLOpenHash(ByVal Hash As String)
-    If Not IsHex(Hash) Then
+Public Function DLOpenHash(ByVal HASH As String)
+    If Not IsHex(HASH) Then
         RaiseMiscError "Invalid hash"
         Exit Function
     End If
-    Hash = LCase(Hash)
+    HASH = LCase(HASH)
     Dim FName As String
-    FName = "/system/libs/hash_" & Hash & ".ds"
+    FName = "/system/libs/hash_" & HASH & ".ds"
     
     Dim FData As String
     FData = ""
     On Error Resume Next
     FData = GetFile(FName)
     On Error GoTo 0
-    If SHA256(FData) <> Hash Then
+    If SHA256(FData) <> HASH Then
         On Error Resume Next
         Kill SafePath(FName)
         On Error GoTo 0
         
         Dim DomReq As String
-        DomReq = DoDownloadAPI("libraries.php", True, "get=" & URLEncode(Hash), "")
+        DomReq = DoDownloadAPI("libraries.php", True, "get=" & URLEncode(HASH), "")
         FData = WaitFor(DomReq)
-        If SHA256(FData) <> Hash Then
+        If SHA256(FData) <> HASH Then
             RaiseMiscError "Could not download hash library correctly :("
         End If
         WriteFile FName, FData
@@ -2198,17 +2198,17 @@ Public Function DLOpenHash(ByVal Hash As String)
     SControl.AddCode FData
 End Function
 
-Public Function DLPutHash(ByVal Hash As String, ByVal Data As String)
+Public Function DLPutHash(ByVal HASH As String, ByVal Data As String)
     AssertLocalOnly
 
-    If Not IsHex(Hash) Then
+    If Not IsHex(HASH) Then
         RaiseMiscError "Invalid hash"
         Exit Function
     End If
-    Hash = LCase(Hash)
+    HASH = LCase(HASH)
     
     Dim DomReq As String
-    DomReq = DoDownloadAPI("libraries.php", True, "put=" & URLEncode(Hash) & "&data=" & URLEncode(Data), "")
+    DomReq = DoDownloadAPI("libraries.php", True, "put=" & URLEncode(HASH) & "&data=" & URLEncode(Data), "")
     WaitFor DomReq
 End Function
 
