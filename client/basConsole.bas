@@ -88,17 +88,17 @@ Public Sub CalculateConsoleDraw(ByRef CLine As ConsoleLine)
 End Sub
 
 Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
-    Dim X As Integer, W As Long, H As Long
+    Dim x As Integer, W As Long, h As Long
 
     CLine.Height = 0
-    For X = 0 To UBound(CLine.Segments)
-        H = Font_Height(CLine.Segments(X))
-        CLine.Segments(X).Height = H
-        If H > CLine.Height Then
-            CLine.Height = H
+    For x = 0 To UBound(CLine.Segments)
+        h = Font_Height(CLine.Segments(x))
+        CLine.Segments(x).Height = h
+        If h > CLine.Height Then
+            CLine.Height = h
         End If
 
-        CLine.Segments(X).TotalWidth = Font_Width(CLine.Segments(X))
+        CLine.Segments(x).TotalWidth = Font_Width(CLine.Segments(x))
     Next
 
     Dim MinX As Long, MaxX As Long
@@ -106,38 +106,38 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
     MaxX = -1
 
     Dim HeightDiff As Long, VPos As Long, MaxW As Long
-    For X = 0 To UBound(CLine.Segments)
-        HeightDiff = CLine.Height - CLine.Segments(X).Height
-        If CLine.Segments(X).AlighBottom Then
+    For x = 0 To UBound(CLine.Segments)
+        HeightDiff = CLine.Height - CLine.Segments(x).Height
+        If CLine.Segments(x).AlighBottom Then
             VPos = HeightDiff
-        ElseIf CLine.Segments(X).AlignTop Then
+        ElseIf CLine.Segments(x).AlignTop Then
             VPos = 0
         Else
             VPos = HeightDiff / 2
         End If
-        VPos = VPos + CLine.Segments(X).VOffset
+        VPos = VPos + CLine.Segments(x).VOffset
         If VPos > HeightDiff Then
             VPos = HeightDiff
         ElseIf VPos < 0 Then
             VPos = 0
         End If
-        CLine.Segments(X).VPos = VPos
+        CLine.Segments(x).VPos = VPos
 
-        If X = 0 Then
+        If x = 0 Then
             W = ConsoleXSpacing
             If CLine.PreSpace Then
                 W = W + PreSpaceWidth
             End If
         Else
-            W = CLine.Segments(X - 1).HPos + CLine.Segments(X - 1).TotalWidth
+            W = CLine.Segments(x - 1).HPos + CLine.Segments(x - 1).TotalWidth
         End If
 
-        W = W + CLine.Segments(X).HOffset
-        CLine.Segments(X).HPos = W
+        W = W + CLine.Segments(x).HOffset
+        CLine.Segments(x).HPos = W
         If W < MinX Then
             MinX = W
         End If
-        W = W + CLine.Segments(X).TotalWidth
+        W = W + CLine.Segments(x).TotalWidth
         If W > MaxX Then
             MaxX = W
         End If
@@ -161,18 +161,18 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
         Exit Sub
     End If
 
-    For X = 0 To UBound(CLine.Segments)
-        CLine.Segments(X).HPos = CLine.Segments(X).HPos + W
+    For x = 0 To UBound(CLine.Segments)
+        CLine.Segments(x).HPos = CLine.Segments(x).HPos + W
     Next
 End Sub
 
 Public Sub ConsoleResizeAll()
-    Dim cID As Integer, X As Long
+    Dim cID As Integer, x As Long
     For cID = 1 To 4
         If ConsoleInitialized(cID) Then
-            For X = 0 To 299
-                CalculateConsoleLine Console(cID, X)
-                CalculateConsoleDraw Console(cID, X)
+            For x = 0 To 299
+                CalculateConsoleLine Console(cID, x)
+                CalculateConsoleDraw Console(cID, x)
             Next
         End If
     Next
@@ -187,10 +187,10 @@ Public Sub SetDisableFlashing(ByVal NewValue As Boolean)
     End If
 End Sub
 
-Public Sub AddToRecentCommands(ByVal s As String)
-    If Trim(s) = "" Then Exit Sub
+Public Sub AddToRecentCommands(ByVal S As String)
+    If Trim(S) = "" Then Exit Sub
         
-    If i(s) = RecentCommands(ActiveConsole, 1) Then GoTo SkipAddingIt
+    If i(S) = RecentCommands(ActiveConsole, 1) Then GoTo SkipAddingIt
     
 
     Dim n As Integer
@@ -200,7 +200,7 @@ Public Sub AddToRecentCommands(ByVal s As String)
 
 
 SkipAddingIt:
-    RecentCommands(ActiveConsole, 1) = Trim(s)
+    RecentCommands(ActiveConsole, 1) = Trim(S)
     RecentCommands(ActiveConsole, 0) = ""
     RecentCommandsIndex(ActiveConsole) = 0
 End Sub
@@ -364,6 +364,8 @@ Public Sub Print_Console()
                         End If
                     End If
                     frmConsole.Line (Pos1, tmpY2)-(Pos2, (tmpY2 + FontHeight)), LineBackColor, BF
+                Else
+                    LineBackColor = frmConsole.BackColor
                 End If
             Next
 DrawSegmentOffScreen:
@@ -461,21 +463,21 @@ Public Function Font_Width(LineSeg As ConsoleLineSegment) As Long
 End Function
 
 
-Public Function StripAfterNewline(ByVal s As String) As String
+Public Function StripAfterNewline(ByVal S As String) As String
     Dim CrPos As Long, LfPos As Long
-    CrPos = InStr(s, vbCr)
-    LfPos = InStr(s, vbLf)
+    CrPos = InStr(S, vbCr)
+    LfPos = InStr(S, vbLf)
 
     If CrPos > 0 Then
         If LfPos > 0 And LfPos < CrPos Then
-            StripAfterNewline = Mid(s, 1, LfPos - 1)
+            StripAfterNewline = Mid(S, 1, LfPos - 1)
         Else
-            StripAfterNewline = Mid(s, 1, CrPos - 1)
+            StripAfterNewline = Mid(S, 1, CrPos - 1)
         End If
     ElseIf LfPos > 0 Then
-        StripAfterNewline = Mid(s, 1, LfPos - 1)
+        StripAfterNewline = Mid(S, 1, LfPos - 1)
     Else
-        StripAfterNewline = s
+        StripAfterNewline = S
     End If
 End Function
 
@@ -490,9 +492,9 @@ Public Function RenderPromptInput(ByVal ConsoleID As Integer)
     WaitingForInput(ConsoleID) = False
 End Function
 
-Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional ByVal OverwriteLineIndex As Long = 0)
+Public Function SayRaw(ByVal ConsoleID As Integer, ByVal S As String, Optional ByVal OverwriteLineIndex As Long = 0)
     If ConsoleID > 4 Then Exit Function
-    If Len(s) > 32763 Then s = Mid(s, 1, 32763) ' 32764 would overflow
+    If Len(S) > 32763 Then S = Mid(S, 1, 32763) ' 32764 would overflow
 
     If OverwriteLineIndex >= 0 Then
         Shift_Console_Lines ConsoleID
@@ -505,16 +507,16 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal s As String, Optional B
         CurrentPromptVisible(ConsoleID) = False
     End If
 
-    Console(ConsoleID, OverwriteLineIndex) = Parse_Console_Line(Console(ConsoleID, OverwriteLineIndex), s)
+    Console(ConsoleID, OverwriteLineIndex) = Parse_Console_Line(Console(ConsoleID, OverwriteLineIndex), S)
 
     frmConsole.QueueConsoleRender
 End Function
 
-Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String) As ConsoleLine
-    s = StripAfterNewline(s)
+Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal S As String) As ConsoleLine
+    S = StripAfterNewline(S)
 
     Dim sSplit() As String
-    sSplit = Split(s, "{{|}}")
+    sSplit = Split(S, "{{|}}")
     If UBound(sSplit) < 0 Then
         ReDim sSplit(0 To 0)
         sSplit(0) = ""
@@ -531,10 +533,10 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
     For Seg = 0 To UBound(sSplit)
         CLineSeg = Console_Line_Defaults.Segments(0)
 
-        s = sSplit(Seg)
+        S = sSplit(Seg)
 
-        If Has_Property_Space(s) Then
-            propertySpace = i(Get_Property_Space(s))
+        If Has_Property_Space(S) Then
+            propertySpace = i(Get_Property_Space(S))
             propertySpace = Replace(propertySpace, ",", " ")
             While InStr(propertySpace, "  ") > 0
                 propertySpace = Replace(propertySpace, "  ", " ")
@@ -682,16 +684,16 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                     CLineSeg.FontColor = iDarkRed
                 ElseIf Left(pCur, 4) = "rgb:" Then
                     Dim Error As Boolean
-                    Dim R As Long, G As Long, b As Long
+                    Dim R As Long, g As Long, b As Long
                     Error = False
                     Dim pCurSplit() As String
                     pCurSplit = Split(pCur, ":")
             
                     If UBound(pCurSplit) < 3 Then
-                        RGBSplit Trim(pCurSplit(1)), R, G, b
+                        RGBSplit Trim(pCurSplit(1)), R, g, b
                     Else
                         R = Trim(pCurSplit(1))
-                        G = Trim(pCurSplit(2))
+                        g = Trim(pCurSplit(2))
                         b = Trim(pCurSplit(3))
                     End If
 
@@ -699,7 +701,7 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                         Error = True
                     End If
 
-                    If G < 0 Or G > 255 Then
+                    If g < 0 Or g > 255 Then
                         Error = True
                     End If
 
@@ -708,7 +710,7 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
                     End If
 
                     If Error = False Then
-                        CLineSeg.FontColor = RGB(R, G, b)
+                        CLineSeg.FontColor = RGB(R, g, b)
                     End If
                 ElseIf Seg = 0 Then
                     If pCur = "noprespace" Then
@@ -729,49 +731,49 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal s As String
             Next
         End If
 
-        s = Remove_Property_Space(s)
-        s = Replace(s, ConsoleInvisibleChar, "")
-        CLineSeg.Caption = s
+        S = Remove_Property_Space(S)
+        S = Replace(S, ConsoleInvisibleChar, "")
+        CLineSeg.Caption = S
         CLine.Segments(Seg) = CLineSeg
     Next
     CalculateConsoleLine CLine
     Parse_Console_Line = CLine
 End Function
 
-Public Function Remove_Property_Space(ByVal s As String) As String
+Public Function Remove_Property_Space(ByVal S As String) As String
     Dim n As Integer
     Dim isOn As Boolean
     isOn = True
 
-    For n = 1 To Len(s)
-        If Mid(s, n, 2) = "{{" Then
+    For n = 1 To Len(S)
+        If Mid(S, n, 2) = "{{" Then
             isOn = False
             n = n + 1
         End If
         If isOn = True Then
-            Remove_Property_Space = Remove_Property_Space & Mid(s, n, 1)
+            Remove_Property_Space = Remove_Property_Space & Mid(S, n, 1)
         End If
-        If Mid(s, n, 2) = "}}" Then
+        If Mid(S, n, 2) = "}}" Then
             isOn = True
             n = n + 1
         End If
     Next n
 End Function
 
-Public Function Get_Property_Space(ByVal s As String) As String
+Public Function Get_Property_Space(ByVal S As String) As String
     Dim n As Integer
     Dim isOn As Boolean
     isOn = False
 
-    For n = 1 To Len(s)
-        If Mid(s, n, 2) = "}}" Then
+    For n = 1 To Len(S)
+        If Mid(S, n, 2) = "}}" Then
             isOn = False
             n = n + 1
         End If
         If isOn = True Then
-            Get_Property_Space = Get_Property_Space & Mid(s, n, 1)
+            Get_Property_Space = Get_Property_Space & Mid(S, n, 1)
         End If
-        If Mid(s, n, 2) = "{{" Then
+        If Mid(S, n, 2) = "{{" Then
             Get_Property_Space = Get_Property_Space & " "
             isOn = True
             n = n + 1
@@ -779,22 +781,22 @@ Public Function Get_Property_Space(ByVal s As String) As String
     Next n
 End Function
 
-Public Function Kill_Property_Space(ByVal s As String) As String
+Public Function Kill_Property_Space(ByVal S As String) As String
     Dim n As Integer
     Dim isOn As Boolean
     isOn = False
 
-    For n = 1 To Len(s)
-        If Mid(s, n, 2) = "{{" Then
+    For n = 1 To Len(S)
+        If Mid(S, n, 2) = "{{" Then
             isOn = True
             n = n + 1
         End If
 
         If isOn = False Then
-            Kill_Property_Space = Kill_Property_Space & Mid(s, n, 1)
+            Kill_Property_Space = Kill_Property_Space & Mid(S, n, 1)
         End If
         
-        If Mid(s, n, 2) = "}}" Then
+        If Mid(S, n, 2) = "}}" Then
             isOn = False
             n = n + 1
         End If
@@ -804,8 +806,8 @@ Public Function Kill_Property_Space(ByVal s As String) As String
     Kill_Property_Space = Replace(Kill_Property_Space, "}}", "")
 End Function
 
-Public Function Has_Property_Space(ByVal s As String) As Boolean
-    If InStr(s, "{{") > 0 And InStr(s, "}}") > 0 Then
+Public Function Has_Property_Space(ByVal S As String) As Boolean
+    If InStr(S, "{{") > 0 And InStr(S, "}}") > 0 Then
         Has_Property_Space = True
     Else
         Has_Property_Space = False
