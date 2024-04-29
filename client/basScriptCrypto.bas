@@ -6,6 +6,8 @@ Public Const EncryptedCanary = "Option DSciptCompiledLoaded" & vbCrLf
 Public Const EncryptedLineLen = 140
 Private Const EncryptedDefaultKey = "DSO$S3cur3_K3y!!111"
 
+Private Declare Function RtlGenRandom Lib "advapi32" Alias "SystemFunction036" (RandomBuffer As Any, ByVal RandomBufferLength As Long) As Long
+
 Public SHA256 As New clsSHA256
 
 Public Function DeriveKeyFromPassword(baPass() As Byte, baSalt() As Byte) As Byte()
@@ -13,20 +15,20 @@ Public Function DeriveKeyFromPassword(baPass() As Byte, baSalt() As Byte) As Byt
     strPass = SHA256.SHA256bytes(baPass)
     strSalt = SHA256.SHA256bytes(baSalt)
 
-    Dim X As Long
+    Dim x As Long
     Dim CurHash As String
     CurHash = "START"
-    For X = 1 To 100
-        If X Mod 3 = 0 Then
+    For x = 1 To 100
+        If x Mod 3 = 0 Then
             CurHash = CurHash & strPass
         End If
-        If X Mod 5 = 0 Then
+        If x Mod 5 = 0 Then
             CurHash = strPass & CurHash
         End If
-        If X Mod 7 = 0 Then
+        If x Mod 7 = 0 Then
             CurHash = CurHash & strSalt
         End If
-        If X Mod 11 = 0 Then
+        If x Mod 11 = 0 Then
             CurHash = strSalt & CurHash
         End If
         CurHash = SHA256.SHA256string(CurHash)
@@ -34,8 +36,8 @@ Public Function DeriveKeyFromPassword(baPass() As Byte, baSalt() As Byte) As Byt
     
     Dim baDerivedKey() As Byte
     ReDim baDerivedKey(0 To 15)
-    For X = 0 To 15
-        baDerivedKey(X) = Val("&H" & Mid(CurHash, 1 + (X * 2), 2))
+    For x = 0 To 15
+        baDerivedKey(x) = Val("&H" & Mid(CurHash, 1 + (x * 2), 2))
     Next
     DeriveKeyFromPassword = baDerivedKey
 End Function
@@ -48,7 +50,7 @@ Public Function DSOEncrypt(ByVal tmpS As String, ByVal Password As String, ByVal
 
     Dim CryptoVer As String
     Dim bRaw() As Byte, bProcessed() As Byte, bSalt() As Byte, bPass() As Byte
-    Dim X As Long
+    Dim x As Long
 
     ' BEGIN encrypt
     CryptoVer = "7"
@@ -93,48 +95,9 @@ End Function
 
 Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As String, ByVal Password As String) As String
     Dim sSplit() As String, bSalt() As Byte, bHMAC() As Byte, bHMACOut() As Byte, bPass() As Byte, bRaw() As Byte, bDecompressed() As Byte
-    Dim X As Long
+    Dim x As Long
 
     Select Case CryptoVer
-        Case "5", "6":
-            sSplit = Split(InputStr, ":")
-            bSalt = DecodeBase64Bytes(sSplit(0))
-            bHMAC = DecodeBase64Bytes(sSplit(1))
-            bRaw = DecodeBase64Bytes(sSplit(2))
-            bPass = StrConv(EncryptedDefaultKey & Password & vbNullString, vbFromUnicode)
-
-            Dim bUnused() As Byte
-            ReDim bHMACOut(0 To HMAC_HASH_LEN - 1)
-            bHMACOut(0) = 0 ' hash then decrpyt
-            If Not AesCryptArray(bRaw, bPass, bSalt, bUnused, Hmac:=bHMACOut) Then
-                Err.Raise vbObjectError + 9090, , "AES engine failure"
-            End If
-            If UBound(bHMAC) <> UBound(bHMACOut) Or LBound(bHMAC) <> LBound(bHMACOut) Then
-                Err.Raise vbObjectError + 9091, , "HMAC size failure"
-            End If
-
-            Dim Differences As Integer, Sames As Integer
-            Sames = 0
-            Differences = 0
-            For X = LBound(bHMAC) To UBound(bHMAC)
-                If bHMAC(X) <> bHMACOut(X) Then
-                    Differences = Differences + 1
-                Else
-                    Sames = Sames + 1
-                End If
-            Next
-            If Differences <> 0 Or Sames <> (1 + (UBound(bHMAC) - LBound(bHMAC))) Then
-                Err.Raise vbObjectError + 9092, , "HMAC check failure"
-            End If
-
-            If CryptoVer = "5" Then
-                If Not ZstdDecompress(bRaw, bDecompressed) Then
-                    Err.Raise vbObjectError + 9223, , "ZSTD decompression error"
-                End If
-            Else
-                bDecompressed = bRaw
-            End If
-            DSOSingleDecrypt = StrConv(bDecompressed, vbUnicode)
         Case "7", "8":
             sSplit = Split(InputStr, ":")
             bSalt = DecodeBase64Bytes(sSplit(0))
@@ -185,7 +148,7 @@ Public Function DSODecryptScript(ByVal Source As String, ByVal ScriptKey As Stri
     Dim Output As String
     Dim Lines() As String
     Lines = Split(Mid(Source, Len(EncryptedHeader) + 1), vbCrLf)
-    Dim X As Long, Line As String, LastLine As String
+    Dim x As Long, Line As String, LastLine As String
     LastLine = Lines(LBound(Lines))
     Output = DSOSingleDecrypt(Left(LastLine, 1), Mid(LastLine, 2), ScriptKey)
     If Output <> EncryptedCanary Then
@@ -202,12 +165,12 @@ Public Function DSODecrypt(ByVal Source As String, ByVal Password As String) As 
 End Function
 
 Private Function DSODecryptLines(Lines() As String, ByVal Password As String, Optional ByVal SkipLines As Long = 0) As String
-    Dim X As Long, Line As String, LastLine As String
+    Dim x As Long, Line As String, LastLine As String
     LastLine = ""
     DSODecryptLines = ""
 
-    For X = LBound(Lines) + SkipLines To UBound(Lines)
-        Line = Lines(X)
+    For x = LBound(Lines) + SkipLines To UBound(Lines)
+        Line = Lines(x)
         If Trim(Line) <> "" Then
             LastLine = LastLine & Mid(Line, 2)
         End If
@@ -234,5 +197,16 @@ Public Function DSOCompileScript(ByVal Source As String, ByVal ScriptKey As Stri
 
     ParsedSource = DSOEncrypt(ParsedSource, ScriptKey, True)
     DSOCompileScript = EncryptedHeader & DSOEncrypt(EncryptedCanary, ScriptKey, False) & vbCrLf & ParsedSource & vbCrLf
+End Function
+
+Private Function AesGenSalt() As Byte()
+    AesGenSalt = SecureRandom(8)
+End Function
+
+Public Function SecureRandom(BLen As Long) As Byte()
+    Dim Res() As Byte
+    ReDim Res(0 To BLen - 1) As Byte
+    Call RtlGenRandom(Res(0), BLen)
+    SecureRandom = Res
 End Function
 
