@@ -135,12 +135,16 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As S
     End Select
 End Function
 
+Public Function DSOIsScriptCompiled(ByVal Source As String) As Boolean
+    DSOIsScriptCompiled = (UCase(Left(Source, Len(EncryptedHeader))) = UCase(EncryptedHeader))
+End Function
+
 Public Function DSODecryptScript(ByVal Source As String, ByVal ScriptKey As String) As String
     If ScriptKey = "" Then
         ScriptKey = "local"
     End If
 
-    If UCase(Left(Source, Len(EncryptedHeader))) <> UCase(EncryptedHeader) Then
+    If Not DSOIsScriptCompiled(Source) Then
         DSODecryptScript = Source
         Exit Function
     End If

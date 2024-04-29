@@ -1266,7 +1266,7 @@ Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFil
     Domain = HttpResponse.Response
     
     Dim tempStrA As String
-    If Uncompiled Then
+    If Uncompiled And Not DSOIsScriptCompiled(sFileData) Then
         tempStrA = sFileData
     Else
         tempStrA = DSOCompileScript(sFileData, "dso://" & Domain & ":" & Port)
