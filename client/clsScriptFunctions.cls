@@ -1268,10 +1268,10 @@ Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFil
     Dim tempStrA As String
     If DSOIsScriptCompiled(sFileData) Then
         tempStrA = DSOCompileScript(sFileData, "dso://" & Domain & ":" & Port)
-        tempStrA = EncodeBase64Str(tempStrA)
     Else
         tempStrA = sFileData
     End If
+    tempStrA = EncodeBase64Str(tempStrA)
 
     Dim PostData As String
     PostData = "port=" & EncodeURLParameter(Port) & _
