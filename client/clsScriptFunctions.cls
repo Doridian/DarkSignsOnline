@@ -1295,6 +1295,13 @@ Public Function DownloadStr(ByVal Domain As String, ByVal Port As Long) As Strin
 
     DownloadStr = DoDownloadAPI("domain_download.php", True, PostData, "")
 
+    If DSOIsScriptCompiled(DownloadStr) Then
+        DownloadStr = ""
+        Yield
+        RaiseMiscError "Can not download compiled script from server"
+        Exit Function
+    End If
+
     Yield
 End Function
 
