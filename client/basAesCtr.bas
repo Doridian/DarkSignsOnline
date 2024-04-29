@@ -364,6 +364,7 @@ Private Function pvCryptoAesCtrCrypt( _
                     End If
                 End If
             Next
+            ' TODO: This here crashes wine
             HResult = BCryptEncrypt(.hAesKey, .EncrData(0), lPadSize, 0, 0, 0, .EncrData(0), lPadSize, lJdx, 0)
             If HResult < 0 Then
                 GoTo QH
