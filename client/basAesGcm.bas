@@ -90,7 +90,6 @@ Private Sub pvInit()
     m_hMulThunk = pvThunkAllocate
 End Sub
 
-#If WIN64 = 1 Then
 Private Function pvThunkAllocate() As LongPtr
 
 End Function
@@ -100,74 +99,6 @@ Private Function pvPatchTrampoline(ByVal Pfn As LongPtr, Optional ByVal Noop As 
     #End If
     pvPatchTrampoline = True
 End Function
-#Else
-Private Function pvThunkAllocate() As LongPtr
-    Const MEM_COMMIT                    As Long = &H1000
-    Const MEM_DECOMMIT                  As Long = &H4000
-    Const PAGE_EXECUTE_READWRITE        As Long = &H40
-    Const CRYPT_STRING_BASE64           As Long = 1
-    Const THUNK_SIZE    As Long = 327
-    Dim STR_THUNK       As String: STR_THUNK = "VYvsi0UIg+wQU1ZXhcB1IkCNffAzyVMPoovzW4kHiXcEiU8IiVcMi0X4g+AC6QwBAAAPECiLRQzHRfAPDg0Mx0X0CwoJCMdF+AcGBQQPEAjHRfwDAgEADxB18GYPOADOZg84AO4PKNUPKMVmDzpEwQFmDzpE0RBmD+/QDyjdZg86RNkAZg86ROkRDyjCZg9z2ghmD3P4CGYP7+pmD+/YDyjlDyjDZg9y1B9mD3LQH2YPcvMBDyjIZg9z/ARmD3P5BGYP68tmD3PYDA8o2WYPcvUBZg9y8x9mD+vlZg/r4A8owWYPcvAeZg/v2A8owWYPcvAZZg/v2A8o02YPc9sEZg9z+gxmD+/RDyjKDyjCZg9y0QJmD3LQAWYP78gPKMJmD3LQB2YP78hmD+/LZg/vymYP78xmDzgAzg8RCDPAX15bi+VdwggA"  ' 327, 16.12.2023 15:55:18
-    Dim lPtr            As LongPtr
-        
-    lPtr = VirtualAlloc(0, THUNK_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
-    If lPtr = 0 Then
-        GoTo QH
-    End If
-    If CryptStringToBinary(StrPtr(STR_THUNK), Len(STR_THUNK), CRYPT_STRING_BASE64, lPtr, THUNK_SIZE) = 0 Then
-        GoTo QH
-    End If
-    pvPatchTrampoline AddressOf pvCallMult
-    If pvCallMult(lPtr, 0, 0) = 0 Then '--- checks if PCLMULQDQ instruction supported
-        GoTo QH
-    End If
-    pvPatchTrampoline AddressOf pvMult
-    '--- success
-    pvThunkAllocate = lPtr
-    lPtr = 0
-QH:
-    If lPtr <> 0 Then
-        Call VirtualFree(lPtr, THUNK_SIZE, MEM_DECOMMIT)
-    End If
-End Function
-
-Private Function pvPatchTrampoline(ByVal Pfn As LongPtr, Optional ByVal Noop As Boolean) As Boolean
-    Const PAGE_EXECUTE_READWRITE        As Long = &H40
-    Dim bInIde          As Boolean
- 
-    If Noop Then
-        pvPatchTrampoline = True
-        Exit Function
-    End If
-    Debug.Assert pvSetTrue(bInIde)
-    If bInIde Then
-        Call CopyMemory(Pfn, ByVal Pfn + &H16, 4)
-    Else
-        Call VirtualProtect(Pfn, 8, PAGE_EXECUTE_READWRITE, 0)
-    End If
-    ' 0:  58                      pop    eax
-    ' 1:  59                      pop    ecx
-    ' 2:  50                      push   eax
-    ' 3:  ff e1                   jmp    ecx
-    ' 5:  90                      nop
-    ' 6:  90                      nop
-    ' 7:  90                      nop
-    Call CopyMemory(ByVal Pfn, -802975883527609.7536@, 8)
-    '--- success
-    pvPatchTrampoline = True
-End Function
-
-Private Function pvSetTrue(bValue As Boolean) As Boolean
-    #If TWINBASIC = 0 Then
-        bValue = True
-    #End If
-    pvSetTrue = True
-End Function
-
-Private Function pvCallMult(ByVal Pfn As LongPtr, ByVal lPtr1 As LongPtr, ByVal lPtr2 As LongPtr) As Long
-    '--- trampoline
-End Function
-#End If
 
 Private Sub pvPrecompute(baKey() As Byte, uKeyTable As ShoupTable)
     Dim lIdx            As Long
