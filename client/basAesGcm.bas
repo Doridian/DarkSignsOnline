@@ -1,5 +1,6 @@
 Attribute VB_Name = "basAesGcm"
 '--- mdAesGcm.bas
+' Credit goes to: https://gist.github.com/wqweto/7cc2b5a31147798850e06d80379be18e
 Option Explicit
 DefObj A-Z
 
