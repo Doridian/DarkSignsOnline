@@ -1,0 +1,7 @@
+Option Explicit
+Say "{{green 12}}Command: UPLOADRAW Server[String] Port[Integer] FileName[String]"
+Say "{{lgreen 12}}Example #1: UPLOAD mywebsite.com 80 newscript.ds"
+Say "{{lgrey}}Upload a file to your domain name on the specified port."
+Say "{{lorange}}WARNING: This will upload the raw script and not compile it!"
+Say "{{lgrey}}This script will then become connectable to all players."
+Say "{{lorange}}You can only upload and download scripts to domain names (servers) which you own."

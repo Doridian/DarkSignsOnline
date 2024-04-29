@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: Draw(YPos[Long], RGBVal[Long], mode[String], <Segments[Long,Default=0]>) -> Nothing"
+Say "{{green 12}}Function: Draw(YPos[Long], RGBVal[Long], <mode[String,Default=""solid""]>, <Segments[Long,Default=0]>) -> Nothing"
