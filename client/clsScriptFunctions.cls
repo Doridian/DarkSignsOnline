@@ -1256,7 +1256,7 @@ Public Function GetIP(ByVal Domain As String) As String
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFileData As String, Optional ByVal Uncompiled As Boolean = False) As String
+Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFileData As String) As String
     AssertLocalOnly
 
     Yield
@@ -1266,11 +1266,11 @@ Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFil
     Domain = HttpResponse.Response
     
     Dim tempStrA As String
-    If Uncompiled And Not DSOIsScriptCompiled(sFileData) Then
-        tempStrA = sFileData
-    Else
+    If DSOIsScriptCompiled(sFileData) Then
         tempStrA = DSOCompileScript(sFileData, "dso://" & Domain & ":" & Port)
         tempStrA = EncodeBase64Str(tempStrA)
+    Else
+        tempStrA = sFileData
     End If
 
     Dim PostData As String
