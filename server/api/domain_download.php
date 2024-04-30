@@ -28,7 +28,7 @@ $row = $res->fetch_assoc();
 if (!empty($row)) {
 	$script = $row['code'];
 
-	if (substr($script, 0, strlen(DSO_SCRIPT_CRYPTO_HEADER)) === DSO_SCRIPT_CRYPTO_HEADER) {
+	if (strtoupper(substr($script, 0, strlen(DSO_SCRIPT_CRYPTO_HEADER))) === strtoupper(DSO_SCRIPT_CRYPTO_HEADER)) {
 		die_error("Cannot Download Compiled Script: " . strtoupper($d) . ":$port", 403);
 	}
 
