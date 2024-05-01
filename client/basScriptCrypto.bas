@@ -10,10 +10,17 @@ Private Declare Function RtlGenRandom Lib "advapi32" Alias "SystemFunction036" (
 
 Public SHA256 As New clsSHA256
 
+Private LastBaPass As String, LastBaSalt As String, LastDerivedKey() As Byte
+
 Public Function DeriveKeyFromPassword(baPass() As Byte, baSalt() As Byte) As Byte()
     Dim strPass As String, strSalt As String
     strPass = SHA256.SHA256bytes(baPass)
     strSalt = SHA256.SHA256bytes(baSalt)
+
+    If strPass = LastBaPass And strSalt = LastBaSalt Then
+        DeriveKeyFromPassword = LastDerivedKey
+        Exit Function
+    End If
 
     Dim x As Long
     Dim CurHash As String
@@ -39,6 +46,9 @@ Public Function DeriveKeyFromPassword(baPass() As Byte, baSalt() As Byte) As Byt
     For x = 0 To 15
         baDerivedKey(x) = Val("&H" & Mid(CurHash, 1 + (x * 2), 2))
     Next
+    LastBaPass = strPass
+    LastBaSalt = strSalt
+    LastDerivedKey = baDerivedKey
     DeriveKeyFromPassword = baDerivedKey
 End Function
 
