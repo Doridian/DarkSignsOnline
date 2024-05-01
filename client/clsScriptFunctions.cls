@@ -1266,13 +1266,9 @@ Public Function UploadStr(ByVal Domain As String, ByVal Port As Long, ByVal sFil
 
     Yield
 
-    Dim HttpResponse As clsHttpResponse
-    Set HttpResponse = WaitFor_Internal(GetDomain(Domain))
-    Domain = HttpResponse.Response
-    
     Dim tempStrA As String
     If DSOIsScriptCompiled(sFileData) Then
-        tempStrA = DSOCompileScript(sFileData, "dso://" & Domain & ":" & Port)
+        tempStrA = DSOCompileScript(sFileData, "dso://" & LCase(Domain) & ":" & Port)
     Else
         tempStrA = sFileData
     End If
@@ -1958,9 +1954,14 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
     strCode = DecodeBase64Str(DomainSplit(5))
 
     Dim DomScript As String
-    DomScript = "dso://" & strDomain & ":" & strPort
+    DomScript = "dso://" & LCase(strDomain) & ":" & strPort
+    Dim ScriptKey As String
+    ScriptKey = DomScript
+    If Not DSOCheckScriptKey(strCode, ScriptKey) Then
+        ScriptKey = "dso://" & LCase(strIP) & ":" & strPort
+    End If
     DomainConnectParams(0) = DomScript
-    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, strIP, PrivServerIP, False, RedirectOutput, DisableOutput, DomScript, strOwner)
+    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, strIP, PrivServerIP, False, RedirectOutput, DisableOutput, ScriptKey, strOwner)
 
     Yield
 End Function

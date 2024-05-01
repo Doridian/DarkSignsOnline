@@ -139,6 +139,25 @@ Public Function DSOIsScriptCompiled(ByVal Source As String) As Boolean
     DSOIsScriptCompiled = (UCase(Left(Source, Len(EncryptedHeader))) = UCase(EncryptedHeader))
 End Function
 
+Public Function DSOCheckScriptKey(ByVal Source As String, ByVal ScriptKey As String) As Boolean
+    If ScriptKey = "" Then
+        ScriptKey = "local"
+    End If
+
+    If Not DSOIsScriptCompiled(Source) Then
+        DSOCheckScriptKey = True
+        Exit Function
+    End If
+
+    Dim Output As String
+    Dim Lines() As String
+    Lines = Split(Mid(Source, Len(EncryptedHeader) + 1), vbCrLf)
+    Dim Line As String, LastLine As String
+    LastLine = Lines(LBound(Lines))
+    Output = DSOSingleDecrypt(Left(LastLine, 1), Mid(LastLine, 2), ScriptKey)
+    DSOCheckScriptKey = (Output = EncryptedCanary)
+End Function
+
 Public Function DSODecryptScript(ByVal Source As String, ByVal ScriptKey As String) As String
     If ScriptKey = "" Then
         ScriptKey = "local"
