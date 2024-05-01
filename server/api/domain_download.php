@@ -16,10 +16,6 @@ if ($dInfo === false) {
 	die_error('Domain does not exist.', 404);
 }
 
-if ($user['id'] !== $dInfo['owner']) {
-	die_error('Restricted access.', 403);
-}
-
 $stmt = $db->prepare('SELECT code FROM domain_scripts WHERE domain=? AND port=? AND ver=?');
 $stmt->bind_param('iii', $dInfo['id'], $port, $ver);
 $stmt->execute();
