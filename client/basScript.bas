@@ -35,10 +35,10 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
     SCT.UseSafeSubset = True
     SCT.Language = "VBScript"
 
-    Dim G As clsScriptFunctions
-    Set G = New clsScriptFunctions
-    G.Configure ConsoleID, ScriptFrom, False, SCT, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False, ScriptOwner, ServerIP, ConnectingIP
-    SCT.AddObject "DSO", G, True
+    Dim g As clsScriptFunctions
+    Set g = New clsScriptFunctions
+    g.Configure ConsoleID, ScriptFrom, False, SCT, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False, ScriptOwner, ServerIP, ConnectingIP
+    SCT.AddObject "DSO", g, True
     LoadBasicFunctions SCT
 
     tmpAll = DSODecryptScript(tmpAll, ScriptKey)
@@ -63,6 +63,9 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
         GoTo ScriptEnd
     End If
     If Not ErrorHandling Then
+        Run_Script_Code = g.ScriptGetOutput()
+        g.CleanupScriptTasks
+        cPath(ConsoleID) = OldPath
         Err.Raise ErrNumber, , ErrDescription
         Exit Function
     End If
@@ -88,8 +91,8 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
 ScriptCancelled:
     SayRaw ConsoleID, "Script Stopped by User (CTRL + B){{orange}}"
 ScriptEnd:
-    Run_Script_Code = G.ScriptGetOutput()
-    G.CleanupScriptTasks
+    Run_Script_Code = g.ScriptGetOutput()
+    g.CleanupScriptTasks
     cPath(ConsoleID) = OldPath
     Exit Function
 

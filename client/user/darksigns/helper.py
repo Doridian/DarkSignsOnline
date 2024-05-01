@@ -167,7 +167,7 @@ def dso_uploadscript():
     for server in servers:
         for port, script in server.ports.items():
             print(f"Say \"Uploading {script.name}.ds to {server.ip}:{port}\"")
-            print(f"Run \"UPLOAD\", \"{server.ip}\", {port}, \"/darksigns/mission_scripts/{script.name}.ds\"")
+            print(f"UploadSecure \"{server.ip}\", {port}, \"/darksigns/mission_scripts/{script.name}.ds\"")
             print(f"Say \"Uploaded {script.name}.ds to {server.ip}:{port}\"")
 
     bPath = "remotefs"
@@ -181,7 +181,7 @@ def dso_uploadscript():
     for scr in listdir(bPath):
         host, port = scr.removesuffix(".ds").split("___")
         print(f"Say \"Uploading {scr} to {host}:{port}\"")
-        print(f"Run \"UPLOAD\", \"{host}\", {port}, \"/darksigns/dso_specific/{scr}\"")
+        print(f"UploadSecure \"{host}\", {port}, \"/darksigns/dso_specific/{scr}\"")
         print(f"Say \"Uploaded {scr} to {host}:{port}\"")
 
 # Generate all traceroute files for traceroute.dsn
@@ -212,4 +212,11 @@ def dso_upload_portscans():
             print(f"sScan = sScan & \"{port}={dsc.name}\"  & vbCrLf")
         print(f"PrintVar RemoteWrite(\"portscan.dsn\", \"{server.ip}.ports\", sScan)")
 
-dso_convert_check()
+print("Option Explicit")
+print("Sub UploadSecure(Domain, Port, File)")
+print("    Dim strData")
+print("    strData = Display(File)")
+print("    strData = CompileStr(strData)")
+print("    WaitFor UploadStr(Domain, Port, strData)")
+print("End Sub")
+dso_uploadscript()

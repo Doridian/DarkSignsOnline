@@ -186,9 +186,13 @@ End Sub
 
 Public Sub CleanupScriptTasks()
     If UBound(PendingCustomDownloads) > 0 Then
-        Dim x As Long
+        Dim x As Long, y As Long
         For x = 1 To UBound(PendingCustomDownloads)
-            DownloadAborted(x) = True
+            y = PendingCustomDownloads(x)
+            DownloadAborted(y) = True
+            If DownloadDone(y) Then
+                DownloadInUse(y) = False
+            End If
         Next
     End If
     ReDim PendingCustomDownloads(0 To 0)
@@ -355,7 +359,7 @@ Private Sub RemoveCustomDownload(ByVal ResIndex As Long)
             MadeChanges = True
         Else
             y = y + 1
-            NewPendingCustomDownloads(y) = ResIndex
+            NewPendingCustomDownloads(y) = PendingCustomDownloads(x)
         End If
     Next
     
@@ -396,6 +400,7 @@ Private Function DoDownload(ByVal url As String, ByVal UsePost As Boolean, ByVal
         Exit Function
     End If
 
+    DownloadAborted(ResIndex) = False
     DownloadInUse(ResIndex) = True
     DownloadDone(ResIndex) = False
     DownloadResponseTypes(ResIndex) = ResponseType

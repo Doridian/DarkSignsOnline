@@ -12,23 +12,23 @@ Private CLIPaths() As String
 Public Const Pi As Double = 3.14159265358979
 
 Public Sub InitBasCommands()
-    Dim X As Integer
-    For X = 1 To 4
-        Set scrConsole(X) = New ScriptControl
-        scrConsole(X).AllowUI = False
-        scrConsole(X).Timeout = -1
-        scrConsole(X).UseSafeSubset = True
-        scrConsole(X).Language = "VBScript"
+    Dim x As Integer
+    For x = 1 To 4
+        Set scrConsole(x) = New ScriptControl
+        scrConsole(x).AllowUI = False
+        scrConsole(x).Timeout = -1
+        scrConsole(x).UseSafeSubset = True
+        scrConsole(x).Language = "VBScript"
 
         Dim CLIArguments(0 To 0) As Variant
-        CLIArguments(0) = "/dev/tty" & X
-        Set scrConsoleContext(X) = New clsScriptFunctions
-        scrConsoleContext(X).Configure X, "", True, scrConsole(X), CLIArguments, "", "", 0, False, False, True, "", "", ""
+        CLIArguments(0) = "/dev/tty" & x
+        Set scrConsoleContext(x) = New clsScriptFunctions
+        scrConsoleContext(x).Configure x, "", True, scrConsole(x), CLIArguments, "", "", 0, False, False, True, "", "", ""
 
-        scrConsole(X).AddObject "DSO", scrConsoleContext(X), True
-        LoadBasicFunctions scrConsole(X)
+        scrConsole(x).AddObject "DSO", scrConsoleContext(x), True
+        LoadBasicFunctions scrConsole(x)
 
-        scrConsoleDScript(X) = True
+        scrConsoleDScript(x) = True
     Next
 
     ReDim CLIPaths(0 To 1)
@@ -93,11 +93,11 @@ Public Function ResolvePathRel(ByVal CCPath As String, ByVal Path As String) As 
     Dim ResolvePathSplitCut() As String
     ReDim ResolvePathSplitCut(0 To 0)
 
-    Dim X As Long
+    Dim x As Long
     ResolvePathRel = ""
     Dim CurPath As String
-    For X = LBound(ResolvePathSplit) To UBound(ResolvePathSplit)
-        CurPath = ResolvePathSplit(X)
+    For x = LBound(ResolvePathSplit) To UBound(ResolvePathSplit)
+        CurPath = ResolvePathSplit(x)
         If CurPath = "" Or CurPath = "." Then
             ' Don't do anything!
         ElseIf CurPath = ".." Then
@@ -108,7 +108,7 @@ Public Function ResolvePathRel(ByVal CCPath As String, ByVal Path As String) As 
             ReDim Preserve ResolvePathSplitCut(0 To UBound(ResolvePathSplitCut) + 1)
             ResolvePathSplitCut(UBound(ResolvePathSplitCut)) = CurPath
         End If
-    Next X
+    Next x
 
     If UBound(ResolvePathSplitCut) = 0 Then
         ResolvePathRel = "/"
@@ -133,11 +133,11 @@ Public Function ResolveCommand(ByVal ConsoleID As Integer, ByVal Command As Stri
         Command = Command & ".ds"
     End If
 
-    Dim X As Long
+    Dim x As Long
 
     Dim tmpCommand As String
-    For X = 0 To UBound(CLIPaths)
-        ResolveCommand = ResolvePath(ConsoleID, CLIPaths(X) & "/" & Command)
+    For x = 0 To UBound(CLIPaths)
+        ResolveCommand = ResolvePath(ConsoleID, CLIPaths(x) & "/" & Command)
         If Left(ResolveCommand, 1) <> "/" Then
             GoTo SkipThisPath
         End If
@@ -234,6 +234,7 @@ ScriptEnd:
     Exit Function
 
 OnCodeFaulted:
+    scrConsoleContext(ConsoleID).CleanupScriptTasks
     ErrNumber = scrConsole(ConsoleID).Error.Number
     ErrDescription = scrConsole(ConsoleID).Error.Description
     If ErrNumber = 0 Or ErrDescription = "" Then
@@ -296,17 +297,17 @@ Public Function IsValidVarName(ByVal Candidate As String) As Boolean
         Exit Function
     End If
 
-    Dim X As Long, C As Integer
-    For X = 1 To Len(lCandidate)
-        C = Asc(Mid(lCandidate, X, 1))
+    Dim x As Long, c As Integer
+    For x = 1 To Len(lCandidate)
+        c = Asc(Mid(lCandidate, x, 1))
         ' Only check lowercase as we use LCase'd string
-        If C >= Asc("a") And C <= Asc("z") Then
+        If c >= Asc("a") And c <= Asc("z") Then
             GoTo CIsValid
         End If
-        If C >= Asc("0") And C <= Asc("9") Then
+        If c >= Asc("0") And c <= Asc("9") Then
             GoTo CIsValid
         End If
-        If C = Asc("_") Or C = Asc("(") Or C = Asc(")") Then
+        If c = Asc("_") Or c = Asc("(") Or c = Asc(")") Then
             GoTo CIsValid
         End If
 
@@ -337,16 +338,16 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Lo
     NextInQuotes = ""
     InjectYield = False
 
-    Dim X As Long
-    For X = 1 To Len(tmpS)
-        curC = Mid(tmpS, X, 1)
+    Dim x As Long
+    For x = 1 To Len(tmpS)
+        curC = Mid(tmpS, x, 1)
         If InQuotes <> "" Then
             If curC <> InQuotes Then
                 GoTo AddToArg
             End If
 
-            If X < Len(tmpS) And Mid(tmpS, X + 1, 1) = curC Then 'Doubling quotes escapes them
-                X = X + 1
+            If x < Len(tmpS) And Mid(tmpS, x + 1, 1) = curC Then 'Doubling quotes escapes them
+                x = x + 1
                 GoTo AddToArg
             End If
            
@@ -366,7 +367,7 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Lo
             Case "'":
                 If curArg <> "" Or CLIArgs(0) <> "" Then
                     RestSplit = " "
-                    X = X - 1
+                    x = x - 1
                     GoTo RestStartSet
                 End If
                 InComment = True
@@ -375,31 +376,31 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Lo
             Case ",", ";", "(", ")", "|", "=", "&", "<", ">": ' These mean the user likely intended VBScript and not CLI
                 IsSimpleCommand = False
             Case "_":
-                If curArg = "" And X < Len(tmpS) Then
+                If curArg = "" And x < Len(tmpS) Then
                     Dim NextC As String
-                    NextC = Mid(tmpS, X + 1, 1)
+                    NextC = Mid(tmpS, x + 1, 1)
                     If NextC = vbLf Then
                         IsSimpleCommand = False
-                        X = X + 1
+                        x = x + 1
                         GoTo CommandForNext
                     ElseIf NextC = vbCr Then
                         IsSimpleCommand = False
-                        X = X + 1
-                        If X < Len(tmpS) Then
-                            NextC = Mid(tmpS, X + 1, 1)
+                        x = x + 1
+                        If x < Len(tmpS) Then
+                            NextC = Mid(tmpS, x + 1, 1)
                             If NextC = vbLf Then
-                                X = X + 1
+                                x = x + 1
                             End If
                         End If
                         GoTo CommandForNext
                     End If
                 End If
             Case vbCr:
-                If X = Len(tmpS) Then
+                If x = Len(tmpS) Then
                     GoTo CommandForNext
                 End If
-                If Mid(tmpS, X + 1, 1) = vbLf Then
-                    X = X + 1
+                If Mid(tmpS, x + 1, 1) = vbLf Then
+                    x = x + 1
                 End If
                 RestSplit = vbCrLf
                 GoTo RestStartSet
@@ -409,15 +410,15 @@ Private Function ParseCommandLineInt(ByVal tmpS As String, ByRef RestStart As Lo
             Case ":":
                 RestSplit = ":"
 RestStartSet:
-                RestStart = X + 1
-                X = Len(tmpS) + 1
+                RestStart = x + 1
+                x = Len(tmpS) + 1
                 GoTo NextArg
             'Case Else:
             '   GoTo AddToArg
         End Select
 AddToArg:
     curArg = curArg & curC
-    If X <> Len(tmpS) Then
+    If x <> Len(tmpS) Then
         GoTo CommandForNext
     End If
     If InQuotes <> "" Then
@@ -444,7 +445,7 @@ NextArg:
     InQuotes = NextInQuotes
     NextInQuotes = ""
 CommandForNext:
-    Next X
+    Next x
 
     Dim Command As String
     Command = Trim(LCase(CLIArgs(0)))
@@ -514,14 +515,14 @@ CommandForNext:
         CommandNeedFirstComma = False
     End If
 
-    For X = ArgStart To UBound(CLIArgs)
-        If X > ArgStart Or CommandNeedFirstComma Then
+    For x = ArgStart To UBound(CLIArgs)
+        If x > ArgStart Or CommandNeedFirstComma Then
             ParseCommandLineInt = ParseCommandLineInt & ", "
         End If
 
         Dim ArgVal As String
-        ArgVal = CLIArgs(X)
-        If CLIArgsQuoted(X) Then
+        ArgVal = CLIArgs(x)
+        If CLIArgsQuoted(x) Then
             GoTo ArgIsNotVar
         End If
         If Left(ArgVal, 1) = "%" And Right(ArgVal, 1) = "%" Then
@@ -567,9 +568,9 @@ CommandForNext:
         ParseCommandLineInt = ParseCommandLineInt & VBEscapeSimple(ArgVal)
         GoTo NextCLIFor
 ArgIsNotVar:
-        ParseCommandLineInt = ParseCommandLineInt & VBEscapeSimpleQuoted(ArgVal, CLIArgsQuoted(X))
+        ParseCommandLineInt = ParseCommandLineInt & VBEscapeSimpleQuoted(ArgVal, CLIArgsQuoted(x))
 NextCLIFor:
-    Next X
+    Next x
     ParseCommandLineInt = ParseCommandLineInt & ")"
     GoTo RunSplitCommand
 
@@ -598,9 +599,9 @@ EvalErrorHandler:
     Resume Next
 End Function
 
-Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef G As Long, ByRef b As Long)
+Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef g As Long, ByRef b As Long)
     R = lColor And &HFF ' mask the low byte
-    G = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
+    g = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
     b = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
 End Function
 
@@ -632,7 +633,7 @@ Public Function SinLerp(ByVal FromNum As Long, ByVal ToNum As Long, ByVal ValNum
     Debug.Assert SinLerp > 0# And SinLerp < 1#
 End Function
 
-Private Sub LerpDrawSegments(ByVal ConsoleID As Integer, ByVal R As Integer, ByVal G As Integer, ByVal b As Integer, ByVal yIndex As Long, ByVal LoopA As Long, ByVal LoopB As Long)
+Private Sub LerpDrawSegments(ByVal ConsoleID As Integer, ByVal R As Integer, ByVal g As Integer, ByVal b As Integer, ByVal yIndex As Long, ByVal LoopA As Long, ByVal LoopB As Long)
     Dim StepVal As Long, n As Long, Mult As Double
     If LoopA > LoopB Then
         StepVal = -1
@@ -641,7 +642,7 @@ Private Sub LerpDrawSegments(ByVal ConsoleID As Integer, ByVal R As Integer, ByV
     End If
     For n = LoopA To LoopB Step StepVal
         Mult = SinLerp(LoopA, LoopB, n)
-        Console(ConsoleID, yIndex).Draw(n).Color = RGB(R * Mult, G * Mult, b * Mult)
+        Console(ConsoleID, yIndex).Draw(n).Color = RGB(R * Mult, g * Mult, b * Mult)
     Next n
 End Sub
 
@@ -674,8 +675,8 @@ Public Sub DrawSimple(ByVal ConsoleID As Integer, ByVal YPos As Long, ByVal RGBV
         Exit Sub
     End If
 
-    Dim R As Long, G As Long, b As Long
-    RGBSplit RGBVal, R, G, b
+    Dim R As Long, g As Long, b As Long
+    RGBSplit RGBVal, R, g, b
 
     ReDim Console(ConsoleID, yIndex).Draw(1 To (Segments + 1))
     For n = 1 To Segments
@@ -686,20 +687,20 @@ Public Sub DrawSimple(ByVal ConsoleID As Integer, ByVal YPos As Long, ByVal RGBV
 
     Select Case mode
         Case "fadecenter":
-            LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsHalf + 1), Segments
-            LerpDrawSegments ConsoleID, R, G, b, yIndex, SegmentsHalf, 1
+            LerpDrawSegments ConsoleID, R, g, b, yIndex, (SegmentsHalf + 1), Segments
+            LerpDrawSegments ConsoleID, R, g, b, yIndex, SegmentsHalf, 1
         Case "fadeinverse":
-            LerpDrawSegments ConsoleID, R, G, b, yIndex, Segments, (SegmentsHalf + 1)
-            LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, SegmentsHalf
+            LerpDrawSegments ConsoleID, R, g, b, yIndex, Segments, (SegmentsHalf + 1)
+            LerpDrawSegments ConsoleID, R, g, b, yIndex, 1, SegmentsHalf
         Case "fadein":
-            LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, Segments
+            LerpDrawSegments ConsoleID, R, g, b, yIndex, 1, Segments
         Case "fadeout":
-            LerpDrawSegments ConsoleID, R, G, b, yIndex, Segments, 1
+            LerpDrawSegments ConsoleID, R, g, b, yIndex, Segments, 1
         Case "flow":
-            LerpDrawSegments ConsoleID, R, G, b, yIndex, 1, SegmentsQuarter
-            LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsQuarter * 2), (SegmentsQuarter + 1)
-            LerpDrawSegments ConsoleID, R, G, b, yIndex, ((SegmentsQuarter * 2) + 1), (SegmentsQuarter * 3)
-            LerpDrawSegments ConsoleID, R, G, b, yIndex, (SegmentsQuarter * 4), ((SegmentsQuarter * 3) + 1)
+            LerpDrawSegments ConsoleID, R, g, b, yIndex, 1, SegmentsQuarter
+            LerpDrawSegments ConsoleID, R, g, b, yIndex, (SegmentsQuarter * 2), (SegmentsQuarter + 1)
+            LerpDrawSegments ConsoleID, R, g, b, yIndex, ((SegmentsQuarter * 2) + 1), (SegmentsQuarter * 3)
+            LerpDrawSegments ConsoleID, R, g, b, yIndex, (SegmentsQuarter * 4), ((SegmentsQuarter * 3) + 1)
         Case Else:
             ReDim Console(ConsoleID, yIndex).Draw(-1 To -1)
             Err.Raise vbObjectError + 1393, , "Invalid draw mode: " & mode
@@ -718,8 +719,8 @@ Public Sub SetYDiv(ByVal n As Integer)
     frmConsole.QueueConsoleRender
 End Sub
 
-Public Sub MusicCommand(ByVal s As String)
-    Select Case i(s)
+Public Sub MusicCommand(ByVal S As String)
+    Select Case i(S)
         Case "start", "on":
             ConfigSave "music", "on", False
         Case "stop", "off":
@@ -735,13 +736,13 @@ Public Sub MusicCommand(ByVal s As String)
 End Sub
 
 
-Public Sub SetUsername(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub SetUsername(ByVal S As String, ByVal ConsoleID As Integer)
     If Authorized = True Then
         SayError "You are already logged in.", ConsoleID
         Exit Sub
     End If
 
-    ConfigSave "username", s, True
+    ConfigSave "username", S, True
     
     Dim Password As String
     If myPassword = "" Then
@@ -754,13 +755,13 @@ Public Sub SetUsername(ByVal s As String, ByVal ConsoleID As Integer)
     SayRaw ConsoleID, "Password: " & Password & "{{orange 16}}"
 End Sub
 
-Public Sub SetPassword(ByVal s As String, ByVal ConsoleID As Integer)
+Public Sub SetPassword(ByVal S As String, ByVal ConsoleID As Integer)
     If Authorized = True Then
         SayError "You are already logged in.", ConsoleID
         Exit Sub
     End If
 
-    ConfigSave "password", s, True
+    ConfigSave "password", S, True
 
     Dim Password As String
     If myPassword = "" Then
@@ -780,27 +781,27 @@ Public Sub ClearConsole(ByVal ConsoleID As Integer)
     Next n
 End Sub
 
-Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
-    If s = "" Then
+Public Sub EditFile(ByVal S As String, ByVal ConsoleID As Integer)
+    If S = "" Then
         Exit Sub
     End If
 
-    If Not basGeneral.FileExists(s) Then
-        SayRaw ConsoleID, "{{green}}File Not Found, Creating: " & s
-        WriteFile s, ""
+    If Not basGeneral.FileExists(S) Then
+        SayRaw ConsoleID, "{{green}}File Not Found, Creating: " & S
+        WriteFile S, ""
     End If
 
     Dim ExternalEditor As Boolean
     ExternalEditor = ConfigLoad("externaleditor", "false", False) = "true"
 
     If ExternalEditor Then
-        SayRaw ConsoleID, "{{green}}Opening external editor for " & s
-        frmConsole.OpenFileDefault s
+        SayRaw ConsoleID, "{{green}}Opening external editor for " & S
+        frmConsole.OpenFileDefault S
         Exit Sub
     End If
 
-    EditorFile_Short = GetShortName(s)
-    EditorFile_Long = s
+    EditorFile_Short = GetShortName(S)
+    EditorFile_Long = S
 
     frmEditor.Show vbModal
     
@@ -816,17 +817,17 @@ Public Sub EditFile(ByVal s As String, ByVal ConsoleID As Integer)
 errorDir:
 End Sub
 
-Public Function GetShortName(ByVal s As String) As String
-    s = ReverseString(s)
-    s = Replace(s, "\", "/")
+Public Function GetShortName(ByVal S As String) As String
+    S = ReverseString(S)
+    S = Replace(S, "\", "/")
 
-    If InStr(s, "/") > 0 Then
-        s = Mid(s, 1, InStr(s, "/") - 1)
+    If InStr(S, "/") > 0 Then
+        S = Mid(S, 1, InStr(S, "/") - 1)
     End If
 
-    GetShortName = Trim(ReverseString(s))
+    GetShortName = Trim(ReverseString(S))
 End Function
 
-Public Function SayError(s As String, ByVal ConsoleID As Integer)
-    SayRaw ConsoleID, "Error - " & s & " {{orange}}"
+Public Function SayError(S As String, ByVal ConsoleID As Integer)
+    SayRaw ConsoleID, "Error - " & S & " {{orange}}"
 End Function
