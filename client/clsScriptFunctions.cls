@@ -389,7 +389,7 @@ End Function
 Private Function DoDownload(ByVal url As String, ByVal UsePost As Boolean, ByVal PostData As String, ByVal NoAuth As Boolean, ByVal ResponseType As String) As String
     Dim ResIndex As Long
     DoDownload = ""
-    For ResIndex = 1 To 99
+    For ResIndex = 1 To 50
         If Not DownloadInUse(ResIndex) Then
             DoDownload = "HTTPRequest" & ConsoleInvisibleChar & "(" & ResIndex & ")"
             Exit For
