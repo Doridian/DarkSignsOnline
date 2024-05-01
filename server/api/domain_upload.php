@@ -23,7 +23,7 @@ if ($user['id'] !== $dInfo['owner']) {
 	die_error('Restricted access.', 403);
 }
 
-$code = dso_b64_decode(line_endings_to_dos($_POST['filedata']));
+$code = line_endings_to_dos(dso_b64_decode($_POST['filedata']));
 $stmt = $db->prepare('INSERT INTO domain_scripts (domain, port, code, ip, time, ver) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE code=?, ip=?, time=?;');
 $time = time();
 $stmt->bind_param('iissiissi', $dInfo['id'], $port, $code, $_SERVER['REMOTE_ADDR'], $time, $ver, $code, $_SERVER['REMOTE_ADDR'], $time);
