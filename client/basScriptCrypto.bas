@@ -86,12 +86,15 @@ Public Function DSOEncrypt(ByVal tmpS As String, ByVal Password As String, ByVal
     ReDim bAuxData(0 To 0)
     bAuxData(0) = 0
 
+    Dim bTagData() As Byte
+    ReDim bTagData(0 To 15)
+
     Dim uCtx As CryptoAesGcmContext
     CryptoAesGcmInit uCtx, bKey, bSalt, bAuxData
-    CryptoAesGcmEncrypt uCtx, bProcessed
+    CryptoAesGcmEncrypt uCtx, bProcessed, TagSize:=16, Tag:=bTagData
     ' END encrypt
 
-    tmpS = EncodeBase64Bytes(bSalt) & ":" & EncodeBase64Bytes(bProcessed)
+    tmpS = EncodeBase64Bytes(bSalt) & ":" & EncodeBase64Bytes(bTagData) & ":" & EncodeBase64Bytes(bProcessed)
 
     DSOEncrypt = ""
     If Not NoWrap Then
@@ -104,14 +107,15 @@ Public Function DSOEncrypt(ByVal tmpS As String, ByVal Password As String, ByVal
 End Function
 
 Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As String, ByVal Password As String) As String
-    Dim sSplit() As String, bSalt() As Byte, bHMAC() As Byte, bHMACOut() As Byte, bPass() As Byte, bRaw() As Byte, bDecompressed() As Byte
+    Dim sSplit() As String, bSalt() As Byte, bTag() As Byte, bPass() As Byte, bRaw() As Byte, bDecompressed() As Byte
     Dim x As Long
 
     Select Case CryptoVer
         Case "7", "8":
             sSplit = Split(InputStr, ":")
             bSalt = DecodeBase64Bytes(sSplit(0))
-            bRaw = DecodeBase64Bytes(sSplit(1))
+            bTag = DecodeBase64Bytes(sSplit(1))
+            bRaw = DecodeBase64Bytes(sSplit(2))
             bPass = StrConv(EncryptedDefaultKey & Password & vbNullString, vbFromUnicode)
 
             Dim bKey() As Byte
@@ -123,7 +127,9 @@ Private Function DSOSingleDecrypt(ByVal CryptoVer As String, ByVal InputStr As S
 
             Dim uCtx As CryptoAesGcmContext
             CryptoAesGcmInit uCtx, bKey, bSalt, bAuxData
-            CryptoAesGcmDecrypt uCtx, bRaw
+            If Not CryptoAesGcmDecrypt(uCtx, bRaw, Tag:=bTag) Then
+                Err.Raise vbObjectError + 9224, , "AES decryption error"
+            End If
 
             If CryptoVer = "7" Then
                 If Not ZstdDecompress(bRaw, bDecompressed) Then
