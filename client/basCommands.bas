@@ -224,7 +224,7 @@ Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer, Op
         ErrNumberStr = "(E#" & ErrNumber & ")"
     End If
 
-    SayRaw ConsoleID, "Error processing CLI input: " & ConsoleEscape(ErrDescription) & " " & ErrNumberStr & " " & ErrHelp & "{{red}}"
+    SayRaw ConsoleID, "Error: " & ConsoleEscape(ErrDescription) & " " & ErrNumberStr & " " & ErrHelp & "{{red}}"
     GoTo ScriptEnd
 
 ScriptCancelled:
@@ -234,7 +234,6 @@ ScriptEnd:
     Exit Function
 
 OnCodeFaulted:
-    scrConsoleContext(ConsoleID).CleanupScriptTasks
     ErrNumber = scrConsole(ConsoleID).Error.Number
     ErrDescription = scrConsole(ConsoleID).Error.Description
     If ErrNumber = 0 Or ErrDescription = "" Then
@@ -809,10 +808,9 @@ Public Sub EditFile(ByVal S As String, ByVal ConsoleID As Integer)
         Shift_Console_Lines ConsoleID
         Dim EmptyArguments(0 To 0) As Variant
         EmptyArguments(0) = ""
-        Run_Script EditorRunFile, ConsoleID, EmptyArguments, "CONSOLE", True, False, False, "", ""
+        Run_Command EditorRunFile, ConsoleID, "CONSOLE", True
     End If
-    
-    
+
     Exit Sub
 errorDir:
 End Sub
