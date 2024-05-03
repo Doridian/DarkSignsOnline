@@ -227,7 +227,7 @@ Public Function DSOCompileScript(ByVal Source As String, ByVal ScriptKey As Stri
 End Function
 
 Private Function AesGenSalt() As Byte()
-    AesGenSalt = SecureRandom(8)
+    AesGenSalt = SecureRandom(16)
 End Function
 
 Public Function SecureRandom(BLen As Long) As Byte()
