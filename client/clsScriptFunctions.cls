@@ -22,7 +22,6 @@ Option Explicit
 
 Private PrivConsoleID As Integer
 Private PrivParameters() As Variant
-Private ScriptFrom As String
 Private IsCLIInput As Boolean
 Private IsConfigured As Boolean
 Private SControl As ScriptControl
@@ -287,13 +286,12 @@ ExitGetASCII:
     Yield
 End Function
 
-Public Sub Configure(ByVal NewConsoleID As Integer, ByVal NewScriptFrom As String, ByVal NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, ByVal NewFileKey As String, ByVal NewServerDomain As String, ByVal NewServerPort As Long, ByVal NewRedirect As Boolean, NewDisableOutput As Boolean, ByVal NewAllowUnAbort As Boolean, ByVal NewScriptOwner As String, ByVal NewServerIP As String, ByVal NewServerConnectingIP As String)
+Public Sub Configure(ByVal NewConsoleID As Integer, ByVal NewIsCLIInput As Boolean, NewScriptControl As ScriptControl, NewPrivParameters() As Variant, ByVal NewFileKey As String, ByVal NewServerDomain As String, ByVal NewServerPort As Long, ByVal NewRedirect As Boolean, NewDisableOutput As Boolean, ByVal NewAllowUnAbort As Boolean, ByVal NewScriptOwner As String, ByVal NewServerIP As String, ByVal NewServerConnectingIP As String)
     If IsConfigured Then
         Exit Sub
     End If
     IsConfigured = True
     PrivConsoleID = NewConsoleID
-    ScriptFrom = NewScriptFrom
     IsCLIInput = NewIsCLIInput
     Set SControl = NewScriptControl
     PrivParameters = NewPrivParameters
@@ -1620,7 +1618,7 @@ Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOu
         RaiseMiscError "Could not find script to run for command """ & Script & """"
         Exit Function
     End If
-    RawRunCaptureA = Run_Script(ResolvedScript, PrivConsoleID, SParamArr, "RUN", RedirectOutput, DisableOutput, "local", PrivSpoofedLocalConnectingIP)
+    RawRunCaptureA = Run_Script(ResolvedScript, PrivConsoleID, SParamArr, RedirectOutput, DisableOutput, "local", PrivSpoofedLocalConnectingIP)
     Yield
 End Function
 
@@ -1748,7 +1746,7 @@ Private Function RawRunCaptureCodeA(ByVal RedirectOutput As Boolean, ByVal Disab
 
     SParamArr(0) = "sys://mem"
     Yield
-    RawRunCaptureCodeA = Run_Script_Code(Code, PrivConsoleID, SParamArr, "RunCode", FileKey, PrivServerDomain, PrivServerPort, PrivServerIP, PrivServerConnectingIP, RedirectOutput, DisableOutput, "", "local")
+    RawRunCaptureCodeA = Run_Script_Code(Code, PrivConsoleID, SParamArr, FileKey, PrivServerDomain, PrivServerPort, PrivServerIP, PrivServerConnectingIP, RedirectOutput, DisableOutput, "", "local")
     Yield
 End Function
 
@@ -1993,7 +1991,7 @@ Private Function ConnectRaw(ByVal Verbose As Boolean, RedirectOutput As Boolean,
         ScriptKey = "dso://" & LCase(strIP) & ":" & strPort
     End If
     DomainConnectParams(0) = DomScript
-    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, DomScript, strFileKey, strDomain, strPort, strIP, PrivServerIP, RedirectOutput, DisableOutput, ScriptKey, strOwner)
+    ConnectRaw = Run_Script_Code(strCode, ConsoleID, DomainConnectParams, strFileKey, strDomain, strPort, strIP, PrivServerIP, RedirectOutput, DisableOutput, ScriptKey, strOwner)
 
     Yield
 End Function

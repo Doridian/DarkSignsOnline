@@ -23,7 +23,7 @@ Public Sub InitBasCommands()
         Dim CLIArguments(0 To 0) As Variant
         CLIArguments(0) = "/dev/tty" & x
         Set scrConsoleContext(x) = New clsScriptFunctions
-        scrConsoleContext(x).Configure x, "", True, scrConsole(x), CLIArguments, "", "", 0, False, False, True, "", "", ""
+        scrConsoleContext(x).Configure x, True, scrConsole(x), CLIArguments, "", "", 0, False, False, True, "", "", ""
 
         scrConsole(x).AddObject "DSO", scrConsoleContext(x), True
         LoadBasicFunctions scrConsole(x)
@@ -167,7 +167,7 @@ Public Function VBEscapeSimpleQuoted(ByVal Str As String, Optional ByVal ForceQu
 End Function
 
 
-Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer, Optional ScriptFrom As String, Optional FromScript As Boolean = True)
+Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer)
     If ConsoleID < 1 Then
         ConsoleID = 1
     End If
@@ -819,7 +819,7 @@ Public Sub EditFile(ByVal S As String, ByVal ConsoleID As Integer)
         Shift_Console_Lines ConsoleID
         Dim EmptyArguments(0 To 0) As Variant
         EmptyArguments(0) = ""
-        Run_Command EditorRunFile, ConsoleID, "CONSOLE", True
+        Run_Command EditorRunFile, ConsoleID
     End If
 
     Exit Sub

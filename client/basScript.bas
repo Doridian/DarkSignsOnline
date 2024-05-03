@@ -16,7 +16,7 @@ Public WaitingForInputReturn(1 To 4) As String
 Public CancelScript(1 To 4) As Boolean
 
 
-Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal FileKey As String, ByVal ServerDomain As String, ByVal ServerPort As Long, ByVal ServerIP As String, ByVal ConnectingIP As String, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal ScriptKey As String, ByVal ScriptOwner As String) As String
+Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal FileKey As String, ByVal ServerDomain As String, ByVal ServerPort As Long, ByVal ServerIP As String, ByVal ConnectingIP As String, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal ScriptKey As String, ByVal ScriptOwner As String) As String
     If ConsoleID < 1 Then
         ConsoleID = 1
     End If
@@ -40,7 +40,7 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
 
     Dim g As clsScriptFunctions
     Set g = New clsScriptFunctions
-    g.Configure ConsoleID, ScriptFrom, False, SCT, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False, ScriptOwner, ServerIP, ConnectingIP
+    g.Configure ConsoleID, False, SCT, ScriptParameters, FileKey, ServerDomain, ServerPort, RedirectOutput, DisableOutput, False, ScriptOwner, ServerIP, ConnectingIP
     SCT.AddObject "DSO", g, True
     LoadBasicFunctions SCT
 
@@ -92,7 +92,7 @@ OnCodeFaulted:
     Resume Next
 End Function
 
-Public Function Run_Script(ByVal filename As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal ScriptFrom As String, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal ScriptKey As String, ByVal ConnectingIP As String) As String
+Public Function Run_Script(ByVal filename As String, ByVal ConsoleID As Integer, ScriptParameters() As Variant, ByVal RedirectOutput As Boolean, ByVal DisableOutput As Boolean, ByVal ScriptKey As String, ByVal ConnectingIP As String) As String
     If ScriptParameters(0) = "" Then
         ScriptParameters(0) = filename
     End If
@@ -105,6 +105,6 @@ Public Function Run_Script(ByVal filename As String, ByVal ConsoleID As Integer,
 
     Dim tmpAll As String
     tmpAll = GetFile(filename)
-    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, ScriptFrom, "", "", 0, "", ConnectingIP, RedirectOutput, DisableOutput, ScriptKey, "local")
+    Run_Script = Run_Script_Code(tmpAll, ConsoleID, ScriptParameters, "", "", 0, "", ConnectingIP, RedirectOutput, DisableOutput, ScriptKey, "local")
 End Function
 

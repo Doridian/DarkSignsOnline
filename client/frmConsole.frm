@@ -734,7 +734,7 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
                 New_Console_Line ActiveConsole
             End If
         Else
-            Run_Command CommandStr, ActiveConsole, False
+            Run_Command CommandStr, ActiveConsole
             New_Console_Line ActiveConsole
         End If
 
@@ -1083,9 +1083,9 @@ Public Sub Start_Console(ByVal ConsoleID As Integer)
     EmptyParams(0) = ""
     If ConsoleID = 1 Then
         'run the primary startup script
-        Run_Command "/system/startup.ds", ConsoleID, "BOOT", True
+        Run_Command "/system/startup.ds", ConsoleID
     Else
-        Run_Command "/system/newconsole.ds", ConsoleID, "BOOT", True
+        Run_Command "/system/newconsole.ds", ConsoleID
     End If
     New_Console_Line ConsoleID
 End Sub
