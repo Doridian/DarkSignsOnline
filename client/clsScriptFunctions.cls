@@ -1618,7 +1618,7 @@ Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOu
         RaiseMiscError "Could not find script to run for command """ & Script & """"
         Exit Function
     End If
-    RawRunCaptureA = Run_Script(ResolvedScript, PrivConsoleID, SParamArr, RedirectOutput, DisableOutput, "local", PrivSpoofedLocalConnectingIP)
+    RawRunCaptureA = Run_Script(ResolvedScript, PrivConsoleID, SParamArr, RedirectOutput, DisableOutput, "", PrivSpoofedLocalConnectingIP)
     Yield
 End Function
 
@@ -1662,10 +1662,10 @@ End Function
 Public Function Include(ByVal Script As String)
     AssertLocalOnly
 
+    Script = ResolvePath(Script)
     Dim ScriptData As String
-    ScriptData = GetFile(ResolvePath(Script))
-    ScriptData = DSODecryptScript(ScriptData, "local")
-    SControl.AddCode ScriptData
+    ScriptData = GetFile(Script)
+    IncludeCode_Internal ScriptData, Script
 End Function
 
 ' This allows remote/domain calls on purpose!
@@ -1811,7 +1811,7 @@ Private Sub IncludeCode_Internal(ByVal Code As String, ByVal SegName As String)
     CodeFaulted = False
 
     On Error GoTo OnCodeFaulted
-    Code = DSODecryptScript(Code, "local")
+    Code = DSODecryptScript(Code, "")
     If CodeFaulted Then
         ErrDescription = "[DECODE " & SegName & "] " & ErrDescription
         GoTo SkipScriptInclusion
