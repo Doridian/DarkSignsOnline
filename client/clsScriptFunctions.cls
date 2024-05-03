@@ -1666,12 +1666,11 @@ Public Function Include(ByVal Script As String)
 
     Dim ScriptData As String
     ScriptData = GetFile(ResolvePath(Script))
-
+    ScriptData = DSODecryptScript(ScriptData, "local")
     SControl.AddCode ScriptData
 End Function
 
 ' This allows remote/domain calls on purpose!
-
 Public Function DLOpen(ByVal Library As String)
     If LCase(Trim(Library)) = "termlib" Then
         If PrivTermlibObject Is Nothing Then
@@ -1688,8 +1687,7 @@ Public Function DLOpen(ByVal Library As String)
 
     Dim SData As String
     SData = GetFile("/system/libs/" & Library & ".ds")
-
-    SControl.AddCode SData
+    IncludeCode_Internal SData, "dlopen://by-name/" & Library
 End Function
 
 Public Function Run(ParamArray XArr() As Variant)
@@ -1748,7 +1746,7 @@ Private Function RawRunCaptureCodeA(ByVal RedirectOutput As Boolean, ByVal Disab
         ReDim SParamArr(0 To 0)
     End If
 
-    SParamArr(0) = "inline://"
+    SParamArr(0) = "sys://mem"
     Yield
     RawRunCaptureCodeA = Run_Script_Code(Code, PrivConsoleID, SParamArr, "RunCode", FileKey, PrivServerDomain, PrivServerPort, PrivServerIP, PrivServerConnectingIP, RedirectOutput, DisableOutput, "", "local")
     Yield
@@ -1810,8 +1808,42 @@ Public Function RunCode(ParamArray XArr() As Variant)
     RunCodeA Script, SParamArr
 End Function
 
-Public Function IncludeCode(ByVal Code As String)
+Private Sub IncludeCode_Internal(ByVal Code As String, ByVal SegName As String)
+    Dim CodeFaulted As Boolean, ErrNumber As Long, ErrDescription As String
+    CodeFaulted = False
+
+    On Error GoTo OnCodeFaulted
+    Code = DSODecryptScript(Code, "local")
+    If CodeFaulted Then
+        ErrDescription = "[DECODE " & SegName & "] " & ErrDescription
+        GoTo SkipScriptInclusion
+    End If
+    Code = ParseCommandLineOptional(Code, PrivConsoleID, IsLocal())
+    If CodeFaulted Then
+        ErrDescription = "[PARSE " & SegName & "] " & ErrDescription
+        GoTo SkipScriptInclusion
+    End If
     SControl.AddCode Code
+    If CodeFaulted Then
+        ErrDescription = "[RUN " & SegName & "] " & ErrDescription
+        GoTo SkipScriptInclusion
+    End If
+SkipScriptInclusion:
+    On Error GoTo 0
+    If CodeFaulted Then
+        Err.Raise ErrNumber, , ErrDescription
+    End If
+    Exit Sub
+
+OnCodeFaulted:
+    CodeFaulted = True
+    ErrNumber = Err.Number
+    ErrDescription = Err.Description
+    Resume Next
+End Sub
+
+Public Function IncludeCode(ByVal Code As String)
+    IncludeCode_Internal Code, "sys://mem"
 End Function
 
 ' RUN CODE FROM DSO DOMAIN
@@ -2211,8 +2243,7 @@ Public Function DLOpenHash(ByVal HASH As String)
     
     Yield
 
-    FData = DSODecryptScript(FData, "local")
-    SControl.AddCode FData
+    IncludeCode_Internal FData, "dlopen://by-hash/" & HASH
 End Function
 
 Public Function DLPutHash(ByVal HASH As String, ByVal Data As String)
