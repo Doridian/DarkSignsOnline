@@ -51,19 +51,19 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
 
     tmpAll = DSODecryptScript(tmpAll, ScriptKey)
     If CodeFaulted Then
-        ErrDescription = "[DECODING CODE] " & ErrDescription
+        ErrDescription = "[DECODING " & ScriptParameters(0) & "] " & ErrDescription
         GoTo SkipScriptProcessing
     End If
 
     tmpAll = ParseCommandLineOptional(tmpAll, ConsoleID, ServerPort <= 0)
     If CodeFaulted Then
-        ErrDescription = "[PARSING CODE] " & ErrDescription
+        ErrDescription = "[PARSING " & ScriptParameters(0) & "] " & ErrDescription
         GoTo SkipScriptProcessing
     End If
 
     SCT.AddCode tmpAll
     If CodeFaulted Then
-        ErrDescription = "[RUNNING CODE] " & ErrDescription
+        ErrDescription = "[RUNNING " & ScriptParameters(0) & "] " & ErrDescription
         GoTo SkipScriptProcessing
     End If
 

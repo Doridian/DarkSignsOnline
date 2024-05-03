@@ -7,8 +7,9 @@
 '{{lorange}}You can only upload and download scripts to domain names (servers) which you own.
 Option Explicit
 
-Dim strContents, strDomain, strPort
+Dim strContents, strDomain, strPort, Res
 strDomain = ArgV(1)
 strPort = ArgV(2)
 strContents = Display(ArgV(3))
-UploadStr strDomain, strPort, strContents
+Res = UploadStr(strDomain, strPort, strContents)
+WaitFor Res

@@ -235,7 +235,7 @@ SkipCommandProcessing:
         ErrNumberStr = "(E#" & ErrNumber & ")"
     End If
 
-    SayRaw ConsoleID, "Error: " & ConsoleEscape(ErrDescription) & " " & ErrNumberStr & " " & ErrHelp & "{{red}}"
+    SayRaw ConsoleID, "Error: " & ConsoleEscape(ErrDescription) & " " & ErrNumberStr & " " & ConsoleEscape(ErrHelp) & "{{red}}"
     GoTo ScriptEnd
 
 ScriptCancelled:

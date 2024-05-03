@@ -1613,8 +1613,8 @@ Private Function RawRunCaptureA(ByVal RedirectOutput As Boolean, ByVal DisableOu
         ReDim SParamArr(0 To 0)
     End If
 
-    SParamArr(0) = Script
     ResolvedScript = basCommands.ResolveCommand(PrivConsoleID, Script)
+    SParamArr(0) = ResolvedScript
     Yield
     If ResolvedScript = "" Then
         RaiseMiscError "Could not find script to run for command """ & Script & """"
