@@ -164,6 +164,14 @@ def dso_regdomains():
     
 # Call this function to generate a script to upload all the DSO scripts to all the servers...
 def dso_uploadscript():
+    print("Option Explicit")
+    print("Sub UploadSecure(Domain, Port, File)")
+    print("    Dim strData")
+    print("    strData = Display(File)")
+    print("    strData = CompileStr(strData)")
+    print("    WaitFor UploadStr(Domain, Port, strData)")
+    print("End Sub")
+
     for server in servers:
         for port, script in server.ports.items():
             print(f"Say \"Uploading {script.name}.ds to {server.ip}:{port}\"")
@@ -212,11 +220,4 @@ def dso_upload_portscans():
             print(f"sScan = sScan & \"{port}={dsc.name}\"  & vbCrLf")
         print(f"PrintVar RemoteWrite(\"portscan.dsn\", \"{server.ip}.ports\", sScan)")
 
-print("Option Explicit")
-print("Sub UploadSecure(Domain, Port, File)")
-print("    Dim strData")
-print("    strData = Display(File)")
-print("    strData = CompileStr(strData)")
-print("    WaitFor UploadStr(Domain, Port, strData)")
-print("End Sub")
 dso_uploadscript()
