@@ -26,6 +26,9 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
     Dim OldPath As String
     OldPath = cPath(ConsoleID)
 
+    Dim ErrNumber As Long
+    Dim ErrDescription As String
+
     CancelScript(ConsoleID) = False
 
     Dim SCT As ScriptControl
@@ -41,17 +44,20 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
     SCT.AddObject "DSO", g, True
     LoadBasicFunctions SCT
 
-    tmpAll = DSODecryptScript(tmpAll, ScriptKey)
-    tmpAll = ParseCommandLineOptional(tmpAll, ConsoleID, ServerPort <= 0)
-
-    Dim ErrNumber As Long
-    Dim ErrDescription As String
-
     Dim CodeFaulted As Boolean
     CodeFaulted = False
     On Error GoTo OnCodeFaulted
-    SCT.AddCode tmpAll
+    tmpAll = DSODecryptScript(tmpAll, ScriptKey)
+    tmpAll = ParseCommandLineOptional(tmpAll, ConsoleID, ServerPort <= 0)
     On Error GoTo 0
+
+    If CodeFaulted Then
+        ErrDescription = "Error loading script: " & ErrDescription
+    Else
+        On Error GoTo OnCodeFaulted
+        SCT.AddCode tmpAll
+        On Error GoTo 0
+    End If
     
     If ErrNumber = vbObjectError + 9002 Then
         CodeFaulted = False
