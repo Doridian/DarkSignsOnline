@@ -184,19 +184,30 @@ Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer, Op
     Dim ErrNumber As Long
     Dim ErrDescription As String
 
-    Dim CodeFaulted As Boolean
-    CodeFaulted = False
-    On Error GoTo OnCodeFaulted
-
     scrConsoleContext(ConsoleID).UnAbort
     scrConsole(ConsoleID).Error.Clear
 
     Dim RunStr As String
     Dim OptionDScript As Boolean
     OptionDScript = scrConsoleDScript(ConsoleID)
+
+    Dim CodeFaulted As Boolean
+    CodeFaulted = False
+    On Error GoTo OnCodeFaulted
+
     RunStr = ParseCommandLine(tmpS, OptionDScript, False, ConsoleID, True)
+    If CodeFaulted Then
+        ErrDescription = "[PARSING CLI] " & ErrDescription
+        GoTo SkipCommandProcessing
+    End If
     scrConsoleDScript(ConsoleID) = OptionDScript
     scrConsole(ConsoleID).AddCode RunStr
+    If CodeFaulted Then
+        ErrDescription = "[RUNNING CLI] " & ErrDescription
+        GoTo SkipCommandProcessing
+    End If
+
+SkipCommandProcessing:
     On Error GoTo 0
     If Not CodeFaulted Then
         GoTo ScriptEnd

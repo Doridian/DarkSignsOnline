@@ -46,19 +46,29 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
 
     Dim CodeFaulted As Boolean
     CodeFaulted = False
-    On Error GoTo OnCodeFaulted
-    tmpAll = DSODecryptScript(tmpAll, ScriptKey)
-    tmpAll = ParseCommandLineOptional(tmpAll, ConsoleID, ServerPort <= 0)
-    On Error GoTo 0
 
+    On Error GoTo OnCodeFaulted
+
+    tmpAll = DSODecryptScript(tmpAll, ScriptKey)
     If CodeFaulted Then
-        ErrDescription = "Error loading script: " & ErrDescription
-    Else
-        On Error GoTo OnCodeFaulted
-        SCT.AddCode tmpAll
-        On Error GoTo 0
+        ErrDescription = "[DECODING CODE] " & ErrDescription
+        GoTo SkipScriptProcessing
     End If
-    
+
+    tmpAll = ParseCommandLineOptional(tmpAll, ConsoleID, ServerPort <= 0)
+    If CodeFaulted Then
+        ErrDescription = "[PARSING CODE] " & ErrDescription
+        GoTo SkipScriptProcessing
+    End If
+
+    SCT.AddCode tmpAll
+    If CodeFaulted Then
+        ErrDescription = "[RUNNING CODE] " & ErrDescription
+        GoTo SkipScriptProcessing
+    End If
+
+SkipScriptProcessing:
+    On Error GoTo 0
     If ErrNumber = vbObjectError + 9002 Then
         CodeFaulted = False
     End If
