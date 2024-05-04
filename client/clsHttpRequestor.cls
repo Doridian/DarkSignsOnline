@@ -146,11 +146,14 @@ Private Function ManageSockError(ByVal Reason As String, ByVal AllowSetDoneForev
         Exit Function
     End If
 
+    Dim ShowErrors As Boolean
     Dim AllowRetry As Boolean
+    ShowErrors = True
     AllowRetry = Retries < basWorld.MaxSockRetries
     If IsCustomDownload > 0 Then
         If DownloadAborted(IsCustomDownload) Then
             AllowRetry = False
+            ShowErrors = False
         End If
     End If
     ManageSockError = AllowRetry
@@ -167,9 +170,13 @@ Private Function ManageSockError(ByVal Reason As String, ByVal AllowSetDoneForev
 
         Send
 
-        SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry " & Trim(Str(Retries)) & " of " & Trim(Str(basWorld.MaxSockRetries)) & "."
+        If ShowErrors Then
+            SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry " & Trim(Str(Retries)) & " of " & Trim(Str(basWorld.MaxSockRetries)) & "."
+        End If
    Else
-        SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry count expired."
+        If ShowErrors Then
+            SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry count expired."
+        End If
         If AllowSetDoneForever Then SetDoneForever
    End If
 End Function
