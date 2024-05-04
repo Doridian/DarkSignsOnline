@@ -73,6 +73,8 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
 
+        Remove-Item -Force ".\client\logs" -Recurse -ErrorAction Continue
+        mkdir ".\client\logs"
         Remove-Item -Force ".\client\dist" -Recurse -ErrorAction Continue
         mkdir ".\client\dist"
         Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\VB98\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\build.log" -Wait -PassThru
