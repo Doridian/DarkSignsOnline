@@ -66,37 +66,6 @@ jobs:
         $vbp = $vbp -replace '^VersionFileDescription=.*$', "VersionFileDescription=""DSO public build $hash"""
         $vbp | Set-Content .\client\DSO.vbp
     # Build process
-    - name: Download VB6 from public sources and extract/install
-      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
-      timeout-minutes: 1
-      run: |
-        $ErrorActionPreference = 'Stop'
-        Set-PSDebug -Trace 1
-
-        Start-Process -FilePath "regsvr32.exe" -ArgumentList "/s","/i",".\client\libs\msstdfmt.dll" -Wait -PassThru
-
-        mkdir ".\logs"
-        mkdir "C:\vb6"
-
-        function Test-FileHash {
-            param (
-                $FilePath,
-                $ExpectedHash
-            )
-            $Hash = Get-FileHash -Path $FilePath -Algorithm SHA256
-            if($Hash.Hash -ne $ExpectedHash) {
-                throw (New-Object System.Security.Cryptography.CryptographicException("Hash mismatch for $FilePath. Expected: $ExpectedHash, got: $($Hash.Hash)"))
-            }
-            Write-Host "Hash OK for $FilePath"
-        }
-
-        Invoke-WebRequest -Uri "https://archive.org/download/VisualBasic6Portable/Visual%20Basic%206%20Portable.exe" -OutFile "C:\vb6\vb6_portable.exe"
-        Test-FileHash -FilePath "C:\vb6\vb6_portable.exe" -ExpectedHash "11A56534505DC393BF367CD2ABB7C59036BF0C5D82444A4E26D0E77BB6717ACB"
-
-        C:
-        cd "C:\vb6"
-        & "C:\Program Files\7-Zip\7z.exe" x "C:\vb6\vb6_portable.exe"
-        reg import "C:\vb6\AutoPlay\Docs\VbPortable6.reg"
     - name: Build client
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       timeout-minutes: 1
@@ -106,7 +75,7 @@ jobs:
 
         Remove-Item -Force ".\client\dist" -Recurse -ErrorAction Continue
         mkdir ".\client\dist"
-        Start-Process -FilePath "C:\vb6\AutoPlay\Docs\Portable.VB6\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\build.log" -Wait -PassThru
+        Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\VB98\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\build.log" -Wait -PassThru
         Get-Content .\logs\build.log
         if(![System.IO.File]::Exists(".\client\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Build failure?", $path))
