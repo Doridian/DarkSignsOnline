@@ -75,6 +75,7 @@ jobs:
 
         Remove-Item -Force ".\logs" -Recurse -ErrorAction Continue
         mkdir ".\logs"
+
         Remove-Item -Force ".\client\dist" -Recurse -ErrorAction Continue
         mkdir ".\client\dist"
         Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\VB98\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\client-build.log" -Wait -PassThru
@@ -94,24 +95,23 @@ jobs:
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
       timeout-minutes: 2
       run: |
-        Remove-MpPreference -ExclusionPath (Get-MpPreference).ExclusionPath
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
 
-        Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
+        Remove-Item -Force ".\logs\MpCmdRun.log" -ErrorAction Continue
         & "C:\Program Files\Windows Defender\MpCmdRun.exe" -SignatureUpdate -http
-        Get-Content "$env:TEMP\MpCmdRun.log"
+        Get-Content ".\logs\MpCmdRun.log"
 
-        Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
+        Remove-Item -Force ".\logs\MpCmdRun.log" -ErrorAction Continue
         & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$(pwd)\client\dist\dso.exe"
-        Get-Content "$env:TEMP\MpCmdRun.log"
+        Get-Content ".\logs\MpCmdRun.log"
         if(![System.IO.File]::Exists(".\client\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
         }
 
-        Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
+        Remove-Item -Force ".\logs\MpCmdRun.log" -ErrorAction Continue
         & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$(pwd)\client.zip"
-        Get-Content "$env:TEMP\MpCmdRun.log"
+        Get-Content ".\logs\MpCmdRun.log"
         if(![System.IO.File]::Exists(".\client.zip")) {
           throw (New-Object System.IO.FileNotFoundException("client.zip not found. Defender likely nabbed it...", $path))
         }
