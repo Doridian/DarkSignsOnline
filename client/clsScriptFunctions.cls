@@ -1808,7 +1808,10 @@ End Function
 
 Private Sub IncludeCode_Internal(ByVal Code As String, ByVal SegName As String)
     Dim CodeFaulted As Boolean, ErrNumber As Long, ErrDescription As String
+
     CodeFaulted = False
+    SControl.Error.Clear
+    Err.Clear
 
     On Error GoTo OnCodeFaulted
     Code = DSODecryptScript(Code, "")
@@ -1835,8 +1838,13 @@ SkipScriptInclusion:
 
 OnCodeFaulted:
     CodeFaulted = True
-    ErrNumber = Err.Number
-    ErrDescription = Err.Description
+
+    ErrNumber = SControl.Error.Number
+    ErrDescription = SControl.Error.Description
+    If ErrNumber = 0 Or ErrDescription = "" Then
+        ErrNumber = Err.Number
+        ErrDescription = Err.Description
+    End If
     Resume Next
 End Sub
 

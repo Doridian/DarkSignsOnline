@@ -186,6 +186,7 @@ Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer)
 
     scrConsoleContext(ConsoleID).UnAbort
     scrConsole(ConsoleID).Error.Clear
+    Err.Clear
 
     Dim RunStr As String
     Dim OptionDScript As Boolean

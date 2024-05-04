@@ -46,6 +46,7 @@ Public Function Run_Script_Code(ByVal tmpAll As String, ByVal ConsoleID As Integ
 
     Dim CodeFaulted As Boolean
     CodeFaulted = False
+    SCT.Error.Clear
 
     On Error GoTo OnCodeFaulted
 
