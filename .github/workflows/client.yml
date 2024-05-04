@@ -98,6 +98,9 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
 
+        Remove-Item -Force "R:\check" -Recurse -ErrorAction Continue
+        mkdir "R:\check"
+
         Copy-Item -Force ".\client\dist\dso.exe" "R:\check\dso.exe"
         Copy-Item -Force ".\client.zip" "R:\check\client.zip"
 
