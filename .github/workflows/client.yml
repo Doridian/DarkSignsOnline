@@ -73,12 +73,12 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
 
-        Remove-Item -Force ".\client\logs" -Recurse -ErrorAction Continue
-        mkdir ".\client\logs"
+        Remove-Item -Force ".\logs" -Recurse -ErrorAction Continue
+        mkdir ".\logs"
         Remove-Item -Force ".\client\dist" -Recurse -ErrorAction Continue
         mkdir ".\client\dist"
-        Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\VB98\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\build.log" -Wait -PassThru
-        Get-Content .\logs\build.log
+        Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\VB98\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\client-build.log" -Wait -PassThru
+        Get-Content .\logs\client-build.log
         if(![System.IO.File]::Exists(".\client\dist\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Build failure?", $path))
         }
