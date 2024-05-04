@@ -98,21 +98,24 @@ jobs:
         $ErrorActionPreference = 'Stop'
         Set-PSDebug -Trace 1
 
+        Copy-Item -Force ".\client\dist\dso.exe" "$env:TEMP\dso.exe"
+        Copy-Item -Force ".\client.zip" "$env:TEMP\client.zip"
+
         Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
         & "C:\Program Files\Windows Defender\MpCmdRun.exe" -SignatureUpdate -http
         Get-Content "$env:TEMP\MpCmdRun.log"
 
         Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
-        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$(pwd)\client\dist\dso.exe"
+        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$env:TEMP\dso.exe"
         Get-Content "$env:TEMP\MpCmdRun.log"
-        if(![System.IO.File]::Exists(".\client\dist\dso.exe")) {
+        if(![System.IO.File]::Exists("$env:TEMP\dso.exe")) {
           throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
         }
 
         Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
-        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$(pwd)\client.zip"
+        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "$env:TEMP\client.zip"
         Get-Content "$env:TEMP\MpCmdRun.log"
-        if(![System.IO.File]::Exists(".\client.zip")) {
+        if(![System.IO.File]::Exists("$env:TEMP\client.zip")) {
           throw (New-Object System.IO.FileNotFoundException("client.zip not found. Defender likely nabbed it...", $path))
         }
     #  Artifact handlers
