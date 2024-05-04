@@ -1,6 +1,8 @@
 [submodule "client/libs/VbAsyncSocket"]
 	path = client/libs/VbAsyncSocket
 	url = https://github.com/wqweto/VbAsyncSocket.git
+	branch = master
 [submodule "client/libs/VBCCR"]
 	path = client/libs/VBCCR
 	url = https://github.com/Kr00l/VBCCR.git
+	branch = master
