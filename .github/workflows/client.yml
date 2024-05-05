@@ -89,6 +89,7 @@ jobs:
         Copy-Item ..\libs\VbAsyncSocket\LICENSE .\LICENSE-VbAsyncSocket.txt
         Copy-Item ..\libs\VBCCR\LICENSE.md .\LICENSE-VBCCR.txt
         Copy-Item ..\libs\runtime\*.dll .\
+        Copy-Item "$env:SYSTEMROOT\SysWOW64\msvbvm60.dll" .\
         Copy-Item ..\..\LICENSE .\LICENSE.txt
         & "C:\Program Files\7-Zip\7z.exe" a -tzip "..\..\client.zip" -r * "-x!dso.pdb"
     - name: Ensure Defender doesn't false-positive us
