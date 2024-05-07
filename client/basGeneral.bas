@@ -111,7 +111,7 @@ Public Function GetFileUnsafe(ByVal filename As String) As String
     Close #Handle
 End Function
 
-Public Function WriteFileUnsafe(ByVal filename As String, ByVal Contents As String)
+Public Sub WriteFileUnsafe(ByVal filename As String, ByVal Contents As String)
     On Error Resume Next
     Kill filename$
     On Error GoTo 0
@@ -121,24 +121,24 @@ Public Function WriteFileUnsafe(ByVal filename As String, ByVal Contents As Stri
     Open filename$ For Binary Access Write As #Handle
         Put #Handle, , Contents
     Close #Handle
-End Function
+End Sub
 
-Public Function AppendFileUnsafe(ByVal filename As String, ByVal Contents As String)
+Public Sub AppendFileUnsafe(ByVal filename As String, ByVal Contents As String)
     Dim Handle As Long
     Handle = FreeFile
     Open filename For Binary Access Write As #Handle
         Seek #Handle, LOF(Handle) + 1
         Put #Handle, , Contents
     Close #Handle
-End Function
+End Sub
 
-Public Function WriteFile(ByVal filename As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+Public Sub WriteFile(ByVal filename As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
     WriteFileUnsafe SafePath(filename, Prefix), Contents
-End Function
+End Sub
 
-Public Function AppendFile(ByVal filename As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
+Public Sub AppendFile(ByVal filename As String, ByVal Contents As String, Optional ByVal Prefix As String = "")
     AppendFileUnsafe SafePath(filename, Prefix), Contents
-End Function
+End Sub
 
 Public Function FileLen(ByVal filename As String, Optional ByVal Prefix As String = "") As Long
     FileLen = FileLenUnsafe(SafePath(filename, Prefix))

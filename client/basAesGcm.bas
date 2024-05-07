@@ -318,7 +318,7 @@ End Sub
 
 '= AES-GCM ===============================================================
 
-Private Function pvFinalize(uCtx As CryptoAesGcmContext, ByVal lTagSize As Long, baTag() As Byte)
+Private Sub pvFinalize(uCtx As CryptoAesGcmContext, ByVal lTagSize As Long, baTag() As Byte)
     Dim cTemp           As Currency
     Dim aTemp(0 To 1)   As Long
     Dim uBlock          As ArrayLong4
@@ -344,7 +344,7 @@ Private Function pvFinalize(uCtx As CryptoAesGcmContext, ByVal lTagSize As Long,
             baTag(lIdx) = baTag(lIdx) Xor .Counter(lIdx)
         Next
     End With
-End Function
+End Sub
 
 Public Sub CryptoAesGcmInit(uCtx As CryptoAesGcmContext, baKey() As Byte, baNonce() As Byte, baAad() As Byte)
     Dim baAuthKey(0 To LNG_BLOCKSZ - 1) As Byte

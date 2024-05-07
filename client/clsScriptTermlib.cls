@@ -16,6 +16,7 @@ Option Explicit
 Private IsConf As Boolean
 Private GSF As clsScriptFunctions
 
+' VBNODOC
 Public Sub SetGSF(NewGSF As clsScriptFunctions)
     If IsConf Then
         Exit Sub
@@ -37,15 +38,15 @@ Public Property Get TwipsPerPixelY() As Long
 End Property
 
 ' Just like "Say", except you can pass a background color for the line
-Public Function SayWithBGColor(ByVal RGBVal As Long, ByVal Str As String)
+Public Sub SayWithBGColor(ByVal RGBVal As Long, ByVal Str As String)
     GSF.Say Str
     GSF.Draw -1, RGBVal, "solid"
-End Function
+End Sub
 
-Public Function SaySlowWithBGColor(ByVal RGBVal As Long, ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
+Public Sub SaySlowWithBGColor(ByVal RGBVal As Long, ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
     If GSF.IsOutputDisabled Then
         GSF.Say Str & Style
-        Exit Function
+        Exit Sub
     End If
 
     Dim X As Long
@@ -64,13 +65,13 @@ Public Function SaySlowWithBGColor(ByVal RGBVal As Long, ByVal Delay As Long, By
             GSF.Draw -1, RGBVal, "solid"
         End If
     Next
-End Function
+End Sub
 
-Public Function SaySlow(ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
+Public Sub SaySlow(ByVal Delay As Long, ByVal Str As String, ByVal Style As String)
     SaySlowWithBGColor -1, Delay, Str, Style
-End Function
+End Sub
 
-Public Function GetAsciiWithCPromptBG(ByVal RGBVal As Long, ByVal Prompt As String)
+Public Function GetAsciiWithCPromptBG(ByVal RGBVal As Long, ByVal Prompt As String) As Long
     GSF.Say "{{noprespace}}" & Prompt & "> [_]"
     If RGBVal >= 0 Then
         GSF.Draw -1, RGBVal, "solid"
@@ -84,24 +85,24 @@ Public Function GetAsciiWithCPromptBG(ByVal RGBVal As Long, ByVal Prompt As Stri
     GetAsciiWithCPromptBG = Choice
 End Function
 
-Public Function GetAsciiWithCPrompt(ByVal Prompt As String)
+Public Function GetAsciiWithCPrompt(ByVal Prompt As String) As Long
     GetAsciiWithCPrompt = GetAsciiWithCPromptBG(-1, Prompt)
 End Function
 
-Public Function GetAsciiWithPrompt()
+Public Function GetAsciiWithPrompt() As Long
     GetAsciiWithPrompt = GetAsciiWithCPrompt("")
 End Function
 
-Public Function SetMissionProgress(ByVal MissionID As String, ByVal key As String, ByVal value As String)
+Public Sub SetMissionProgress(ByVal MissionID As String, ByVal key As String, ByVal value As String)
     GSF.SetMissionData MissionID, "progress", key, value
-End Function
+End Sub
 
-Public Function GetMissionProgress(ByVal MissionID As String, ByVal key As String)
+Public Function GetMissionProgress(ByVal MissionID As String, ByVal key As String) As String
     GetMissionProgress = GSF.GetMissionData(MissionID, "progress", key)
 End Function
 
-Public Function IntMissionProgress(ByVal MissionID As String, ByVal key As String)
-    Dim Val
+Public Function IntMissionProgress(ByVal MissionID As String, ByVal key As String) As Long
+    Dim Val As String
     Val = GetMissionProgress(MissionID, key)
     If Val = "" Then
         IntMissionProgress = 0
@@ -110,29 +111,28 @@ Public Function IntMissionProgress(ByVal MissionID As String, ByVal key As Strin
     End If
 End Function
 
-Public Function IncMissionProgress(ByVal MissionID As String, ByVal key As String)
-    Dim Val
+Public Sub IncMissionProgress(ByVal MissionID As String, ByVal key As String)
+    Dim Val As String
     Val = IntMissionProgress(MissionID, key)
     SetMissionProgress MissionID, key, (Val + 1)
-End Function
+End Sub
 
-Public Function BoolMissionProgress(ByVal MissionID As String, ByVal key As String)
+Public Function BoolMissionProgress(ByVal MissionID As String, ByVal key As String) As Boolean
     BoolMissionProgress = (GetMissionProgress(MissionID, key) = "1")
 End Function
 
-Public Function BoolSetMissionProgress(ByVal MissionID As String, ByVal key As String)
+Public Sub BoolSetMissionProgress(ByVal MissionID As String, ByVal key As String)
     SetMissionProgress MissionID, key, "1"
-End Function
+End Sub
 
-Public Function BoolClearMissionProgress(ByVal MissionID As String, ByVal key As String)
+Public Sub BoolClearMissionProgress(ByVal MissionID As String, ByVal key As String)
     SetMissionProgress MissionID, key, "0"
-End Function
+End Sub
 
-Public Function QReadLine(ByVal Prompt As String)
+Public Function QReadLine(ByVal Prompt As String) As String
     QReadLine = LCase(Trim(GSF.ReadLine(Prompt)))
 End Function
 
-Public Function QReadLineBG(ByVal RGBVal As Long, ByVal Prompt As String)
+Public Function QReadLineBG(ByVal RGBVal As Long, ByVal Prompt As String) As String
     QReadLineBG = LCase(Trim(GSF.ReadLine(Prompt, RGBVal)))
 End Function
-

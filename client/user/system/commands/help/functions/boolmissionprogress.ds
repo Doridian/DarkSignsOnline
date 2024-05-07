@@ -1,3 +1,3 @@
 Option Explicit
-Say "{{green 12}}Function: BoolMissionProgress(MissionID[String], key[String]) -> Nothing"
+Say "{{green 12}}Function: BoolMissionProgress(MissionID[String], key[String]) -> Boolean"
 Say "{{lred}}Restriction: Must be loaded with: DLOpen ""termlib"""

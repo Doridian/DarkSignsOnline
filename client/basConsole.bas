@@ -481,7 +481,7 @@ Public Function StripAfterNewline(ByVal S As String) As String
     End If
 End Function
 
-Public Function RenderPromptInput(ByVal ConsoleID As Integer)
+Public Sub RenderPromptInput(ByVal ConsoleID As Integer)
     Dim Seg As Integer
     Seg = UBound(Console(ConsoleID, 1).Segments)
     Console(ConsoleID, 1).Segments(Seg).Caption = Console(ConsoleID, 1).Segments(Seg).Caption & Replace(CurrentPromptInput(ConsoleID), ConsoleInvisibleChar, "")
@@ -490,10 +490,10 @@ Public Function RenderPromptInput(ByVal ConsoleID As Integer)
     CurrentPromptSelLength(ConsoleID) = 0
     CurrentPromptInput(ConsoleID) = ""
     WaitingForInput(ConsoleID) = False
-End Function
+End Sub
 
-Public Function SayRaw(ByVal ConsoleID As Integer, ByVal S As String, Optional ByVal OverwriteLineIndex As Long = 0)
-    If ConsoleID > 4 Then Exit Function
+Public Sub SayRaw(ByVal ConsoleID As Integer, ByVal S As String, Optional ByVal OverwriteLineIndex As Long = 0)
+    If ConsoleID > 4 Then Exit Sub
     If Len(S) > 32763 Then S = Mid(S, 1, 32763) ' 32764 would overflow
 
     If OverwriteLineIndex >= 0 Then
@@ -510,7 +510,7 @@ Public Function SayRaw(ByVal ConsoleID As Integer, ByVal S As String, Optional B
     Console(ConsoleID, OverwriteLineIndex) = Parse_Console_Line(Console(ConsoleID, OverwriteLineIndex), S)
 
     frmConsole.QueueConsoleRender
-End Function
+End Sub
 
 Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal S As String) As ConsoleLine
     S = StripAfterNewline(S)

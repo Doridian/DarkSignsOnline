@@ -1,2 +1,2 @@
 Option Explicit
-Say "{{green 12}}Function: SetMissionData(MissionID[String], Section[String], key[String], value[String]) -> String"
+Say "{{green 12}}Function: SetMissionData(MissionID[String], Section[String], key[String], value[String]) -> Nothing"

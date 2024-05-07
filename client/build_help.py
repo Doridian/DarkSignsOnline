@@ -178,6 +178,8 @@ def process_vb_function_decl(prefix: str, i: int, lines: list[str], always_add_l
                 else:
                     raise ValueError(f"Invalid VBType override: {vbtcur}")
                 continue
+            elif jlcur.lower() == "vbnodoc":
+                return None
 
             if jlcur.lower().startswith("example #"):
                 jlcur = "{{lgreen 12}}" + jlcur
@@ -200,6 +202,7 @@ def process_vb_function_decl(prefix: str, i: int, lines: list[str], always_add_l
     return DSFunc(name=name, args=args, return_type=func_return, docs=func_docs, limitations=func_limits)
 
 F_PREFIX = "public function "
+S_PREFIX = "public sub "
 PG_PREFIX = "public property get "
 PL_PREFIX = "public property let "
 
@@ -213,7 +216,15 @@ def process_vb_file(file: str, always_add_limits: list[str] | None = None) -> tu
     for i in range(len(lines)):
         line_decl = process_vb_function_decl(F_PREFIX, i, lines, always_add_limits)
         if line_decl:
+            if not line_decl.return_type:
+                line_decl.return_type = "Variant"
             res.append(line_decl)
+            continue
+
+        line_decl = process_vb_function_decl(S_PREFIX, i, lines, always_add_limits)
+        if line_decl:
+            res.append(line_decl)
+            continue
 
         line_decl = process_vb_function_decl(PG_PREFIX, i, lines, always_add_limits)
         if line_decl:
@@ -223,6 +234,7 @@ def process_vb_file(file: str, always_add_limits: list[str] | None = None) -> tu
                 props[line_decl.name].limitations_get = line_decl.limitations
             else:
                 props[line_decl.name] = DSProp(name=line_decl.name, prop_type=line_decl.return_type, limitations_get=line_decl.limitations, limitations_let=[], docs_get=line_decl.docs, docs_let="", has_get=True, has_let=False)
+            continue
 
         line_decl = process_vb_function_decl(PL_PREFIX, i, lines, always_add_limits)
         if line_decl:
@@ -232,6 +244,7 @@ def process_vb_file(file: str, always_add_limits: list[str] | None = None) -> tu
                 props[line_decl.name].limitations_let = line_decl.limitations
             else:
                 props[line_decl.name] = DSProp(name=line_decl.name, prop_type=line_decl.return_type, limitations_let=line_decl.limitations, limitations_get=[], docs_get="", docs_let=line_decl.docs, has_get=False, has_let=True)
+            continue
 
     return res, list(props.values())
 

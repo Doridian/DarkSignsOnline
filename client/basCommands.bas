@@ -167,7 +167,7 @@ Public Function VBEscapeSimpleQuoted(ByVal Str As String, Optional ByVal ForceQu
 End Function
 
 
-Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer)
+Public Sub Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer)
     If ConsoleID < 1 Then
         ConsoleID = 1
     End If
@@ -176,7 +176,7 @@ Public Function Run_Command(ByVal tmpS As String, ByVal ConsoleID As Integer)
     End If
 
     If tmpS = "" Then
-        Exit Function
+        Exit Sub
     End If
 
     CancelScript(ConsoleID) = False
@@ -243,7 +243,7 @@ ScriptCancelled:
     SayRaw ConsoleID, "Script Stopped by User (CTRL + B){{orange}}"
 ScriptEnd:
     scrConsoleContext(ConsoleID).CleanupScriptTasks
-    Exit Function
+    Exit Sub
 
 OnCodeFaulted:
     ErrNumber = scrConsole(ConsoleID).Error.Number
@@ -255,7 +255,7 @@ OnCodeFaulted:
 
     CodeFaulted = True
     Resume Next
-End Function
+End Sub
 
 Public Function ConsoleEscape(ByVal tmpS As String) As String
     tmpS = Replace(tmpS, ConsoleInvisibleChar, "")
@@ -610,11 +610,11 @@ EvalErrorHandler:
     Resume Next
 End Function
 
-Public Function RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef g As Long, ByRef b As Long)
+Public Sub RGBSplit(ByVal lColor As Long, ByRef R As Long, ByRef g As Long, ByRef b As Long)
     R = lColor And &HFF ' mask the low byte
     g = (lColor And &HFF00&) \ &H100 ' mask the 2nd byte and shift it to the low byte
     b = (lColor And &HFF0000) \ &H10000 ' mask the 3rd byte and shift it to the low byte
-End Function
+End Sub
 
 Public Function SinLerp(ByVal FromNum As Long, ByVal ToNum As Long, ByVal ValNum As Long) As Double
     If ToNum < FromNum Then
@@ -838,6 +838,6 @@ Public Function GetShortName(ByVal S As String) As String
     GetShortName = Trim(ReverseString(S))
 End Function
 
-Public Function SayError(S As String, ByVal ConsoleID As Integer)
+Public Sub SayError(S As String, ByVal ConsoleID As Integer)
     SayRaw ConsoleID, "Error - " & S & " {{orange}}"
-End Function
+End Sub

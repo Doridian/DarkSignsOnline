@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Public Url As String
+Public url As String
 Public Method As String
 Public UserName As String
 Public Password As String
@@ -53,7 +53,7 @@ End Function
 Private Sub SetDoneForever()
     If Not ResponseSent Then
         If IsCustomDownload > 0 Then
-            basWorld.Process "[error]", 666, Url, IsCustomDownload
+            basWorld.Process "[error]", 666, url, IsCustomDownload
         End If
         ResponseSent = True
     End If
@@ -78,7 +78,7 @@ End Sub
 
 Public Sub Send()
     If DoneForever Then
-        SayCOMM "Request Send while DoneForever: " & Url
+        SayCOMM "Request Send while DoneForever: " & url
         Exit Sub
     End If
 
@@ -86,7 +86,7 @@ Public Sub Send()
 
     Done = False
 
-    HttpRequest.Open_ Method, Url, True
+    HttpRequest.Open_ Method, url, True
     If UserName <> "" And Password <> "" Then
         HttpRequest.SetCredentials UserName, Password, HTTPREQUEST_SETCREDENTIALS_FOR_SERVER
     End If
@@ -103,7 +103,7 @@ End Sub
 
 Private Sub HttpRequest_OnError(ByVal ErrorNumber As Long, ByVal ErrorDescription As String)
     If Done Then
-        SayCOMM "Request OnError while Done: " & Url
+        SayCOMM "Request OnError while Done: " & url
         Exit Sub
     End If
     Done = True
@@ -124,7 +124,7 @@ End Function
 
 Private Sub HttpRequest_OnResponseFinished()
     If Done Then
-        SayCOMM "Request OnResponseFinished while Done: " & Url
+        SayCOMM "Request OnResponseFinished while Done: " & url
         Exit Sub
     End If
     Done = True
@@ -135,14 +135,14 @@ Private Sub HttpRequest_OnResponseFinished()
         End If
     End If
 
-    basWorld.Process HttpRequest.ResponseText, HttpRequest.Status, Url, IsCustomDownload
+    basWorld.Process HttpRequest.ResponseText, HttpRequest.Status, url, IsCustomDownload
     ResponseSent = True
     SetDoneForever
 End Sub
 
-Private Function ManageSockError(ByVal Reason As String, ByVal AllowSetDoneForever As Boolean)
+Private Function ManageSockError(ByVal Reason As String, ByVal AllowSetDoneForever As Boolean) As Boolean
     If DoneForever Then
-        SayCOMM "Request ManageSockError while DoneForever: " & Url
+        SayCOMM "Request ManageSockError while DoneForever: " & url
         Exit Function
     End If
 
@@ -171,11 +171,11 @@ Private Function ManageSockError(ByVal Reason As String, ByVal AllowSetDoneForev
         Send
 
         If ShowErrors Then
-            SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry " & Trim(Str(Retries)) & " of " & Trim(Str(basWorld.MaxSockRetries)) & "."
+            SayCOMM "Connection failed to [" & url & "] because of " & Reason & ". Retry " & Trim(Str(Retries)) & " of " & Trim(Str(basWorld.MaxSockRetries)) & "."
         End If
    Else
         If ShowErrors Then
-            SayCOMM "Connection failed to [" & Url & "] because of " & Reason & ". Retry count expired."
+            SayCOMM "Connection failed to [" & url & "] because of " & Reason & ". Retry count expired."
         End If
         If AllowSetDoneForever Then SetDoneForever
    End If

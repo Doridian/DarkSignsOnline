@@ -783,7 +783,7 @@ Private Sub Form_KeyPress(KeyAscii As Integer)
     End If
 End Sub
 
-Public Function getConnected()
+Public Function getConnected() As Boolean
     getConnected = connected
 End Function
 
