@@ -122,7 +122,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: client
-        path: client/dist/
+        path: client.zip
         if-no-files-found: error
     - name: Release mainline
       uses: softprops/action-gh-release@v2
