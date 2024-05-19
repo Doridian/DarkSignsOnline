@@ -1,0 +1,3 @@
+Option Explicit
+Say "{{green 12}}Function: RemoteToken(Domain[String], <Info[String,Default=""""]>) -> HTTPRequest"
+Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"
