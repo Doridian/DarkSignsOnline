@@ -13,6 +13,10 @@ if ($dInfo === false) {
 	die_error('not found', 404);
 }
 
+if (($user['id'] !== $dInfo['owner']) && ($_REQUEST['is_local_script'] === 'true')) {
+    die_error('not owned', 403);
+}
+
 require_once('jwt/JWTExceptionWithPayloadInterface.php');
 require_once('jwt/BeforeValidException.php');
 require_once('jwt/ExpiredException.php');
@@ -30,6 +34,7 @@ $payload = [
     'aud' => $d,
     'sub' => ''.$user['id'],
     'name' => $user['username'],
+    'info'=> ''.$_REQUEST['info'],
     'iat' => $start,
     'exp' => $start + (5 * 60),
 ];
