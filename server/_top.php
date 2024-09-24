@@ -26,6 +26,8 @@
                       |
                       <a href="/create_account.php">Sign up</a>
                       |
+                      <a href="/forgot_password.php">Forgot password</a>
+                      |
                       <a href="/download.php">Download</a>
                       |
                       <a href="/wiki/">Wiki</a>
