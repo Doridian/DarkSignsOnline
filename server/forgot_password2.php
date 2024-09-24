@@ -19,6 +19,15 @@ if (!$row) {
 	die('Error, invalid code.');
 }
 
+$stmt = $db->prepare('SELECT username, email FROM users WHERE id = ?');
+$stmt->bind_param('i', $row['user']);
+$stmt->execute();
+$res = $stmt->get_result();
+$user = $res->fetch_assoc();
+if (!$user) {
+	die('Error, invalid user.');
+}
+
 if (isset($_POST['password'])) {
 	$stmt = $db->prepare('DELETE FROM email_codes WHERE code=?');
 	$stmt->bind_param('s', $_REQUEST['code']);
@@ -44,13 +53,25 @@ if (isset($_POST['password'])) {
 <form action="forgot_password2.php" method="post">
 	<table width="546" border="0" cellpadding="10" cellspacing="0" bgcolor="#003366">
 		<tr>
-			<td bgcolor="#004488">
+			<td>
 				<div align="left">
-					<font face='verdana'><strong>Password</strong></font>
+					<font face='verdana'><strong>Username</strong></font>
 				</div>
 			</td>
-			<td bgcolor="#004488">
-				<div align="left"><input type="password" name="password" /></div>
+			<td>
+				<div align="left"><input name="username" type="text" disabled="disabled" value="<?php echo htmlspecialchars($user['username']); ?>" />
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div align="left">
+					<font face='verdana'><strong>E-Mail Address</strong></font>
+				</div>
+			</td>
+			<td>
+				<div align="left"><input name="email" type="text" disabled="disabled" value="<?php echo htmlspecialchars($user['email']); ?>" />
+				</div>
 			</td>
 		</tr>
 		<tr>

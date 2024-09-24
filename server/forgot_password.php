@@ -5,19 +5,22 @@ require('_top.php');
 require_once('api/function_base.php');
 
 if (isset($_POST['email'])) {
-    $email = strtolower(trim($_POST['email']));
+	$username = strtolower(trim($_POST['username']));
+	$email = trim($_POST['email']);
 
-    $stmt = $db->prepare('SELECT id FROM users WHERE email=?');
-    $stmt->bind_param('s', $email);
+    $stmt = $db->prepare('SELECT id, username FROM users WHERE email=? AND username=?');
+    $stmt->bind_param('ss', $email, $username);
     $stmt->execute();
     $res = $stmt->get_result();
     $user = $res->fetch_assoc();
 
     if (!$user) {
-        echo "<center><br><br><font size='4' color='orange' face='arial'><b>Error, no user with this E-Mail not found.</b></font></center>";
+        echo "<center><br><br><font size='4' color='orange' face='arial'><b>Error, no user with this E-Mail and username not found.</b></font></center>";
         require('_bottom.php');
         exit;
     }
+
+    $username = $user['username']; // Re-grab from DB
 
     $vercode = make_keycode();
     $expiry = time() + 3600;
@@ -44,11 +47,22 @@ if (isset($_POST['email'])) {
 		<tr>
 			<td>
 				<div align="left">
-					<font face='verdana'><strong>Email Address</strong></font>
+					<font face='verdana'><strong>Username</strong></font>
 				</div>
 			</td>
 			<td>
-				<div align="left"><input name="email" type="text" size="35" />
+				<div align="left"><input name="username" type="text" />
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div align="left">
+					<font face='verdana'><strong>E-Mail Address</strong></font>
+				</div>
+			</td>
+			<td>
+				<div align="left"><input name="email" type="text" />
 				</div>
 			</td>
 		</tr>
@@ -60,11 +74,7 @@ if (isset($_POST['email'])) {
 			</td>
 			<td>
 				<div align="left">
-					<font face="Verdana" size="1"><strong>By creating an account, you agree to the <a
-								href="termsofuse.php" target="_blank" style="color:#DDE8F9">Dark Signs Online TERMS OF
-								USE</a>.</strong></font><br />
-					<br />
-					<input type="submit" value="Create the account..." />
+					<input type="submit" value="Send E-Mail" />
 				</div>
 			</td>
 		</tr>

@@ -211,14 +211,14 @@ if (isset($_POST['username'])) {
 		<tr>
 			<td>
 				<div align="left">
-					<font face='verdana'><strong>Email Address</strong>
+					<font face='verdana'><strong>E-Mail Address</strong>
 						<font size="2"><br />
-							This must be a valid email address, or you will not be able to log in. </font>
+							This must be a valid e-mail address, or you will not be able to log in. </font>
 					</font>
 				</div>
 			</td>
 			<td>
-				<div align="left"><input name="email" type="text" size="35" />
+				<div align="left"><input name="email" type="text" />
 				</div>
 			</td>
 		</tr>
