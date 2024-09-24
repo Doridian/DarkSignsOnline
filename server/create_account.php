@@ -201,16 +201,6 @@ if (isset($_POST['username'])) {
 		<tr>
 			<td>
 				<div align="left">
-					<font face='verdana'></font>
-				</div>
-			</td>
-			<td>
-				<div align="left"></div>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<div align="left">
 					<font face='verdana'><strong>E-Mail Address</strong>
 						<font size="2"><br />
 							This must be a valid e-mail address, or you will not be able to log in. </font>
@@ -220,16 +210,6 @@ if (isset($_POST['username'])) {
 			<td>
 				<div align="left"><input name="email" type="text" />
 				</div>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<div align="left">
-					<font face='verdana'></font>
-				</div>
-			</td>
-			<td>
-				<div align="left"></div>
 			</td>
 		</tr>
 		<tr>

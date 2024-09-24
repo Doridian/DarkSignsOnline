@@ -56,12 +56,12 @@ if (isset($_POST['email'])) {
 			</td>
 		</tr>
 		<tr>
-			<td>
+			<td bgcolor="#004488">
 				<div align="left">
 					<font face='verdana'><strong>E-Mail Address</strong></font>
 				</div>
 			</td>
-			<td>
+			<td bgcolor="#004488">
 				<div align="left"><input name="email" type="text" />
 				</div>
 			</td>

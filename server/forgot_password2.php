@@ -64,12 +64,12 @@ if (isset($_POST['password'])) {
 			</td>
 		</tr>
 		<tr>
-			<td>
+			<td bgcolor="#004488">
 				<div align="left">
 					<font face='verdana'><strong>E-Mail Address</strong></font>
 				</div>
 			</td>
-			<td>
+			<td bgcolor="#004488">
 				<div align="left"><input name="email" type="text" disabled="disabled" value="<?php echo htmlspecialchars($user['email']); ?>" />
 				</div>
 			</td>
@@ -77,10 +77,20 @@ if (isset($_POST['password'])) {
 		<tr>
 			<td>
 				<div align="left">
-					<font face='verdana'></font>
+					<font face='verdana'><strong>Password</strong></font>
 				</div>
 			</td>
 			<td>
+				<div align="left"><input type="password" name="password" /></div>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#004488">
+				<div align="left">
+					<font face='verdana'></font>
+				</div>
+			</td>
+			<td bgcolor="#004488">
 				<div align="left">
 					<input type="hidden" name="code" value="<?php echo htmlspecialchars($_REQUEST['code']); ?>" />
 					<input type="submit" value="Change password" />
