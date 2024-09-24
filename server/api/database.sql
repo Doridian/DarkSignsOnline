@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 24, 2024 at 07:28 AM
--- Server version: 10.6.17-MariaDB
--- PHP Version: 7.4.33
+-- Generation Time: Sep 24, 2024 at 03:26 PM
+-- Server version: 10.4.34-MariaDB
+-- PHP Version: 7.2.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -81,6 +81,20 @@ CREATE TABLE `dsmail` (
   `message` longtext NOT NULL,
   `time` int(11) NOT NULL,
   `message_hash` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `email_codes`
+--
+
+CREATE TABLE `email_codes` (
+  `id` int(11) NOT NULL,
+  `user` int(11) NOT NULL,
+  `code` varchar(255) NOT NULL,
+  `expiry` int(11) NOT NULL,
+  `action` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -212,6 +226,14 @@ ALTER TABLE `dsmail`
   ADD KEY `to_user` (`to_user`);
 
 --
+-- Indexes for table `email_codes`
+--
+ALTER TABLE `email_codes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user` (`user`),
+  ADD KEY `expiry` (`expiry`);
+
+--
 -- Indexes for table `file_database`
 --
 ALTER TABLE `file_database`
@@ -285,6 +307,12 @@ ALTER TABLE `dsmail`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `email_codes`
+--
+ALTER TABLE `email_codes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `file_database`
 --
 ALTER TABLE `file_database`
@@ -342,6 +370,12 @@ ALTER TABLE `domain_scripts`
 --
 ALTER TABLE `dsmail`
   ADD CONSTRAINT `dsmail_ibfk_2` FOREIGN KEY (`to_user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `email_codes`
+--
+ALTER TABLE `email_codes`
+  ADD CONSTRAINT `email_codes_ibfk_1` FOREIGN KEY (`user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `file_database`
