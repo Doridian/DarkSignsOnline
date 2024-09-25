@@ -79,13 +79,12 @@ Public Const PreSpaceWidth = 600
 
 Public ConsoleLastRenderFlash As Boolean
 
+Private SystemDefaultFont As String
+Private ClientDefaultFontValid As String
+
 Public Property Get ConsoleInvisibleChar() As String
     ConsoleInvisibleChar = Chr(7)
 End Property
-
-Public Sub CalculateConsoleDraw(ByRef CLine As ConsoleLine)
-
-End Sub
 
 Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
     Dim x As Integer, W As Long, h As Long
@@ -172,7 +171,6 @@ Public Sub ConsoleResizeAll()
         If ConsoleInitialized(cID) Then
             For x = 0 To 299
                 CalculateConsoleLine Console(cID, x)
-                CalculateConsoleDraw Console(cID, x)
             Next
         End If
     Next
@@ -433,12 +431,17 @@ Public Function Console_Line_Defaults() As ConsoleLine
 
     Dim FontNameConfig As String
     FontNameConfig = ConfigLoad("Default_FontName", "Verdana", False)
-    Dim FontNameValid As String
-    FontNameValid = EnsureValidFont(FontNameConfig)
-    If FontNameConfig <> FontNameValid Then
-        ConfigSave "Default_FontName", FontNameValid, False
+    If FontNameConfig = ClientDefaultFontValid Then
+        Console_Line_Defaults.Segments(0).FontName = ClientDefaultFontValid
+    Else
+        Dim FontNameValid As String
+        FontNameValid = EnsureValidFont(FontNameConfig)
+        If FontNameConfig <> FontNameValid Then
+            ConfigSave "Default_FontName", FontNameValid, False
+        End If
+        ClientDefaultFontValid = FontNameValid
+        Console_Line_Defaults.Segments(0).FontName = FontNameValid
     End If
-    Console_Line_Defaults.Segments(0).FontName = FontNameValid
 
     Console_Line_Defaults.Segments(0).FontSize = ConfigLoad("Default_FontSize", "10", False)
     Console_Line_Defaults.Segments(0).FontUnderline = ConfigLoad("Default_FontUnderline", "False", False)
@@ -864,12 +867,19 @@ Public Function DecodeBase64Str(ByVal strData As String) As String
 End Function
 
 Public Function EnsureValidFont(ByVal AttemptFont As String) As String
-    Dim NewFont As String
-    EnsureValidFont = frmConsole.lblFontTest.FontName
+    If SystemDefaultFont = "" Then
+        SystemDefaultFont = frmConsole.lblFontTest.FontName
+    End If
+
+    EnsureValidFont = SystemDefaultFont
+
+    If LCase(AttemptFont) = LCase(SystemDefaultFont) Then
+        Exit Function
+    End If
+
     On Error GoTo NotValidFont
     frmConsole.lblFontTest.FontName = AttemptFont
     On Error GoTo 0
-
     EnsureValidFont = frmConsole.lblFontTest.FontName
 
 NotValidFont:

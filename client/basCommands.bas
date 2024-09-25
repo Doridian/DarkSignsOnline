@@ -681,7 +681,6 @@ Public Sub DrawSimple(ByVal ConsoleID As Integer, ByVal YPos As Long, ByVal RGBV
         ReDim Console(ConsoleID, yIndex).Draw(1 To 1)
         Console(ConsoleID, yIndex).Draw(1).Color = RGBVal
         Console(ConsoleID, yIndex).Draw(1).HPos = 0
-        CalculateConsoleDraw Console(ConsoleID, yIndex)
         frmConsole.QueueConsoleRender
         Exit Sub
     End If
@@ -717,7 +716,6 @@ Public Sub DrawSimple(ByVal ConsoleID As Integer, ByVal YPos As Long, ByVal RGBV
             Err.Raise vbObjectError + 1393, , "Invalid draw mode: " & mode
     End Select
 
-    CalculateConsoleDraw Console(ConsoleID, yIndex)
     frmConsole.QueueConsoleRender
 End Sub
 

@@ -887,7 +887,6 @@ Public Sub DrawCustomA(ByVal YPos As Long, WidthsAndColors As Variant)
     DrawSegs(UBound(DrawSegs)).HPos = z
 
     Console(PrivConsoleID, YPos * -1).Draw = DrawSegs
-    CalculateConsoleDraw Console(PrivConsoleID, YPos * -1)
     Yield
     frmConsole.QueueConsoleRender
 End Sub
@@ -927,7 +926,6 @@ Public Sub DrawEvenA(ByVal YPos As Long, Colors As Variant)
     DrawSegs(UBound(DrawSegs)).Color = -1
     DrawSegs(UBound(DrawSegs)).HPos = frmConsole.Width
     Console(PrivConsoleID, YPos * -1).Draw = DrawSegs
-    CalculateConsoleDraw Console(PrivConsoleID, YPos * -1)
     Yield
     frmConsole.QueueConsoleRender
 End Sub
@@ -1434,10 +1432,10 @@ Public Function RemoteView(ByVal Domain As String, ByVal filename As String, Opt
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function RemoteToken(ByVal Domain As String, Optional ByVal Info As String = "") As String
+Public Function RemoteToken(ByVal Domain As String, Optional ByVal info As String = "") As String
     AssertLocalOnly
 
-    RemoteToken = ServerTokenHelper(Info, Domain)
+    RemoteToken = ServerTokenHelper(info, Domain)
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
@@ -1476,7 +1474,7 @@ Public Function ServerDir() As String
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Private Function ServerTokenHelper(ByVal Info As String, ByVal Domain As String) As String
+Private Function ServerTokenHelper(ByVal info As String, ByVal Domain As String) As String
     Dim IsLocalValue As String
     IsLocalValue = "false"
     If IsLocal() Then
@@ -1487,17 +1485,17 @@ Private Function ServerTokenHelper(ByVal Info As String, ByVal Domain As String)
     Dim PostData As String
     PostData = "is_local_script=" & EncodeURLParameter(IsLocalValue) & _
                 "d=" & EncodeURLParameter(Domain) & _
-                "&info=" & EncodeURLParameter(Info)
+                "&info=" & EncodeURLParameter(info)
 
     ServerTokenHelper = DoDownloadAPI("domain_token.php", True, PostData, "")
     Yield
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
-Public Function ServerToken(Optional ByVal Info As String = "") As String
+Public Function ServerToken(Optional ByVal info As String = "") As String
     AssertRemoteOnly
 
-    ServerToken = ServerTokenHelper(Info, ServerDomain)
+    ServerToken = ServerTokenHelper(info, ServerDomain)
 End Function
 
 ' VBTYPE: _RETURN=HTTPRequest
