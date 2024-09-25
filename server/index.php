@@ -116,7 +116,7 @@
 
   <hr />
   <strong>News below this line are archived from the old site.</strong>
-  <hr />
+  <hr /><br />
 
   <strong>March 7th 2008</strong><br /><span class="style9">Just released DSO 0.8.1, contains minor bug fixes, plus
     afew new features. See
