@@ -1,6 +1,15 @@
 <?php require('_top.php'); ?>
 <span class="style5"><br />- News - <br /><br />
 
+  <strong>September 24th 2024</strong><br /><span class="style9">
+    Long time no see everyone!<br />
+    With a recent "influx" of users I've been reminded this client had some Linux issues<br />
+    Today (with 0.99.32 and newer), some advancements have been made in that regard!<br />
+    The client will now no longer crash if a font the game wants to use is not installed<br />
+    If you want to have all fonts available the game might use, <a href="https://github.com/Doridian/DarkSignsOnline/blob/main/winetricks-fonts.txt">here is a handy list of<br />
+    <i>winetricks</i> commands to run</a><br />
+    </span><br /><br />
+
   <strong>April 23rd 2024</strong><br /><span class="style9">
     Well, it is done. The entire original DarkSigns 0.96.1 server list ported.<br />
     To try it out the way it would have been in DarkSigns, just<br />
