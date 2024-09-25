@@ -1,6 +1,6 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\..\WINDOWS\SysWow64\stdole2.tlb#OLE Automation
-Reference=*\G{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}#1.0#0#..\..\..\..\..\Windows\SysWOW64\msscript.ocx#Microsoft Script Control 1.0
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\SysWOW64\stdole2.tlb#OLE Automation
+Reference=*\G{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}#1.0#0#C:\Windows\SysWOW64\msscript.ocx#Microsoft Script Control 1.0
 Reference=*\G{5A2B9220-BF07-11E6-9598-0800200C9A66}#1.0#0#libs\VBCCR\Standard EXE Version\OLEGuids\OLEGuids.tlb#OLE Guid and interface definitions
 Form=frmConsole.frm
 Module=basConsole; basConsole.bas
@@ -66,6 +66,7 @@ HelpFile=""
 NoControlUpgrade=1
 Title="Dark Signs Online"
 ExeName32="dso.exe"
+Path32="dist"
 Command32=""
 Name="DSO"
 HelpContextID="0"

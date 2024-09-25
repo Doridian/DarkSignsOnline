@@ -808,11 +808,11 @@ Private Sub Form_Load()
     basCompression.ZstdInit
     basCommands.InitBasCommands
 
-    Dim x As Integer
-    For x = 1 To 30
-        Load tmrProcessQueue(x)
-        tmrProcessQueue(x).Enabled = False
-        tmrProcessQueue(x).Interval = 1
+    Dim X As Integer
+    For X = 1 To 30
+        Load tmrProcessQueue(X)
+        tmrProcessQueue(X).Enabled = False
+        tmrProcessQueue(X).Interval = 1
     Next
 
     curMsg = 0
@@ -957,7 +957,7 @@ Private Sub Form_Unload(Cancel As Integer)
 End Sub
 
 
-Private Sub IRC_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub IRC_MouseDown(Button As Integer, Shift As Integer, X As Single, y As Single)
     txtChatMsg.SetFocus
 End Sub
 
@@ -1017,8 +1017,8 @@ Private Sub lFull_Click()
 End Sub
 
 
-Private Sub Stats_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
-    If x > (Stats.Width - 120) And y < 60 Then
+Private Sub Stats_MouseDown(Button As Integer, Shift As Integer, X As Single, y As Single)
+    If X > (Stats.Width - 120) And y < 60 Then
         Unload Me
     End If
 End Sub
@@ -1180,7 +1180,7 @@ Sub processCommand()
     'This section processes all other commands
     If Left$(Data$, 1) = ":" Then   'if the message starts with a colon (standard IRC message)
         Dim tempStr As String
-        Dim Pos%, Pos2%, x% '2 position variables we need to extract the nickname of whoever that issued the command
+        Dim Pos%, Pos2%, X% '2 position variables we need to extract the nickname of whoever that issued the command
         Dim from$, rest$    'these will hold the sender of the command and the rest of the message
         Dim Command$        'this will hold the type of the command (eg.: PRIVMSG)
         Params$ = ""        'and the parameters
@@ -1218,29 +1218,29 @@ Sub processCommand()
                     Case "JOIN" 'if someone joined
                         displaychat "** " + from$ + " has joined " + processParam(Params$) + " **"     'display it
                         'check if the user is already in the list
-                        x% = -1  'start checking from the first user (-1 + 1 = 0)
+                        X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            x% = x% + 1     'increase x% with 1
-                            If x% = lstUsers.ListCount Then 'if the user is not found ...
-                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            X% = X% + 1     'increase x% with 1
+                            If X% = lstUsers.ListCount Then 'if the user is not found ...
+                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
+                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
                         'if x% = -1, the user was not found in the list, so we can add him
-                        If x% = -1 Then lstUsers.AddItem (from$)    'add this user to the user list
+                        If X% = -1 Then lstUsers.AddItem (from$)    'add this user to the user list
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "QUIT" 'if someone disconnected
                         displaychat "** " + from$ + " has quit IRC (" + processParam(Params$) + ") **"    'display it
                         'check if the user is already in the list
-                        x% = -1  'start checking from the first user (-1 + 1 = 0)
+                        X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            x% = x% + 1     'increase x% with 1
-                            If x% = lstUsers.ListCount Then 'if the user is not found ...
-                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            X% = X% + 1     'increase x% with 1
+                            If X% = lstUsers.ListCount Then 'if the user is not found ...
+                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
-                        If x% > -1 Then lstUsers.RemoveItem (x%)    'if we found a matching user in the list, remove it
+                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
+                        If X% > -1 Then lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "NICK" 'if someone changed his nickname
                         If from$ = nick$ Then
@@ -1249,31 +1249,31 @@ Sub processCommand()
                         End If
                         displaychat "** " + from$ + " changed his nickname to " + processParam(Params$) + " **"    'display it
                         'check if the user is already in the list
-                        x% = -1  'start checking from the first user (-1 + 1 = 0)
+                        X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            x% = x% + 1     'increase x% with 1
-                            If x% = lstUsers.ListCount Then 'if the user is not found ...
-                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            X% = X% + 1     'increase x% with 1
+                            If X% = lstUsers.ListCount Then 'if the user is not found ...
+                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
-                        If x% > -1 Then
-                            lstUsers.RemoveItem (x%)    'if we found a matching user in the list, remove it
+                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
+                        If X% > -1 Then
+                            lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
                             lstUsers.AddItem (processParam(Params$))    'and add the new nick
                         End If
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "PART" ' if someone left the channel
                         displaychat "** " + from$ + " has left " + Params$ + " **"    'display it
                         'check if the user is allready in the list
-                        x% = -1  'start checking from the first user (-1 + 1 = 0)
+                        X% = -1  'start checking from the first user (-1 + 1 = 0)
                         Do
-                            x% = x% + 1
-                            If x% = lstUsers.ListCount Then 'if the user is not found ...
-                                x% = -1     'set the user to be removed to -1 (ERROR :-) )
+                            X% = X% + 1
+                            If X% = lstUsers.ListCount Then 'if the user is not found ...
+                                X% = -1     'set the user to be removed to -1 (ERROR :-) )
                                 Exit Do     'exit the loop
                             End If
-                        Loop Until lstUsers.List(x%) = from$    'loop until we find the user
-                        If x% > -1 Then lstUsers.RemoveItem (x%)    'if we found a matching user in the list, remove it
+                        Loop Until lstUsers.List(X%) = from$    'loop until we find the user
+                        If X% > -1 Then lstUsers.RemoveItem (X%)    'if we found a matching user in the list, remove it
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "MODE"     'if someone sets the mode on someone
                         displaychat "** " + from$ + " sets mode " + processParam(processRest(Params$)) + " on " + processParam(Params$) + " **" 'display the mode change
@@ -1293,16 +1293,16 @@ Sub processCommand()
                             'Do Until Left$(nick2$, 1) <> "@" And Left$(nick2$, 1) <> "+"  'cut of the @ and + flags at the beginning ...
                                 'nick2$ = Right(nick2$, Len(nick2$) - 1) 'cut of the first character
                             'Loop
-                            x% = -1  'start checking from the first user (-1 + 1 = 0)
+                            X% = -1  'start checking from the first user (-1 + 1 = 0)
                             Do
-                                x% = x% + 1     'increase x% with 1
-                                If x% = lstUsers.ListCount Then 'if the user is not found ...
-                                    x% = -1     'set the user to be removed to -1 (ERROR :-) )
+                                X% = X% + 1     'increase x% with 1
+                                If X% = lstUsers.ListCount Then 'if the user is not found ...
+                                    X% = -1     'set the user to be removed to -1 (ERROR :-) )
                                     Exit Do     'exit the loop
                                 End If
-                            Loop Until lstUsers.List(x%) = nick2$    'loop until we find the user
+                            Loop Until lstUsers.List(X%) = nick2$    'loop until we find the user
                             'if x% = -1, the user was not found in the list, so we can add him
-                            If x% = -1 Then lstUsers.AddItem (nick2$)    'add this user to the user list
+                            If X% = -1 Then lstUsers.AddItem (nick2$)    'add this user to the user list
                         Loop Until othernicks$ = ""     'loop through all the received nicknames
                         'lblCount.Caption = lstUsers.ListCount & " people in channel"    'update the user count
                     Case "376"    'end of the motd
@@ -1374,13 +1374,13 @@ Private Sub sockIRC_Connect()   'as soon as we're connected to the server:
 End Sub
 
 Private Sub sockIRC_DataArrival(ByVal bytesTotal As Long)
-    Dim x As Long
+    Dim X As Long
     Dim ArrivedData$
     sockIRC.GetData ArrivedData$, vbString
 
     Dim Temp$
-    For x& = 1 To bytesTotal    'get every byte we received, but only one at a time
-        Temp$ = Mid(ArrivedData$, x, 1)
+    For X& = 1 To bytesTotal    'get every byte we received, but only one at a time
+        Temp$ = Mid(ArrivedData$, X, 1)
         If Temp$ = Chr$(10) Then    'if we received a newline character (this is the end of the message)
             processCommand  'process the entire command
             Data$ = ""      'clear the data$
@@ -1478,7 +1478,7 @@ Sub PrintAll()
         
         S = ss(n)
         S = Replace(S, vbCrLf, ""): S = Replace(S, vbCr, ""): S = Replace(S, vbLf, "")
-        cSize.FontName = EnsureValidFont(IRC.FontName)
+        cSize.FontName = EnsureValidFont(IRC.FontName, "")
         cSize.FontSize = IRC.FontSize
 CheckForLine:
         For n2 = 1 To Len(S)

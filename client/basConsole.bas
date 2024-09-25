@@ -82,22 +82,29 @@ Public ConsoleLastRenderFlash As Boolean
 Private SystemDefaultFont As String
 Private ClientDefaultFontValid As String
 
+Private Type ValidFontResult
+    LowerFontName As String
+    ValidFontName As String
+End Type
+
+Private ValidFontCache() As ValidFontResult
+
 Public Property Get ConsoleInvisibleChar() As String
     ConsoleInvisibleChar = Chr(7)
 End Property
 
 Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
-    Dim x As Integer, W As Long, h As Long
+    Dim X As Integer, W As Long, h As Long
 
     CLine.Height = 0
-    For x = 0 To UBound(CLine.Segments)
-        h = Font_Height(CLine.Segments(x))
-        CLine.Segments(x).Height = h
+    For X = 0 To UBound(CLine.Segments)
+        h = Font_Height(CLine.Segments(X))
+        CLine.Segments(X).Height = h
         If h > CLine.Height Then
             CLine.Height = h
         End If
 
-        CLine.Segments(x).TotalWidth = Font_Width(CLine.Segments(x))
+        CLine.Segments(X).TotalWidth = Font_Width(CLine.Segments(X))
     Next
 
     Dim MinX As Long, MaxX As Long
@@ -105,38 +112,38 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
     MaxX = -1
 
     Dim HeightDiff As Long, VPos As Long, MaxW As Long
-    For x = 0 To UBound(CLine.Segments)
-        HeightDiff = CLine.Height - CLine.Segments(x).Height
-        If CLine.Segments(x).AlighBottom Then
+    For X = 0 To UBound(CLine.Segments)
+        HeightDiff = CLine.Height - CLine.Segments(X).Height
+        If CLine.Segments(X).AlighBottom Then
             VPos = HeightDiff
-        ElseIf CLine.Segments(x).AlignTop Then
+        ElseIf CLine.Segments(X).AlignTop Then
             VPos = 0
         Else
             VPos = HeightDiff / 2
         End If
-        VPos = VPos + CLine.Segments(x).VOffset
+        VPos = VPos + CLine.Segments(X).VOffset
         If VPos > HeightDiff Then
             VPos = HeightDiff
         ElseIf VPos < 0 Then
             VPos = 0
         End If
-        CLine.Segments(x).VPos = VPos
+        CLine.Segments(X).VPos = VPos
 
-        If x = 0 Then
+        If X = 0 Then
             W = ConsoleXSpacing
             If CLine.PreSpace Then
                 W = W + PreSpaceWidth
             End If
         Else
-            W = CLine.Segments(x - 1).HPos + CLine.Segments(x - 1).TotalWidth
+            W = CLine.Segments(X - 1).HPos + CLine.Segments(X - 1).TotalWidth
         End If
 
-        W = W + CLine.Segments(x).HOffset
-        CLine.Segments(x).HPos = W
+        W = W + CLine.Segments(X).HOffset
+        CLine.Segments(X).HPos = W
         If W < MinX Then
             MinX = W
         End If
-        W = W + CLine.Segments(x).TotalWidth
+        W = W + CLine.Segments(X).TotalWidth
         If W > MaxX Then
             MaxX = W
         End If
@@ -160,17 +167,17 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
         Exit Sub
     End If
 
-    For x = 0 To UBound(CLine.Segments)
-        CLine.Segments(x).HPos = CLine.Segments(x).HPos + W
+    For X = 0 To UBound(CLine.Segments)
+        CLine.Segments(X).HPos = CLine.Segments(X).HPos + W
     Next
 End Sub
 
 Public Sub ConsoleResizeAll()
-    Dim cID As Integer, x As Long
+    Dim cID As Integer, X As Long
     For cID = 1 To 4
         If ConsoleInitialized(cID) Then
-            For x = 0 To 299
-                CalculateConsoleLine Console(cID, x)
+            For X = 0 To 299
+                CalculateConsoleLine Console(cID, X)
             Next
         End If
     Next
@@ -435,7 +442,7 @@ Public Function Console_Line_Defaults() As ConsoleLine
         Console_Line_Defaults.Segments(0).FontName = ClientDefaultFontValid
     Else
         Dim FontNameValid As String
-        FontNameValid = EnsureValidFont(FontNameConfig)
+        FontNameValid = EnsureValidFont(FontNameConfig, "")
         If FontNameConfig <> FontNameValid Then
             ConfigSave "Default_FontName", FontNameValid, False
         End If
@@ -745,7 +752,7 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal S As String
                 End If
 
                 If NewFont <> "" Then
-                    CLineSeg.FontName = EnsureValidFont(NewFont)
+                    CLineSeg.FontName = EnsureValidFont(NewFont, CLineSeg.FontName)
                 End If
             Next
         End If
@@ -866,21 +873,46 @@ Public Function DecodeBase64Str(ByVal strData As String) As String
     DecodeBase64Str = StrConv(DecodeBase64Bytes(strData), vbUnicode)
 End Function
 
-Public Function EnsureValidFont(ByVal AttemptFont As String) As String
+Public Function EnsureValidFont(ByVal AttemptFont As String, ByVal FallbackFont As String) As String
     If SystemDefaultFont = "" Then
         SystemDefaultFont = frmConsole.lblFontTest.FontName
+        If SystemDefaultFont = "" Then
+            Err.Raise vbObjectError + 1010, , "Could not determine SystemDefaultFont"
+        End If
+        ReDim ValidFontCache(0 To 0)
+        ValidFontCache(0).LowerFontName = LCase(SystemDefaultFont)
+        ValidFontCache(0).ValidFontName = SystemDefaultFont
     End If
 
-    EnsureValidFont = SystemDefaultFont
-
-    If LCase(AttemptFont) = LCase(SystemDefaultFont) Then
-        Exit Function
+    If FallbackFont = "" Then
+        FallbackFont = SystemDefaultFont
     End If
 
-    On Error GoTo NotValidFont
+    AttemptFont = LCase(AttemptFont)
+
+    Dim X As Integer, VFCEntry As ValidFontResult
+    For X = 1 To UBound(ValidFontCache)
+        VFCEntry = ValidFontCache(X)
+        If VFCEntry.LowerFontName = AttemptFont Then
+            EnsureValidFont = VFCEntry.ValidFontName
+            Exit Function
+        End If
+    Next
+
+    EnsureValidFont = FallbackFont
+
+    On Error GoTo NotValidFontCheck
     frmConsole.lblFontTest.FontName = AttemptFont
     On Error GoTo 0
     EnsureValidFont = frmConsole.lblFontTest.FontName
+    GoTo AddFontToCache
 
-NotValidFont:
+NotValidFontCheck:
+    SayCOMM "Could not load font """ & AttemptFont & """, falling back to """ & EnsureValidFont & """"
+
+AddFontToCache:
+    X = UBound(ValidFontCache) + 1
+    ReDim Preserve ValidFontCache(0 To X)
+    ValidFontCache(X).LowerFontName = AttemptFont
+    ValidFontCache(X).ValidFontName = EnsureValidFont
 End Function
