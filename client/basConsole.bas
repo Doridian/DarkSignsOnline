@@ -436,7 +436,7 @@ Public Function Console_Line_Defaults() As ConsoleLine
     Dim FontNameValid As String
     FontNameValid = EnsureValidFont(FontNameConfig)
     If FontNameConfig <> FontNameValid Then
-        ConfigSave "Default_FontName", FontConfig, False
+        ConfigSave "Default_FontName", FontNameValid, False
     End If
     Console_Line_Defaults.Segments(0).FontName = FontNameValid
 
