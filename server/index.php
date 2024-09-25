@@ -7,7 +7,7 @@
     Today (with 0.99.32 and newer), some advancements have been made in that regard!<br />
     The client will now no longer crash if a font the game wants to use is not installed<br />
     If you want to have all fonts available the game might use, <a href="https://github.com/Doridian/DarkSignsOnline/blob/main/winetricks-fonts.txt">here is a handy list of<br />
-    <i>winetricks</i> commands to run</a><br />
+    <i>winetricks</i> commands to run</a>
     </span><br /><br />
 
   <strong>April 23rd 2024</strong><br /><span class="style9">
@@ -113,6 +113,10 @@
     <a href="mailto:doridian@darksignsonline.com">doridian@darksignsonline.com</a><br />
     Fedi:
     <a href="https://furry.engineer/@Doridian">@furry.engineer@Doridian</a></span><br /><br />
+
+  <hr />
+  <strong>News below this line are archived from the old site.</strong>
+  <hr />
 
   <strong>March 7th 2008</strong><br /><span class="style9">Just released DSO 0.8.1, contains minor bug fixes, plus
     afew new features. See
