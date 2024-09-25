@@ -161,56 +161,56 @@ Public Function GetFileBinary(ByVal filename As String, Optional ByVal Prefix As
     GetFileBinary = GetFileBinaryUnsafe(SafePath(filename, Prefix))
 End Function
 
-Public Function i(ByVal s As String) As String
-    i = Trim(LCase(s))
+Public Function i(ByVal S As String) As String
+    i = Trim(LCase(S))
 End Function
 
-Public Function IU(s As String) As String
-    IU = Trim(UCase(s))
+Public Function IU(S As String) As String
+    IU = Trim(UCase(S))
 End Function
 
-Public Function FileExists(s As String) As Boolean
+Public Function FileExists(S As String) As Boolean
     On Error GoTo zxc
-    GetAttr SafePath(s)
+    GetAttr SafePath(S)
     FileExists = True
     Exit Function
 zxc:
     FileExists = False
 End Function
 
-Public Function FileTitleOnly(ByVal s As String) As String
+Public Function FileTitleOnly(ByVal S As String) As String
     Dim n As Integer
     
-    s = Replace(s, "\", "/")
+    S = Replace(S, "\", "/")
     
-    For n = Len(s) To 1 Step -1
-        If Mid(s, n, 1) = "/" Then
+    For n = Len(S) To 1 Step -1
+        If Mid(S, n, 1) = "/" Then
             GoTo zz
         Else
-            FileTitleOnly = Mid(s, n, 1) & FileTitleOnly
+            FileTitleOnly = Mid(S, n, 1) & FileTitleOnly
         End If
     Next n
 zz:
     FileTitleOnly = Trim(FileTitleOnly)
 End Function
 
-Public Function ReverseString(s As String) As String
+Public Function ReverseString(S As String) As String
     Dim nLoop As Long
-    For nLoop = Len(s) To 1 Step -1
-        ReverseString = ReverseString & Mid(s, nLoop, 1)
+    For nLoop = Len(S) To 1 Step -1
+        ReverseString = ReverseString & Mid(S, nLoop, 1)
     Next nLoop
 End Function
 
-Public Function ExistsInList(ByVal s As String, l As ListBox) As Boolean
+Public Function ExistsInList(ByVal S As String, l As ListBox) As Boolean
     'checks if the specified item exists in a listbox
     Dim n As Long
     If l.ListCount = 0 Then
         ExistsInList = False
         Exit Function
     End If
-    s = i(s)
+    S = i(S)
     For n = 0 To l.ListCount - 1
-        If s = i(l.List(n)) Then
+        If S = i(l.List(n)) Then
             ExistsInList = True
             Exit Function
         End If
@@ -250,4 +250,16 @@ Public Function DirExists(ByVal sDirName As String) As Boolean
 
 NotADir:
     DirExists = False
+End Function
+
+Public Function EnsureValidFont(ByVal AttemptFont As String) As String
+    Dim NewFont As String
+    EnsureValidFont = frmConsole.lblFontTest.FontName
+    On Error GoTo NotValidFont
+    frmConsole.lblFontTest.FontName = AttemptFont
+    On Error GoTo 0
+
+    EnsureValidFont = frmConsole.lblFontTest.FontName
+
+NotValidFont:
 End Function

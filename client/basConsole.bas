@@ -430,13 +430,23 @@ Public Function Console_Line_Defaults() As ConsoleLine
     Console_Line_Defaults.Segments(0).Caption = ""
     Console_Line_Defaults.Segments(0).FontBold = ConfigLoad("Default_FontBold", "True", False)
     Console_Line_Defaults.Segments(0).FontItalic = ConfigLoad("Default_FontItalic", "False", False)
-    Console_Line_Defaults.Segments(0).FontName = ConfigLoad("Default_FontName", "Verdana", False)
+
+    Dim FontNameConfig As String
+    FontNameConfig = ConfigLoad("Default_FontName", "Verdana", False)
+    Dim FontNameValid As String
+    FontNameValid = EnsureValidFont(FontNameConfig)
+    If FontNameConfig <> FontNameValid Then
+        ConfigSave "Default_FontName", FontConfig, False
+    End If
+    Console_Line_Defaults.Segments(0).FontName = FontNameValid
+
     Console_Line_Defaults.Segments(0).FontSize = ConfigLoad("Default_FontSize", "10", False)
     Console_Line_Defaults.Segments(0).FontUnderline = ConfigLoad("Default_FontUnderline", "False", False)
     Console_Line_Defaults.Segments(0).FontColor = ConfigLoad("Default_FontColor", RGB(255, 255, 255), False)
     Console_Line_Defaults.Segments(0).Flash = False
     Console_Line_Defaults.Segments(0).FlashFast = False
     Console_Line_Defaults.Segments(0).FlashSlow = False
+
     ReDim Console_Line_Defaults.Draw(-1 To -1)
     Console_Line_Defaults.Draw(-1).Color = -1
     Console_Line_Defaults.Center = False
@@ -547,33 +557,35 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal S As String
             For pIdx = 0 To UBound(pSplit)
                 pCur = pSplit(pIdx)
 
+                Dim NewFont As String
+                NewFont = ""
                 ' ==== FONTS ====
                 If pCur = "arial" Then
-                    CLineSeg.FontName = "Arial"
+                    NewFont = "Arial"
                 ElseIf pCur = "arial_black" Then
-                    CLineSeg.FontName = "Arial Black"
+                    NewFont = "Arial Black"
                 ElseIf pCur = "comic_sans_ms" Then
-                    CLineSeg.FontName = "Comic Sans MS"
+                    NewFont = "Comic Sans MS"
                 ElseIf pCur = "courier_new" Then
-                    CLineSeg.FontName = "Courier New"
+                    NewFont = "Courier New"
                 ElseIf pCur = "georgia" Then
-                    CLineSeg.FontName = "Georgia"
+                    NewFont = "Georgia"
                 ElseIf pCur = "impact" Then
-                    CLineSeg.FontName = "Impact"
+                    NewFont = "Impact"
                 ElseIf pCur = "lucida_console" Then
-                    CLineSeg.FontName = "Lucida Console"
+                    NewFont = "Lucida Console"
                 ElseIf pCur = "tahoma" Then
-                    CLineSeg.FontName = "Tahoma"
+                    NewFont = "Tahoma"
                 ElseIf pCur = "times_new_roman" Then
-                    CLineSeg.FontName = "Times New Roman"
+                    NewFont = "Times New Roman"
                 ElseIf pCur = "trebuchet_ms" Then
-                    CLineSeg.FontName = "Trebuchet MS"
+                    NewFont = "Trebuchet MS"
                 ElseIf pCur = "verdana" Then
-                    CLineSeg.FontName = "Verdana"
+                    NewFont = "Verdana"
                 ElseIf pCur = "wingdings" Then
-                    CLineSeg.FontName = "Wingdings"
+                    NewFont = "Wingdings"
                 ElseIf pCur = "webdings" Then
-                    CLineSeg.FontName = "Webdings"
+                    NewFont = "Webdings"
                 ' ==== FONT ATTRIBUTES ====
                 ElseIf pCur = "strikethrough" Or pCur = "strikethru" Then
                     CLineSeg.FontStrikethru = True
@@ -727,6 +739,10 @@ Public Function Parse_Console_Line(ByRef CLine As ConsoleLine, ByVal S As String
                         CLine.Right = False
                         CLine.Center = False
                     End If
+                End If
+
+                If NewFont <> "" Then
+                    CLineSeg.FontName = EnsureValidFont(NewFont)
                 End If
             Next
         End If

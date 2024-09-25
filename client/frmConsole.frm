@@ -532,6 +532,15 @@ Begin VB.Form frmConsole
       Visible         =   0   'False
       Width           =   4335
    End
+   Begin VB.Label lblFontTest 
+      Caption         =   "Font Test"
+      Height          =   375
+      Left            =   960
+      TabIndex        =   33
+      Top             =   8400
+      Visible         =   0   'False
+      Width           =   615
+   End
    Begin VB.Label lfont 
       Appearance      =   0  'Flat
       AutoSize        =   -1  'True
@@ -1469,7 +1478,7 @@ Sub PrintAll()
         
         S = ss(n)
         S = Replace(S, vbCrLf, ""): S = Replace(S, vbCr, ""): S = Replace(S, vbLf, "")
-        cSize.FontName = IRC.FontName
+        cSize.FontName = EnsureValidFont(IRC.FontName)
         cSize.FontSize = IRC.FontSize
 CheckForLine:
         For n2 = 1 To Len(S)
