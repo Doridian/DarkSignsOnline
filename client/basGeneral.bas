@@ -251,15 +251,3 @@ Public Function DirExists(ByVal sDirName As String) As Boolean
 NotADir:
     DirExists = False
 End Function
-
-Public Function EnsureValidFont(ByVal AttemptFont As String) As String
-    Dim NewFont As String
-    EnsureValidFont = frmConsole.lblFontTest.FontName
-    On Error GoTo NotValidFont
-    frmConsole.lblFontTest.FontName = AttemptFont
-    On Error GoTo 0
-
-    EnsureValidFont = frmConsole.lblFontTest.FontName
-
-NotValidFont:
-End Function
