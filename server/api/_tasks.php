@@ -17,7 +17,7 @@ function taskrun($taskname, $func) {
     $start = microtime(true);
     tasklog('<START> ' . $taskname);
     $func();
-    tasklog('< END > ' . $taskname . ' (took ' . (microtime(true) - $start) . ' us)');
+    tasklog('< END > ' . $taskname . ' (took ' . ((microtime(true) - $start) * 1000.0) . ' ms)');
 }
 
 function taskmain() {
