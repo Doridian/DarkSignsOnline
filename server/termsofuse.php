@@ -6,7 +6,7 @@ require('_top.php');
 ?>
 <span class="style5">
     <p><br />
-        <font face="Georgia, Times New Roman, Times, serif" size="+3">Conditions </font><br />
+        <font face="Georgia, Times New Roman, Times, serif" size="+3">Conditions</font><br />
     </p>
     <table width="80%" border="0">
         <tr>
