@@ -180,9 +180,6 @@ CREATE TABLE `users` (
   `createtime` int(11) NOT NULL,
   `ip` varchar(255) NOT NULL,
   `lastseen` int(11) NOT NULL,
-  `dobday` int(11) NOT NULL,
-  `dobmonth` int(11) NOT NULL,
-  `dobyear` int(11) NOT NULL,
   `emailverifycode` varchar(255) NOT NULL,
   `cash` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
