@@ -9,11 +9,27 @@ error_reporting(E_ALL);
 
 require_once('function_base.php');
 
-echo "_tasks.php: Cleaning up up email_codes.\n";
+function tasklog($msg) {
+    echo '[' . date('Y-m-d H:i:s') . '] ' . $msg . PHP_EOL;
+}
 
-$time = time();
-$stmt = $db->prepare('DELETE FROM email_codes WHERE expiry < ?');
-$stmt->bind_param('i', $time);
-$stmt->execute();
+function taskrun($taskname, $func) {
+    $start = microtime(true);
+    tasklog('<START> ' . $taskname);
+    $func();
+    tasklog('< END > ' . $taskname . ' (took ' . (microtime(true) - $start) . ' us)');
+}
 
-echo "_tasks.php: Done.\n";
+function taskmain() {
+    taskrun('Remove expired email_codes', function() {
+        global $db;
+
+        $time = time();
+
+        $stmt = $db->prepare('DELETE FROM email_codes WHERE expiry < ?');
+        $stmt->bind_param('i', $time);
+        $stmt->execute();
+    });
+}
+
+taskrun('Main', 'taskmain');
