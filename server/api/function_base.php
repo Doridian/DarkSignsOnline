@@ -110,6 +110,6 @@ function die_frontend_msg($msg, $submsg = '') {
 		echo $submsg;
 	}
 	echo '</font></center>';
-	require('../_bottom.php');
+	require(__DIR__ . '/../_bottom.php');
 	exit;
 }
