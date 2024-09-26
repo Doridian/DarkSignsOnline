@@ -28,15 +28,20 @@ if (!$user) {
 	die('Error, invalid user.');
 }
 
-if (isset($_POST['password'])) {
+if (!empty($_POST['password'])) {
+	$password = $_POST['password'];
+	if (strlen($password) < 6) {
+		die("Your password must be at least 6 characters long.");
+	}
+
 	$stmt = $db->prepare('DELETE FROM email_codes WHERE code=?');
 	$stmt->bind_param('s', $_REQUEST['code']);
 	$stmt->execute();
 
-	$password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+	$pwhash = password_hash($password, PASSWORD_DEFAULT);
 
 	$stmt = $db->prepare('UPDATE users SET password=? WHERE id=?');
-	$stmt->bind_param('si', $password, $row['user']);
+	$stmt->bind_param('si', $pwhash, $row['user']);
 	$stmt->execute();
 
 	echo "<center><br><br><font size='4' color='orange' face='arial'><b>Password has been changed!</b></font></center>";
@@ -81,7 +86,7 @@ if (isset($_POST['password'])) {
 				</div>
 			</td>
 			<td>
-				<div align="left"><input type="password" name="password" /></div>
+				<div align="left"><input type="password" name="password" required="required" /></div>
 			</td>
 		</tr>
 		<tr>

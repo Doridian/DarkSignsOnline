@@ -4,16 +4,27 @@ $htmltitle = 'Create a new account';
 require('_top.php');
 require_once('api/function_base.php');
 
-if (isset($_POST['username'])) {
+if (!empty($_POST['username'])) {
+	if ($_POST['agreetos'] !== 'yes' || $_POST['agecheck'] !== 'yes') {
+		die('You must agree to the terms of use and confirm you are at least 13 years old.');
+	}
+
 	$username = strtolower(trim($_POST['username']));
 	$password = $_POST['password'];
 	$email = trim($_POST['email']);
 
-	$username = str_replace(" ", "-", $username);
+	$username = str_replace(' ', '-', $username);
 
 	if (strlen($username) < 3) {
 		die("Your username must be at least 3 characters long.");
 	}
+	if (strlen($username) > 20) {
+		die("Your username must be at most 20 characters long.");
+	}
+	if (strlen($password) < 6) {
+		die("Your password must be at least 6 characters long.");
+	}
+
 	if (strstr($username, "_")) {
 		die("Error, please don't use invalid characters in your username.");
 	}
@@ -111,12 +122,7 @@ if (isset($_POST['username'])) {
 		die("Error, please don't use invalid characters in your username.");
 	}
 
-	//check password length
-	if (strlen($password) < 6) {
-		die("Your password should be at least 6 characters long.");
-	}
-
-	$password = password_hash($password, PASSWORD_DEFAULT);
+	$pwhash = password_hash($password, PASSWORD_DEFAULT);
 
 	$db->begin_transaction();
 	//check if email already exists
@@ -149,7 +155,7 @@ if (isset($_POST['username'])) {
 		$db->rollback();
 		die("Error: " . $db->error);
 	}
-	$stmt->bind_param('sssisis', $username, $password, $email, $timestamp, $aip, $timestamp, $vercode);
+	$stmt->bind_param('sssisis', $username, $pwhash, $email, $timestamp, $aip, $timestamp, $vercode);
 	$stmt->execute();
 	$res = $stmt->get_result();
 	$userid = $db->insert_id;
@@ -179,13 +185,13 @@ if (isset($_POST['username'])) {
 				<div align="left">
 					<font face='verdana'><strong>Username</strong><br />
 						<font size="2">Try to be unique.<br />
-							Do not use spaces, underscores, or other strange characters. You may use dashes. </font>
+							Do not use spaces, underscores, or other strange characters. You may use dashes.</font>
 					</font><br />
 
 				</div>
 			</td>
 			<td width="245">
-				<div align="left"><input type="text" name="username" /></div>
+				<div align="left"><input type="text" name="username" required="required" /></div>
 			</td>
 		</tr>
 		<tr>
@@ -195,7 +201,7 @@ if (isset($_POST['username'])) {
 				</div>
 			</td>
 			<td bgcolor="#004488">
-				<div align="left"><input type="password" name="password" /></div>
+				<div align="left"><input type="password" name="password" required="required" /></div>
 			</td>
 		</tr>
 		<tr>
@@ -208,7 +214,36 @@ if (isset($_POST['username'])) {
 				</div>
 			</td>
 			<td>
-				<div align="left"><input name="email" type="text" /></div>
+				<div align="left"><input name="email" type="text" required="required" /></div>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="#004488">
+				<div align="left">
+					<label for="agreetos">
+						<font face="Verdana" size="2"><strong>I have read and agree to the <a
+									href="termsofuse.php" target="_blank" style="color:#DDE8F9">Dark Signs Online Terms of Use</a></strong></font>
+					</label>
+				</div>
+			</td>
+			<td bgcolor="#004488">
+				<div align="left">
+					<input type="checkbox" id="agreetos" name="agreetos" value="yes" required="required" />
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div align="left">
+					<label for="agecheck">
+						<font face="Verdana" size="2"><strong>I am at least 13 years old</strong></font>
+					</label>
+				</div>
+			</td>
+			<td>
+				<div align="left">
+					<input type="checkbox" id="agecheck" name="agecheck" value="yes" required="required" />
+				</div>
 			</td>
 		</tr>
 		<tr>
@@ -219,15 +254,10 @@ if (isset($_POST['username'])) {
 			</td>
 			<td bgcolor="#004488">
 				<div align="left">
-					<font face="Verdana" size="1"><strong>By creating an account, you agree to the <a
-								href="termsofuse.php" target="_blank" style="color:#DDE8F9">Dark Signs Online TERMS OF
-								USE</a>.</strong></font><br />
-					<br />
 					<input type="submit" value="Create the account..." />
 				</div>
 			</td>
 		</tr>
-
 	</table>
 </form>
 <br />

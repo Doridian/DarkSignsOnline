@@ -4,7 +4,7 @@ $htmltitle = 'Forgot password';
 require('_top.php');
 require_once('api/function_base.php');
 
-if (isset($_POST['email'])) {
+if (!empty($_POST['email']) && !empty($_POST['username'])) {
 	$username = strtolower(trim($_POST['username']));
 	$email = trim($_POST['email']);
 
@@ -51,7 +51,7 @@ if (isset($_POST['email'])) {
 				</div>
 			</td>
 			<td>
-				<div align="left"><input name="username" type="text" />
+				<div align="left"><input name="username" type="text" required="required" />
 				</div>
 			</td>
 		</tr>
@@ -62,7 +62,7 @@ if (isset($_POST['email'])) {
 				</div>
 			</td>
 			<td bgcolor="#004488">
-				<div align="left"><input name="email" type="text" />
+				<div align="left"><input name="email" type="text" required="required" />
 				</div>
 			</td>
 		</tr>
