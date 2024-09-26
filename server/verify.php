@@ -1,5 +1,6 @@
 <?php
 
+$htmltitle = 'E-Mail Verification';
 require('_top.php');
 require_once('api/function_base.php');
 

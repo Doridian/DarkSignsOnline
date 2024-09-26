@@ -1,4 +1,6 @@
 <?php
+
+$htmltitle = 'Download';
 require('_top.php');
 
 function get_release_client($release)

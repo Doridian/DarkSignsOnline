@@ -9,7 +9,6 @@
 
 <body>
   <table width="1103" border="0" cellpadding="0" cellspacing="0">
-    <!--DWLayoutTable-->
     <tbody>
       <tr>
         <td width="40" height="187" valign="top">
@@ -43,54 +42,6 @@
               <tbody>
                 <tr>
                   <td width="35%">
-                    <!--<form action="/login.php" method="post">
-                      <table width="200" cellpadding="5" cellspacing="0" border="0">
-                        <tbody>
-                          <tr>
-                            <td>
-                              <div align="center">
-                                <font face="verdana" size="1">Username
-                                </font>
-                              </div>
-                            </td>
-                            <td>
-                              <div align="center">
-                                <font face="verdana" size="1">
-                                  <input type="text" disabled="disabled" size="14" />
-                                </font>
-                              </div>
-                            </td>
-                            <td>
-                              <font face="verdana" size="1">&nbsp;</font>
-                            </td>
-                          </tr>
-
-                          <tr>
-                            <td>
-                              <div align="center">
-                                <font face="verdana" size="1">
-                                  Password</font>
-                              </div>
-                            </td>
-                            <td>
-                              <div align="center">
-                                <font face="verdana" size="1">
-                                  <input type="password" disabled="disabled" size="14" />
-                                </font>
-                              </div>
-                            </td>
-                            <td>
-                              <input disabled="disabled" type="submit" value="Log in" />
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-
-                      <font face="verdana" size="1">
-                        <a href="/create_account.php"><strong>Create
-                            a new account</strong></a>
-                      </font>
-                    </form>-->
                     &nbsp;
                   </td>
                   <td width="29%">&nbsp;</td>
