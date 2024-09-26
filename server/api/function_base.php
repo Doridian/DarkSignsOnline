@@ -1,11 +1,14 @@
 <?php
 
-$ver = (int)$_SERVER['HTTP_DSO_PROTOCOL_VERSION'];
-if ($ver < 1) {
+$ver = 0;
+if (!empty($_SERVER['HTTP_DSO_PROTOCOL_VERSION'])) {
+	$ver = (int)$_SERVER['HTTP_DSO_PROTOCOL_VERSION'];
+} else if (!empty($_GET['dso_version'])) {
 	$ver = (int)$_GET['dso_version'];
-	if ($ver < 1) {
-		$ver = 1;
-	}
+}
+
+if ($ver < 1) {
+	$ver = 1;
 }
 
 function print_returnwith($def = '2000', $max_version = 1) {
