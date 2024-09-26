@@ -16,7 +16,9 @@ $stmt->execute();
 $res = $stmt->get_result();
 $row = $res->fetch_assoc();
 if (!$row) {
-	die('Error, invalid code.');
+	echo '<center><br><br><font size="4" color="orange" face="arial"><b>Error, invalid or expired code.</b></font></center>';
+	require('_bottom.php');
+	exit;
 }
 
 $stmt = $db->prepare('SELECT username, email FROM users WHERE id = ?');
@@ -25,7 +27,7 @@ $stmt->execute();
 $res = $stmt->get_result();
 $user = $res->fetch_assoc();
 if (!$user) {
-	die('Error, invalid user.');
+	die('Internal error, invalid user.');
 }
 
 if (!empty($_POST['password'])) {
