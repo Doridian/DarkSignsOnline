@@ -15,9 +15,7 @@ if (!empty($_POST['email']) && !empty($_POST['username'])) {
     $user = $res->fetch_assoc();
 
     if (!$user) {
-        echo "<center><br><br><font size='4' color='orange' face='arial'><b>Error, no user with this E-Mail and username not found.</b></font></center>";
-        require('_bottom.php');
-        exit;
+		die_frontend_msg('Error, no user with this E-Mail and username not found.');
     }
 
     $username = $user['username']; // Re-grab from DB
@@ -31,9 +29,7 @@ if (!empty($_POST['email']) && !empty($_POST['username'])) {
 	$headers = "From: Dark Signs Online <noreply@darksignsonline.com>\r\n";
 	mail($email, "Dark Signs Online - Password reset for $username", "Hi $username,\n\nYou (or someone who knows your E-Mail) has reuqested a password reset for your account, $username\n\nClick the link below to change your password, or ignore this E-Mail if you didn't initiate this change.\n\nhttps://darksignsonline.com/forgot_password2.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttps://darksignsonline.com/", $headers);
 
-	echo "<center><br><br><font size='4' color='orange' face='arial'><b>E-Mail has been sent!</b><br>Check your email for the password reset link.</font></center>";
-	require('_bottom.php');
-	exit;
+	die_frontend_msg('E-Mail has been sent!', 'Check your E-Mail for the password reset link.');
 }
 
 ?>

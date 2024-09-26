@@ -6,7 +6,7 @@ require_once('api/function_base.php');
 
 if (!empty($_POST['username'])) {
 	if ($_POST['agreetos'] !== 'yes' || $_POST['agecheck'] !== 'yes') {
-		die('You must agree to the terms of use and confirm you are at least 13 years old.');
+		die_frontend_msg('You must agree to the terms of use and confirm you are at least 13 years old.');
 	}
 
 	$username = strtolower(trim($_POST['username']));
@@ -16,110 +16,110 @@ if (!empty($_POST['username'])) {
 	$username = str_replace(' ', '-', $username);
 
 	if (strlen($username) < 3) {
-		die("Your username must be at least 3 characters long.");
+		die_frontend_msg("Your username must be at least 3 characters long.");
 	}
 	if (strlen($username) > 20) {
-		die("Your username must be at most 20 characters long.");
+		die_frontend_msg("Your username must be at most 20 characters long.");
 	}
 	if (strlen($password) < 6) {
-		die("Your password must be at least 6 characters long.");
+		die_frontend_msg("Your password must be at least 6 characters long.");
 	}
 
 	if (strstr($username, "_")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, ">")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "~")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "!")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "`")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "@")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "#")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "$")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "%")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "^")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "&")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "*")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "<")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "/")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "\\")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "(")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, ")")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "_")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "+")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "=")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "[")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "{")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "]")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "}")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "|")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, ":")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, ";")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "\"")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "'")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, "?")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, ",")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 	if (strstr($username, ".")) {
-		die("Error, please don't use invalid characters in your username.");
+		die_frontend_msg("Error, please don't use invalid characters in your username.");
 	}
 
 	$pwhash = password_hash($password, PASSWORD_DEFAULT);
@@ -132,7 +132,7 @@ if (!empty($_POST['username'])) {
 	if ($stmt->get_result()->num_rows > 0) {
 		$db->rollback();
 		$email = htmlentities($email);
-		die("The email address <b>$email</b> already exists in the database. Please try again.");
+		die_frontend_msg("The email address <b>$email</b> already exists in the database. Please try again.");
 	}
 	//check if username already exists
 	$stmt = $db->prepare("SELECT id from users where username=?");
@@ -141,7 +141,7 @@ if (!empty($_POST['username'])) {
 	if ($stmt->get_result()->num_rows > 0) {
 		$db->rollback();
 		$username = htmlentities($username);
-		die("The username <b>$username</b> already exists in the database. Please try again.");
+		die_frontend_msg("The username <b>$username</b> already exists in the database. Please try again.");
 	}
 
 	//insert the data
@@ -153,7 +153,7 @@ if (!empty($_POST['username'])) {
 	$stmt = $db->prepare('INSERT INTO users (username, password, email, createtime, ip, lastseen, emailverifycode, active, cash) VALUES (?,?,?,?,?,?,?,0,200)');
 	if (!$stmt) {
 		$db->rollback();
-		die("Error: " . $db->error);
+		die_frontend_msg('Database error, please try again');
 	}
 	$stmt->bind_param('sssisis', $username, $pwhash, $email, $timestamp, $aip, $timestamp, $vercode);
 	$stmt->execute();
@@ -167,9 +167,7 @@ if (!empty($_POST['username'])) {
 	$headers = "From: Dark Signs Online <noreply@darksignsonline.com>\r\n";
 	mail($email, "$username, verify your Dark Signs Online Account", "Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\nhttps://darksignsonline.com/verify.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttps://darksignsonline.com/", $headers);
 
-	echo "<center><br><br><font size='4' color='orange' face='arial'><b>Your account has been created!</b><br>Check your E-Mail for more information.</font></center>";
-	require('_bottom.php');
-	exit;
+	die_frontend_msg('Your account has been created!', 'Check your E-Mail for more information.');
 }
 
 ?>

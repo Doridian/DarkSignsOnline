@@ -5,7 +5,7 @@ require('_top.php');
 require_once('api/function_base.php');
 
 if (empty($_REQUEST['code'])) {
-	die('Error, no code provided.');
+	die_frontend_msg('Error, no code provided.');
 }
 
 $time = time();
@@ -16,9 +16,7 @@ $stmt->execute();
 $res = $stmt->get_result();
 $row = $res->fetch_assoc();
 if (!$row) {
-	echo '<center><br><br><font size="4" color="orange" face="arial"><b>Error, invalid or expired code.</b></font></center>';
-	require('_bottom.php');
-	exit;
+	die_frontend_msg('Error, invalid or expired code.');
 }
 
 $stmt = $db->prepare('SELECT username, email FROM users WHERE id = ?');
@@ -27,13 +25,13 @@ $stmt->execute();
 $res = $stmt->get_result();
 $user = $res->fetch_assoc();
 if (!$user) {
-	die('Internal error, invalid user.');
+	die_frontend_msg('Internal error, invalid user.');
 }
 
 if (!empty($_POST['password'])) {
 	$password = $_POST['password'];
 	if (strlen($password) < 6) {
-		die("Your password must be at least 6 characters long.");
+		die_frontend_msg('Your password must be at least 6 characters long.');
 	}
 
 	$stmt = $db->prepare('DELETE FROM email_codes WHERE code=?');
@@ -46,9 +44,7 @@ if (!empty($_POST['password'])) {
 	$stmt->bind_param('si', $pwhash, $row['user']);
 	$stmt->execute();
 
-	echo "<center><br><br><font size='4' color='orange' face='arial'><b>Password has been changed!</b></font></center>";
-	require('_bottom.php');
-	exit;
+	die_frontend_msg('Password has been changed!');
 }
 
 ?>
@@ -68,7 +64,7 @@ if (!empty($_POST['password'])) {
 				</div>
 			</td>
 			<td>
-				<div align="left"><input name="username" id="username" type="text" disabled="disabled" value="<?php echo htmlspecialchars($user['username']); ?>" />
+				<div align="left"><input name="username" id="username" type="text" disabled="disabled" value="<?php echo htmlentities($user['username']); ?>" />
 				</div>
 			</td>
 		</tr>
@@ -81,7 +77,7 @@ if (!empty($_POST['password'])) {
 				</div>
 			</td>
 			<td bgcolor="#004488">
-				<div align="left"><input name="email" id="email" type="email" disabled="disabled" value="<?php echo htmlspecialchars($user['email']); ?>" />
+				<div align="left"><input name="email" id="email" type="email" disabled="disabled" value="<?php echo htmlentities($user['email']); ?>" />
 				</div>
 			</td>
 		</tr>
@@ -105,7 +101,7 @@ if (!empty($_POST['password'])) {
 			</td>
 			<td bgcolor="#004488">
 				<div align="left">
-					<input type="hidden" name="code" value="<?php echo htmlspecialchars($_REQUEST['code']); ?>" />
+					<input type="hidden" name="code" value="<?php echo htmlentities($_REQUEST['code']); ?>" />
 					<input type="submit" value="Change password" />
 				</div>
 			</td>
