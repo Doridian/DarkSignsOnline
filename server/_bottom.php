@@ -15,8 +15,8 @@
     Copyright &copy; 2008 Dark Signs Online<br />
     <a href="/index.php">Home</a>
     |
-    <a href="/chatlog.php">Live Chat Log</a>
-    |
+    <!--<a href="/chatlog.php">Live Chat Log</a>
+    |-->
     <a href="/termsofuse.php">Terms of use</a><br /><br /><br /><br /><br />
   </span>
 </center>

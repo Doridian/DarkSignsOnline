@@ -3,6 +3,8 @@
 $htmltitle = 'Live Chat Log';
 require('_top.php');
 
+die_frontend_msg('This feature is not yet implemented.');
+
 ?>
 <span class="style5"><br />
 
