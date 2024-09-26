@@ -183,38 +183,43 @@ if (!empty($_POST['username'])) {
 		<tr>
 			<td width="281">
 				<div align="left">
-					<font face='verdana'><strong>Username</strong><br />
-						<font size="2">Try to be unique.<br />
-							Do not use spaces, underscores, or other strange characters. You may use dashes.</font>
-					</font><br />
-
+					<label for="username">
+						<font face='verdana'><strong>Username</strong><br />
+							<font size="2">Try to be unique.<br />
+								Do not use spaces, underscores, or other strange characters. You may use dashes.</font>
+						</font><br />
+					</label>
 				</div>
 			</td>
 			<td width="245">
-				<div align="left"><input type="text" name="username" required="required" /></div>
+				<div align="left"><input type="text" id="username" name="username" required="required" /></div>
 			</td>
 		</tr>
 		<tr>
 			<td bgcolor="#004488">
 				<div align="left">
-					<font face='verdana'><strong>Password</strong></font>
+					<label for="password">
+						<font face='verdana'><strong>Password</strong></font>
+					</label>
 				</div>
 			</td>
 			<td bgcolor="#004488">
-				<div align="left"><input type="password" name="password" required="required" /></div>
+				<div align="left"><input type="password" id="password" name="password" required="required" /></div>
 			</td>
 		</tr>
 		<tr>
 			<td>
 				<div align="left">
-					<font face='verdana'><strong>E-Mail Address</strong>
-						<font size="2"><br />
-							This must be a valid e-mail address, or you will not be able to log in. </font>
-					</font>
+					<label for="email">
+						<font face='verdana'><strong>E-Mail Address</strong>
+							<font size="2"><br />
+								This must be a valid e-mail address, or you will not be able to log in. </font>
+						</font>
+					</label>
 				</div>
 			</td>
 			<td>
-				<div align="left"><input name="email" type="text" required="required" /></div>
+				<div align="left"><input name="email" id="email" type="email" required="required" /></div>
 			</td>
 		</tr>
 		<tr>

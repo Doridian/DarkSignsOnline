@@ -47,22 +47,26 @@ if (!empty($_POST['email']) && !empty($_POST['username'])) {
 		<tr>
 			<td>
 				<div align="left">
-					<font face='verdana'><strong>Username</strong></font>
+					<label for="username">
+						<font face='verdana'><strong>Username</strong></font>
+					</label>
 				</div>
 			</td>
 			<td>
-				<div align="left"><input name="username" type="text" required="required" />
+				<div align="left"><input name="username" id="username" type="text" required="required" />
 				</div>
 			</td>
 		</tr>
 		<tr>
 			<td bgcolor="#004488">
 				<div align="left">
-					<font face='verdana'><strong>E-Mail Address</strong></font>
+					<label for="email">
+						<font face='verdana'><strong>E-Mail Address</strong></font>
+					</label>
 				</div>
 			</td>
 			<td bgcolor="#004488">
-				<div align="left"><input name="email" type="text" required="required" />
+				<div align="left"><input name="email" id="email" type="email" required="required" />
 				</div>
 			</td>
 		</tr>

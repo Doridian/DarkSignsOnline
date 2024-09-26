@@ -60,33 +60,39 @@ if (!empty($_POST['password'])) {
 		<tr>
 			<td>
 				<div align="left">
-					<font face='verdana'><strong>Username</strong></font>
+					<label for="username">
+						<font face='verdana'><strong>Username</strong></font>
+					</label>
 				</div>
 			</td>
 			<td>
-				<div align="left"><input name="username" type="text" disabled="disabled" value="<?php echo htmlspecialchars($user['username']); ?>" />
+				<div align="left"><input name="username" id="username" type="text" disabled="disabled" value="<?php echo htmlspecialchars($user['username']); ?>" />
 				</div>
 			</td>
 		</tr>
 		<tr>
 			<td bgcolor="#004488">
 				<div align="left">
-					<font face='verdana'><strong>E-Mail Address</strong></font>
+					<label for="email">
+						<font face='verdana'><strong>E-Mail Address</strong></font>
+					</label>
 				</div>
 			</td>
 			<td bgcolor="#004488">
-				<div align="left"><input name="email" type="text" disabled="disabled" value="<?php echo htmlspecialchars($user['email']); ?>" />
+				<div align="left"><input name="email" id="email" type="email" disabled="disabled" value="<?php echo htmlspecialchars($user['email']); ?>" />
 				</div>
 			</td>
 		</tr>
 		<tr>
 			<td>
 				<div align="left">
-					<font face='verdana'><strong>Password</strong></font>
+					<label for="password">
+						<font face='verdana'><strong>Password</strong></font>
+					</label>
 				</div>
 			</td>
 			<td>
-				<div align="left"><input type="password" name="password" required="required" /></div>
+				<div align="left"><input type="password" id="password" name="password" required="required" /></div>
 			</td>
 		</tr>
 		<tr>
