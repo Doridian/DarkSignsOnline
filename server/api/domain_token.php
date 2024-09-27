@@ -10,7 +10,7 @@ if (empty($d)) {
 
 $dInfo = getDomainInfo($d);
 if ($dInfo === false) {
-	die_error('not found', 404);
+    die_error('not found', 404);
 }
 
 if (($user['id'] !== $dInfo['owner']) && ($_REQUEST['is_local_script'] === 'true')) {
