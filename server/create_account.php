@@ -25,102 +25,14 @@ if (!empty($_POST['username'])) {
 		die_frontend_msg("Your password must be at least 6 characters long.");
 	}
 
-	if (strstr($username, "_")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, ">")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "~")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "!")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "`")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "@")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "#")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "$")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "%")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "^")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "&")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "*")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "<")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "/")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "\\")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "(")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, ")")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "_")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "+")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "=")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "[")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "{")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "]")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "}")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "|")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, ":")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, ";")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "\"")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "'")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, "?")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, ",")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
-	if (strstr($username, ".")) {
-		die_frontend_msg("Error, please don't use invalid characters in your username.");
-	}
+    $invalid_chars = <<<EOF
+_>~!`@#$%^&*</\()_+=[{]}|:;"'?.,
+EOF;
+    $invalid_chars = str_split($invalid_chars, 1);
+
+    foreach($invalid_chars as $invalid_char) {
+        if(str_contains($username, $invalid_char)) die_frontend_msg("Error, please don't use invalid characters in your username.");
+    }
 
 	$pwhash = password_hash($password, PASSWORD_DEFAULT);
 
