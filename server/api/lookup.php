@@ -7,7 +7,7 @@ print_returnwith();
 $d = trim($_REQUEST['d']);
 $dInfo = getDomainInfo($d);
 if ($dInfo === false) {
-	die('not found');
+    die('not found');
 }
 
 $owner_id = $dInfo['owner'];

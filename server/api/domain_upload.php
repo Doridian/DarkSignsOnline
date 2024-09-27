@@ -3,24 +3,24 @@
 require_once('function.php');
 
 if ($ver < 2) {
-	echo '2003';
+    echo '2003';
 }
 
 $port = (int)$_POST['port'];
 if ($port < 1 || $port > 65535)
 {
-	die_error('Port number must be between 1 and 65535.');
+    die_error('Port number must be between 1 and 65535.');
 }
 
 $d = $_POST['d'];
 $dInfo = getDomainInfo($d);
 
 if ($dInfo === false) {
-	die_error('Domain does not exist.', 404);
+    die_error('Domain does not exist.', 404);
 }
 
 if ($user['id'] !== $dInfo['owner']) {
-	die_error('Restricted access.', 403);
+    die_error('Restricted access.', 403);
 }
 
 $code = line_endings_to_dos(dso_b64_decode($_POST['filedata']));

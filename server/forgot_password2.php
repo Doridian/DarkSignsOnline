@@ -5,7 +5,7 @@ require('_top.php');
 require_once('api/function_base.php');
 
 if (empty($_REQUEST['code'])) {
-	die_frontend_msg('Error, no code provided.');
+    die_frontend_msg('Error, no code provided.');
 }
 
 $time = time();
@@ -16,7 +16,7 @@ $stmt->execute();
 $res = $stmt->get_result();
 $row = $res->fetch_assoc();
 if (!$row) {
-	die_frontend_msg('Error, invalid or expired code.');
+    die_frontend_msg('Error, invalid or expired code.');
 }
 
 $stmt = $db->prepare('SELECT username, email FROM users WHERE id = ?');
@@ -25,26 +25,26 @@ $stmt->execute();
 $res = $stmt->get_result();
 $user = $res->fetch_assoc();
 if (!$user) {
-	die_frontend_msg('Internal error, invalid user.');
+    die_frontend_msg('Internal error, invalid user.');
 }
 
 if (!empty($_POST['password'])) {
-	$password = $_POST['password'];
-	if (strlen($password) < 6) {
-		die_frontend_msg('Your password must be at least 6 characters long.');
-	}
+    $password = $_POST['password'];
+    if (strlen($password) < 6) {
+        die_frontend_msg('Your password must be at least 6 characters long.');
+    }
 
-	$stmt = $db->prepare('DELETE FROM email_codes WHERE code=?');
-	$stmt->bind_param('s', $_REQUEST['code']);
-	$stmt->execute();
+    $stmt = $db->prepare('DELETE FROM email_codes WHERE code=?');
+    $stmt->bind_param('s', $_REQUEST['code']);
+    $stmt->execute();
 
-	$pwhash = password_hash($password, PASSWORD_DEFAULT);
+    $pwhash = password_hash($password, PASSWORD_DEFAULT);
 
-	$stmt = $db->prepare('UPDATE users SET password=? WHERE id=?');
-	$stmt->bind_param('si', $pwhash, $row['user']);
-	$stmt->execute();
+    $stmt = $db->prepare('UPDATE users SET password=? WHERE id=?');
+    $stmt->bind_param('si', $pwhash, $row['user']);
+    $stmt->execute();
 
-	die_frontend_msg('Password has been changed!');
+    die_frontend_msg('Password has been changed!');
 }
 
 ?>
@@ -54,60 +54,60 @@ if (!empty($_POST['password'])) {
 
 
 <form action="forgot_password2.php" method="post">
-	<table width="546" border="0" cellpadding="10" cellspacing="0" bgcolor="#003366">
-		<tr>
-			<td>
-				<div align="left">
-					<label for="username">
-						<font face='verdana'><strong>Username</strong></font>
-					</label>
-				</div>
-			</td>
-			<td>
-				<div align="left"><input name="username" id="username" type="text" disabled="disabled" value="<?php echo htmlentities($user['username']); ?>" />
-				</div>
-			</td>
-		</tr>
-		<tr>
-			<td bgcolor="#004488">
-				<div align="left">
-					<label for="email">
-						<font face='verdana'><strong>E-Mail Address</strong></font>
-					</label>
-				</div>
-			</td>
-			<td bgcolor="#004488">
-				<div align="left"><input name="email" id="email" type="email" disabled="disabled" value="<?php echo htmlentities($user['email']); ?>" />
-				</div>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<div align="left">
-					<label for="password">
-						<font face='verdana'><strong>Password</strong></font>
-					</label>
-				</div>
-			</td>
-			<td>
-				<div align="left"><input type="password" id="password" name="password" required="required" /></div>
-			</td>
-		</tr>
-		<tr>
-			<td bgcolor="#004488">
-				<div align="left">
-					<font face='verdana'></font>
-				</div>
-			</td>
-			<td bgcolor="#004488">
-				<div align="left">
-					<input type="hidden" name="code" value="<?php echo htmlentities($_REQUEST['code']); ?>" />
-					<input type="submit" value="Change password" />
-				</div>
-			</td>
-		</tr>
+    <table width="546" border="0" cellpadding="10" cellspacing="0" bgcolor="#003366">
+        <tr>
+            <td>
+                <div align="left">
+                    <label for="username">
+                        <font face='verdana'><strong>Username</strong></font>
+                    </label>
+                </div>
+            </td>
+            <td>
+                <div align="left"><input name="username" id="username" type="text" disabled="disabled" value="<?php echo htmlentities($user['username']); ?>" />
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="#004488">
+                <div align="left">
+                    <label for="email">
+                        <font face='verdana'><strong>E-Mail Address</strong></font>
+                    </label>
+                </div>
+            </td>
+            <td bgcolor="#004488">
+                <div align="left"><input name="email" id="email" type="email" disabled="disabled" value="<?php echo htmlentities($user['email']); ?>" />
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div align="left">
+                    <label for="password">
+                        <font face='verdana'><strong>Password</strong></font>
+                    </label>
+                </div>
+            </td>
+            <td>
+                <div align="left"><input type="password" id="password" name="password" required="required" /></div>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="#004488">
+                <div align="left">
+                    <font face='verdana'></font>
+                </div>
+            </td>
+            <td bgcolor="#004488">
+                <div align="left">
+                    <input type="hidden" name="code" value="<?php echo htmlentities($_REQUEST['code']); ?>" />
+                    <input type="submit" value="Change password" />
+                </div>
+            </td>
+        </tr>
 
-	</table>
+    </table>
 </form>
 <br />
 <br />

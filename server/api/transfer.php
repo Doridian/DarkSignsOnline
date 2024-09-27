@@ -13,12 +13,12 @@ $db->begin_transaction();
 $status = transaction($user['id'], $to, $description, $amount);
 $db->commit();
 if ($ver > 1) {
-	die($status);
+    die($status);
 }
 
 $usercash = getCash($user['id']);
 if ($status === 'COMPLETE') {
-	die("Payment of $$amount.00 to $to is complete. Your new balance is $$usercash.00");
+    die("Payment of $$amount.00 to $to is complete. Your new balance is $$usercash.00");
 }
 
 die_error("Payment of $$amount.00 to $to was DECLINED by the bank with error: $status");
