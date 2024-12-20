@@ -12,5 +12,8 @@ $JWT_PRIVATE_KEY = '-----BEGIN PRIVATE KEY-----
 PUT YOUR PRIVATE KEY HERE
 -----END PRIVATE KEY-----';
 
+$CAPTCHA_SECRET_KEY = 'ThisShouldBe32BytesAlphanumeric!';
+$CAPTCHA_FONT = '/usr/share/fonts/TTF/Roboto-Regular.ttf';
+
 //error_reporting(E_ALL & ~E_NOTICE);
 //ini_set('display_errors', 'On');
