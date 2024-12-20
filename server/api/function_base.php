@@ -24,8 +24,7 @@ function print_returnwith($def = '2000', $max_version = 1) {
     echo $returnwith;
 }
 
-function make_keycode($length = 16) {
-    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function make_keycode($length = 16, $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
     $charactersLength = strlen($characters);
     $keycode = '';
     for ($i = 0; $i < $length; $i++) {

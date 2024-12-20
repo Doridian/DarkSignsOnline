@@ -1,10 +1,16 @@
 <?php
 
 $htmltitle = 'Forgot password';
-require('_top.php');
 require_once('api/function_base.php');
+require_once('api/_captcha.php');
+require('_top.php');
 
 if (!empty($_POST['email']) && !empty($_POST['username'])) {
+    $captcha = new DSOCaptcha('forgot_password', $_POST['captchaid']);
+    if (!$captcha->check($_POST['captchacode'])) {
+        die_frontend_msg('The CAPTCHA code you entered was incorrect.');
+    }
+
     $username = strtolower(trim($_POST['username']));
     $email = trim($_POST['email']);
 
@@ -32,6 +38,7 @@ if (!empty($_POST['email']) && !empty($_POST['username'])) {
     die_frontend_msg('E-Mail has been sent!', 'Check your E-Mail for the password reset link.');
 }
 
+$captcha = new DSOCaptcha('forgot_password');
 ?>
 
 <font face="Georgia, Times New Roman, Times, serif" size="+3">Forgot password</font><br />
@@ -74,6 +81,7 @@ if (!empty($_POST['email']) && !empty($_POST['username'])) {
             </td>
             <td>
                 <div align="left">
+                    <input type="hidden" name="captchaid" value="<?php echo htmlspecialchars($captcha->getID()); ?>" />
                     <input type="submit" value="Send E-Mail" />
                 </div>
             </td>

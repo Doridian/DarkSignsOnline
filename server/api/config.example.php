@@ -12,5 +12,7 @@ $JWT_PRIVATE_KEY = '-----BEGIN PRIVATE KEY-----
 PUT YOUR PRIVATE KEY HERE
 -----END PRIVATE KEY-----';
 
+$CAPTCHA_SECRET_KEY = 'ThisShouldBe32BytesAlphanumeric!';
+
 //error_reporting(E_ALL & ~E_NOTICE);
 //ini_set('display_errors', 'On');

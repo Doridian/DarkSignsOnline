@@ -1,10 +1,16 @@
 <?php
 
 $htmltitle = 'Create a new account';
-require('_top.php');
 require_once('api/function_base.php');
+require_once('api/_captcha.php');
+require('_top.php');
 
 if (!empty($_POST['username'])) {
+    $captcha = new DSOCaptcha('create_account', $_POST['captchaid']);
+    if (!$captcha->check($_POST['captchacode'])) {
+        die_frontend_msg('The CAPTCHA code you entered was incorrect.');
+    }
+
     if ($_POST['agreetos'] !== 'yes' || $_POST['agecheck'] !== 'yes') {
         die_frontend_msg('You must agree to the terms of use and confirm you are at least 13 years old.');
     }
@@ -48,7 +54,6 @@ if (!empty($_POST['username'])) {
         $username = htmlentities($username);
         die_frontend_msg("The username <b>$username</b> already exists in the database. Please try again.");
     }
-
     //insert the data
 
     $aip = $_SERVER['REMOTE_ADDR'];
@@ -75,6 +80,7 @@ if (!empty($_POST['username'])) {
     die_frontend_msg('Your account has been created!', 'Check your E-Mail for more information.');
 }
 
+$captcha = new DSOCaptcha('create_account');
 ?>
 
 <font face="Georgia, Times New Roman, Times, serif" size="+3">Create a new account</font><br />
@@ -162,6 +168,7 @@ if (!empty($_POST['username'])) {
             </td>
             <td bgcolor="#004488">
                 <div align="left">
+                    <input type="hidden" name="captchaid" value="<?php echo htmlspecialchars($captcha->getID()); ?>" />
                     <input type="submit" value="Create the account..." />
                 </div>
             </td>
