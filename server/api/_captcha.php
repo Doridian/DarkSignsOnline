@@ -45,6 +45,9 @@ class DSOCaptcha {
     }
 
     public function check($code) {
+        $curSession = @$_SESSION[$this->sessionKey()];
+        unset($_SESSION[$this->sessionKey()]);
+
         if (time() - $this->timestamp > CAPTCHA_EXPIRY_SECONDS) {
             return false;
         }
@@ -54,10 +57,9 @@ class DSOCaptcha {
         if (!hash_equals($this->hmac, $this->hash($code))) {
             return false;
         }
-        if (@$_SESSION[$this->sessionKey()] !== $this->sessionValue()) {
+        if ($curSession !== $this->sessionValue()) {
             return false;
         }
-        unset($_SESSION[$this->sessionKey()]);
         return true;
     }
 
