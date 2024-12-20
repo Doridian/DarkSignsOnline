@@ -69,17 +69,18 @@ class DSOCaptcha {
             throw new Exception('No image code set');
         }
 
+
         $img = imagecreatetruecolor(CAPTCHA_WIDTH, CAPTCHA_HEIGHT);
         $bg = imagecolorallocate($img, 0, 0, 0);
         $textcolor = imagecolorallocate($img, 255, 255, 255);
         imagefilledrectangle($img, 0, 0, CAPTCHA_WIDTH, CAPTCHA_HEIGHT, $bg);
 
-        mt_srand($this->timestamp);
+        $e = new \Random\Engine\Mt19937($this->timestamp);
+        $r = new \Random\Randomizer($e);
         $per_char_width = CAPTCHA_WIDTH / CAPTCHA_LENGTH;
         for ($i = 0; $i < CAPTCHA_LENGTH; $i++) {
-            imagettftext($img, CAPTCHA_FONT_SIZE, mt_rand(-15, 15), ($per_char_width * $i) + mt_rand(0, 10), mt_rand(CAPTCHA_HEIGHT - CAPTCHA_FONT_SIZE, CAPTCHA_HEIGHT), $textcolor, $CAPTCHA_FONT, $this->code[$i]);
+            imagettftext($img, CAPTCHA_FONT_SIZE + $r->getInt(-2, 2), $r->getFloat(-15, 15), ($per_char_width * $i) + $r->getFloat(0, 10), $r->getFloat(CAPTCHA_HEIGHT - CAPTCHA_FONT_SIZE, CAPTCHA_HEIGHT), $textcolor, $CAPTCHA_FONT, $this->code[$i]);
         }
-        mt_srand();
 
         header('Content-Type: image/png');
         imagepng($img);
