@@ -175,12 +175,12 @@ $captcha = new DSOCaptcha('create_account');
             </td>
         </tr>
         <tr>
-            <td bgcolor="#004488">
+            <td">
                 <div align="left">
                     <font face='verdana'></font>
                 </div>
             </td>
-            <td bgcolor="#004488">
+            <td>
                 <div align="left">
                     <input type="hidden" name="captchaid" value="<?php echo htmlspecialchars($captcha->getID()); ?>" />
                     <input type="submit" value="Create the account..." />

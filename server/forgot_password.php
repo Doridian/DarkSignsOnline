@@ -74,7 +74,7 @@ $captcha = new DSOCaptcha('forgot_password');
             </td>
         </tr>
         <tr>
-            <td bgcolor="#004488">
+            <td>
                 <div align="left">
                     <label for="captchacode">
                         <font face='verdana'><strong>CAPTCHA</strong></font>
@@ -82,18 +82,18 @@ $captcha = new DSOCaptcha('forgot_password');
                     </label>
                 </div>
             </td>
-            <td bgcolor="#004488">
+            <td>
                 <div align="left"><input name="captchacode" id="captchacode" type="text" required="required" />
                 </div>
             </td>
         </tr>
         <tr>
-            <td>
+            <td bgcolor="#004488">
                 <div align="left">
                     <font face='verdana'></font>
                 </div>
             </td>
-            <td>
+            <td bgcolor="#004488">
                 <div align="left">
                     <input type="hidden" name="captchaid" value="<?php echo htmlspecialchars($captcha->getID()); ?>" />
                     <input type="submit" value="Send E-Mail" />
