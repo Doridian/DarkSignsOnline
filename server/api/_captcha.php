@@ -50,6 +50,8 @@ class DSOCaptcha {
     }
 
     public function check($code) {
+        $code = strtoupper(trim($code));
+
         if (time() > $this->expiry) {
             $this->unsetSessionKey();
             return false;
