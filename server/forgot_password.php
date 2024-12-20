@@ -78,7 +78,7 @@ $captcha = new DSOCaptcha('forgot_password');
                 <div align="left">
                     <label for="captchacode">
                         <font face='verdana'><strong>CAPTCHA</strong></font>
-                        <img src="api/captcha_render.php?page=forgot_password&id=<?php echo htmlspecialchars($captcha->getID()); ?>" />
+                        <img src="api/captcha_render.php?page=forgot_password&captchaid=<?php echo htmlspecialchars($captcha->getID()); ?>" />
                     </label>
                 </div>
             </td>

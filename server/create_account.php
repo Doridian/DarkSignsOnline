@@ -165,7 +165,7 @@ $captcha = new DSOCaptcha('create_account');
                 <div align="left">
                     <label for="captchacode">
                         <font face='verdana'><strong>CAPTCHA</strong></font>
-                        <img src="api/captcha_render.php?page=create_account&id=<?php echo htmlspecialchars($captcha->getID()); ?>" />
+                        <img src="api/captcha_render.php?page=create_account&captchaid=<?php echo htmlspecialchars($captcha->getID()); ?>" />
                     </label>
                 </div>
             </td>
