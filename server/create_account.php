@@ -6,7 +6,7 @@ require_once('api/_captcha.php');
 require('_top.php');
 
 if (!empty($_POST['username']) && !empty($_POST['captchaid'])) {
-    $captcha = new DSOCaptcha('create_account', $_POST['captchaid']);
+    $captcha = DSOCaptcha::loadFromSession('create_account', $_POST['captchaid']);
     if (!$captcha->check($_POST['captchacode'])) {
         die_frontend_msg('The CAPTCHA code you entered was incorrect.');
     }
@@ -80,7 +80,7 @@ if (!empty($_POST['username']) && !empty($_POST['captchaid'])) {
     die_frontend_msg('Your account has been created!', 'Check your E-Mail for more information.');
 }
 
-$captcha = new DSOCaptcha('create_account');
+$captcha = DSOCaptcha::createNew('create_account');
 ?>
 
 <font face="Georgia, Times New Roman, Times, serif" size="+3">Create a new account</font><br />

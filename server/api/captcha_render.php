@@ -7,5 +7,5 @@ if (empty($_REQUEST['page']) || empty($_REQUEST['captchaid'])) {
     die_error('Missing parameters', 400);
 }
 
-$captcha = new DSOCaptcha($_REQUEST['page'], $_REQUEST['captchaid']);
+$captcha = DSOCaptcha::loadFromSession($_REQUEST['page'], $_REQUEST['captchaid']);
 $captcha->render();

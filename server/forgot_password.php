@@ -6,7 +6,7 @@ require_once('api/_captcha.php');
 require('_top.php');
 
 if (!empty($_POST['email']) && !empty($_POST['username']) && !empty($_POST['captchaid'])) {
-    $captcha = new DSOCaptcha('forgot_password', $_POST['captchaid']);
+    $captcha = DSOCaptcha::loadFromSession('forgot_password', $_POST['captchaid']);
     if (!$captcha->check($_POST['captchacode'])) {
         die_frontend_msg('The CAPTCHA code you entered was incorrect.');
     }
@@ -38,7 +38,7 @@ if (!empty($_POST['email']) && !empty($_POST['username']) && !empty($_POST['capt
     die_frontend_msg('E-Mail has been sent!', 'Check your E-Mail for the password reset link.');
 }
 
-$captcha = new DSOCaptcha('forgot_password');
+$captcha = DSOCaptcha::createNew('forgot_password');
 ?>
 
 <font face="Georgia, Times New Roman, Times, serif" size="+3">Forgot password</font><br />

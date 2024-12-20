@@ -10,61 +10,57 @@ define('CAPTCHA_LENGTH', 6);
 define('CAPTCHA_FONT_SIZE', 24);
 
 class DSOCaptcha {
-    private $code;
-    private $hmac;
-    private $timestamp;
+    private $id;
     private $page;
+    private $expiry;
+    private $code;
 
-    public function __construct($page, $id = null) {
-        if (empty($id)) {
-            $this->timestamp = time();
-            $this->page = $page;
+    private function __construct($page, $id, $expiry, $code) {
+        $this->page = $page;
+        $this->id = $id;
+        $this->expiry = $expiry;
+        $this->code = $code;
+    }
 
-            $this->code = make_keycode(CAPTCHA_LENGTH, '23456789ABCDEFGHJKLMNPQRSTUVWXYZ');
-            $this->hmac = $this->hash($this->code);
-            $_SESSION[$this->sessionKey()] = $this->sessionValue();
-        } else {
-            list($this->hmac, $this->page, $timestamp_str) = explode(';', $id, 3);
-            $this->timestamp = intval($timestamp_str);
+    public static function createNew($page) {
+        $id = make_keycode(64);
+        $expiry = time() + CAPTCHA_EXPIRY_SECONDS;
+        $code = make_keycode(CAPTCHA_LENGTH, '23456789ABCDEFGHJKLMNPQRSTUVWXYZ');
+        $obj = new DSOCaptcha($page, $id, $expiry, $code);
+        $_SESSION[$obj->sessionKey()] = strval($obj->expiry) . '|' . $obj->code;
+        return $obj;
+    }
 
-            $this->code = @$_SESSION[$this->sessionKey()];
+    public static function loadFromSession($page, $id) {
+        $obj = new DSOCaptcha($page, $id, 0, '');
+        $data = @$_SESSION[$obj->sessionKey()];
+        if (!empty($data)) {
+            list($expiry_str, $obj->code) = explode('|', $data);
+            $obj->expiry = intval($expiry_str);
         }
+        return $obj;
     }
 
     private function sessionKey() {
-        return 'captcha_' . $this->page;
+        return 'captcha_' . $this->page . '_' . $this->id;
     }
 
-    private function sessionValue() {
-        return $this->code;
-    }
-
-    private function hash($code) {
-        global $CAPTCHA_SECRET_KEY;
-        return hash_hmac('sha256', $code . ';' . $this->page . ';' . strval($this->timestamp), $CAPTCHA_SECRET_KEY);
+    private function unsetSessionKey() {
+        unset($_SESSION[$this->sessionKey()]);
     }
 
     public function check($code) {
-        $curSession = @$_SESSION[$this->sessionKey()];
-        unset($_SESSION[$this->sessionKey()]);
-
-        if (time() - $this->timestamp > CAPTCHA_EXPIRY_SECONDS) {
+        if (time() > $this->expiry) {
+            $this->unsetSessionKey();
             return false;
         }
 
-        $code = trim(strtoupper($code));
-
-        if (!hash_equals($this->hmac, $this->hash($code))) {
-            return false;
-        }
-        if ($curSession !== $this->sessionValue()) {
-            return false;
-        }
-        return true;
+        $this->unsetSessionKey();
+        return strcmp($this->code, $code) === 0;
     }
 
     public function getID() {
-        return $this->hmac . ';' . $this->page . ';' . strval($this->timestamp);
+        return $this->id;
     }
 
     public function render() {
@@ -73,13 +69,12 @@ class DSOCaptcha {
             throw new Exception('No image code set');
         }
 
-
         $img = imagecreatetruecolor(CAPTCHA_WIDTH, CAPTCHA_HEIGHT);
         $bg = imagecolorallocate($img, 0, 0, 0);
         $textcolor = imagecolorallocate($img, 255, 255, 255);
         imagefilledrectangle($img, 0, 0, CAPTCHA_WIDTH, CAPTCHA_HEIGHT, $bg);
 
-        $e = new \Random\Engine\Mt19937($this->timestamp);
+        $e = new \Random\Engine\Mt19937($this->expiry);
         $r = new \Random\Randomizer($e);
         $per_char_width = CAPTCHA_WIDTH / CAPTCHA_LENGTH;
         for ($i = 0; $i < CAPTCHA_LENGTH; $i++) {
