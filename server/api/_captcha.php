@@ -17,14 +17,16 @@ class DSOCaptcha {
 
     public function __construct($page, $id = null) {
         if (empty($id)) {
-            $this->code = make_keycode(CAPTCHA_LENGTH, '23456789ABCDEFGHJKLMNPQRSTUVWXYZ');
             $this->timestamp = time();
             $this->page = $page;
+
+            $this->code = make_keycode(CAPTCHA_LENGTH, '23456789ABCDEFGHJKLMNPQRSTUVWXYZ');
             $this->hmac = $this->hash($this->code);
             $_SESSION[$this->sessionKey()] = $this->sessionValue();
         } else {
             list($this->hmac, $this->page, $timestamp_str) = explode(';', $id, 3);
             $this->timestamp = intval($timestamp_str);
+
             $this->code = @$_SESSION[$this->sessionKey()];
         }
     }
