@@ -11,7 +11,7 @@ class DSOCaptcha {
     private $timestamp;
     private $page;
 
-    public function DSOCaptcha($page, $id = null) {
+    public function __construct($page, $id = null) {
         if (empty($id)) {
             $this->code = make_keycode(8, '23456789ABCDEFGHJKLMNPQRSTUVWXYZ');
             $this->timestamp = time();
@@ -56,7 +56,7 @@ class DSOCaptcha {
     }
 
     public function getID() {
-        return $this->hmac . ';' . strval($this->timestamp);
+        return $this->hmac . ';' . $this->page . ';' . strval($this->timestamp);
     }
 
     public function render() {

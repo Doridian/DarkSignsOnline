@@ -87,9 +87,13 @@ define('BANK_USER_ID', 42);
 require_once('config.php');
 
 global $db;
-$db = new mysqli($DB_HOST, $DB_USERNAME, $DB_PASSWORD, $DB_DATABASE);
-if (!$db) {
-    die_error('Database error', 500);
+if (empty($disable_database)) {
+    $db = new mysqli($DB_HOST, $DB_USERNAME, $DB_PASSWORD, $DB_DATABASE);
+    if (!$db) {
+        die_error('Database error', 500);
+    }
+} else {
+    $db = null;
 }
 
 if (empty($need_db_credentials)) {
