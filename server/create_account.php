@@ -175,7 +175,7 @@ $captcha = new DSOCaptcha('create_account');
             </td>
         </tr>
         <tr>
-            <td">
+            <td>
                 <div align="left">
                     <font face='verdana'></font>
                 </div>
