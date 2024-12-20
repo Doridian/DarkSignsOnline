@@ -6,7 +6,7 @@ require_once('api/_captcha.php');
 require('_top.php');
 
 if (!empty($_POST['username']) && !empty($_POST['captchaid'])) {
-    $captcha = DSOCaptcha::fromSession('create_account', $_POST['captchaid']);
+    $captcha = DSOCaptcha::fromID('create_account', $_POST['captchaid']);
     if (!$captcha->check($_POST['captchacode'])) {
         die_frontend_msg('The CAPTCHA code you entered was incorrect.');
     }

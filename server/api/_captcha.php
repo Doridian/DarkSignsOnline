@@ -31,7 +31,7 @@ class DSOCaptcha {
         return $obj;
     }
 
-    public static function fromSession($page, $id) {
+    public static function fromID($page, $id) {
         $obj = new DSOCaptcha($page, $id, 0, '');
         $data = @$_SESSION[$obj->sessionKey()];
         if (!empty($data)) {
