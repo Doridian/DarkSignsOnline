@@ -31,16 +31,25 @@ class DSOCaptcha {
         return $obj;
     }
 
+    public function regenerate() {
+        return DSOCaptcha::createNew($this->page);
+    }
+
     public static function fromPOSTData($page) {
         $id = @$_POST['captchaid'];
         if (empty($id)) {
-            return null;
+            $id = '';
         }
         return DSOCaptcha::fromID($page, $id);
     }
 
     public static function fromID($page, $id) {
         $obj = new DSOCaptcha($page, $id, 0, '');
+        if (empty($id)) {
+            // Return always-invalid expiry 0 CAPTCHA
+            return $obj;
+        }
+
         $data = @$_SESSION[$obj->sessionKey()];
         if (!empty($data)) {
             list($expiry_str, $obj->code) = explode('|', $data);
