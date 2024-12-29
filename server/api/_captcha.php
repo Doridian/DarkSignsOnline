@@ -31,6 +31,14 @@ class DSOCaptcha {
         return $obj;
     }
 
+    public static function fromPOSTData($page) {
+        $id = @$_POST['captchaid'];
+        if (empty($id)) {
+            return null;
+        }
+        return DSOCaptcha::fromID($page, $id);
+    }
+
     public static function fromID($page, $id) {
         $obj = new DSOCaptcha($page, $id, 0, '');
         $data = @$_SESSION[$obj->sessionKey()];
@@ -49,6 +57,14 @@ class DSOCaptcha {
         unset($_SESSION[$this->sessionKey()]);
     }
 
+    public function checkPOSTData() {
+        $code = @$_POST['captchacode'];
+        if (empty($code)) {
+            return false;
+        }
+        return $this->check($code);
+    }
+
     public function check($code) {
         $code = strtoupper(trim($code));
 
@@ -65,6 +81,23 @@ class DSOCaptcha {
         return $this->id;
     }
 
+    public function imageURL() {
+        return 'api/captcha_render.php?page=' . urlencode($this->page) .
+                '&captchaid=' . urlencode($this->id);
+    }
+
+    public function image() {
+        return '<img src="' . htmlspecialchars($this->imageURL()) . '" />';
+    }
+
+    public function idField() {
+        return '<input type="hidden" name="captchaid" value="' . htmlspecialchars($this->id) . '" />';
+    }
+
+    public function formField() {
+        return '<input name="captchacode" id="captchacode" type="text" required="required" />';
+    }
+
     public function render() {
         global $CAPTCHA_FONT;
         if (empty($this->code)) {
@@ -73,14 +106,27 @@ class DSOCaptcha {
 
         $img = imagecreatetruecolor(CAPTCHA_WIDTH, CAPTCHA_HEIGHT);
         $bg = imagecolorallocate($img, 0, 0, 0);
-        $textcolor = imagecolorallocate($img, 255, 255, 255);
+        $textcolors = [
+            imagecolorallocate($img, 242, 201, 6),
+            imagecolorallocate($img, 255, 255, 255),
+        ];
+        $textcolor_max = count($textcolors) - 1;
         imagefilledrectangle($img, 0, 0, CAPTCHA_WIDTH, CAPTCHA_HEIGHT, $bg);
 
         $e = new \Random\Engine\Mt19937($this->expiry);
         $r = new \Random\Randomizer($e);
         $per_char_width = CAPTCHA_WIDTH / CAPTCHA_LENGTH;
         for ($i = 0; $i < CAPTCHA_LENGTH; $i++) {
-            imagettftext($img, CAPTCHA_FONT_SIZE + $r->getInt(-2, 2), $r->getFloat(-15, 15), ($per_char_width * $i) + $r->getFloat(0, 10), $r->getFloat(CAPTCHA_HEIGHT - CAPTCHA_FONT_SIZE, CAPTCHA_HEIGHT), $textcolor, $CAPTCHA_FONT, $this->code[$i]);
+            imagettftext(
+                $img,
+                CAPTCHA_FONT_SIZE + $r->getInt(-2, 2),
+                $r->getFloat(-15, 15),
+                ($per_char_width * $i) + $r->getFloat(0, 10),
+                $r->getFloat(CAPTCHA_HEIGHT - CAPTCHA_FONT_SIZE, CAPTCHA_HEIGHT),
+                $textcolors[$r->getInt(0, $textcolor_max)],
+                $CAPTCHA_FONT,
+                $this->code[$i]
+            );
         }
 
         header('Content-Type: image/png');

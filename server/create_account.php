@@ -5,9 +5,9 @@ require_once('api/function_base.php');
 require_once('api/_captcha.php');
 require('_top.php');
 
-if (!empty($_POST['username']) && !empty($_POST['captchaid'])) {
-    $captcha = DSOCaptcha::fromID('create_account', $_POST['captchaid']);
-    if (!$captcha->check($_POST['captchacode'])) {
+$captcha = DSOCaptcha::fromPOSTData('create_account');
+if (!empty($_POST['username']) && !empty($captcha)) {
+    if (!$captcha->checkPOSTData()) {
         die_frontend_msg('The CAPTCHA code you entered was incorrect.');
     }
 
@@ -164,13 +164,13 @@ $captcha = DSOCaptcha::createNew('create_account');
             <td bgcolor="#004488">
                 <div align="left">
                     <label for="captchacode">
-                        <font face='verdana'><strong>CAPTCHA</strong></font>
-                        <img src="api/captcha_render.php?page=create_account&captchaid=<?php echo htmlspecialchars($captcha->getID()); ?>" />
+                        <?php echo $captcha->image(); ?>
                     </label>
                 </div>
             </td>
             <td bgcolor="#004488">
-                <div align="left"><input name="captchacode" id="captchacode" type="text" required="required" />
+                <div align="left">
+                    <?php echo $captcha->formField(); ?>
                 </div>
             </td>
         </tr>
@@ -182,7 +182,7 @@ $captcha = DSOCaptcha::createNew('create_account');
             </td>
             <td>
                 <div align="left">
-                    <input type="hidden" name="captchaid" value="<?php echo htmlspecialchars($captcha->getID()); ?>" />
+                    <?php echo $captcha->idField(); ?>
                     <input type="submit" value="Create the account..." />
                 </div>
             </td>
