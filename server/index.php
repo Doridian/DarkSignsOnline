@@ -4,7 +4,7 @@
   <strong>December 31st 2024</strong><br /><span class="style9">
     Added a CAPTCHA as for some reason we started getting a ton of spam/bot registrations.<br />
     I also deleted all the bot accounts cluttering up the database.<br />
-    If I accidently deleted your account (I hope not, I tried to be careful), please just re-register.<br />
+    If I accidently deleted your account (I hope not, I tried to be careful), please just re-register.
     </span><br /><br />
 
   <strong>September 24th 2024</strong><br /><span class="style9">
