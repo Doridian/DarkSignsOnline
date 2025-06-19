@@ -22,12 +22,12 @@ if (strpos($version, '.') === false) {
 }
 
 $releases = json_decode(file_get_contents('../releases.json'));
-$release = @$releases[$release_track];
+$release = @$releases->{$release_track};
 
-$current = strtolower(trim($release->name));
+$current = strtolower($release->name);
 
 if ($version !== $current) {
-    die('0002Client update available! Please download version ' . $name . ' at https://darksignsonline.com/download.php');
+    die('0002Client update available! Please download version ' . $release->name . ' at https://darksignsonline.com/download.php');
 }
 
 die('0000OK');
