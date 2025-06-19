@@ -1,8 +1,10 @@
 on:
   push:
     branches-ignore:
+      - ignored
+    tags-ignore:
+      - latest
       - main
-  workflow_call: {}
 
 concurrency:
   group: client-${{ github.ref }}

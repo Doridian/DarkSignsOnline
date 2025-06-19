@@ -1,18 +1,21 @@
 on:
-  pull_request: {}
+  push:
+    branches:
+      - main
 
 concurrency:
-  group: server-${{ github.ref }}
+  group: server-publish-${{ github.ref }}
   cancel-in-progress: true
 
-name: Build server
+name: Publish server
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   server:
-    name: Build server
+    name: Publish server
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -22,10 +25,10 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build container image
+    - name: Push container image
       uses: docker/build-push-action@v6
       with:
-        push: false
+        push: true
         build-args: |
           GIT_REVISION=${{ github.sha }}
-        tags: ghcr.io/doridian/darksignsonline/server:dev
+        tags: ghcr.io/doridian/darksignsonline/server:latest

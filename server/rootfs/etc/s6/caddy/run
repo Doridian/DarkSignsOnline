@@ -1,0 +1,5 @@
+#!/bin/sh
+
+export HOME=/var/lib/caddy
+
+exec s6-setuidgid caddy /usr/sbin/caddy run --config /etc/Caddyfile
