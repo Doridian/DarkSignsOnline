@@ -3,6 +3,7 @@ FROM alpine:3.22
 RUN apk --no-cache add \
     caddy \
     php84-fpm \
+    php84-cli \
     php84-gd \
     php84-json \
     php84-mysqli \
