@@ -28,8 +28,8 @@
                       <a href="/forgot_password.php">Forgot password</a>
                       |
                       <a href="/download.php">Download</a>
-                      |
-                      <a href="/wiki/">Wiki</a>
+                      <!--|
+                      <a href="/wiki/">Wiki</a>-->
                       |
                       <a href="https://web.archive.org/web/20101231205551/http://www.darksignsonline.com/forum/">Discussion
                         Forum (archive.org)</a>
