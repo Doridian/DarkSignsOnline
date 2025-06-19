@@ -17,6 +17,7 @@ RUN apk --no-cache add \
     php84-fileinfo \
     php84-intl \
     s6 \
+    msmtp \
     shadow \
     libcap \
     font-roboto
