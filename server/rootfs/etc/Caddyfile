@@ -27,6 +27,11 @@
 	php_fastcgi unix//run/php-fpm.sock
 	file_server
 
-	rewrite /wiki/w/* /wiki/index.php?{query}
-	rewrite /wiki/* /wiki/index.php?{query}
+	handle_path /wiki/* {
+		try_files /wiki/{path} /wiki/{path}/ /wiki/index.php
+	}
+
+	handle {
+		try_files {path} {path}/ =404
+	}
 }
