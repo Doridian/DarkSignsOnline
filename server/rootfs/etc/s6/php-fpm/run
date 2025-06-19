@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # BEGIN Create config.php
-PRIVCONF="$(mktemp -t -p /run dsoconfig.XXXXXX)"
+PRIVCONF=/run/dso-config.php
 chown root:php "${PRIVCONF}"
 chmod 640 "${PRIVCONF}"
 
