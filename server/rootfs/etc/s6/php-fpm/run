@@ -31,7 +31,7 @@ phpenvvar_b64 'JWT_PUBLIC_KEY'
 phpenvvar 'CAPTCHA_SECRET_KEY'
 phpenvvar 'CAPTCHA_FONT'
 
-echo "<php require_once('${PRIVCONF}');" > /var/www/api/config.php
+echo "<?php require_once('${PRIVCONF}');" > /var/www/api/config.php
 # END Create config.php
 
 exec /usr/sbin/php-fpm84 --nodaemonize --fpm-config /etc/php-fpm.conf
