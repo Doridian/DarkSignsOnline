@@ -7,6 +7,8 @@ RUN apk --no-cache add \
     php84-gd \
     php84-json \
     php84-mysqli \
+    php84-session \
+    php84-opcache \
     s6 \
     shadow \
     libcap \
