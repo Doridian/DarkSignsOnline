@@ -1,6 +1,6 @@
 FROM alpine:3.22
 
-ARG GIT_REV="unknown"
+ARG GIT_REVISION="unknown"
 
 RUN apk --no-cache add \
     caddy \
@@ -20,7 +20,7 @@ RUN useradd -s /bin/false php && \
 COPY server/rootfs/ /
 COPY server/www/ /var/www/
 COPY LICENSE /var/www/LICENSE
-RUN echo "${GIT_REV}" > /var/www/api/gitrev.txt
+RUN echo "${GIT_REVISION}" > /var/www/api/gitrev.txt
 RUN echo '[]' > /var/www/releases.json
 
 ENV DOMAIN='http://dso'
