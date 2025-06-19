@@ -49,7 +49,7 @@ echo 'account default' >> "${MSMTP_CONF}"
 echo "host ${SMTP_HOST}" >> "${MSMTP_CONF}"
 echo "from ${SMTP_FROM}" >> "${MSMTP_CONF}"
 echo "user ${SMTP_USERNAME}" >> "${MSMTP_CONF}"
-echo "passwordeval echo '${SMTP_PASSWORD}'" >> "${MSMTP_CONF}"
+echo 'passwordeval echo \'${SMTP_PASSWORD}\'' >> "${MSMTP_CONF}"
 # END Create msmtp config
 
 exec /usr/sbin/php-fpm84 --nodaemonize --fpm-config /etc/php-fpm.conf
