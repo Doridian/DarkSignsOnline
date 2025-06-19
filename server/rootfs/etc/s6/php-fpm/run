@@ -2,6 +2,7 @@
 
 # BEGIN Create config.php
 PRIVCONF=/run/dso-config.php
+touch "${PRIVCONF}"
 chown root:php "${PRIVCONF}"
 chmod 640 "${PRIVCONF}"
 
