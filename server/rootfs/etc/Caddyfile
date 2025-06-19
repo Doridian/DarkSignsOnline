@@ -1,0 +1,29 @@
+{
+	servers {
+		listener_wrappers {
+			proxy_protocol {
+				timeout 5s
+				allow 10.1.0.0/23
+				allow 10.2.0.0/23
+				allow 10.3.0.0/23
+				allow 10.4.0.0/23
+				allow 10.5.0.0/23
+				allow 10.6.0.0/23
+				allow 10.7.0.0/23
+				allow 10.8.0.0/23
+				allow 10.9.0.0/23
+			}
+			tls
+		}
+	}
+}
+
+#http:// {
+# Dummy block as per https://caddyserver.com/docs/caddyfile/options#name
+#}
+
+{$DOMAIN} {
+	root * /var/www
+	php_fastcgi unix//run/php-fpm.sock
+	file_server
+}

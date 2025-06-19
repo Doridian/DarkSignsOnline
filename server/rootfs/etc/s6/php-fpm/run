@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# BEGIN Create config.php
+PRIVCONF="$(mktemp -t -p /run dsoconfig.XXXXXX)"
+chown root:php "${PRIVCONF}"
+chmod 640 "${PRIVCONF}"
+
+phpenvvar() {
+    VAR="${1}"
+    eval VAL="\$$VAR"
+    echo "\$${VAR} = '${VAL}';" >> "${PRIVCONF}"
+}
+
+echo '<?php' > "${PRIVCONF}"
+
+echo 'error_reporting(E_ALL & ~E_NOTICE);' >> "${PRIVCONF}"
+echo 'ini_set("display_errors", "Off");' >> "${PRIVCONF}"
+
+phpenvvar 'DB_HOST'
+phpenvvar 'DB_USERNAME'
+phpenvvar 'DB_PASSWORD'
+phpenvvar 'DB_DATABASE'
+
+phpenvvar 'JWT_PRIVATE_KEY'
+phpenvvar 'JWT_PUBLIC_KEY'
+
+phpenvvar 'CAPTCHA_SECRET_KEY'
+phpenvvar 'CAPTCHA_FONT'
+
+echo "<php require_once('${PRIVCONF}');" > /var/www/api/config.php
+# END Create config.php
+
+exec /usr/sbin/php-fpm84 --nodaemonize --fpm-config /etc/php-fpm.conf
