@@ -9,6 +9,12 @@ RUN apk --no-cache add \
     php84-mysqli \
     php84-session \
     php84-opcache \
+    php84-mbstring \
+    php84-xml \
+    php84-ctype \
+    php84-iconv \
+    php84-fileinfo \
+    php84-intl \
     s6 \
     shadow \
     libcap \
