@@ -641,9 +641,8 @@ Private Sub Form_KeyDown(KeyCodeIn As Integer, Shift As Integer)
     Dim KeyCode As Integer
     KeyCode = KeyCodeIn
     KeyCodeIn = 0
-    If KeyCode = vbKeyEscape Then
-        Unload Me
-    End If
+
+    If KeyCode = vbKeyEscape Then Unload Me: Exit Sub
  
     If KeyCode = vbKeyPageDown And Shift = 1 Then CommLarger: Exit Sub
     If KeyCode = vbKeyPageUp And Shift = 1 Then CommSmaller: Exit Sub
