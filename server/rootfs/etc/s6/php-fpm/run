@@ -44,12 +44,11 @@ echo 'defaults' > "${MSMTP_CONF}"
 echo 'auth on' >> "${MSMTP_CONF}"
 echo 'tls on' >> "${MSMTP_CONF}"
 echo 'tls_starttls on' >> "${MSMTP_CONF}"
-
+echo "port 587" >> "${MSMTP_CONF}"
 echo 'account default' >> "${MSMTP_CONF}"
 echo "host ${SMTP_HOST}" >> "${MSMTP_CONF}"
-echo "port ${SMTP_PORT}" >> "${MSMTP_CONF}"
 echo "from ${SMTP_FROM}" >> "${MSMTP_CONF}"
-echo "user ${SMTP_USER}" >> "${MSMTP_CONF}"
+echo "user ${SMTP_USERNAME}" >> "${MSMTP_CONF}"
 echo "passwordeval echo '${SMTP_PASSWORD}'" >> "${MSMTP_CONF}"
 # END Create msmtp config
 
