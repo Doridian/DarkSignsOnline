@@ -41,5 +41,6 @@ COPY server/www/ /var/www/
 ARG GIT_REVISION="unknown"
 RUN echo "${GIT_REVISION}" > /var/www/api/gitrev.txt
 RUN ln -s /tmp/releases.json /var/www/releases.json
+RUN /bin/refresh_releases /var/www/releases_fallback.json
 
 ENTRYPOINT [ "/usr/bin/s6-svscan", "/etc/s6" ]

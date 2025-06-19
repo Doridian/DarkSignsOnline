@@ -57,7 +57,7 @@ echo "passwordeval cat '${MSMTP_PASSWD}'" >> "${MSMTP_CONF}"
 echo "${SMTP_PASSWORD}" > "${MSMTP_PASSWD}"
 # END Create msmtp config
 
-s6-setuidgid php /bin/refresh_releases || (echo '{}' > /tmp/releases.json)
+s6-setuidgid php /bin/refresh_releases || (cp -f /var/www/releases_fallback.json /tmp/releases.json)
 chown php:php /tmp/releases.json
 
 exec /usr/sbin/php-fpm84 --nodaemonize --fpm-config /etc/php-fpm.conf

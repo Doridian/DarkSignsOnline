@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 
+TARGET_FILE="${1-/tmp/releases.json}"
 RELEASES_BASE_URL='https://api.github.com/repos/Doridian/DarkSignsOnline/releases/'
 
 releases_tmp="$(mktemp)"
@@ -34,4 +35,4 @@ jq . "${releases_tmp}" >/dev/null # Validate JSON
 
 echo 'Releases downloaded OK'
 
-mv "${releases_tmp}" /tmp/releases.json
+mv "${releases_tmp}" "${TARGET_FILE}"
