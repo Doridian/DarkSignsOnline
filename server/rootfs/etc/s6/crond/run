@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/sbin/crond -f -c /etc/crontabs -d 8

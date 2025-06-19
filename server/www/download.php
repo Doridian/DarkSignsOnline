@@ -28,14 +28,10 @@ function get_release_client($release)
             if (empty($client)) {
                 continue;
             }
-            $name = $release->name;
-            if ($name === 'main' || $name === 'latest') {
-                $name = 'Latest';
-            }
         ?>
             <tr>
                 <td width="100%">
-                    <font face="Verdana" size="2"><strong><?php echo htmlentities($name); ?></strong><br />
+                    <font face="Verdana" size="2"><strong><?php echo htmlentities($release->name); ?></strong><br />
                         Updated <?php echo htmlentities($client->updated_at); ?><br />
                         <a href="https://github.com/Doridian/DarkSignsOnline/tree/<?php echo htmlentities($release->name); ?>/client">Source code</a>
                     </font>

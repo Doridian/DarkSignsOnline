@@ -2,6 +2,10 @@
 
 require_once('function.php');
 
+if (empty($_REQUEST['version'])) {
+    die('0000OK');
+}
+
 $version = strtolower(trim($_REQUEST['version']));
 if (empty($version)) {
     die('0000OK');
@@ -11,28 +15,19 @@ if ($version === 'dev') {
     die('0000OK');
 }
 
-$is_nightly = true;
-if (strpos($version, '.') !== false) {
-    $is_nightly = false;
+$release_track = 'stable';
+if (strpos($version, '.') === false) {
+    $release_track = 'nightly';
+    die('0000OK'); // nightly doesn't auto-update for now
 }
 
-foreach (json_decode(file_get_contents('../releases.json')) as $release) {
-    $name = $release->name;
+$releases = json_decode(file_get_contents('../releases.json'));
+$release = @$releases[$release_track];
 
-    $is_for_nightly = false;
-    if ($name === 'main' || $name === 'latest') {
-        $is_for_nightly = true;
-        $name = file_get_contents('gitrev.txt');
-    }
+$current = strtolower(trim($release->name));
 
-    if ($is_nightly !== $is_for_nightly) {
-        continue;
-    }
-
-    $name = trim($name);
-    if ($version !== strtolower($name)) {
-        die('0002Client update available! Please download version ' . $name . ' at https://darksignsonline.com/download.php');
-    }
+if ($version !== $current) {
+    die('0002Client update available! Please download version ' . $name . ' at https://darksignsonline.com/download.php');
 }
 
 die('0000OK');

@@ -2,25 +2,28 @@ FROM alpine:3.22
 
 RUN apk --no-cache add \
     caddy \
-    php84-fpm \
-    php84-cli \
-    php84-dom \
-    php84-gd \
-    php84-json \
-    php84-mysqli \
-    php84-session \
-    php84-opcache \
-    php84-mbstring \
-    php84-xml \
-    php84-ctype \
-    php84-iconv \
-    php84-fileinfo \
-    php84-intl \
-    s6 \
-    msmtp \
-    shadow \
+    cronie \
+    curl \
+    font-roboto \
+    jq \
     libcap \
-    font-roboto
+    msmtp \
+    php84-cli \
+    php84-ctype \
+    php84-dom \
+    php84-fileinfo \
+    php84-fpm \
+    php84-gd \
+    php84-iconv \
+    php84-intl \
+    php84-json \
+    php84-mbstring \
+    php84-mysqli \
+    php84-opcache \
+    php84-session \
+    php84-xml \
+    s6 \
+    shadow
 
 RUN useradd -s /bin/false php && \
     setcap cap_net_bind_service=+ep /usr/sbin/caddy && \ 
@@ -35,6 +38,6 @@ COPY server/www/ /var/www/
 
 ARG GIT_REVISION="unknown"
 RUN echo "${GIT_REVISION}" > /var/www/api/gitrev.txt
-RUN echo '[]' > /var/www/releases.json
+RUN ln -s /tmp/releases.json /var/www/releases.json
 
 ENTRYPOINT [ "/usr/bin/s6-svscan", "/etc/s6" ]

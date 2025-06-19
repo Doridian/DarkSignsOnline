@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 mkpriv() {
     privfile="${1}"
@@ -24,15 +25,12 @@ phpenvvar_b64() {
 }
 
 echo '<?php' > "${PRIVCONF}"
-
 phpenvvar 'DB_HOST'
 phpenvvar 'DB_USERNAME'
 phpenvvar 'DB_PASSWORD'
 phpenvvar 'DB_DATABASE'
-
 phpenvvar_b64 'JWT_PRIVATE_KEY'
 phpenvvar_b64 'JWT_PUBLIC_KEY'
-
 phpenvvar 'CAPTCHA_SECRET_KEY'
 phpenvvar 'CAPTCHA_FONT'
 
@@ -58,5 +56,7 @@ echo "passwordeval cat '${MSMTP_PASSWD}'" >> "${MSMTP_CONF}"
 
 echo "${SMTP_PASSWORD}" > "${MSMTP_PASSWD}"
 # END Create msmtp config
+
+s6-setuidgid php /bin/refresh_releases || (echo '{}' > /tmp/releases.json)
 
 exec /usr/sbin/php-fpm84 --nodaemonize --fpm-config /etc/php-fpm.conf
