@@ -20,9 +20,6 @@ phpenvvar_b64() {
 
 echo '<?php' > "${PRIVCONF}"
 
-echo 'error_reporting(E_ALL & ~E_NOTICE);' >> "${PRIVCONF}"
-echo 'ini_set("display_errors", "Off");' >> "${PRIVCONF}"
-
 phpenvvar 'DB_HOST'
 phpenvvar 'DB_USERNAME'
 phpenvvar 'DB_PASSWORD'
