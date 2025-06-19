@@ -1,10 +1,15 @@
 #!/bin/sh
 
+mkpriv() {
+    privfile="${1}"
+    touch "${privfile}"
+    chown root:php "${privfile}"
+    chmod 640 "${privfile}"
+}
+
 # BEGIN Create config.php
 PRIVCONF=/run/dso-config.php
-touch "${PRIVCONF}"
-chown root:php "${PRIVCONF}"
-chmod 640 "${PRIVCONF}"
+mkpriv "${PRIVCONF}"
 
 phpenvvar() {
     VAR="${1}"
@@ -36,9 +41,9 @@ echo "<?php require_once('${PRIVCONF}');" > /var/www/api/config.php
 
 # BEGIN Create msmtp config
 MSMTP_CONF=/run/msmtp.conf
-touch "${MSMTP_CONF}"
-chown root:php "${MSMTP_CONF}"
-chmod 640 "${MSMTP_CONF}"
+mkpriv "${MSMTP_CONF}"
+MSMTP_PASSWD=/run/msmtp.passwd
+mkpriv "${MSMTP_PASSWD}"
 
 echo 'defaults' > "${MSMTP_CONF}"
 echo 'auth on' >> "${MSMTP_CONF}"
@@ -49,7 +54,9 @@ echo 'account default' >> "${MSMTP_CONF}"
 echo "host ${SMTP_HOST}" >> "${MSMTP_CONF}"
 echo "from ${SMTP_FROM}" >> "${MSMTP_CONF}"
 echo "user ${SMTP_USERNAME}" >> "${MSMTP_CONF}"
-echo 'passwordeval echo \'${SMTP_PASSWORD}\'' >> "${MSMTP_CONF}"
+echo "passwordeval cat '${MSMTP_PASSWD}'" >> "${MSMTP_CONF}"
+
+echo "${SMTP_PASSWORD}" > "${MSMTP_PASSWD}"
 # END Create msmtp config
 
 exec /usr/sbin/php-fpm84 --nodaemonize --fpm-config /etc/php-fpm.conf
