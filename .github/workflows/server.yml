@@ -26,4 +26,6 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         push: false
+        build-args: |
+          GIT_REVISION=${{ github.sha }}
         tags: ghcr.io/doridian/darksignsonline/server:dev

@@ -1,11 +1,6 @@
-FROM alpine:3.22 AS builder
-RUN apk --no-cache add git
-
-COPY .git /project/.git
-RUN git -C /project rev-parse HEAD > /project/gitrev.txt && \
-    echo '[]' > /project/releases.json
-
 FROM alpine:3.22
+
+ARG GIT_REV="unknown"
 
 RUN apk --no-cache add \
     caddy \
@@ -25,8 +20,8 @@ RUN useradd -s /bin/false php && \
 COPY server/rootfs/ /
 COPY server/www/ /var/www/
 COPY LICENSE /var/www/LICENSE
-COPY --from=builder /project/gitrev.txt /var/www/api/gitrev.txt
-COPY --from=builder /project/releases.json /var/www/releases.json
+RUN echo "${GIT_REV}" > /var/www/api/gitrev.txt
+RUN echo '[]' > /var/www/releases.json
 
 ENV DOMAIN='http://dso'
 ENV CAPTCHA_FONT=/usr/share/fonts/roboto/Roboto-Regular.ttf
