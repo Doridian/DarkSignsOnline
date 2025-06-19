@@ -5,7 +5,7 @@ require('_top.php');
 
 function get_release_client($release)
 {
-    foreach (json_decode($release->assets) as $asset) {
+    foreach ($release->assets as $asset) {
         if ($asset->name !== 'client.zip') {
             continue;
         }
