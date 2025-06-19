@@ -1,8 +1,7 @@
 on:
   push:
-    branches-ignore:
+    branches:
       - main
-  workflow_call: {}
 
 concurrency:
   group: server-${{ github.ref }}
