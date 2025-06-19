@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+  pull_request: {}
 
 concurrency:
   group: server-${{ github.ref }}
