@@ -11,6 +11,7 @@
 /client/user/system/missions/*.ini
 !/client/user/home/README.txt
 !/client/user/home/music/README.txt
+/server/LICENSE
 /client/user/darksigns/DS_scr
 /client/user/darksigns/DS_scr_todo
 /client/user/darksigns/DS_srv
