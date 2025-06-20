@@ -20,16 +20,10 @@ function taskrun($taskname, $func) {
     tasklog('< END > ' . $taskname . ' (took ' . round(((microtime(true) - $start) * 1000.0), 3) . ' ms)');
 }
 
-function taskmain() {
-    taskrun('Remove expired email_codes', function() {
-        global $db;
-
-        $time = time();
-
-        $stmt = $db->prepare('DELETE FROM email_codes WHERE expiry < ?');
-        $stmt->bind_param('i', $time);
-        $stmt->execute();
-    });
-}
-
-taskrun('Main', 'taskmain');
+taskrun('Remove expired email_codes', function() {
+    global $db;
+    $time = time();
+    $stmt = $db->prepare('DELETE FROM email_codes WHERE expiry < ?');
+    $stmt->bind_param('i', $time);
+    $stmt->execute();
+});
