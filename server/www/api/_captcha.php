@@ -122,7 +122,7 @@ class DSOCaptcha {
         $textcolor_max = count($textcolors) - 1;
         imagefilledrectangle($img, 0, 0, CAPTCHA_WIDTH, CAPTCHA_HEIGHT, $bg);
 
-        $e = new \Random\Engine\Mt19937($this->expiry);
+        $e = new \Random\Engine\Secure();
         $r = new \Random\Randomizer($e);
         $per_char_width = CAPTCHA_WIDTH / CAPTCHA_LENGTH;
         for ($i = 0; $i < CAPTCHA_LENGTH; $i++) {

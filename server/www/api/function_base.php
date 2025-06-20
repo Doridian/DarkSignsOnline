@@ -28,7 +28,7 @@ function make_keycode($length = 16, $characters = '0123456789abcdefghijklmnopqrs
     $charactersLength = strlen($characters);
     $keycode = '';
     for ($i = 0; $i < $length; $i++) {
-        $keycode .= $characters[rand(0, $charactersLength - 1)];
+        $keycode .= $characters[random_int(0, $charactersLength - 1)];
     }
     return $keycode;
 }
@@ -42,7 +42,7 @@ function make_new_domain($regtype, $fixedip = '', $userid = 0, $host = '', $pare
     } else {
         $stmt = $db->prepare('SELECT id FROM domains WHERE ip = ?');
         do {
-            $randomip = rand(1, 254) . "." . rand(0, 255) . "." . rand(0, 255) . "." . rand(0, 255);
+            $randomip = random_int(1, 254) . "." . random_int(0, 255) . "." . random_int(0, 255) . "." . random_int(0, 255);
             $stmt->bind_param('s', $randomip);
             $stmt->execute();
             $res = $stmt->get_result();
