@@ -14,10 +14,11 @@ function tasklog($msg) {
 }
 
 function taskrun($taskname, $func) {
-    $start = microtime(true);
     tasklog('<START> ' . $taskname);
+    $start = microtime(true);
     $func();
-    tasklog('< END > ' . $taskname . ' (took ' . round(((microtime(true) - $start) * 1000.0), 3) . ' ms)');
+    $end = microtime(true);
+    tasklog('< END > ' . $taskname . ' (took ' . round((($end - $start) * 1000.0), 3) . ' ms)');
 }
 
 taskrun('Remove expired email_codes', function() {
