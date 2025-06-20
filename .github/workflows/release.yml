@@ -41,6 +41,7 @@ jobs:
         push: true
         build-args: |
           GIT_REVISION=${{ github.sha }}
+          CACHE_INVALIDATOR=${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         tags: ghcr.io/doridian/darksignsonline/server:latest
