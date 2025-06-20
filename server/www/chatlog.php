@@ -2,7 +2,7 @@
 
 $htmltitle = 'Live Chat Log';
 require('_top.php');
-require_once('api/function_base.php');
+require_once('_function_base.php');
 
 die_frontend_msg('This feature is not yet implemented.');
 

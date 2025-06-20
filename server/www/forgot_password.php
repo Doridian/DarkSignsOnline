@@ -1,8 +1,8 @@
 <?php
 
 $htmltitle = 'Forgot password';
-require_once('api/function_base.php');
-require_once('api/_captcha.php');
+require_once('_function_base.php');
+require_once('_captcha.php');
 require('_top.php');
 
 $captcha = DSOCaptcha::fromPOSTData('forgot_password');

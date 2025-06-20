@@ -91,7 +91,7 @@ class DSOCaptcha {
     }
 
     public function imageURL() {
-        return 'api/captcha_render.php?page=' . urlencode($this->page) .
+        return 'captcha_render.php?page=' . urlencode($this->page) .
                 '&captchaid=' . urlencode($this->id);
     }
 

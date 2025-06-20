@@ -103,16 +103,3 @@ if (empty($need_db_credentials)) {
 if (empty($need_jwt_private_key)) {
     unset($JWT_PRIVATE_KEY);
 }
-
-function die_frontend_msg($msg, $submsg = '') {
-    echo '<center><br><br><font size="4" color="orange" face="arial"><b>';
-    echo $msg;
-    echo '</b>';
-    if (!empty($submsg)) {
-        echo '<br>';
-        echo $submsg;
-    }
-    echo '</font></center>';
-    require(__DIR__ . '/../_bottom.php');
-    exit;
-}

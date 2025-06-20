@@ -2,7 +2,7 @@
 
 $htmltitle = 'Forgot password';
 require('_top.php');
-require_once('api/function_base.php');
+require_once('_function_base.php');
 
 if (empty($_REQUEST['code'])) {
     die_frontend_msg('Error, no code provided.');

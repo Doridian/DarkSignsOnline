@@ -2,7 +2,7 @@
 
 $htmltitle = 'E-Mail Verification';
 require('_top.php');
-require_once('api/function_base.php');
+require_once('_function_base.php');
 
 $verify = $_REQUEST['code'];
 if (empty($verify)) {
