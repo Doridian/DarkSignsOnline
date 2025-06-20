@@ -1,14 +1,9 @@
 on:
-  push:
-    branches-ignore:
-      - ignored
-    tags-ignore:
-      - latest
-      - main
+  workflow_call: {}
 
 concurrency:
   group: client-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/tags/') }}
 
 name: Build client
 
