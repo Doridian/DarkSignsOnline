@@ -18,6 +18,7 @@ class DSOCaptcha {
 
     public static function createNew($page) {
         global $CAPTCHA_EXPIRY_SECONDS, $CAPTCHA_LENGTH;
+
         $id = make_keycode(64);
         $expiry = time() + $CAPTCHA_EXPIRY_SECONDS;
         $code = make_keycode($CAPTCHA_LENGTH, '23456789ABCDEFGHJKLMNPQRSTUVWXYZ');
@@ -104,6 +105,7 @@ class DSOCaptcha {
 
     public function render() {
         global $CAPTCHA_FONT, $CAPTCHA_FONT_SIZE, $CAPTCHA_WIDTH, $CAPTCHA_HEIGHT, $CAPTCHA_LENGTH;
+
         if (empty($this->code)) {
             throw new Exception('No image code set');
         }
