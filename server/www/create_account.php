@@ -30,6 +30,9 @@ if (!empty($_POST['username'])) {
     if (strlen($password) < 6) {
         die_frontend_msg("Your password must be at least 6 characters long.");
     }
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        die_frontend_msg("You must enter a valid email address.");
+    }
 
     if (!preg_match('/^[A-Za-z0-9-]+$/', $username)) die_frontend_msg("Error, please don't use invalid characters in your username.");
 
