@@ -33,6 +33,11 @@ RUN useradd -s /bin/false php && \
 
 ENV DOMAIN='http://dso'
 ENV CAPTCHA_FONT=/usr/share/fonts/roboto/Roboto-Regular.ttf
+ENV CAPTCHA_EXPIRY_SECONDS=300
+ENV CAPTCHA_WIDTH=200
+ENV CAPTCHA_HEIGHT=50
+ENV CAPTCHA_LENGTH=6
+ENV CAPTCHA_FONT_SIZE=24
 COPY LICENSE /var/www/LICENSE
 
 COPY server/rootfs/ /

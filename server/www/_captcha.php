@@ -3,12 +3,6 @@
 require_once('_function_base.php');
 session_start();
 
-define('CAPTCHA_EXPIRY_SECONDS', 300);
-define('CAPTCHA_WIDTH', 200);
-define('CAPTCHA_HEIGHT', 50);
-define('CAPTCHA_LENGTH', 6);
-define('CAPTCHA_FONT_SIZE', 24);
-
 class DSOCaptcha {
     private $id;
     private $page;
@@ -23,9 +17,10 @@ class DSOCaptcha {
     }
 
     public static function createNew($page) {
+        global $CAPTCHA_EXPIRY_SECONDS, $CAPTCHA_LENGTH;
         $id = make_keycode(64);
-        $expiry = time() + CAPTCHA_EXPIRY_SECONDS;
-        $code = make_keycode(CAPTCHA_LENGTH, '23456789ABCDEFGHJKLMNPQRSTUVWXYZ');
+        $expiry = time() + $CAPTCHA_EXPIRY_SECONDS;
+        $code = make_keycode($CAPTCHA_LENGTH, '23456789ABCDEFGHJKLMNPQRSTUVWXYZ');
         $obj = new DSOCaptcha($page, $id, $expiry, $code);
         $_SESSION[$obj->sessionKey()] = strval($obj->expiry) . '|' . $obj->code;
         return $obj;
@@ -108,30 +103,30 @@ class DSOCaptcha {
     }
 
     public function render() {
-        global $CAPTCHA_FONT;
+        global $CAPTCHA_FONT, $CAPTCHA_FONT_SIZE, $CAPTCHA_WIDTH, $CAPTCHA_HEIGHT, $CAPTCHA_LENGTH;
         if (empty($this->code)) {
             throw new Exception('No image code set');
         }
 
-        $img = imagecreatetruecolor(CAPTCHA_WIDTH, CAPTCHA_HEIGHT);
+        $img = imagecreatetruecolor($CAPTCHA_WIDTH, $CAPTCHA_HEIGHT);
         $bg = imagecolorallocate($img, 0, 0, 0);
         $textcolors = [
             imagecolorallocate($img, 242, 201, 6),
             imagecolorallocate($img, 255, 255, 255),
         ];
         $textcolor_max = count($textcolors) - 1;
-        imagefilledrectangle($img, 0, 0, CAPTCHA_WIDTH, CAPTCHA_HEIGHT, $bg);
+        imagefilledrectangle($img, 0, 0, $CAPTCHA_WIDTH, $CAPTCHA_HEIGHT, $bg);
 
         $e = new \Random\Engine\Secure();
         $r = new \Random\Randomizer($e);
-        $per_char_width = CAPTCHA_WIDTH / CAPTCHA_LENGTH;
-        for ($i = 0; $i < CAPTCHA_LENGTH; $i++) {
+        $per_char_width = $CAPTCHA_WIDTH / $CAPTCHA_LENGTH;
+        for ($i = 0; $i < $CAPTCHA_LENGTH; $i++) {
             imagettftext(
                 $img,
-                CAPTCHA_FONT_SIZE + $r->getInt(-2, 2),
+                $CAPTCHA_FONT_SIZE + $r->getInt(-2, 2),
                 $r->getFloat(-15, 15),
                 ($per_char_width * $i) + $r->getFloat(0, 10),
-                $r->getFloat(CAPTCHA_HEIGHT - CAPTCHA_FONT_SIZE, CAPTCHA_HEIGHT),
+                $r->getFloat($CAPTCHA_HEIGHT - $CAPTCHA_FONT_SIZE, $CAPTCHA_HEIGHT),
                 $textcolors[$r->getInt(0, $textcolor_max)],
                 $CAPTCHA_FONT,
                 $this->code[$i]

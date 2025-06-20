@@ -12,7 +12,9 @@ $JWT_PRIVATE_KEY = '-----BEGIN PRIVATE KEY-----
 PUT YOUR PRIVATE KEY HERE
 -----END PRIVATE KEY-----';
 
-$CAPTCHA_FONT = '/usr/share/fonts/TTF/Roboto-Regular.ttf';
-
-//error_reporting(E_ALL & ~E_NOTICE);
-//ini_set('display_errors', 'On');
+$CAPTCHA_EXPIRY_SECONDS = 300;
+$CAPTCHA_WIDTH = 200;
+$CAPTCHA_HEIGHT = 50;
+$CAPTCHA_LENGTH = 6;
+$CAPTCHA_FONT_SIZE = 24;
+$CAPTCHA_FONT = '/usr/share/fonts/roboto/Roboto-Regular.ttf';
