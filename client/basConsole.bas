@@ -94,17 +94,17 @@ Public Property Get ConsoleInvisibleChar() As String
 End Property
 
 Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
-    Dim X As Integer, W As Long, h As Long
+    Dim x As Integer, W As Long, h As Long
 
     CLine.Height = 0
-    For X = 0 To UBound(CLine.Segments)
-        h = Font_Height(CLine.Segments(X))
-        CLine.Segments(X).Height = h
+    For x = 0 To UBound(CLine.Segments)
+        h = Font_Height(CLine.Segments(x))
+        CLine.Segments(x).Height = h
         If h > CLine.Height Then
             CLine.Height = h
         End If
 
-        CLine.Segments(X).TotalWidth = Font_Width(CLine.Segments(X))
+        CLine.Segments(x).TotalWidth = Font_Width(CLine.Segments(x))
     Next
 
     Dim MinX As Long, MaxX As Long
@@ -112,38 +112,38 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
     MaxX = -1
 
     Dim HeightDiff As Long, VPos As Long, MaxW As Long
-    For X = 0 To UBound(CLine.Segments)
-        HeightDiff = CLine.Height - CLine.Segments(X).Height
-        If CLine.Segments(X).AlighBottom Then
+    For x = 0 To UBound(CLine.Segments)
+        HeightDiff = CLine.Height - CLine.Segments(x).Height
+        If CLine.Segments(x).AlighBottom Then
             VPos = HeightDiff
-        ElseIf CLine.Segments(X).AlignTop Then
+        ElseIf CLine.Segments(x).AlignTop Then
             VPos = 0
         Else
             VPos = HeightDiff / 2
         End If
-        VPos = VPos + CLine.Segments(X).VOffset
+        VPos = VPos + CLine.Segments(x).VOffset
         If VPos > HeightDiff Then
             VPos = HeightDiff
         ElseIf VPos < 0 Then
             VPos = 0
         End If
-        CLine.Segments(X).VPos = VPos
+        CLine.Segments(x).VPos = VPos
 
-        If X = 0 Then
+        If x = 0 Then
             W = ConsoleXSpacing
             If CLine.PreSpace Then
                 W = W + PreSpaceWidth
             End If
         Else
-            W = CLine.Segments(X - 1).HPos + CLine.Segments(X - 1).TotalWidth
+            W = CLine.Segments(x - 1).HPos + CLine.Segments(x - 1).TotalWidth
         End If
 
-        W = W + CLine.Segments(X).HOffset
-        CLine.Segments(X).HPos = W
+        W = W + CLine.Segments(x).HOffset
+        CLine.Segments(x).HPos = W
         If W < MinX Then
             MinX = W
         End If
-        W = W + CLine.Segments(X).TotalWidth
+        W = W + CLine.Segments(x).TotalWidth
         If W > MaxX Then
             MaxX = W
         End If
@@ -167,17 +167,17 @@ Public Sub CalculateConsoleLine(ByRef CLine As ConsoleLine)
         Exit Sub
     End If
 
-    For X = 0 To UBound(CLine.Segments)
-        CLine.Segments(X).HPos = CLine.Segments(X).HPos + W
+    For x = 0 To UBound(CLine.Segments)
+        CLine.Segments(x).HPos = CLine.Segments(x).HPos + W
     Next
 End Sub
 
 Public Sub ConsoleResizeAll()
-    Dim cID As Integer, X As Long
+    Dim cID As Integer, x As Long
     For cID = 1 To 4
         If ConsoleInitialized(cID) Then
-            For X = 0 To 299
-                CalculateConsoleLine Console(cID, X)
+            For x = 0 To 299
+                CalculateConsoleLine Console(cID, x)
             Next
         End If
     Next
@@ -410,7 +410,9 @@ DrawSegmentOffScreen:
                     frmConsole.txtPromptInput.ForeColor = SegVal.FontColor
                     frmConsole.txtPromptInput.BackColor = LineBackColor
                     frmConsole.txtPromptInput.Visible = True
+                    On Error Resume Next
                     frmConsole.txtPromptInput.SetFocus
+                    On Error GoTo 0
                     ConsumedInputPrompt = True
                 End If
             End If
@@ -890,9 +892,9 @@ Public Function EnsureValidFont(ByVal AttemptFont As String, ByVal FallbackFont 
 
     AttemptFont = LCase(AttemptFont)
 
-    Dim X As Integer, VFCEntry As ValidFontResult
-    For X = 1 To UBound(ValidFontCache)
-        VFCEntry = ValidFontCache(X)
+    Dim x As Integer, VFCEntry As ValidFontResult
+    For x = 1 To UBound(ValidFontCache)
+        VFCEntry = ValidFontCache(x)
         If VFCEntry.LowerFontName = AttemptFont Then
             EnsureValidFont = VFCEntry.ValidFontName
             Exit Function
@@ -911,8 +913,8 @@ NotValidFontCheck:
     SayCOMM "Could not load font """ & AttemptFont & """, falling back to """ & EnsureValidFont & """"
 
 AddFontToCache:
-    X = UBound(ValidFontCache) + 1
-    ReDim Preserve ValidFontCache(0 To X)
-    ValidFontCache(X).LowerFontName = AttemptFont
-    ValidFontCache(X).ValidFontName = EnsureValidFont
+    x = UBound(ValidFontCache) + 1
+    ReDim Preserve ValidFontCache(0 To x)
+    ValidFontCache(x).LowerFontName = AttemptFont
+    ValidFontCache(x).ValidFontName = EnsureValidFont
 End Function
