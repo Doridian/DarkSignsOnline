@@ -1,6 +1,6 @@
 <?php
 
-require_once('function_base.php');
+require_once('_function_base.php');
 session_start();
 
 define('CAPTCHA_EXPIRY_SECONDS', 300);
