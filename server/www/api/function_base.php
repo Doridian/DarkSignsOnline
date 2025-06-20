@@ -42,7 +42,7 @@ function make_new_domain($regtype, $fixedip = '', $userid = 0, $host = '', $pare
     } else {
         $stmt = $db->prepare('SELECT id FROM domains WHERE ip = ?');
         do {
-            $randomip = random_int(1, 254) . "." . random_int(0, 255) . "." . random_int(0, 255) . "." . random_int(0, 255);
+            $randomip = random_int(1, 254) . '.' . random_int(1, 254) . '.' . random_int(1, 254) . '.' . random_int(1, 254);
             $stmt->bind_param('s', $randomip);
             $stmt->execute();
             $res = $stmt->get_result();
