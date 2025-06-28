@@ -32,6 +32,7 @@ RUN echo '@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing' >> etc/ap
 RUN useradd -s /bin/false php && \
     useradd -s /bin/false anubis && \
     usermod -aG anubis caddy && \
+    usermod -aG caddy anubis && \
     setcap cap_net_bind_service=+ep /usr/sbin/caddy && \ 
     mkdir -p /var/lib/caddy && chown caddy:caddy /var/lib/caddy
 

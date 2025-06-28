@@ -53,8 +53,8 @@ http:// {
 	import site
 }
 
-{$DOMAIN} {
+{$HTTP_DOMAIN} {
 	import site
 
-	bind unix//run/caddy/internal.sock
+	bind unix//run/caddy/internal.sock|0220
 }
