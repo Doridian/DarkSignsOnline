@@ -18,9 +18,9 @@
 	}
 }
 
-#http:// {
-# Dummy block as per https://caddyserver.com/docs/caddyfile/options#name
-#}
+http:// {
+	# Dummy block as per https://caddyserver.com/docs/caddyfile/options#name
+}
 
 {$DOMAIN} {
 	root * /var/www
