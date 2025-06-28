@@ -31,13 +31,6 @@ phpenvvar 'DB_PASSWORD'
 phpenvvar 'DB_DATABASE'
 phpenvvar_b64 'JWT_PRIVATE_KEY'
 phpenvvar_b64 'JWT_PUBLIC_KEY'
-phpenvvar 'CAPTCHA_SECRET_KEY'
-phpenvvar 'CAPTCHA_FONT'
-phpenvvar 'CAPTCHA_EXPIRY_SECONDS'
-phpenvvar 'CAPTCHA_WIDTH'
-phpenvvar 'CAPTCHA_HEIGHT'
-phpenvvar 'CAPTCHA_LENGTH'
-phpenvvar 'CAPTCHA_FONT_SIZE'
 
 echo "<?php require_once('${PRIVCONF}');" > /var/www/api/config.php
 # END Create config.php

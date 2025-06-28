@@ -2,15 +2,9 @@
 
 $htmltitle = 'Create a new account';
 require_once('_function_base.php');
-require_once('_captcha.php');
 require('_top.php');
 
-$captcha = DSOCaptcha::fromPOSTData('create_account');
 if (!empty($_POST['username'])) {
-    if (!$captcha->checkPOSTData()) {
-        die_frontend_msg('The CAPTCHA code you entered was incorrect.');
-    }
-
     if ($_POST['agreetos'] !== 'yes' || $_POST['agecheck'] !== 'yes') {
         die_frontend_msg('You must agree to the terms of use and confirm you are at least 13 years old.');
     }
@@ -82,8 +76,6 @@ if (!empty($_POST['username'])) {
 
     die_frontend_msg('Your account has been created!', 'Check your E-Mail for more information.');
 }
-
-$captcha = $captcha->regenerate();
 ?>
 
 <font face="Georgia, Times New Roman, Times, serif" size="+3">Create a new account</font><br />
@@ -166,26 +158,11 @@ $captcha = $captcha->regenerate();
         <tr>
             <td bgcolor="#004488">
                 <div align="left">
-                    <label for="captchacode">
-                        <?php echo $captcha->image(); ?>
-                    </label>
+                    <font face='verdana'></font>
                 </div>
             </td>
             <td bgcolor="#004488">
                 <div align="left">
-                    <?php echo $captcha->formField(); ?>
-                </div>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <div align="left">
-                    <font face='verdana'></font>
-                </div>
-            </td>
-            <td>
-                <div align="left">
-                    <?php echo $captcha->idField(); ?>
                     <input type="submit" value="Create the account..." />
                 </div>
             </td>

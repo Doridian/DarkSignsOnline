@@ -2,15 +2,9 @@
 
 $htmltitle = 'Forgot password';
 require_once('_function_base.php');
-require_once('_captcha.php');
 require('_top.php');
 
-$captcha = DSOCaptcha::fromPOSTData('forgot_password');
 if (!empty($_POST['email']) && !empty($_POST['username'])) {
-    if (!$captcha->checkPOSTData()) {
-        die_frontend_msg('The CAPTCHA code you entered was incorrect.');
-    }
-
     $username = strtolower(trim($_POST['username']));
     $email = trim($_POST['email']);
 
@@ -37,8 +31,6 @@ if (!empty($_POST['email']) && !empty($_POST['username'])) {
 
     die_frontend_msg('E-Mail has been sent!', 'Check your E-Mail for the password reset link.');
 }
-
-$captcha = $captcha->regenerate();
 ?>
 
 <font face="Georgia, Times New Roman, Times, serif" size="+3">Forgot password</font><br />
@@ -76,26 +68,11 @@ $captcha = $captcha->regenerate();
         <tr>
             <td>
                 <div align="left">
-                    <label for="captchacode">
-                        <?php echo $captcha->image(); ?>
-                    </label>
+                    <font face='verdana'></font>
                 </div>
             </td>
             <td>
                 <div align="left">
-                    <?php echo $captcha->formField(); ?>
-                </div>
-            </td>
-        </tr>
-        <tr>
-            <td bgcolor="#004488">
-                <div align="left">
-                    <font face='verdana'></font>
-                </div>
-            </td>
-            <td bgcolor="#004488">
-                <div align="left">
-                    <?php echo $captcha->idField(); ?>
                     <input type="submit" value="Send E-Mail" />
                 </div>
             </td>

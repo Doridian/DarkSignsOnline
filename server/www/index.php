@@ -1,6 +1,10 @@
 <?php require('_top.php'); ?>
 <span class="style5"><br />- News - <br /><br />
 
+  <strong>June 27th 2025</strong><br /><span class="style9">
+    Replaced the CAPTCHA with <a href="https://github.com/TecharoHQ/anubis">anubis</a>, as the CAPTCHA got bypassed way too easily.
+    </span><br /><br />
+
   <strong>December 31st 2024</strong><br /><span class="style9">
     Added a CAPTCHA as for some reason we started getting a ton of spam/bot registrations.<br />
     I also deleted all the bot accounts cluttering up the database.<br />
