@@ -3,4 +3,7 @@ set -e
 
 export HOME=/var/lib/caddy
 
-exec s6-setuidgid caddy /usr/sbin/caddy run --config /etc/Caddyfile
+mkdir -p /run/caddy
+chown caddy:caddy /run/caddy
+
+exec s6-setuidgid caddy /usr/sbin/caddy run --config /etc/caddy/Caddyfile

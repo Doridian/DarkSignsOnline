@@ -1,6 +1,7 @@
 FROM alpine:3.22
 
-RUN apk --no-cache update && \
+RUN echo '@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing' >> etc/apk/repositories && \
+    apk --no-cache update && \
     apk --no-cache upgrade && \
     apk --no-cache add \
         caddy \
@@ -25,9 +26,12 @@ RUN apk --no-cache update && \
         php84-session \
         php84-xml \
         s6 \
-        shadow
+        shadow \
+        anubis@testing
 
 RUN useradd -s /bin/false php && \
+    useradd -s /bin/false anubis && \
+    usermod -aG anubis caddy && \
     setcap cap_net_bind_service=+ep /usr/sbin/caddy && \ 
     mkdir -p /var/lib/caddy && chown caddy:caddy /var/lib/caddy
 
