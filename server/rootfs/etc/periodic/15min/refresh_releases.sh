@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
 
-s6-setuidgid php /bin/refresh_releases
+s6-setuidgid php /bin/refresh_releases.sh

@@ -47,6 +47,6 @@ RUN ln -s /tmp/releases.json /var/www/releases.json
 
 ARG CACHE_INVALIDATOR=1
 RUN echo "${CACHE_INVALIDATOR}"
-RUN /bin/refresh_releases /var/www/releases_fallback.json
+RUN /bin/refresh_releases.sh /var/www/releases_fallback.json
 
 ENTRYPOINT [ "/usr/bin/s6-svscan", "/etc/s6" ]
