@@ -15,7 +15,6 @@ RUN echo '@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing' >> etc/ap
         php84-dom \
         php84-fileinfo \
         php84-fpm \
-        php84-gd \
         php84-iconv \
         php84-intl \
         php84-json \
