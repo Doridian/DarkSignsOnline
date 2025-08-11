@@ -15,7 +15,7 @@ jobs:
     name: Build client
     runs-on: vb6
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: true
     - uses: dorny/paths-filter@v3
