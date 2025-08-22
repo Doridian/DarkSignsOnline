@@ -2,9 +2,10 @@
 set -e
 
 export HOME=/var/lib/caddy
+chown -R caddy:caddy "${HOME}"
 
 mkdir -p /run/caddy
-chown caddy:caddy /run/caddy
+chown -R caddy:caddy /run/caddy
 
 tmp_domain="${DOMAIN#http://}"
 tmp_domain="${tmp_domain#https://}"
