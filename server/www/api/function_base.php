@@ -88,7 +88,7 @@ require_once('config.php');
 
 global $db;
 if (empty($disable_database)) {
-    $db = new mysqli($DB_HOST, $DB_USERNAME, $DB_PASSWORD, $DB_DATABASE);
+    $db = new mysqli($MYSQL_HOST, $MYSQL_USERNAME, $MYSQL_PASSWORD, $MYSQL_DATABASE);
     if (!$db) {
         die_error('Database error', 500);
     }
@@ -97,7 +97,7 @@ if (empty($disable_database)) {
 }
 
 if (empty($need_db_credentials)) {
-    unset($DB_HOST, $DB_USERNAME, $DB_PASSWORD, $DB_DATABASE);
+    unset($MYSQL_HOST, $MYSQL_USERNAME, $MYSQL_PASSWORD, $MYSQL_DATABASE);
 }
 
 if (empty($need_jwt_private_key)) {

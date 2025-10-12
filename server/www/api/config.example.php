@@ -1,9 +1,9 @@
 <?php
 
-$DB_HOST = 'localhost';
-$DB_USERNAME = 'root';
-$DB_PASSWORD = '';
-$DB_DATABASE = 'darksigns';
+$MYSQL_HOST = 'localhost';
+$MYSQL_USERNAME = 'root';
+$MYSQL_PASSWORD = '';
+$MYSQL_DATABASE = 'darksigns';
 
 $JWT_PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----
 PUT YOUR PUBLIC KEY HERE
