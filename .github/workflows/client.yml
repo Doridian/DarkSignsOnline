@@ -122,7 +122,7 @@ jobs:
     #  Artifact handlers
     - name: Upload build artifacts
       if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: client
         path: client.zip
@@ -151,7 +151,7 @@ jobs:
     #  Always/Failure handlers
     - name: Upload build logs
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: logs
         path: |
