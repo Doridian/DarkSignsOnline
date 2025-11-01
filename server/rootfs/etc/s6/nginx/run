@@ -1,13 +1,22 @@
 #!/bin/sh
 set -e
 
+AUTOGEN_HEADER='# Auto-Generated file. Do not edit.'
+
 mkdir -p /run/nginx /var/lib/nginx/acme
 chown -R nginx:nginx /run/nginx /var/lib/nginx
 chmod 700 /var/lib/nginx
 
-echo "server_name ${DOMAIN};" > /etc/nginx/domain.conf
+echo "${AUTOGEN_HEADER}" > /etc/nginx/domain.conf
+echo "server_name ${DOMAIN};" >> /etc/nginx/domain.conf
 echo "js_var \$njs_acme_server_names \"${DOMAIN}\";" >> /etc/nginx/domain.conf
 
-sed "s/#${HTTP_MODE}ONLY#//g" /etc/nginx/headers.tpl.conf > /etc/nginx/headers.conf
+echo "${AUTOGEN_HEADER}" > /etc/nginx/headers.conf
+sed "s/#${HTTP_MODE}ONLY#//g" /etc/nginx/headers.tpl.conf >> /etc/nginx/headers.conf
+
+echo "${AUTOGEN_HEADER}" > /etc/nginx/trusted-proxies.conf
+for proxy in ${TRUSTED_PROXIES}; do
+    echo "set_real_ip_from ${proxy};" >> /etc/nginx/trusted-proxies.conf
+done
 
 exec s6-setuidgid nginx /usr/sbin/nginx -g 'daemon off;' -e stderr -c /etc/nginx/nginx-${HTTP_MODE}.conf

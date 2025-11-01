@@ -42,6 +42,7 @@ RUN useradd -s /bin/false php && \
 
 ENV HTTP_MODE='http'
 ENV DOMAIN='dso'
+ENV TRUSTED_PROXIES='127.0.0.1/32 127.0.0.2/32'
 COPY LICENSE /var/www/LICENSE
 
 COPY server/rootfs/ /
