@@ -1,14 +1,18 @@
 FROM alpine:3.22
 
+ADD https://github.com/nginx/njs-acme/releases/download/v1.0.0/acme.js /etc/nginx/acme.js
+
 RUN echo '@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing' >> etc/apk/repositories && \
     apk --no-cache update && \
     apk --no-cache upgrade && \
     apk --no-cache add \
-        caddy \
+        ca-certificates \
         cronie \
         curl \
         jq \
         libcap \
+        nginx \
+        nginx-mod-http-js \
         msmtp \
         php84-cli \
         php84-ctype \
@@ -30,12 +34,14 @@ RUN echo '@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing' >> etc/ap
 
 RUN useradd -s /bin/false php && \
     useradd -s /bin/false anubis && \
-    usermod -aG anubis caddy && \
-    usermod -aG caddy anubis && \
-    setcap cap_net_bind_service=+ep /usr/sbin/caddy && \ 
-    mkdir -p /var/lib/caddy && chown caddy:caddy /var/lib/caddy
+    usermod -aG anubis nginx && \
+    usermod -aG nginx anubis && \
+    setcap cap_net_bind_service=+ep /usr/sbin/nginx && \
+    mkdir -p /var/lib/nginx/acme && chown nginx:nginx -R /var/lib/nginx && \
+    chmod 444 /etc/nginx/acme.js
 
-ENV DOMAIN='http://dso'
+ENV HTTP_MODE='http'
+ENV DOMAIN='dso'
 COPY LICENSE /var/www/LICENSE
 
 COPY server/rootfs/ /

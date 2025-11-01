@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+mkdir -p /run/nginx
+chown -R nginx:nginx /run/nginx
+
+echo "server_name ${DOMAIN};" > /etc/nginx/domain.conf
+echo "js_var \$njs_acme_server_names \"${DOMAIN}\";" >> /etc/nginx/domain.conf
+
+exec s6-setuidgid nginx /usr/sbin/nginx -g 'daemon off;' -e stderr -c /etc/nginx/nginx-${HTTP_MODE}.conf

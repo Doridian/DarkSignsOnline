@@ -4,4 +4,4 @@ set -e
 mkdir -p /run/anubis
 chown anubis:anubis /run/anubis
 
-exec s6-setuidgid anubis /usr/bin/anubis -bind-network unix -bind /run/anubis/anubis.sock -target unix:/run/caddy/internal.sock --xff-strip-private=false
+exec s6-setuidgid anubis /usr/bin/anubis -bind-network unix -bind /run/anubis/anubis.sock -target unix:/run/nginx/internal.sock --xff-strip-private=false
