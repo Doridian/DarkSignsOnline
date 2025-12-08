@@ -17,7 +17,7 @@ function print_returnwith($def = '2000', $max_version = 1) {
         return;
     }
 
-    $returnwith = (string)(int)$_GET['returnwith'];
+    $returnwith = (string)(int)@$_GET['returnwith'];
     if (trim($returnwith) === '0' || empty($returnwith)) {
         $returnwith = $def;
     }
