@@ -97,7 +97,7 @@ else if ($action === 'script_send_to_self')
 
     $msg_hash = dso_hash($message);
     $time = time();
-    $stmt = $db->prepare("INSERT INTO dsmail (from_addr, to_user, subject, message, message_hash, time) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt = $db->prepare("REPLACE INTO dsmail (from_addr, to_user, subject, message, message_hash, time) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param('sisssi', $from, $to, $subject, $message, $msg_hash, $time);
     $stmt->execute();
     die('OK');
