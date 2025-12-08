@@ -2,8 +2,7 @@ FROM alpine:3.23
 
 ADD https://github.com/nginx/njs-acme/releases/download/v1.0.0/acme.js /etc/nginx/acme.js
 
-RUN echo '@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing' >> etc/apk/repositories && \
-    apk --no-cache update && \
+RUN apk --no-cache update && \
     apk --no-cache upgrade && \
     apk --no-cache add \
         ca-certificates \
@@ -19,7 +18,6 @@ RUN echo '@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing' >> etc/ap
         php84-dom \
         php84-fileinfo \
         php84-fpm \
-        php84-gd \
         php84-iconv \
         php84-intl \
         php84-json \
@@ -30,7 +28,7 @@ RUN echo '@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing' >> etc/ap
         php84-xml \
         s6 \
         shadow \
-        anubis@testing
+        anubis
 
 RUN useradd -s /bin/false php && \
     useradd -s /bin/false anubis && \
