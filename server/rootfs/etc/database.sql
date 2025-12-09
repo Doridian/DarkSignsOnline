@@ -184,6 +184,18 @@ CREATE TABLE `users` (
   `cash` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `releases`
+--
+
+CREATE TABLE `releases` (
+  `id` int(11) NOT NULL,
+  `tag` varchar(64) NOT NULL,
+  `json` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 --
 -- Indexes for dumped tables
 --
@@ -274,6 +286,13 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `username` (`username`),
   ADD UNIQUE KEY `email` (`email`),
   ADD KEY `emailverifycode` (`emailverifycode`);
+
+--
+-- Indexes for table `releases`
+--
+ALTER TABLE `releases`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `tag` (`tag`);
 
 --
 -- AUTO_INCREMENT for dumped tables
