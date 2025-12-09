@@ -191,9 +191,10 @@ CREATE TABLE `users` (
 --
 
 CREATE TABLE `releases` (
-  `id` int(11) NOT NULL,
-  `tag` varchar(64) NOT NULL,
-  `json` text NOT NULL
+  `name` varchar(255) NOT NULL,
+  `tag` varchar(255) NOT NULL,
+  `json` longtext NOT NULL,
+  `updatetime` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -291,8 +292,9 @@ ALTER TABLE `users`
 -- Indexes for table `releases`
 --
 ALTER TABLE `releases`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `tag` (`tag`);
+  ADD PRIMARY KEY (`name`),
+  ADD UNIQUE KEY `tag` (`tag`),
+  ADD KEY `updatetime` (`updatetime`);
 
 --
 -- AUTO_INCREMENT for dumped tables

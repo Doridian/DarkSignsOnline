@@ -28,3 +28,7 @@ taskrun('Remove expired email_codes', function() {
     $stmt->bind_param('i', $time);
     $stmt->execute();
 });
+
+taskrun('Refresh releases', function() {
+
+});
