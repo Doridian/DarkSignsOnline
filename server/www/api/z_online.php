@@ -26,11 +26,14 @@ $stmt = $db->prepare('SELECT json FROM releases WHERE name = ?');
 $stmt->bind_param('s', $release_track);
 $stmt->execute();
 $result = $stmt->get_result();
-$release =  json_decode($result->fetch_assoc()['json']);
+$row = $result->fetch_assoc();
+if (empty($row)) {
+    die('0000OK');
+}
 
-$current = strtolower($release->name);
+$release =  json_decode($row['json']);
 
-if ($version !== $current) {
+if ($version !== strtolower($release->name)) {
     die('0002Client update available! Please download version ' . $release->name . ' at https://darksignsonline.com/download.php');
 }
 
