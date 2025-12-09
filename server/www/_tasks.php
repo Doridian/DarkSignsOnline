@@ -29,6 +29,52 @@ taskrun('Remove expired email_codes', function() {
     $stmt->execute();
 });
 
-taskrun('Refresh releases', function() {
+function fetch_release($name, $tag) {
+    global $db;
+    $time = time();
+    $stmt = $db->prepare('SELECT updatetime FROM releases WHERE name = ?');
+    $stmt->bind_param('s', $name);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $need_update = false;
+    if ($row === null) {
+        $need_update = true;
+    } else {
+        $updatetime = (int)$row['updatetime'];
+        if ($time - $updatetime > 3600) {
+            $need_update = true;
+        }
+    }
 
+    if (!$need_update) {
+        return;
+    }
+
+    tasklog('Fetching release info for ' . $name . ' (' . $tag . ')');
+    $url = 'https://api.github.com/repos/Doridian/DarkSignsOnline/releases/' . $tag;
+    $opts = [
+        'http' => [
+            'method' => 'GET',
+            'header' => [
+                'User-Agent: DarkSignsOnline-Server/1.0',
+                'Accept: application/vnd.github.v3+json'
+            ]
+        ]
+    ];
+    $context = stream_context_create($opts);
+    $json = file_get_contents($url, false, $context);
+    if ($json === false) {
+        tasklog('Failed to fetch release info for ' . $name);
+        return;
+    }
+    $stmt = $db->prepare('REPLACE INTO releases (name, tag, json, updatetime) VALUES (?, ?, ?, ?)');
+    $stmt->bind_param('sssi', $name, $tag, $json, $time);
+    $stmt->execute();
+    tasklog('Updated release info for ' . $name);
+}
+
+taskrun('Refresh releases', function() {
+    fetch_release('stable', 'latest'); // versioned release
+    fetch_release('nightly', 'tags/latest'); // nightly
 });
