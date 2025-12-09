@@ -32,8 +32,6 @@ phpenvvar 'MYSQL_PASSWORD'
 phpenvvar 'MYSQL_DATABASE'
 phpenvvar_b64 'JWT_PRIVATE_KEY'
 phpenvvar_b64 'JWT_PUBLIC_KEY'
-
-echo "<?php require_once('${PRIVCONF}');" > /var/www/api/config.php
 # END Create config.php
 
 # BEGIN Create msmtp config

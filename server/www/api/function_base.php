@@ -84,7 +84,7 @@ function die_error($str, $code = 400) {
 
 define('BANK_USER_ID', 42);
 
-require_once('config.php');
+require_once('/run/darksignsonline/dso-config.php');
 
 global $db;
 if (empty($disable_database)) {
