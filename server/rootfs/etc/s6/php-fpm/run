@@ -1,7 +1,10 @@
 #!/bin/sh
 set -e
 
-/bin/configure.sh root:php
+mkdir -p /run/darksignsonline
+chmod 750 /run/darksignsonline
+chown root:php /run/darksignsonline
+/bin/configure.sh
 
 cp -f /var/www/releases_fallback.json /run/darksignsonline/releases.json
 chown php:php /run/darksignsonline/releases.json
