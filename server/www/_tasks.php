@@ -38,7 +38,7 @@ function fetch_release($name, $tag) {
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     $need_update = false;
-    if ($row === null) {
+    if (empty($row)) {
         $need_update = true;
     } else {
         $updatetime = (int)$row['updatetime'];
