@@ -14,18 +14,11 @@ RUN apk --no-cache update && \
         nginx-mod-http-js \
         msmtp \
         php84-cli \
-        php84-ctype \
-        php84-dom \
-        php84-fileinfo \
         php84-fpm \
-        php84-iconv \
-        php84-intl \
         php84-json \
-        php84-mbstring \
         php84-mysqli \
         php84-opcache \
         php84-session \
-        php84-xml \
         s6 \
         shadow \
         anubis
