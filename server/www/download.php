@@ -1,6 +1,7 @@
 <?php
 
 $htmltitle = 'Download';
+require_once('_function_base.php');
 require('_top.php');
 
 function get_release_client($release)
@@ -23,6 +24,7 @@ function get_release_client($release)
     </p>
     <table width="60%" border="0">
         <?php
+        global $db;
         $stmt = $db->prepare('SELECT json FROM releases');
         $stmt->execute();
         $result = $stmt->get_result();
