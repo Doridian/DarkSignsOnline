@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
 
+owner="$1"
+
+mkpriv() {
+    privfile="${1}"
+    touch "${privfile}"
+    chown "${owner}" "${privfile}"
+    chmod 640 "${privfile}"
+}
+
 # BEGIN Create config.php
 PRIVCONF=/run/darksignsonline/dso-config.php
+mkpriv "${PRIVCONF}"
 
 phpenvvar() {
     VAR="${1}"
@@ -28,7 +38,9 @@ echo "<?php require_once('${PRIVCONF}');" > /var/www/api/config.php
 
 # BEGIN Create msmtp config
 MSMTP_CONF=/run/darksignsonline/msmtp.conf
+mkpriv "${MSMTP_CONF}"
 MSMTP_PASSWD=/run/darksignsonline/msmtp.passwd
+mkpriv "${MSMTP_PASSWD}"
 
 echo 'defaults' > "${MSMTP_CONF}"
 echo 'auth on' >> "${MSMTP_CONF}"
