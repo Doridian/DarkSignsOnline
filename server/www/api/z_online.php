@@ -21,6 +21,7 @@ if (strpos($version, '.') === false) {
     die('0000OK'); // nightly doesn't auto-update for now
 }
 
+global $db;
 $stmt = $db->prepare('SELECT json FROM releases WHERE name = ?');
 $stmt->bind_param('s', $release_track);
 $stmt->execute();
