@@ -23,7 +23,11 @@ function get_release_client($release)
     </p>
     <table width="60%" border="0">
         <?php
-        foreach (json_decode(file_get_contents('/run/darksignsonline/releases.json')) as $release) {
+        $stmt = $db->prepare('SELECT json FROM releases');
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $release = json_decode($row['json']);
             $client = get_release_client($release);
             if (empty($client)) {
                 continue;

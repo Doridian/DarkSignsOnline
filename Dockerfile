@@ -44,6 +44,5 @@ RUN echo "${GIT_REVISION}" > /var/www/api/gitrev.txt
 
 ARG CACHE_INVALIDATOR=1
 RUN echo "${CACHE_INVALIDATOR}"
-RUN /bin/refresh_releases.sh /releases.json
 
 ENTRYPOINT [ "/usr/bin/s6-svscan", "/etc/s6" ]
