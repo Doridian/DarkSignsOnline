@@ -7,7 +7,6 @@ RUN apk --no-cache update && \
     apk --no-cache add \
         ca-certificates \
         cronie \
-        curl \
         jq \
         libcap \
         nginx \
