@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
+owner="$1"
+
 mkpriv() {
     privfile="${1}"
     touch "${privfile}"
-    chown root:php "${privfile}" || true
+    chown "${owner}" "${privfile}"
     chmod 640 "${privfile}"
 }
 
