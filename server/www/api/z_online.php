@@ -21,7 +21,7 @@ if (strpos($version, '.') === false) {
     die('0000OK'); // nightly doesn't auto-update for now
 }
 
-$releases = json_decode(file_get_contents('../releases.json'));
+$releases = json_decode(file_get_contents('/run/darksignsonline/releases.json'));
 $release = @$releases->{$release_track};
 
 $current = strtolower($release->name);

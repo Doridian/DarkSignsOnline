@@ -3,7 +3,7 @@ set -e
 
 /bin/configure.sh root:php
 
-cp -f /var/www/releases_fallback.json /run/darksignsonline/releases.json
+cp -f /releases.json /run/darksignsonline/releases.json
 chown php:php /run/darksignsonline/releases.json
 
 exec /usr/sbin/php-fpm84 --nodaemonize --fpm-config /etc/php-fpm.conf
