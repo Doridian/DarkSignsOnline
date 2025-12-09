@@ -3,7 +3,7 @@ set -e
 
 /bin/configure_msmtp.sh
 
-cp -f /var/www/releases_fallback.json /tmp/releases.json
-chown php:php /tmp/releases.json
+cp -f /var/www/releases_fallback.json /run/darksignsonline/releases.json
+chown php:php /run/darksignsonline/releases.json
 
 exec /usr/sbin/php-fpm84 --nodaemonize --fpm-config /etc/php-fpm.conf

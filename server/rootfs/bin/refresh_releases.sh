@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-TARGET_FILE="${1-/tmp/releases.json}"
+TARGET_FILE="${1-/run/darksignsonline/releases.json}"
 RELEASES_BASE_URL='https://api.github.com/repos/Doridian/DarkSignsOnline/releases/'
 
 releases_tmp="$(mktemp)"

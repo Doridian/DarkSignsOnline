@@ -28,7 +28,7 @@ RUN useradd -s /bin/false php && \
     usermod -aG anubis nginx && \
     usermod -aG nginx anubis && \
     setcap cap_net_bind_service=+ep /usr/sbin/nginx && \
-    mkdir -p /var/lib/nginx/acme && chown nginx:nginx -R /var/lib/nginx && \
+    mkdir -p /run/darksignsonline /var/lib/nginx/acme && chown nginx:nginx -R /var/lib/nginx && \
     chmod 444 /etc/nginx/acme.js
 
 ENV HTTP_MODE='http'
@@ -41,7 +41,7 @@ COPY server/www/ /var/www/
 
 ARG GIT_REVISION="unknown"
 RUN echo "${GIT_REVISION}" > /var/www/api/gitrev.txt
-RUN ln -s /tmp/releases.json /var/www/releases.json
+RUN ln -s /run/darksignsonline/releases.json /var/www/releases.json
 
 ARG CACHE_INVALIDATOR=1
 RUN echo "${CACHE_INVALIDATOR}"

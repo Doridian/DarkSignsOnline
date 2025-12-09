@@ -8,7 +8,7 @@ mkpriv() {
 }
 
 # BEGIN Create config.php
-PRIVCONF=/tmp/dso-config.php
+PRIVCONF=/run/darksignsonline/dso-config.php
 mkpriv "${PRIVCONF}"
 
 phpenvvar() {
@@ -35,9 +35,9 @@ echo "<?php require_once('${PRIVCONF}');" > /var/www/api/config.php
 # END Create config.php
 
 # BEGIN Create msmtp config
-MSMTP_CONF=/tmp/msmtp.conf
+MSMTP_CONF=/run/darksignsonline/msmtp.conf
 mkpriv "${MSMTP_CONF}"
-MSMTP_PASSWD=/tmp/msmtp.passwd
+MSMTP_PASSWD=/run/darksignsonline/msmtp.passwd
 mkpriv "${MSMTP_PASSWD}"
 
 echo 'defaults' > "${MSMTP_CONF}"
