@@ -11,7 +11,6 @@ RUN apk --no-cache update && \
         libcap \
         nginx \
         nginx-mod-http-js \
-        msmtp \
         php84-cli \
         php84-fpm \
         php84-json \

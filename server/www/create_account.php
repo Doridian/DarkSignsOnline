@@ -2,6 +2,7 @@
 
 $htmltitle = 'Create a new account';
 require_once('_function_base.php');
+require_once('api/function_email.php');
 require('_top.php');
 
 if (!empty($_POST['username'])) {
@@ -71,8 +72,7 @@ if (!empty($_POST['username'])) {
 
     $db->commit();
 
-    $headers = "From: Dark Signs Online <noreply@darksignsonline.com>\r\n";
-    mail($email, "$username, verify your Dark Signs Online Account", "Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\nhttps://darksignsonline.com/verify.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttps://darksignsonline.com/", $headers);
+    send_email($email, $username, "$username, verify your Dark Signs Online Account", "Hi $username,\n\nThank you for creating an account on Dark Signs Online!\n\nClick the link below to activate your account.\n\nhttps://darksignsonline.com/verify.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttps://darksignsonline.com/");
 
     die_frontend_msg('Your account has been created!', 'Check your E-Mail for more information.');
 }

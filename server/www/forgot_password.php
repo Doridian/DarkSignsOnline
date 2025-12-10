@@ -2,6 +2,7 @@
 
 $htmltitle = 'Forgot password';
 require_once('_function_base.php');
+require_once('api/function_email.php');
 require('_top.php');
 
 if (!empty($_POST['email']) && !empty($_POST['username'])) {
@@ -26,8 +27,7 @@ if (!empty($_POST['email']) && !empty($_POST['username'])) {
     $stmt->bind_param('isi', $user['id'], $vercode, $expiry);
     $stmt->execute();
 
-    $headers = "From: Dark Signs Online <noreply@darksignsonline.com>\r\n";
-    mail($email, "Dark Signs Online - Password reset for $username", "Hi $username,\n\nYou (or someone who knows your E-Mail) has reuqested a password reset for your account, $username\n\nClick the link below to change your password, or ignore this E-Mail if you didn't initiate this change.\n\nhttps://darksignsonline.com/forgot_password2.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttps://darksignsonline.com/", $headers);
+    send_email($email, $username, "Dark Signs Online - Password reset for $username", "Hi $username,\n\nYou (or someone who knows your E-Mail) has reuqested a password reset for your account, $username\n\nClick the link below to change your password, or ignore this E-Mail if you didn't initiate this change.\n\nhttps://darksignsonline.com/forgot_password2.php?code=$vercode\n\nThank you,\n\nThe Dark Signs Online Team\nhttps://darksignsonline.com/");
 
     die_frontend_msg('E-Mail has been sent!', 'Check your E-Mail for the password reset link.');
 }
