@@ -16,7 +16,7 @@
         gitrev = self.rev or "${self.dirtyRev}-dirty";
         package = pkgs.stdenvNoCC.mkDerivation {
           name = "darksignsonline-server";
-          version = "1.0.0";
+          version = gitrev;
           src = ./server/www;
           installPhase = ''
             mkdir -p "$out/var/www"
