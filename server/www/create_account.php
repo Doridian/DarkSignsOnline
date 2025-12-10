@@ -171,4 +171,4 @@ if (!empty($_POST['username'])) {
 </form>
 <br />
 <br />
-<?php require("_bottom.php");
+<?php require('_bottom.php');

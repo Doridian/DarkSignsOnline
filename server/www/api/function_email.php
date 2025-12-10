@@ -21,7 +21,6 @@ function send_email($to_email, $to_name, $subject, $message) {
     global $mailer, $SMTP_FROM;
     $mailer->clearAddresses();
     $mailer->clearAttachments();
-    $mailer->SMTPDebug = 2;
     $mailer->Debugoutput = 'html';
     $mailer->setFrom($SMTP_FROM, 'Dark Signs Online');
     $mailer->addAddress($to_email, $to_name);
