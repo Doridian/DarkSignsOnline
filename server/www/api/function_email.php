@@ -9,18 +9,20 @@ require_once('phpmailer/SMTP.php');
 
 global $mailer;
 $mailer = new PHPMailer(true);
-$mailer->isSMTP();
-$mailer->Host = $SMTP_HOST;
+$mailer->isSMTP(true);
 $mailer->SMTPAuth = true;
+$mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+$mailer->Host = $SMTP_HOST;
+$mailer->Port = 587;
 $mailer->Username = $SMTP_USERNAME;
 $mailer->Password = $SMTP_PASSWORD;
-$mailer->Port = 587;
-$mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 
 function send_email($to_email, $to_name, $subject, $message) {
     global $mailer, $SMTP_FROM;
     $mailer->clearAddresses();
     $mailer->clearAttachments();
+    $mailer->SMTPDebug = 2;
+    $mailer->Debugoutput = 'html';
     $mailer->setFrom($SMTP_FROM, 'Dark Signs Online');
     $mailer->addAddress($to_email, $to_name);
     $mailer->isHTML(false);
