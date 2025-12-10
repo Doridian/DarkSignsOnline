@@ -18,7 +18,7 @@ $mailer->Port = 587;
 $mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 
 function send_email($to_email, $to_name, $subject, $message) {
-    global $mailer;
+    global $mailer, $SMTP_FROM;
     $mailer->clearAddresses();
     $mailer->clearAttachments();
     $mailer->setFrom($SMTP_FROM, 'Dark Signs Online');
