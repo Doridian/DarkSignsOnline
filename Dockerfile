@@ -18,13 +18,9 @@ RUN apk --no-cache update && \
         php84-opcache \
         php84-session \
         s6 \
-        shadow \
-        anubis
+        shadow
 
 RUN useradd -s /bin/false php && \
-    useradd -s /bin/false anubis && \
-    usermod -aG anubis nginx && \
-    usermod -aG nginx anubis && \
     setcap cap_net_bind_service=+ep /usr/sbin/nginx && \
     mkdir -p /run/darksignsonline /var/lib/nginx/acme && chown nginx:nginx -R /var/lib/nginx && \
     chmod 444 /etc/nginx/acme.js
