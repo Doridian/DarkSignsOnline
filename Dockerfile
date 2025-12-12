@@ -5,6 +5,7 @@ ADD https://github.com/nginx/njs-acme/releases/download/v1.0.0/acme.js /etc/ngin
 RUN apk --no-cache update && \
     apk --no-cache upgrade && \
     apk --no-cache add \
+        bash \
         ca-certificates \
         cronie \
         jq \
@@ -17,11 +18,9 @@ RUN apk --no-cache update && \
         php84-mysqli \
         php84-opcache \
         php84-session \
-        s6 \
-        shadow
+        s6
 
-RUN useradd -s /bin/false php && \
-    setcap cap_net_bind_service=+ep /usr/sbin/nginx && \
+RUN setcap cap_net_bind_service=+ep /usr/sbin/nginx && \
     mkdir -p /run/darksignsonline /var/lib/nginx/acme && chown nginx:nginx -R /var/lib/nginx && \
     chmod 444 /etc/nginx/acme.js
 

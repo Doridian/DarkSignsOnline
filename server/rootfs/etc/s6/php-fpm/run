@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
 
-/bin/configure.sh root:php
+/bin/configure.sh root:nginx
 
 exec /usr/sbin/php-fpm84 --nodaemonize --fpm-config /etc/php-fpm.conf
