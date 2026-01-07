@@ -1,5 +1,6 @@
 on:
   pull_request: {}
+  workflow_call: {}
 
 concurrency:
   group: server-${{ github.ref }}
@@ -27,7 +28,7 @@ jobs:
     - name: Build container image
       uses: docker/build-push-action@v6
       with:
-        push: false
+        push: ${{ github.ref == 'refs/heads/main' }}
         build-args: |
           GIT_REVISION=${{ github.sha }}
         cache-from: type=gha
