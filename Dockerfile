@@ -35,7 +35,4 @@ COPY server/www/ /var/www/
 ARG GIT_REVISION="unknown"
 RUN echo "${GIT_REVISION}" > /var/www/api/gitrev.txt
 
-ARG CACHE_INVALIDATOR=1
-RUN echo "${CACHE_INVALIDATOR}"
-
 ENTRYPOINT [ "/usr/bin/s6-svscan", "/etc/s6" ]
