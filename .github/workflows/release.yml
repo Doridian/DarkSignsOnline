@@ -22,5 +22,3 @@ jobs:
   server:
     uses: ./.github/workflows/server.yml
     secrets: inherit
-    with:
-      push: true
