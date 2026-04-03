@@ -16,9 +16,9 @@ permissions:
   packages: write
 
 jobs:
-  client:
-    uses: ./.github/workflows/client.yml
-    secrets: inherit
+  #client:
+  #  uses: ./.github/workflows/client.yml
+  #  secrets: inherit
   server:
     uses: ./.github/workflows/server.yml
     secrets: inherit
