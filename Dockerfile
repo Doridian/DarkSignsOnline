@@ -1,4 +1,4 @@
-FROM alpine:3.23
+FROM alpine:3.24
 
 ADD https://github.com/nginx/njs-acme/releases/download/v1.0.0/acme.js /etc/nginx/acme.js
 
