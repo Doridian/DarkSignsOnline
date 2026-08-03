@@ -136,7 +136,7 @@ jobs:
         fail_on_unmatched_files: true
         prerelease: true
     - name: Tag Repo
-      uses: richardsimko/update-tag@v2
+      uses: richardsimko/update-tag@v3
       if: github.ref == 'refs/heads/main' && steps.changes.outputs.client == 'true'
       with:
         tag_name: latest
