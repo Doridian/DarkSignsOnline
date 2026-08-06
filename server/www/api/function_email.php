@@ -11,6 +11,7 @@ $mailer = new PHPMailer(true);
 $mailer->isSMTP(true);
 $mailer->Host = $SMTP_HOST;
 $mailer->Port = (int)$SMTP_PORT;
+$mailer->SMTPAutoTLS = false;
 if (!empty($SMTP_USERNAME)) {
     $mailer->SMTPAuth = true;
     $mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
