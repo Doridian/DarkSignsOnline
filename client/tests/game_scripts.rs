@@ -8,30 +8,38 @@
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+
+use vbscript::game::fs::FileSystem;
 use std::rc::Rc;
 
+use vbscript::game::console::RecordingConsole;
+use vbscript::game::fs::MemoryFs;
+use vbscript::game::server::ScriptedServer;
+use vbscript::game::{run_script, Env, GameHost};
 use vbscript::interp::{ArgVal, Host, Interp};
 use vbscript::value::Value;
 use vbscript::VbResult;
 
-/// A host that accepts every call and records the names it was asked for.
-#[derive(Default)]
-struct StubHost {
-    seen: BTreeSet<String>,
+/// Wraps the real host so anything it does not implement is recorded rather
+/// than failing, which is how the corpus run finds gaps in the API.
+struct RecordingHost {
+    inner: GameHost<RecordingConsole, MemoryFs, ScriptedServer>,
+    /// Names the real host did not claim.
+    unknown: RefCell<BTreeSet<String>>,
 }
 
-impl Host for StubHost {
-    fn get_global(&mut self, _it: &mut Interp, name: &str) -> VbResult<Option<Value>> {
-        self.seen.insert(name.to_string());
-        Ok(Some(Value::Empty))
+impl Host for RecordingHost {
+    fn get_global(&self, it: &mut Interp, name: &str) -> VbResult<Option<Value>> {
+        self.inner.get_global(it, name)
     }
-    fn call(
-        &mut self,
-        _it: &mut Interp,
-        name: &str,
-        _args: &mut [ArgVal],
-    ) -> VbResult<Option<Value>> {
-        self.seen.insert(name.to_string());
+
+    fn call(&self, it: &mut Interp, name: &str, args: &mut [ArgVal]) -> VbResult<Option<Value>> {
+        if let Some(v) = self.inner.call(it, name, args)? {
+            return Ok(Some(v));
+        }
+        // Not part of the host API. Most of these come from `DLOpen`ed
+        // script libraries, which this run does not load.
+        self.unknown.borrow_mut().insert(name.to_string());
         Ok(Some(Value::Empty))
     }
 }
@@ -114,16 +122,23 @@ fn run_scripts() {
             continue;
         }
         let src = std::fs::read_to_string(&f).expect("script is readable");
-        let host = Rc::new(RefCell::new(StubHost::default()));
+        // A filesystem holding the corpus itself, so Include and Run work.
+        let fs = corpus_fs();
+        let host = Rc::new(RecordingHost {
+            inner: GameHost::new(RecordingConsole::new(), fs, ScriptedServer::new()).with_env(
+                Env { cwd: "/".into(), args: vec![Value::str("cmd")], ..Default::default() },
+            ),
+            unknown: RefCell::new(BTreeSet::new()),
+        });
         let mut it = Interp::with_host(host.clone());
         // Several scripts sit in a menu loop waiting on the player, which
-        // never ends when every host call answers Empty.
+        // never ends without real input.
         it.set_step_budget(100_000);
-        match it.run_source(&src) {
+        match run_script(&mut it, &src) {
             Ok(()) => completed += 1,
-            Err(e) => errors.push((f.display().to_string(), e)),
+            Err(e) => errors.push((f.display().to_string(), e.to_string())),
         }
-        host_names.extend(host.borrow().seen.iter().cloned());
+        host_names.extend(host.unknown.borrow().iter().cloned());
     }
     println!("completed: {completed}, errored: {}", errors.len());
     // Group by message so the shape of the failures is visible at a glance.
@@ -138,10 +153,26 @@ fn run_scripts() {
             println!("    {f}");
         }
     }
-    println!("\nhost names the corpus reaches for ({}):", host_names.len());
+    println!("\nnames the host does not provide ({}):", host_names.len());
     for chunk in host_names.iter().collect::<Vec<_>>().chunks(8) {
         println!("  {}", chunk.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(" "));
     }
+}
+
+/// Load the `.ds` corpus into an in-memory filesystem under the paths the
+/// scripts expect, so `Include` and `Run` resolve against it.
+fn corpus_fs() -> MemoryFs {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("client has a parent directory")
+        .join("client-legacy/user");
+    let mut fs = MemoryFs::new();
+    for f in scripts() {
+        if let (Ok(text), Ok(rel)) = (std::fs::read_to_string(&f), f.strip_prefix(&root)) {
+            let _ = FileSystem::write(&mut fs, &format!("/{}", rel.display()), &text);
+        }
+    }
+    fs
 }
 
 /// The excluded scripts are expected to fail, so a change that starts

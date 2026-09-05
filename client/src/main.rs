@@ -1,6 +1,5 @@
 //! Command-line driver: runs a `.vbs` or `.ds` script.
 
-use std::cell::RefCell;
 use std::process::ExitCode;
 use std::rc::Rc;
 
@@ -10,7 +9,7 @@ use vbscript::interp::{Host, Interp};
 struct ConsoleHost;
 
 impl Host for ConsoleHost {
-    fn echo(&mut self, text: &str) {
+    fn echo(&self, text: &str) {
         println!("{text}");
     }
 }
@@ -52,7 +51,7 @@ fn main() -> ExitCode {
         };
     }
 
-    let mut it = Interp::with_host(Rc::new(RefCell::new(ConsoleHost)));
+    let mut it = Interp::with_host(Rc::new(ConsoleHost));
     match it.run_source(&src) {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {

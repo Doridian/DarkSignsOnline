@@ -716,7 +716,7 @@ fn dispatch(it: &mut Interp, name: &str, a: &Args) -> VbResult<Value> {
         "msgbox" => {
             let text = a.req(0)?.to_vb_string()?;
             let host = it.host.clone();
-            host.borrow_mut().echo(&text);
+            host.echo(&text);
             Ok(Value::I2(1))
         }
         "inputbox" => Ok(Value::str("")),
@@ -828,7 +828,7 @@ fn create_object(it: &mut Interp, progid: &str) -> VbResult<Value> {
         )))))),
         _ => {
             let host = it.host.clone();
-            let r = host.borrow_mut().create_object(it, progid)?;
+            let r = host.create_object(it, progid)?;
             r.ok_or_else(err::cant_create_object)
         }
     }

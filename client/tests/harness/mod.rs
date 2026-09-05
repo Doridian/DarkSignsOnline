@@ -74,7 +74,7 @@ fn vt_name(v: &Value) -> String {
 }
 
 impl Host for TestHost {
-    fn get_global(&mut self, _it: &mut Interp, name: &str) -> VbResult<Option<Value>> {
+    fn get_global(&self, _it: &mut Interp, name: &str) -> VbResult<Option<Value>> {
         Ok(Some(match name {
             "isenglishlang" => Value::Bool(true),
             "maxcharsize" => Value::I4(1),
@@ -91,11 +91,11 @@ impl Host for TestHost {
         }))
     }
 
-    fn global_object(&mut self, _it: &mut Interp) -> VbResult<Option<Value>> {
+    fn global_object(&self, _it: &mut Interp) -> VbResult<Option<Value>> {
         Ok(Some(Value::Obj(Some(ObjKind::Native(self.script_obj.clone())))))
     }
 
-    fn set_global(&mut self, _it: &mut Interp, name: &str, _value: Value) -> VbResult<bool> {
+    fn set_global(&self, _it: &mut Interp, name: &str, _value: Value) -> VbResult<bool> {
         // Assigning to this global invokes its property put, which throws.
         if name == "throwwithdesc" {
             return Err(throw_with_desc());
@@ -104,7 +104,7 @@ impl Host for TestHost {
     }
 
     fn call(
-        &mut self,
+        &self,
         it: &mut Interp,
         name: &str,
         args: &mut [ArgVal],
@@ -208,7 +208,7 @@ impl Host for TestHost {
         }
     }
 
-    fn echo(&mut self, text: &str) {
+    fn echo(&self, text: &str) {
         self.report.borrow_mut().traces.push(text.to_string());
     }
 }
@@ -379,7 +379,7 @@ impl NativeObject for ErrorObj {
 /// Run one wine test script and return its report.
 pub fn run_script(src: &str) -> (Report, Option<String>) {
     let report = Rc::new(RefCell::new(Report::default()));
-    let host = Rc::new(RefCell::new(TestHost::new(report.clone())));
+    let host = Rc::new(TestHost::new(report.clone()));
     let mut it = Interp::with_host(host);
     let error = match vbscript::parser::parse(src) {
         Err(e) => Some(format!("parse error at {e}")),

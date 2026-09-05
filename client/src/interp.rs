@@ -51,14 +51,20 @@ impl ArgVal {
 }
 
 /// Services the embedding application provides to scripts.
+///
+/// Methods take `&self` because a host procedure may run further script —
+/// `Include`, `Run` and `Capture` all do — and that script calls straight
+/// back into the same host. An implementation therefore keeps its mutable
+/// state behind its own `RefCell`s and borrows them only for the length of
+/// one operation, never across a nested call.
 pub trait Host {
     /// Resolve an identifier the interpreter does not know.
-    fn get_global(&mut self, _it: &mut Interp, _name: &str) -> VbResult<Option<Value>> {
+    fn get_global(&self, _it: &mut Interp, _name: &str) -> VbResult<Option<Value>> {
         Ok(None)
     }
     /// Invoke a host-provided procedure. Returning `None` means "not mine".
     fn call(
-        &mut self,
+        &self,
         _it: &mut Interp,
         _name: &str,
         _args: &mut [ArgVal],
@@ -66,20 +72,20 @@ pub trait Host {
         Ok(None)
     }
     /// The object `Me` refers to outside any class, if the host has one.
-    fn global_object(&mut self, _it: &mut Interp) -> VbResult<Option<Value>> {
+    fn global_object(&self, _it: &mut Interp) -> VbResult<Option<Value>> {
         Ok(None)
     }
     /// Assign to a host-provided global. Returning `false` means the host
     /// does not own this name, so the script scope handles it.
-    fn set_global(&mut self, _it: &mut Interp, _name: &str, _value: Value) -> VbResult<bool> {
+    fn set_global(&self, _it: &mut Interp, _name: &str, _value: Value) -> VbResult<bool> {
         Ok(false)
     }
     /// Construct a `CreateObject` target.
-    fn create_object(&mut self, _it: &mut Interp, _progid: &str) -> VbResult<Option<Value>> {
+    fn create_object(&self, _it: &mut Interp, _progid: &str) -> VbResult<Option<Value>> {
         Ok(None)
     }
     /// Destination for `MsgBox` and similar output.
-    fn echo(&mut self, _text: &str) {}
+    fn echo(&self, _text: &str) {}
 }
 
 /// A host that provides nothing.
@@ -139,7 +145,7 @@ pub struct Interp {
     with_stack: Vec<Value>,
     pub err: ErrState,
     pub option_explicit: bool,
-    pub host: Rc<RefCell<dyn Host>>,
+    pub host: Rc<dyn Host>,
     pub locale: i32,
     /// State for `Rnd`/`Randomize`.
     pub rng: u32,
@@ -175,10 +181,10 @@ impl Default for Interp {
 
 impl Interp {
     pub fn new() -> Interp {
-        Interp::with_host(Rc::new(RefCell::new(NullHost)))
+        Interp::with_host(Rc::new(NullHost))
     }
 
-    pub fn with_host(host: Rc<RefCell<dyn Host>>) -> Interp {
+    pub fn with_host(host: Rc<dyn Host>) -> Interp {
         Interp {
             globals: HashMap::new(),
             frames: Vec::new(),
@@ -1034,7 +1040,7 @@ impl Interp {
                     }
                     let host = self.host.clone();
                     let handled =
-                        host.borrow_mut().set_global(self, name, value.clone())
+                        host.set_global(self, name, value.clone())
                             .map_err(Flow::Error)?;
                     if handled {
                         return Ok(());
@@ -1266,7 +1272,7 @@ impl Interp {
                 }
                 // At global scope `Me` is the host's script object.
                 let host = self.host.clone();
-                let g = host.borrow_mut().global_object(self)?;
+                let g = host.global_object(self)?;
                 g.ok_or_else(err::invalid_reference)
             }
 
@@ -1392,7 +1398,7 @@ impl Interp {
             return Ok(r);
         }
         let host = self.host.clone();
-        let mut h = host.borrow_mut();
+        let h = host;
         if let Some(v) = h.get_global(self, name)? {
             return Ok(v);
         }
@@ -1549,7 +1555,7 @@ impl Interp {
         {
             let host = self.host.clone();
             let (mut a, wb) = self.eval_args_wb(args).map_err(flow_to_err)?;
-            let r = host.borrow_mut().call(self, name, &mut a);
+            let r = host.call(self, name, &mut a);
             self.apply_writebacks(wb)?;
             if let Some(v) = r? {
                 return Ok(v);
@@ -1569,7 +1575,7 @@ impl Interp {
         // default member, as in `indexedObj(0)`.
         {
             let host = self.host.clone();
-            let g = host.borrow_mut().get_global(self, name)?;
+            let g = host.get_global(self, name)?;
             if let Some(v) = g {
                 let idx = self.eval_args_v(args)?;
                 return match &v {

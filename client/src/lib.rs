@@ -29,3 +29,5 @@ pub fn run(src: &str) -> Result<(), String> {
 pub fn check(src: &str) -> Result<(), error::SyntaxError> {
     parser::parse(src).map(|_| ())
 }
+
+pub mod game;
