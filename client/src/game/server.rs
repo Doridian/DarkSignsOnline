@@ -17,25 +17,32 @@ pub struct ApiRequest {
     pub path: String,
     /// Body to POST, or `None` for a GET.
     pub body: Option<String>,
-    /// The client's `ResponseType` hint, which selects how the server
-    /// formats its answer (`bool_1` and so on).
-    pub response_type: String,
+    /// How the script wants the answer shaped.
+    pub response_type: ResponseType,
 }
 
 impl ApiRequest {
     pub fn get(path: impl Into<String>) -> ApiRequest {
-        ApiRequest { path: path.into(), body: None, response_type: String::new() }
-    }
-    pub fn with_response_type(mut self, t: &str) -> ApiRequest {
-        self.response_type = t.into();
-        self
+        ApiRequest {
+            path: path.into(),
+            body: None,
+            response_type: ResponseType::Raw,
+        }
     }
     pub fn post(path: impl Into<String>, body: impl Into<String>) -> ApiRequest {
         ApiRequest {
             path: path.into(),
             body: Some(body.into()),
-            response_type: String::new(),
+            response_type: ResponseType::Raw,
         }
+    }
+    /// A POST with an empty body, which several endpoints use.
+    pub fn post_empty(path: impl Into<String>) -> ApiRequest {
+        ApiRequest::post(path, "")
+    }
+    pub fn returning(mut self, t: ResponseType) -> ApiRequest {
+        self.response_type = t;
+        self
     }
 }
 
@@ -49,6 +56,36 @@ impl ServerResponse {
     pub fn ok(body: impl Into<String>) -> ServerResponse {
         ServerResponse { code: 200, body: body.into() }
     }
+
+    pub fn is_success(&self) -> bool {
+        (200..=299).contains(&self.code)
+    }
+}
+
+/// How a response is handed to the script.
+///
+/// The client asks for this when it starts the request, and applies it when
+/// the script waits: `bool_1` yields a Boolean, `lines` an array, and
+/// anything else the body as it arrived.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ResponseType {
+    /// The raw body.
+    #[default]
+    Raw,
+    /// True when the trimmed body is exactly `1`.
+    Bool1,
+    /// The trimmed body split on newlines.
+    Lines,
+}
+
+impl ResponseType {
+    pub fn parse(s: &str) -> ResponseType {
+        match s {
+            "bool_1" => ResponseType::Bool1,
+            "lines" => ResponseType::Lines,
+            _ => ResponseType::Raw,
+        }
+    }
 }
 
 pub trait GameServer {
@@ -57,6 +94,9 @@ pub trait GameServer {
 
     /// Wait for a request to finish.
     fn wait(&mut self, id: RequestId) -> ServerResponse;
+
+    /// How the request behind `id` wants its answer shaped.
+    fn response_type(&self, id: RequestId) -> ResponseType;
 
     /// Whether the player is logged in, which gates the account functions.
     fn is_logged_in(&self) -> bool {
@@ -136,6 +176,10 @@ impl GameServer for ScriptedServer {
         id
     }
 
+    fn response_type(&self, id: RequestId) -> ResponseType {
+        self.pending.get(&id).map(|r| r.response_type).unwrap_or_default()
+    }
+
     fn wait(&mut self, id: RequestId) -> ServerResponse {
         let Some(request) = self.pending.remove(&id) else {
             return ServerResponse { code: 404, body: String::new() };
@@ -169,6 +213,9 @@ impl GameServer for OfflineServer {
     }
     fn wait(&mut self, _id: RequestId) -> ServerResponse {
         ServerResponse { code: 0, body: String::new() }
+    }
+    fn response_type(&self, _id: RequestId) -> ResponseType {
+        ResponseType::Raw
     }
 }
 

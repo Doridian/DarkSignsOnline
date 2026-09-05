@@ -95,11 +95,9 @@ pub fn weekday_of(v: f64) -> i32 {
     (((day % 7) + 7 + 6) % 7 + 1) as i32
 }
 
-pub fn now_ole() -> f64 {
-    let d = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default();
-    UNIX_EPOCH_OLE as f64 + d.as_secs_f64() / 86400.0
+/// Convert milliseconds since the Unix epoch into an OLE date.
+pub fn ole_from_unix_millis(millis: f64) -> f64 {
+    UNIX_EPOCH_OLE as f64 + millis / 86_400_000.0
 }
 
 // ---- formatting ----------------------------------------------------------
@@ -323,8 +321,12 @@ pub fn normalize_year(y: i32) -> i32 {
     }
 }
 
+/// The year a two-digit date is completed with.
+///
+/// Parsing has no access to the host, so this is fixed rather than read
+/// from the clock; it only affects a date written without a year.
 fn current_year() -> i32 {
-    to_ymd(now_ole()).0
+    2024
 }
 
 fn parse_time(s: &str, ampm: Option<bool>) -> Option<f64> {

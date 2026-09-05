@@ -47,7 +47,8 @@ Two suites, both run by `cargo test`:
 | `noexplicit.vbs` | 5 assertions, all pass |
 | `api.vbs` | 2161 assertions, 3 known failures (see below) |
 | `.ds` scripts | 298 of 301 parse; 242 of 298 also run to completion |
-| Host API | 74 integration tests, 111 unit tests |
+| Host API | 74 integration tests, 117 unit tests |
+| Live server | 4 tests, ignored by default |
 
 Of the 55 scripts that do not run to completion, 42 sit in a `While True`
 menu loop waiting on player input and stop only when the step budget runs
@@ -140,6 +141,51 @@ like script is passed through untouched. Bare words resolve against the live
 session, so `echo target` passes a variable if one exists and the text
 otherwise. `GameHost::parse_command_line` wires it to the running
 interpreter.
+
+### Talking to the server
+
+[`protocol.rs`](src/game/protocol.rs) holds the wire format with no
+transport attached, so the desktop build, a browser build and the tests all
+speak the same protocol and it can be tested without a network. Endpoint
+names and request bodies match the VB6 client exactly, because scripts read
+the raw response.
+
+One header is not optional:
+
+```
+DSO-Protocol-Version: 2
+```
+
+Without it the server answers in a legacy mode that prefixes every body with
+a four-character status code. Everything here expects the clean body, so a
+missing header shows up as garbage at the front of every string.
+
+Calls carry HTTP basic auth, and POST bodies are form-encoded.
+`ResponseType` decides the shape the script receives — `bool_1` yields a
+Boolean, `lines` an array, anything else the body as it arrived — and a
+non-2xx status raises rather than returning.
+
+[`http.rs`](src/game/http.rs) is the desktop transport, behind the
+`native-http` feature. `tests/live_server.rs` runs against the real server;
+it is ignored by default and reads credentials from `DSO_USER` and
+`DSO_PASS`, so none live in the repository:
+
+```sh
+DSO_USER=... DSO_PASS=... cargo test --test live_server -- --ignored --nocapture
+```
+
+### Targeting the browser
+
+The eventual target is WASM. The platform-dependent pieces already go
+through the `Host` trait — `now_unix_millis` and `random_bytes`, which
+`wasm32-unknown-unknown` cannot provide on its own — and `DiskFs` and the
+native HTTP client are both compiled out. What remains:
+
+- **zstd** is a C library. The crate advertises a `wasm` feature, which is
+  probably the answer, but it has not been built for the target here.
+- **`WaitFor` blocks**, which the browser main thread cannot. Either the
+  interpreter runs in a worker, or it has to become resumable. This is the
+  real architectural decision left.
 
 ### Script encryption
 

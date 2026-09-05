@@ -216,13 +216,18 @@ impl FileSystem for MemoryFs {
 
 /// A filesystem backed by a real directory.
 ///
+/// Native only: a browser build uses [`MemoryFs`] over whatever storage it
+/// has.
+///
 /// Every game path is resolved and stripped of `..` before it is joined to
 /// the root, so a script cannot reach outside the player's directory even if
 /// it constructs the path itself.
+#[cfg(not(target_arch = "wasm32"))]
 pub struct DiskFs {
     root: std::path::PathBuf,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl DiskFs {
     pub fn new(root: impl Into<std::path::PathBuf>) -> DiskFs {
         DiskFs { root: root.into() }
@@ -253,6 +258,7 @@ impl DiskFs {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl FileSystem for DiskFs {
     fn exists(&self, path: &str) -> bool {
         self.real(path).exists()
@@ -513,6 +519,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_arch = "wasm32"))]
     fn the_disk_filesystem_stays_inside_its_root() {
         let root = std::env::temp_dir().join(format!("dso-fs-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
@@ -532,6 +539,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_arch = "wasm32"))]
     fn the_disk_filesystem_lists_and_removes() {
         let root = std::env::temp_dir().join(format!("dso-fs2-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);

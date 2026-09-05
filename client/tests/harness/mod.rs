@@ -9,7 +9,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use vbscript::builtins::datetime;
 use vbscript::error::{err, VbError, VbResult};
 use vbscript::interp::{ArgVal, Host, Interp};
 use vbscript::objects::{NativeObject, ObjKind};
@@ -388,7 +387,6 @@ pub fn run_script(src: &str) -> (Report, Option<String>) {
             Err(e) => Some(format!("line {}: {} ({})", it.cur_line, e.description, e.number)),
         },
     };
-    let _ = datetime::now_ole();
     let r = std::mem::take(&mut *report.borrow_mut());
     (r, error)
 }

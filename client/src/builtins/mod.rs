@@ -397,7 +397,7 @@ fn dispatch(it: &mut Interp, name: &str, a: &Args) -> VbResult<Value> {
         }
         "randomize" => {
             let seed = match a.get(0) {
-                None => dt::now_ole() * 86400.0,
+                None => host_now(it) * 86400.0,
                 Some(v) => v.to_f64()?,
             };
             // Randomize mixes into the current state rather than replacing
@@ -407,18 +407,18 @@ fn dispatch(it: &mut Interp, name: &str, a: &Args) -> VbResult<Value> {
         }
 
         // ---- date and time ----------------------------------------------
-        "date" => Ok(Value::Date(dt::now_ole().floor())),
+        "date" => Ok(Value::Date(host_now(it).floor())),
         "time" => {
-            let n = dt::now_ole();
+            let n = host_now(it);
             Ok(Value::Date(n - n.floor()))
         }
         "now" => {
             // `Now` is accurate to the second.
-            let n = dt::now_ole();
+            let n = host_now(it);
             Ok(Value::Date((n * 86400.0).round() / 86400.0))
         }
         "timer" => {
-            let n = dt::now_ole();
+            let n = host_now(it);
             Ok(Value::R4(((n - n.floor()) * 86400.0) as f32))
         }
         "dateserial" => {
@@ -732,6 +732,12 @@ fn text_date(v: &Value) -> VbResult<f64> {
         Value::Str(s) => datetime::parse_date(s).ok_or_else(err::type_mismatch),
         _ => Err(err::type_mismatch()),
     }
+}
+
+/// The current time as an OLE date, read from the host so a browser build
+/// can supply its own clock.
+fn host_now(it: &Interp) -> f64 {
+    datetime::ole_from_unix_millis(it.host.now_unix_millis())
 }
 
 fn clamp_byte(v: i32) -> VbResult<i32> {

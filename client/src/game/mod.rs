@@ -15,8 +15,11 @@ pub mod cli;
 pub mod console;
 pub mod crypto;
 pub mod fs;
+#[cfg(feature = "native-http")]
+pub mod http;
 pub mod markup;
 pub mod path;
+pub mod protocol;
 pub mod server;
 pub mod termlib;
 pub mod values;
@@ -301,7 +304,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 value_array(bytes.into_iter().map(Value::UI1).collect())
             }
             "encrypt" => {
-                let salt = crypto::generate_salt().map_err(|e| misc_error(e.to_string()))?;
+                let salt = crypto::generate_salt(it.host.as_ref()).map_err(|e| misc_error(e.to_string()))?;
                 // The script-facing password is namespaced so it cannot
                 // collide with a script key.
                 let password = format!("dsoscript_{}", arg_str(args, 1)?);
@@ -323,7 +326,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 )
             }
             "compilestr" => {
-                let salt = crypto::generate_salt().map_err(|e| misc_error(e.to_string()))?;
+                let salt = crypto::generate_salt(it.host.as_ref()).map_err(|e| misc_error(e.to_string()))?;
                 Value::str(
                     crypto::compile_script(&arg_str(args, 0)?, &arg_str(args, 1)?, salt)
                         .map_err(|e| misc_error(e.to_string()))?,
@@ -670,31 +673,170 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             "isoutputredirected" => Value::Bool(self.env.borrow().output_redirected),
 
             // ---- the game server ------------------------------------------
-            "lookup" => {
-                let d = values::url_encode(&arg_str(args, 0)?);
-                self.api(ApiRequest::get(format!("lookup.php?d={d}")))
-            }
-            "getdomain" => {
-                let ip = values::url_encode(&arg_str(args, 0)?);
-                self.api(ApiRequest::get(format!("domain_meta.php?getdomain={ip}")))
-            }
-            "getip" => {
-                let d = values::url_encode(&arg_str(args, 0)?);
-                self.api(ApiRequest::get(format!("domain_meta.php?getip={d}")))
-            }
+            //
+            // Endpoint names and request bodies match the VB6 client
+            // exactly; scripts read the raw response, so the shapes are part
+            // of the contract with the server.
+            "lookup" => self.api(ApiRequest::get(format!(
+                "lookup.php?d={}",
+                values::url_encode(&arg_str(args, 0)?)
+            ))),
+            "getdomain" => self.api(ApiRequest::get(format!(
+                "domain_meta.php?getdomain={}",
+                values::url_encode(&arg_str(args, 0)?)
+            ))),
+            "getip" => self.api(ApiRequest::get(format!(
+                "domain_meta.php?getip={}",
+                values::url_encode(&arg_str(args, 0)?)
+            ))),
             "isportopen" | "isdomainonline" => {
-                let d = values::url_encode(&arg_str(args, 0)?);
+                let domain = values::url_encode(&arg_str(args, 0)?);
                 // `IsDomainOnline` is `IsPortOpen` against port 0.
                 let port = if name == "isdomainonline" { 0 } else { arg_int(args, 1, 0)? };
                 self.api(
-                    ApiRequest::get(format!("ping.php?domain={d}&port={port}"))
-                        .with_response_type("bool_1"),
+                    ApiRequest::get(format!("ping.php?domain={domain}&port={port}"))
+                        .returning(server::ResponseType::Bool1),
                 )
+            }
+            "stats" => self.api(ApiRequest::get("get_user_stats.php")),
+            "login" => self.api(ApiRequest::post_empty("auth.php")),
+            "logout" => Value::Empty,
+
+            "uploadstr" => {
+                self.assert_local()?;
+                let domain = arg_str(args, 0)?;
+                let port = arg_int(args, 1, 0)?;
+                let data = arg_str(args, 2)?;
+                // An already-compiled script is re-keyed for its destination
+                // before upload.
+                let payload = if crypto::is_script_compiled(&data) {
+                    let key = format!("dso://{}:{port}", domain.to_lowercase());
+                    let salt = crypto::generate_salt(it.host.as_ref()).map_err(|e| misc_error(e.to_string()))?;
+                    crypto::compile_script(&data, &key, salt)
+                        .map_err(|e| misc_error(e.to_string()))?
+                } else {
+                    data
+                };
+                let encoded = crypto::encode_base64(payload.as_bytes());
+                self.api(ApiRequest::post(
+                    "domain_upload.php",
+                    format!(
+                        "port={port}&d={}&filedata={}",
+                        values::url_encode(&domain),
+                        values::url_encode(&encoded)
+                    ),
+                ))
+            }
+            "downloadstr" => {
+                self.assert_local()?;
+                self.api(ApiRequest::post(
+                    "domain_download.php",
+                    format!(
+                        "port={}&d={}",
+                        arg_int(args, 1, 0)?,
+                        values::url_encode(&arg_str(args, 0)?)
+                    ),
+                ))
+            }
+            "register" | "unregister" => {
+                self.assert_local()?;
+                let endpoint = if name == "register" {
+                    "domain_register.php"
+                } else {
+                    "domain_unregister.php"
+                };
+                self.api(ApiRequest::post(
+                    endpoint,
+                    format!("d={}", values::url_encode(&arg_str(args, 0)?)),
+                ))
+            }
+            "registerprices" => self.api(
+                ApiRequest::get("domain_register.php?prices=true")
+                    .returning(server::ResponseType::Lines),
+            ),
+            "closeport" => {
+                self.assert_local()?;
+                self.api(ApiRequest::post(
+                    "domain_close.php",
+                    format!(
+                        "port={}&d={}",
+                        arg_int(args, 1, 0)?,
+                        values::url_encode(&arg_str(args, 0)?)
+                    ),
+                ))
+            }
+            "mydomains" | "mysubdomains" | "myips" => {
+                self.assert_local()?;
+                let kind = match name {
+                    "mydomains" => "domain",
+                    "mysubdomains" => "subdomain",
+                    _ => "ip",
+                };
+                self.api(
+                    ApiRequest::get(format!("my_domains.php?type={kind}"))
+                        .returning(server::ResponseType::Lines),
+                )
+            }
+            "transfer" => {
+                let amount = arg_int(args, 1, 0)?;
+                if amount < 1 {
+                    return Err(misc_error(format!("Invalid amount: ${amount}.00!")));
+                }
+                // The client builds a body here but sends a bare GET; the
+                // behaviour is reproduced rather than corrected.
+                self.api(ApiRequest::get("transfer.php"))
+            }
+            "sendmailtouser" => {
+                let from = arg_str(args, 0)?;
+                let subject = arg_str(args, 1)?;
+                let body = arg_str(args, 2)?;
+                self.api(ApiRequest::post(
+                    "dsmail.php",
+                    format!(
+                        "action=script_send_to_self&from={}&subject={}&message={}",
+                        values::url_encode(&from),
+                        values::url_encode(&subject),
+                        values::url_encode(&body)
+                    ),
+                ))
+            }
+            "fetch" | "fetcha" | "connect" | "connecta" => {
+                let domain = arg_str(args, 0)?;
+                let port = arg_int(args, 1, 0)?;
+                if !(1..=65535).contains(&port) {
+                    return Err(misc_error(format!("Invalid Port Number: {port}")));
+                }
+                self.api(ApiRequest::post_empty(format!(
+                    "domain_connect.php?d={}&port={port}",
+                    values::url_encode(&domain)
+                )))
+            }
+
+            // The remote and server filesystem calls share one endpoint,
+            // differing only in which domain they name and which operation
+            // they ask for.
+            "remotewrite" | "remoteappend" | "remotesafeappend" | "remotedelete"
+            | "remotedir" | "remoteview" => {
+                self.assert_local()?;
+                let domain = arg_str(args, 0)?;
+                let (op, response) = self.domain_fs_op(name, args, 1)?;
+                self.api(self.domain_fs_request(&domain, &op, response))
+            }
+            "serverwrite" | "serverappend" | "serversafeappend" | "serverdelete"
+            | "serverdir" | "serverview" | "fileserver" => {
+                let domain = self.env.borrow().server_domain.clone();
+                let logical = if name == "fileserver" { "serverview" } else { name };
+                let (op, response) = self.domain_fs_op(logical, args, 0)?;
+                self.api(self.domain_fs_request(&domain, &op, response))
             }
             "waitfor" => {
                 let text = arg_str(args, 0)?;
                 match server::decode_handle(&text) {
-                    Some(id) => Value::str(self.server.borrow_mut().wait(id).body),
+                    Some(id) => {
+                        let shape = self.server.borrow().response_type(id);
+                        let response = self.server.borrow_mut().wait(id);
+                        shape_response(&response, shape)?
+                    }
                     // Anything that is not a handle passes straight through.
                     None => Value::str(text),
                 }
@@ -705,9 +847,12 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                     Some(id) => self.server.borrow_mut().wait(id),
                     None => server::ServerResponse::ok(text),
                 };
+                // The raw form reports the status rather than raising on it.
                 value_array(vec![Value::I4(r.code as i32), Value::str(r.body)])
             }
             "httprequest" => {
+                // An arbitrary URL, which is the one call that does not go
+                // through the game API.
                 let url = arg_str(args, 0)?;
                 let body = arg_str(args, 1)?;
                 let req = if body.is_empty() {
@@ -717,83 +862,23 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 };
                 self.api(req)
             }
-            "uploadstr" => {
-                let d = values::url_encode(&arg_str(args, 0)?);
-                let port = arg_int(args, 1, 0)?;
-                let data = arg_str(args, 2)?;
-                self.api(ApiRequest::post(
-                    format!("upload.php?domain={d}&port={port}"),
-                    data,
-                ))
-            }
-            "downloadstr" => {
-                let d = values::url_encode(&arg_str(args, 0)?);
-                let port = arg_int(args, 1, 0)?;
-                self.api(ApiRequest::get(format!("download.php?domain={d}&port={port}")))
-            }
-            "register" | "unregister" | "closeport" => {
-                let d = values::url_encode(&arg_str(args, 0)?);
-                let extra = if name == "closeport" {
-                    format!("&port={}", arg_int(args, 1, 0)?)
+            "remotetoken" | "servertoken" => {
+                let (domain, info) = if name == "remotetoken" {
+                    (arg_str(args, 0)?, arg_str(args, 1)?)
                 } else {
-                    String::new()
+                    (self.env.borrow().server_domain.clone(), arg_str(args, 0)?)
                 };
-                self.api(ApiRequest::get(format!("domain.php?op={name}&d={d}{extra}")))
-            }
-            "registerprices" => self.api(ApiRequest::get("domain.php?op=prices")),
-            "mydomains" | "mysubdomains" | "myips" => {
-                self.api(ApiRequest::get(format!("domain_list.php?type={name}")))
-            }
-            "stats" => self.api(ApiRequest::get("stats.php")),
-            "transfer" => {
-                let target = values::url_encode(&arg_str(args, 0)?);
-                let amount = arg_int(args, 1, 0)?;
-                let desc = values::url_encode(&arg_str(args, 2)?);
-                self.api(ApiRequest::get(format!(
-                    "transfer.php?to={target}&amount={amount}&desc={desc}"
-                )))
-            }
-            "sendmailtouser" => {
-                let from = values::url_encode(&arg_str(args, 0)?);
-                let subject = values::url_encode(&arg_str(args, 1)?);
-                let body = arg_str(args, 2)?;
+                let is_local = if self.env.borrow().is_local { "true" } else { "false" };
                 self.api(ApiRequest::post(
-                    format!("mail.php?from={from}&subject={subject}"),
-                    body,
+                    "domain_token.php",
+                    format!(
+                        "is_local_script={is_local}d={}&info={}",
+                        values::url_encode(&domain),
+                        values::url_encode(&info)
+                    ),
                 ))
             }
-            "login" | "logout" => {
-                self.api(ApiRequest::get(format!("account.php?op={name}")))
-            }
-            // Remote and server-side file operations share one endpoint,
-            // differing only in which domain they address.
-            "remotewrite" | "remoteappend" | "remotesafeappend" | "remotedelete"
-            | "remotedir" | "remoteview" | "remotetoken" => {
-                let domain = values::url_encode(&arg_str(args, 0)?);
-                let op = name.trim_start_matches("remote");
-                let rest = values::url_encode(&arg_str(args, 1)?);
-                self.api(ApiRequest::post(
-                    format!("domain_fs.php?domain={domain}&op={op}&file={rest}"),
-                    arg_str(args, 2)?,
-                ))
-            }
-            "serverwrite" | "serverappend" | "serversafeappend" | "serverdelete"
-            | "serverdir" | "serverview" | "servertoken" | "fileserver" => {
-                let domain = values::url_encode(&self.env.borrow().server_domain.clone());
-                let op = name.trim_start_matches("server");
-                let rest = values::url_encode(&arg_str(args, 0)?);
-                self.api(ApiRequest::post(
-                    format!("domain_fs.php?domain={domain}&op={op}&file={rest}"),
-                    arg_str(args, 1)?,
-                ))
-            }
-            "fetch" | "fetcha" | "connect" | "connecta" => {
-                let domain = values::url_encode(&arg_str(args, 0)?);
-                let port = arg_int(args, 1, 0)?;
-                self.api(ApiRequest::get(format!(
-                    "connect.php?domain={domain}&port={port}"
-                )))
-            }
+
             "requestreadfile" | "requestwritefile" => Value::str(""),
 
             // Anything else may belong to a library the script opened.
@@ -815,6 +900,62 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
 }
 
 impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
+    /// The operation half of a `domain_filesystem.php` body, and how the
+    /// answer should be shaped.
+    fn domain_fs_op(
+        &self,
+        name: &str,
+        args: &[ArgVal],
+        first: usize,
+    ) -> VbResult<(String, server::ResponseType)> {
+        let file = values::url_encode(&arg_str(args, first)?);
+        let contents = || -> VbResult<String> {
+            Ok(values::url_encode(&arg_str(args, first + 1)?))
+        };
+        Ok(match name.trim_start_matches("remote").trim_start_matches("server") {
+            "write" => (format!("write={file}&filedata={}", contents()?), server::ResponseType::Raw),
+            "append" => (
+                format!("append={file}&filedata={}", contents()?),
+                server::ResponseType::Raw,
+            ),
+            "safeappend" => (
+                format!("safeappend={file}&filedata={}", contents()?),
+                server::ResponseType::Raw,
+            ),
+            "delete" => (format!("delete={file}"), server::ResponseType::Raw),
+            // `dir` always lists the root and comes back as lines.
+            "dir" => ("dir=%2F".to_string(), server::ResponseType::Lines),
+            _ => (
+                format!(
+                    "fileserver={file}&maxlines={}&startline={}",
+                    arg_int(args, first + 2, 0)?,
+                    arg_int(args, first + 1, 0)?
+                ),
+                server::ResponseType::Raw,
+            ),
+        })
+    }
+
+    /// Wrap a filesystem operation in the fields every such request carries.
+    fn domain_fs_request(
+        &self,
+        domain: &str,
+        op: &str,
+        response: server::ResponseType,
+    ) -> ApiRequest {
+        let env = self.env.borrow();
+        let is_local = if env.is_local { "true" } else { "false" };
+        ApiRequest::post(
+            "domain_filesystem.php",
+            format!(
+                "is_local_script={is_local}&keycode={}&d={}&{op}",
+                values::url_encode(&env.file_key),
+                values::url_encode(domain)
+            ),
+        )
+        .returning(response)
+    }
+
     /// Find the script behind a command name.
     ///
     /// A name containing a separator is taken as a path. Otherwise `.ds` is
@@ -1020,6 +1161,29 @@ impl<C: Console, F: FileSystem, S: GameServer> cli::CommandContext
         let path = format!("/system/commands/help/functions/{name}.ds");
         self.host.fs.borrow_mut().exists(&path)
     }
+}
+
+/// Turn a response into the value the script asked for, failing when the
+/// request itself did.
+fn shape_response(
+    response: &server::ServerResponse,
+    shape: server::ResponseType,
+) -> VbResult<Value> {
+    if !response.is_success() {
+        let first_line = response.body.lines().next().unwrap_or("");
+        return Err(VbError::new(
+            VB_OBJECT_ERROR + 6000 + response.code as i32,
+            format!("HTTP error {}: {first_line}", response.code),
+        ));
+    }
+    let trimmed = values::trim_with_newline(&response.body);
+    Ok(match shape {
+        server::ResponseType::Raw => Value::str(&response.body),
+        server::ResponseType::Bool1 => Value::Bool(trimmed == "1"),
+        server::ResponseType::Lines => {
+            string_array(trimmed.split("\r\n").map(|l| l.to_string()).collect())
+        }
+    })
 }
 
 /// Join a `Say`-style parameter list, which the client concatenates.

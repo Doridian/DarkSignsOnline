@@ -422,8 +422,10 @@ fn running_out_of_input_ends_the_script_quietly() {
 fn network_calls_return_a_handle_that_waitfor_resolves() {
     let server = ScriptedServer::new().answer("ping.php", "1");
     let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server);
+    // `IsDomainOnline` asks for the bool_1 shape, so the script gets a
+    // Boolean rather than the server's "1".
     let out = output_of(host, r#"Say WaitFor(IsDomainOnline("example.com"))"#);
-    assert_eq!(out, vec!["1"]);
+    assert_eq!(out, vec!["True"]);
 }
 
 #[test]
@@ -463,7 +465,10 @@ fn lookup_and_getip_hit_their_own_endpoints() {
 #[test]
 fn waitforraw_reports_the_status_code_alongside_the_body() {
     let server = ScriptedServer::new()
-        .answer_with("stats.php", vbscript::game::server::ServerResponse { code: 404, body: "no".into() });
+        .answer_with(
+            "get_user_stats.php",
+            vbscript::game::server::ServerResponse { code: 404, body: "no".into() },
+        );
     let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server);
     let out = output_of(
         host,
@@ -564,7 +569,7 @@ fn a_remote_script_may_still_talk_to_the_server() {
     let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server)
         .with_env(Env { is_local: false, ..Default::default() });
     let out = output_of(host, r#"Say WaitFor(IsDomainOnline("x.com"))"#);
-    assert_eq!(out, vec!["1"]);
+    assert_eq!(out, vec!["True"]);
 }
 
 // ---- real game commands -------------------------------------------------
@@ -683,7 +688,7 @@ fn the_compile_command_round_trips_a_script_through_the_filesystem() {
 
 #[test]
 fn a_compiled_script_can_then_be_included_and_run() {
-    let salt = vbscript::game::crypto::generate_salt().unwrap();
+    let salt = vbscript::game::crypto::generate_salt(&vbscript::interp::NullHost).unwrap();
     let compiled = vbscript::game::crypto::compile_script(
         "Say \"from a compiled script\"\r\n",
         "local",
@@ -751,7 +756,7 @@ fn opening_a_missing_library_reports_it() {
 
 #[test]
 fn a_library_may_itself_be_compiled() {
-    let salt = vbscript::game::crypto::generate_salt().unwrap();
+    let salt = vbscript::game::crypto::generate_salt(&vbscript::interp::NullHost).unwrap();
     let compiled = vbscript::game::crypto::compile_script(
         "Function Answer()\r\n    Answer = 42\r\nEnd Function\r\n",
         "local",

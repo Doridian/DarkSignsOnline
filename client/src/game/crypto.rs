@@ -61,6 +61,12 @@ pub fn encode_base64(data: &[u8]) -> String {
     b64().encode(data)
 }
 
+/// The standard alphabet with padding, which HTTP basic auth requires.
+/// Script payloads use the URL-safe form instead.
+pub fn encode_base64_standard(data: &[u8]) -> String {
+    base64::engine::general_purpose::STANDARD.encode(data)
+}
+
 pub fn decode_base64(text: &str) -> Result<Vec<u8>> {
     b64()
         .decode(text.trim())
@@ -306,14 +312,16 @@ pub fn compile_script(source: &str, script_key: &str, salt: [u8; 16]) -> Result<
     Ok(format!("{ENCRYPTED_HEADER}{body}\r\n"))
 }
 
-/// A salt for a new payload. The client uses the system CSPRNG; this reads
-/// the OS source directly so the crate needs no random-number dependency.
-pub fn generate_salt() -> Result<[u8; 16]> {
-    use std::io::Read;
+/// A salt for a new payload, drawn from the host's random source.
+///
+/// The host provides it because a browser has no `/dev/urandom`; a
+/// predictable salt would be worse than failing, so a host that cannot
+/// supply randomness gets an error.
+pub fn generate_salt(host: &dyn crate::interp::Host) -> Result<[u8; 16]> {
     let mut salt = [0u8; 16];
-    std::fs::File::open("/dev/urandom")
-        .and_then(|mut f| f.read_exact(&mut salt))
-        .map_err(|e| CryptoError(format!("cannot read system randomness: {e}")))?;
+    if !host.random_bytes(&mut salt) {
+        return Err(CryptoError("no source of randomness available".into()));
+    }
     Ok(salt)
 }
 
@@ -441,8 +449,9 @@ mod tests {
 
     #[test]
     fn salts_differ_between_calls() {
-        let a = generate_salt().unwrap();
-        let b = generate_salt().unwrap();
+        let host = crate::interp::NullHost;
+        let a = generate_salt(&host).unwrap();
+        let b = generate_salt(&host).unwrap();
         assert_ne!(a, b, "salt must not repeat");
     }
 }
@@ -484,7 +493,8 @@ mod fixture_tests {
     #[test]
     fn round_trips_the_fixture_plaintext() {
         let plain = decrypt_script(COMPILED, SCRIPT_KEY).unwrap();
-        let recompiled = compile_script(&plain, SCRIPT_KEY, generate_salt().unwrap()).unwrap();
+        let salt = generate_salt(&crate::interp::NullHost).unwrap();
+        let recompiled = compile_script(&plain, SCRIPT_KEY, salt).unwrap();
         assert_eq!(decrypt_script(&recompiled, SCRIPT_KEY).unwrap(), plain);
     }
 

@@ -86,6 +86,47 @@ pub trait Host {
     }
     /// Destination for `MsgBox` and similar output.
     fn echo(&self, _text: &str) {}
+
+    /// Milliseconds since the Unix epoch, for `Now`, `Date` and `Timer`.
+    ///
+    /// The default reads the system clock, which a browser build overrides
+    /// because `wasm32-unknown-unknown` has no clock of its own.
+    fn now_unix_millis(&self) -> f64 {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs_f64() * 1000.0)
+                .unwrap_or(0.0)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            // Without a host-supplied clock there is nothing sensible to
+            // return, so dates start at the epoch rather than panicking.
+            0.0
+        }
+    }
+
+    /// Fill `buffer` with cryptographically strong random bytes.
+    ///
+    /// Used for encryption salts. The default reads the system source; a
+    /// browser build overrides it with `crypto.getRandomValues`. Returning
+    /// `false` means no randomness was available, and the caller reports
+    /// that rather than using a predictable salt.
+    fn random_bytes(&self, buffer: &mut [u8]) -> bool {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use std::io::Read;
+            std::fs::File::open("/dev/urandom")
+                .and_then(|mut f| f.read_exact(buffer))
+                .is_ok()
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = buffer;
+            false
+        }
+    }
 }
 
 /// A host that provides nothing.
