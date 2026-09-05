@@ -1936,6 +1936,19 @@ impl Interp {
         Err(err::sub_not_defined(name))
     }
 
+    /// Whether a name is currently a variable, procedure or constant.
+    ///
+    /// The console uses this to tell `echo myvar` — which passes a value —
+    /// from `echo myvar` where no such variable exists and the word is text.
+    pub fn is_defined(&self, name: &str) -> bool {
+        let key = name.to_ascii_lowercase();
+        self.lookup_slot(&key).is_some()
+            || self.consts.contains_key(key.as_str())
+            || self.funcs.contains_key(key.as_str())
+            || self.classes.contains_key(key.as_str())
+            || self.props.contains_key(&(Rc::from(key.as_str()), PropKind::Get))
+    }
+
     pub fn err_state(&self) -> &ErrState {
         &self.err
     }

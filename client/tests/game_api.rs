@@ -696,3 +696,336 @@ fn a_compiled_script_can_then_be_included_and_run() {
     let out = output_of(host, r#"Include "lib.ds""#);
     assert_eq!(out, vec!["from a compiled script"]);
 }
+
+// ---- libraries ----------------------------------------------------------
+
+#[test]
+fn dlopen_loads_a_library_from_the_libs_directory() {
+    let fs = MemoryFs::new().with_file(
+        "/system/libs/mathlib.ds",
+        "Function Cube(n)\r\n    Cube = n * n * n\r\nEnd Function\r\n",
+    );
+    let host = GameHost::new(RecordingConsole::new(), fs, ScriptedServer::new());
+    let out = output_of(
+        host,
+        r#"
+        DLOpen "mathlib"
+        Say Cube(3)
+        "#,
+    );
+    assert_eq!(out, vec!["27"]);
+}
+
+#[test]
+fn opening_the_same_library_twice_does_not_redefine_it() {
+    let fs = MemoryFs::new().with_file(
+        "/system/libs/once.ds",
+        "Dim Counter\r\nCounter = Counter + 1\r\n",
+    );
+    let host = GameHost::new(RecordingConsole::new(), fs, ScriptedServer::new());
+    let out = output_of(
+        host,
+        r#"
+        DLOpen "once"
+        DLOpen "once"
+        Say Counter
+        "#,
+    );
+    assert_eq!(out, vec!["1"], "the second open is a no-op");
+}
+
+#[test]
+fn dlopen_refuses_to_reach_outside_the_libs_directory() {
+    let fs = MemoryFs::new().with_file("/secret.ds", "Say \"leaked\"\r\n");
+    let host = GameHost::new(RecordingConsole::new(), fs, ScriptedServer::new());
+    // A name with a separator is ignored rather than loaded.
+    let out = output_of(host, r#"DLOpen "../secret""#);
+    assert!(out.is_empty(), "nothing from outside /system/libs ran");
+}
+
+#[test]
+fn opening_a_missing_library_reports_it() {
+    let (_, r) = run(plain_host(), r#"DLOpen "nosuchlib""#);
+    assert!(r.unwrap_err().contains("File not found"));
+}
+
+#[test]
+fn a_library_may_itself_be_compiled() {
+    let salt = vbscript::game::crypto::generate_salt().unwrap();
+    let compiled = vbscript::game::crypto::compile_script(
+        "Function Answer()\r\n    Answer = 42\r\nEnd Function\r\n",
+        "local",
+        salt,
+    )
+    .unwrap();
+    let fs = MemoryFs::new().with_file("/system/libs/secret.ds", &compiled);
+    let host = GameHost::new(RecordingConsole::new(), fs, ScriptedServer::new());
+    let out = output_of(host, "DLOpen \"secret\"\r\nSay Answer()");
+    assert_eq!(out, vec!["42"]);
+}
+
+#[test]
+fn dlopenhash_uses_a_cached_library_when_it_hashes_correctly() {
+    let source = "Function Cached()\r\n    Cached = \"from cache\"\r\nEnd Function\r\n";
+    let hash = vbscript::game::crypto::sha256_hex(source.as_bytes());
+    let fs = MemoryFs::new().with_file(&format!("/system/libs/hash_{hash}.ds"), source);
+    let host = GameHost::new(RecordingConsole::new(), fs, ScriptedServer::new());
+    let (host, r) = run(host, &format!("DLOpenHash \"{hash}\"\r\nSay Cached()"));
+    r.unwrap();
+    assert_eq!(host.console.borrow().output(), vec!["from cache"]);
+    assert!(
+        host.server.borrow().requests.is_empty(),
+        "a good cache entry means no download"
+    );
+}
+
+#[test]
+fn dlopenhash_downloads_and_caches_when_the_copy_is_wrong() {
+    let source = "Function Fetched()\r\n    Fetched = \"from server\"\r\nEnd Function\r\n";
+    let hash = vbscript::game::crypto::sha256_hex(source.as_bytes());
+    // The cached file has the right name but the wrong contents.
+    let fs = MemoryFs::new().with_file(&format!("/system/libs/hash_{hash}.ds"), "tampered");
+    let server = ScriptedServer::new().answer("libraries.php", source);
+    let host = GameHost::new(RecordingConsole::new(), fs, server);
+
+    let (host, r) = run(host, &format!("DLOpenHash \"{hash}\"\r\nSay Fetched()"));
+    r.unwrap();
+    assert_eq!(host.console.borrow().output(), vec!["from server"]);
+    // The good copy replaces the bad one.
+    assert_eq!(
+        host.fs.borrow().read(&format!("/system/libs/hash_{hash}.ds")).unwrap(),
+        source
+    );
+}
+
+#[test]
+fn dlopenhash_refuses_a_download_that_does_not_match_its_hash() {
+    let hash = "a".repeat(64);
+    let server = ScriptedServer::new().answer("libraries.php", "not the right content");
+    let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server);
+    let (_, r) = run(host, &format!("DLOpenHash \"{hash}\""));
+    assert!(r.unwrap_err().contains("Could not download hash library"));
+}
+
+#[test]
+fn dlopenhash_rejects_a_name_that_is_not_a_hash() {
+    let (_, r) = run(plain_host(), r#"DLOpenHash "nothex!""#);
+    assert!(r.unwrap_err().contains("Invalid hash"));
+}
+
+#[test]
+fn dlputhash_uploads_the_library() {
+    let (host, r) = run(plain_host(), r#"DLPutHash "abcdef", "some source""#);
+    r.unwrap();
+    let server = host.server.borrow();
+    assert_eq!(server.paths(), vec!["libraries.php"]);
+    assert_eq!(
+        server.requests[0].body.as_deref(),
+        Some("put=abcdef&data=some+source")
+    );
+}
+
+// ---- termlib ------------------------------------------------------------
+
+#[test]
+fn termlib_names_are_hidden_until_it_is_opened() {
+    let (_, r) = run(plain_host(), r#"SaySlow 1, "hello", "green""#);
+    assert!(
+        r.unwrap_err().contains("not defined"),
+        "termlib must be opened first, as in the client"
+    );
+}
+
+#[test]
+fn sayslow_types_the_line_out_one_character_at_a_time() {
+    let (host, r) = run(
+        plain_host(),
+        "DLOpen \"termlib\"\r\nSaySlow 0, \"abc\", \"green\"",
+    );
+    r.unwrap();
+    let console = host.console.borrow();
+    // The first character starts the line, then it is redrawn as it grows.
+    assert_eq!(
+        console.output(),
+        vec!["a{{green}}", "ab", "abc"],
+        "each step redraws the same line"
+    );
+}
+
+#[test]
+fn sayslow_prints_the_whole_line_at_once_when_output_is_disabled() {
+    let host = plain_host().with_env(Env { output_disabled: false, ..Default::default() });
+    let (host, r) = run(
+        host,
+        "DLOpen \"termlib\"\r\nSaySlow 0, \"abc\", \"{green}\"",
+    );
+    r.unwrap();
+    // The style argument has its braces normalised.
+    assert_eq!(host.console.borrow().output()[0], "a{{green}}");
+}
+
+#[test]
+fn qreadline_normalises_the_answer() {
+    let host = GameHost::new(
+        RecordingConsole::new().with_input(["  YES  "]),
+        MemoryFs::new(),
+        ScriptedServer::new(),
+    );
+    let out = output_of(host, "DLOpen \"termlib\"\r\nSay \"[\" & QReadLine(\"?\") & \"]\"");
+    assert_eq!(out, vec!["?", "[yes]"]);
+}
+
+#[test]
+fn mission_progress_reads_back_what_it_stored() {
+    let host = plain_host().with_env(Env { script_owner: "carol".into(), ..Default::default() });
+    let (host, r) = run(
+        host,
+        r#"
+        DLOpen "termlib"
+        SetMissionProgress "m1", "stage", "2"
+        Say GetMissionProgress("m1", "stage")
+        Say IntMissionProgress("m1", "stage")
+        Say IntMissionProgress("m1", "never-set")
+        "#,
+    );
+    r.unwrap();
+    assert_eq!(host.console.borrow().output(), vec!["2", "2", "0"]);
+}
+
+#[test]
+fn boolean_mission_progress_flips_between_set_and_clear() {
+    let out = output_of(
+        plain_host(),
+        r#"
+        DLOpen "termlib"
+        Say BoolMissionProgress("m", "flag")
+        BoolSetMissionProgress "m", "flag"
+        Say BoolMissionProgress("m", "flag")
+        BoolClearMissionProgress "m", "flag"
+        Say BoolMissionProgress("m", "flag")
+        "#,
+    );
+    assert_eq!(out, vec!["False", "True", "False"]);
+}
+
+#[test]
+fn mission_progress_counts_up() {
+    let out = output_of(
+        plain_host(),
+        r#"
+        DLOpen "termlib"
+        IncMissionProgress "m", "count"
+        IncMissionProgress "m", "count"
+        IncMissionProgress "m", "count"
+        Say IntMissionProgress("m", "count")
+        "#,
+    );
+    assert_eq!(out, vec!["3"]);
+}
+
+#[test]
+fn getasciiwithprompt_shows_the_key_it_read() {
+    let host = GameHost::new(
+        // 'y'
+        RecordingConsole::new().with_keys([121]),
+        MemoryFs::new(),
+        ScriptedServer::new(),
+    );
+    let (host, r) = run(
+        host,
+        "DLOpen \"termlib\"\r\nDim k\r\nk = GetAsciiWithCPrompt(\"Pick\")\r\nSay k",
+    );
+    r.unwrap();
+    let out = host.console.borrow().output();
+    assert_eq!(out[0], "{{noprespace}}Pick> [_]", "the prompt shows a blank");
+    assert_eq!(out[1], "{{noprespace}}Pick> [y]", "then the key that was read");
+    assert_eq!(out[2], "121");
+}
+
+#[test]
+fn saywithbgcolor_writes_the_line_and_draws_behind_it() {
+    let (host, r) = run(
+        plain_host(),
+        "DLOpen \"termlib\"\r\nSayWithBGColor RGB(0,0,255), \"warning\"",
+    );
+    r.unwrap();
+    let console = host.console.borrow();
+    assert_eq!(console.output(), vec!["warning"]);
+    assert!(matches!(
+        console.events[1],
+        ConsoleEvent::Draw { rgb: 0xFF0000, .. }
+    ));
+}
+
+// ---- the console command line -------------------------------------------
+
+#[test]
+fn a_typed_command_is_rewritten_and_then_runs() {
+    // The console's real path: rewrite what the player typed, then run it.
+    let fs = MemoryFs::new().with_file(
+        "/system/commands/greet.ds",
+        r#"Say "hello, " & ArgV(1)"#,
+    );
+    let host = Rc::new(GameHost::new(RecordingConsole::new(), fs, ScriptedServer::new()));
+    let mut it = Interp::with_host(host.clone());
+
+    let mut state = vbscript::game::cli::CommandState { dscript: true };
+    let script = host
+        .parse_command_line(&it, "greet world", &mut state)
+        .expect("the line parses");
+    assert_eq!(script, r#"Call Run("greet", "world")"#);
+
+    run_script(&mut it, &script).expect("the rewritten line runs");
+    assert_eq!(host.console.borrow().output(), vec!["hello, world"]);
+}
+
+#[test]
+fn the_command_line_resolves_names_against_the_live_session() {
+    let fs = MemoryFs::new().with_file("/system/commands/echo.ds", "Say ArgV(1)");
+    let host = Rc::new(GameHost::new(RecordingConsole::new(), fs, ScriptedServer::new()));
+    let mut it = Interp::with_host(host.clone());
+    let mut state = vbscript::game::cli::CommandState { dscript: true };
+
+    // With no such variable the word is text.
+    assert_eq!(
+        host.parse_command_line(&it, "echo target", &mut state).unwrap(),
+        r#"Call Run("echo", "target")"#
+    );
+
+    // Once it exists, the same line passes the variable instead.
+    it.run_source(r#"Dim target : target = "a value""#).unwrap();
+    assert_eq!(
+        host.parse_command_line(&it, "echo target", &mut state).unwrap(),
+        r#"Call Run("echo", target)"#
+    );
+}
+
+#[test]
+fn typed_script_is_left_alone() {
+    let host = Rc::new(plain_host());
+    let it = Interp::with_host(host.clone());
+    let mut state = vbscript::game::cli::CommandState { dscript: true };
+    // An assignment, and anything with VBScript punctuation, is script.
+    for line in [r#"x = 1"#, r#"Say("direct")"#, r#"If x Then Say "y""#] {
+        assert_eq!(
+            host.parse_command_line(&it, line, &mut state).unwrap(),
+            line,
+            "{line} should pass through"
+        );
+    }
+}
+
+#[test]
+fn a_bare_host_call_is_rewritten_but_still_works() {
+    // `Say "hi"` has no command file behind it, so it becomes a call whose
+    // result is printed — which still reaches the host's Say.
+    let host = Rc::new(plain_host());
+    let mut it = Interp::with_host(host.clone());
+    let mut state = vbscript::game::cli::CommandState { dscript: true };
+
+    let script = host.parse_command_line(&it, r#"Say "hi""#, &mut state).unwrap();
+    assert_eq!(script, r#"PrintVarSingleIfSet say("hi")"#);
+
+    run_script(&mut it, &script).expect("the rewritten call runs");
+    assert_eq!(host.console.borrow().output()[0], "hi");
+}

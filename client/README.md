@@ -46,18 +46,19 @@ Two suites, both run by `cargo test`:
 | `regexp.vbs` | 108 assertions, all pass |
 | `noexplicit.vbs` | 5 assertions, all pass |
 | `api.vbs` | 2161 assertions, 3 known failures (see below) |
-| `.ds` scripts | 298 of 301 parse; 243 of 298 also run to completion |
-| Host API | 51 integration tests, 68 unit tests |
+| `.ds` scripts | 298 of 301 parse; 242 of 298 also run to completion |
+| Host API | 74 integration tests, 111 unit tests |
 
 Of the 55 scripts that do not run to completion, 42 sit in a `While True`
 menu loop waiting on player input and stop only when the step budget runs
 out, and the rest fail because the run supplies no command-line arguments and
 no live server. None of them indicate an interpreter or API problem.
 
-The corpus run also reports the names the host does not provide. Those are
-down to twelve — `SaySlow`, `QReadLine`, the mission-progress helpers and so
-on — and all of them are defined in VBScript by the `termlib` library a
-script pulls in with `DLOpen`, not by the host.
+The corpus run also reports the names the host does not provide, which is
+down to three. `pingport` is a command name, reached through the command-line
+parser rather than as a procedure. `SaySlow` and `QReadLine` come from
+`specialstorage.ds`, which uses termlib without opening it first and so fails
+the same way in the real client.
 
 The three `.ds` scripts that do not parse are not VBScript: `xnull.ds` and
 `xnullb.ds` have an `If` with no `Then`, and `xnullrg.ds` is written in the
@@ -94,15 +95,51 @@ the INI reader.
 *Everything with side effects* goes through one of three traits, so the
 desktop client, a headless run and the tests can each supply their own:
 
-| Trait | Covers | Test double |
+| Trait | Covers | Implementations |
 |---|---|---|
 | [`Console`](src/game/console.rs) | `Say`, `Draw`, `ReadLine`, `TextWidth`, … | `RecordingConsole` |
-| [`FileSystem`](src/game/fs.rs) | `FileExists`, `ReadDir`, `Cat`, `WriteINI`, … | `MemoryFs` |
-| [`GameServer`](src/game/server.rs) | every networked call | `ScriptedServer` |
+| [`FileSystem`](src/game/fs.rs) | `FileExists`, `ReadDir`, `Cat`, `WriteINI`, … | `MemoryFs`, `DiskFs` |
+| [`GameServer`](src/game/server.rs) | every networked call | `ScriptedServer`, `OfflineServer` |
+
+`DiskFs` is rooted at the player's directory and normalises every path
+before joining it, so a script cannot reach outside even if it builds the
+path itself.
+
+### Libraries
+
+`DLOpen "name"` loads `/system/libs/name.ds`; a name containing a path
+separator is ignored, which is how the client keeps a script inside that
+directory. `DLOpenHash` is content-addressed: the copy under `/system/libs`
+is only trusted when it hashes to the name it is filed under, and otherwise
+refetched from the server.
+
+`DLOpen "termlib"` is special — in the client it registers a native class
+rather than loading a script, so [`termlib.rs`](src/game/termlib.rs) provides
+its seventeen members (`SaySlow`, `QReadLine`, the mission-progress helpers).
+They stay invisible until the script opens the library, matching the client,
+so a script that forgets `DLOpen` fails the same way it would in game.
 
 The networked surface needs only one seam because the client funnels it all
 through `DoDownloadAPI`: a call starts a request and returns a handle, and
 `WaitFor` resolves it later.
+
+### For the UI
+
+Two pieces exist for the renderer and the input line rather than for
+scripts:
+
+[`markup.rs`](src/game/markup.rs) parses the `{{...}}` markup into styled
+runs — font, size, colour, flash, alignment — so a renderer receives
+segments it can draw rather than a string to re-parse. `RecordingConsole`
+exposes `styled_output()` for exactly that.
+
+[`cli.rs`](src/game/cli.rs) is the console's input path. The player types
+`dir /home`, which is not VBScript, so it is rewritten as
+`Call Run("dir", "/home")` before the engine sees it; anything that looks
+like script is passed through untouched. Bare words resolve against the live
+session, so `echo target` passes a variable if one exists and the text
+otherwise. `GameHost::parse_command_line` wires it to the running
+interpreter.
 
 ### Script encryption
 

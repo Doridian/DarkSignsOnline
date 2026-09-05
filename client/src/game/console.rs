@@ -6,7 +6,7 @@
 //! [`RecordingConsole`] is a character-cell implementation for tests and
 //! headless runs.
 
-use super::values::strip_markup;
+use super::markup;
 
 /// A horizontal rule's fill style, as `Draw` names them.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -180,9 +180,15 @@ impl RecordingConsole {
     pub fn plain_output(&self) -> String {
         self.output()
             .iter()
-            .map(|l| strip_markup(l))
+            .map(|l| markup::parse(l).text())
             .collect::<Vec<_>>()
             .join("\n")
+    }
+
+    /// The main channel's output parsed into styled runs, which is what a
+    /// renderer consumes.
+    pub fn styled_output(&self) -> Vec<markup::Line> {
+        self.output().iter().map(|l| markup::parse(l)).collect()
     }
 }
 
@@ -228,7 +234,9 @@ impl Console for RecordingConsole {
         0
     }
     fn text_width(&self, text: &str) -> i64 {
-        strip_markup(text).chars().count() as i64
+        // A character cell per visible character. The desktop client
+        // overrides this with real font metrics.
+        markup::parse(text).text().chars().count() as i64
     }
     fn text_height(&self, _text: &str) -> i64 {
         1

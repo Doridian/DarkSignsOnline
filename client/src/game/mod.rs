@@ -11,11 +11,14 @@
 //! host functions, so names like `SaySlow` are defined in VBScript and are
 //! deliberately absent here.
 
+pub mod cli;
 pub mod console;
 pub mod crypto;
 pub mod fs;
+pub mod markup;
 pub mod path;
 pub mod server;
+pub mod termlib;
 pub mod values;
 
 use std::cell::RefCell;
@@ -28,6 +31,10 @@ use crate::value::{VbArray, Value};
 use console::{Channel, Console, DrawMode};
 use fs::{FileSystem, FsError};
 use server::{ApiRequest, GameServer};
+
+/// Where a bare command name is looked for, in order. The working
+/// directory comes last so a system command wins.
+const COMMAND_PATH: &[&str] = &["/system/commands", "."];
 
 /// `vbObjectError`, the base the client adds its own error numbers to.
 const VB_OBJECT_ERROR: i32 = 0x8004_0000u32 as i32;
@@ -77,6 +84,14 @@ pub struct Env {
     pub quit: bool,
     /// Text captured instead of printed, when running under `Capture`.
     pub captured: Option<String>,
+    /// Suppresses console output entirely, which `Run` sets for a script
+    /// whose output the caller does not want.
+    pub output_disabled: bool,
+    /// Output is being collected rather than shown.
+    pub output_redirected: bool,
+    /// Libraries `DLOpen` has already brought in, so a second call is free
+    /// and a library cannot be included twice.
+    pub loaded_libraries: std::collections::BTreeSet<String>,
 }
 
 impl Default for Env {
@@ -93,6 +108,9 @@ impl Default for Env {
             is_local: true,
             quit: false,
             captured: None,
+            output_disabled: false,
+            output_redirected: false,
+            loaded_libraries: std::collections::BTreeSet::new(),
         }
     }
 }
@@ -146,9 +164,12 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
     }
 
     /// Write a line, honouring an active `Capture`.
-    fn emit(&self, channel: Channel, text: &str) {
+    pub(crate) fn emit(&self, channel: Channel, text: &str) {
         // Capture is checked and appended under one borrow, which is
         // released before anything else runs.
+        if self.env.borrow().output_disabled {
+            return;
+        }
         let capturing = {
             let mut env = self.env.borrow_mut();
             match &mut env.captured {
@@ -167,7 +188,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
 }
 
 /// Coerce one argument to a string, treating a missing one as empty.
-fn arg_str(args: &[ArgVal], i: usize) -> VbResult<String> {
+pub(crate) fn arg_str(args: &[ArgVal], i: usize) -> VbResult<String> {
     match args.get(i) {
         None => Ok(String::new()),
         Some(a) if a.is_missing() => Ok(String::new()),
@@ -176,7 +197,7 @@ fn arg_str(args: &[ArgVal], i: usize) -> VbResult<String> {
 }
 
 /// Coerce one argument to a whole number, with a default when absent.
-fn arg_int(args: &[ArgVal], i: usize, default: i64) -> VbResult<i64> {
+pub(crate) fn arg_int(args: &[ArgVal], i: usize, default: i64) -> VbResult<i64> {
     match args.get(i) {
         None => Ok(default),
         Some(a) if a.is_missing() => Ok(default),
@@ -353,9 +374,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             )),
             "resolvecommand" => {
                 self.assert_local()?;
-                // Commands live in /system/commands as `<name>.ds`.
-                let cmd = arg_str(args, 0)?;
-                Value::str(format!("/system/commands/{}.ds", cmd.to_ascii_lowercase()))
+                Value::str(self.resolve_command(&arg_str(args, 0)?).unwrap_or_default())
             }
             "cd" => {
                 self.assert_local()?;
@@ -588,7 +607,10 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             }
             "run" | "runa" => {
                 self.assert_local()?;
-                let p = self.resolve(&arg_str(args, 0)?);
+                let name = arg_str(args, 0)?;
+                let p = self
+                    .resolve_command(&name)
+                    .ok_or_else(|| fs_error(FsError::NotFound(name)))?;
                 let src = self.fs.borrow_mut().read(&p).map_err(fs_error)?;
                 let key = self.env.borrow().file_key.clone();
                 let src = crypto::decrypt_script(&src, &key)
@@ -601,7 +623,10 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             }
             "capture" | "capturea" => {
                 self.assert_local()?;
-                let p = self.resolve(&arg_str(args, 0)?);
+                let name = arg_str(args, 0)?;
+                let p = self
+                    .resolve_command(&name)
+                    .ok_or_else(|| fs_error(FsError::NotFound(name)))?;
                 let src = self.fs.borrow_mut().read(&p).map_err(fs_error)?;
                 let key = self.env.borrow().file_key.clone();
                 let src = crypto::decrypt_script(&src, &key)
@@ -612,9 +637,37 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 let src = arg_str(args, 0)?;
                 self.run_nested(it, &src, args, 1, true)?
             }
-            // Library loading is a server fetch in the client; a host with
-            // no library source treats it as satisfied.
-            "dlopen" | "dlopenhash" | "dlputhash" => Value::Empty,
+            "dlopen" => {
+                self.dl_open(it, &arg_str(args, 0)?)?;
+                Value::Empty
+            }
+            "dlopenhash" => {
+                self.dl_open_hash(it, &arg_str(args, 0)?)?;
+                Value::Empty
+            }
+            "dlputhash" => {
+                self.assert_local()?;
+                let hash = arg_str(args, 0)?;
+                if !values::is_hex(&hash) {
+                    return Err(misc_error("Invalid hash"));
+                }
+                let data = arg_str(args, 1)?;
+                let handle = self.api(ApiRequest::post(
+                    "libraries.php",
+                    format!(
+                        "put={}&data={}",
+                        values::url_encode(&hash.to_lowercase()),
+                        values::url_encode(&data)
+                    ),
+                ));
+                // The client waits for the upload before returning.
+                if let Some(id) = server::decode_handle(&handle.to_vb_string()?) {
+                    self.server.borrow_mut().wait(id);
+                }
+                Value::Empty
+            }
+            "isoutputdisabled" => Value::Bool(self.env.borrow().output_disabled),
+            "isoutputredirected" => Value::Bool(self.env.borrow().output_redirected),
 
             // ---- the game server ------------------------------------------
             "lookup" => {
@@ -743,19 +796,147 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             }
             "requestreadfile" | "requestwritefile" => Value::str(""),
 
-            _ => return Ok(None),
+            // Anything else may belong to a library the script opened.
+            other => {
+                if self.env.borrow().loaded_libraries.contains("termlib")
+                    && termlib::provides(other)
+                {
+                    match termlib::call(self, other, args)? {
+                        Some(v) => v,
+                        None => return Ok(None),
+                    }
+                } else {
+                    return Ok(None);
+                }
+            }
         };
         Ok(Some(v))
     }
 }
 
 impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
-    fn mission_file(&self, mission_id: &str) -> String {
+    /// Find the script behind a command name.
+    ///
+    /// A name containing a separator is taken as a path. Otherwise `.ds` is
+    /// appended if missing and the search path is tried in order, so a
+    /// command in the working directory can shadow nothing but is still
+    /// reachable. `None` means no such command.
+    pub fn resolve_command(&self, command: &str) -> Option<String> {
+        if command.contains('/') || command.contains('\\') {
+            let path = self.resolve(command);
+            return self.fs.borrow_mut().exists(&path).then_some(path);
+        }
+
+        let file = if command.to_ascii_lowercase().ends_with(".ds") {
+            command.to_string()
+        } else {
+            format!("{command}.ds")
+        };
+        for dir in COMMAND_PATH {
+            let path = self.resolve(&format!("{dir}/{file}"));
+            if self.fs.borrow_mut().exists(&path) {
+                return Some(path);
+            }
+        }
+        None
+    }
+
+    /// Rewrite a line the player typed into the VBScript to run.
+    ///
+    /// This is the console's entry point: it decides whether `dir /home` is
+    /// a command or script, and resolves bare words against what the session
+    /// has actually defined.
+    pub fn parse_command_line(
+        &self,
+        it: &Interp,
+        input: &str,
+        state: &mut cli::CommandState,
+    ) -> Result<String, cli::CommandError> {
+        let ctx = HostCommandContext { host: self, interp: it };
+        cli::parse_command_line(input, state, &ctx, false)
+    }
+
+    /// `DLOpen`: bring in a library by name.
+    ///
+    /// `termlib` is built in, so opening it only records that its names are
+    /// now visible. Any other name is a script under `/system/libs`. A name
+    /// containing a path separator is ignored rather than rejected, which is
+    /// what the client does — it stops a script reaching outside that
+    /// directory.
+    fn dl_open(&self, it: &mut Interp, library: &str) -> VbResult<()> {
+        let name = library.trim().to_ascii_lowercase();
+
+        if name == "termlib" {
+            self.env.borrow_mut().loaded_libraries.insert(name);
+            return Ok(());
+        }
+        if name.contains('/') || name.contains('\\') {
+            return Ok(());
+        }
+        if !self.env.borrow_mut().loaded_libraries.insert(name.clone()) {
+            // Already open; including it twice would redefine its procedures.
+            return Ok(());
+        }
+
+        let path = format!("/system/libs/{name}.ds");
+        let source = self.fs.borrow_mut().read(&path).map_err(fs_error)?;
+        let source = self.decrypt_library(&source)?;
+        it.execute(&source, false)
+    }
+
+    /// `DLOpenHash`: bring in a library by content hash.
+    ///
+    /// The copy under `/system/libs` is a cache. It is only trusted when it
+    /// hashes to the name it is filed under, so a corrupt or tampered file
+    /// is refetched rather than run.
+    fn dl_open_hash(&self, it: &mut Interp, hash: &str) -> VbResult<()> {
+        if !values::is_hex(hash) {
+            return Err(misc_error("Invalid hash"));
+        }
+        let hash = hash.to_lowercase();
+        let path = format!("/system/libs/hash_{hash}.ds");
+
+        let cached = self.fs.borrow_mut().read(&path).unwrap_or_default();
+        let source = if crypto::sha256_hex(cached.as_bytes()) == hash {
+            cached
+        } else {
+            // Drop the bad cache entry and ask the server for the real one.
+            let _ = self.fs.borrow_mut().delete(&path);
+            let handle = self.api(ApiRequest::post(
+                "libraries.php",
+                format!("get={}", values::url_encode(&hash)),
+            ));
+            let body = match server::decode_handle(&handle.to_vb_string()?) {
+                Some(id) => self.server.borrow_mut().wait(id).body,
+                None => String::new(),
+            };
+            if crypto::sha256_hex(body.as_bytes()) != hash {
+                return Err(misc_error("Could not download hash library correctly :("));
+            }
+            self.fs.borrow_mut().write(&path, &body).map_err(fs_error)?;
+            body
+        };
+
+        if !self.env.borrow_mut().loaded_libraries.insert(format!("hash_{hash}")) {
+            return Ok(());
+        }
+        let source = self.decrypt_library(&source)?;
+        it.execute(&source, false)
+    }
+
+    /// A library may itself be compiled, in which case it is keyed the same
+    /// way a downloaded script is.
+    fn decrypt_library(&self, source: &str) -> VbResult<String> {
+        let key = self.env.borrow().file_key.clone();
+        crypto::decrypt_script(source, &key).map_err(|e| misc_error(e.to_string()))
+    }
+
+    pub(crate) fn mission_file(&self, mission_id: &str) -> String {
         let safe = mission_id.replace(['/', '\\'], "_");
         format!("/system/missions/{}_{safe}.ini", self.env.borrow().script_owner)
     }
 
-    fn read_ini(&self, file: &str, section: &str, key: &str) -> String {
+    pub(crate) fn read_ini(&self, file: &str, section: &str, key: &str) -> String {
         match self.fs.borrow_mut().read(file) {
             Ok(text) => fs::ini_get(&text, section, key),
             // A missing file reads as a missing key.
@@ -763,7 +944,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
         }
     }
 
-    fn write_ini(&self, file: &str, section: &str, key: &str, value: &str) -> VbResult<()> {
+    pub(crate) fn write_ini(&self, file: &str, section: &str, key: &str, value: &str) -> VbResult<()> {
         let text = self.fs.borrow_mut().read(file).unwrap_or_default();
         let updated = fs::ini_set(&text, section, key, value);
         self.fs.borrow_mut().write(file, &updated).map_err(fs_error)
@@ -814,6 +995,30 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
             Err(e) => return Err(e),
         }
         Ok(Value::str(out.unwrap_or_default()))
+    }
+}
+
+/// Answers the command-line parser's questions from the live session.
+struct HostCommandContext<'a, C, F, S> {
+    host: &'a GameHost<C, F, S>,
+    interp: &'a Interp,
+}
+
+impl<C: Console, F: FileSystem, S: GameServer> cli::CommandContext
+    for HostCommandContext<'_, C, F, S>
+{
+    fn command_exists(&self, name: &str) -> bool {
+        let path = format!("/system/commands/{}.ds", name.to_ascii_lowercase());
+        self.host.fs.borrow_mut().exists(&path)
+    }
+
+    fn is_defined(&self, name: &str) -> bool {
+        self.interp.is_defined(name)
+    }
+
+    fn is_help_topic(&self, name: &str) -> bool {
+        let path = format!("/system/commands/help/functions/{name}.ds");
+        self.host.fs.borrow_mut().exists(&path)
     }
 }
 

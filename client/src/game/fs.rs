@@ -214,6 +214,133 @@ impl FileSystem for MemoryFs {
     }
 }
 
+/// A filesystem backed by a real directory.
+///
+/// Every game path is resolved and stripped of `..` before it is joined to
+/// the root, so a script cannot reach outside the player's directory even if
+/// it constructs the path itself.
+pub struct DiskFs {
+    root: std::path::PathBuf,
+}
+
+impl DiskFs {
+    pub fn new(root: impl Into<std::path::PathBuf>) -> DiskFs {
+        DiskFs { root: root.into() }
+    }
+
+    /// Map a game path onto a real one, refusing anything that would escape
+    /// the root.
+    fn real(&self, path: &str) -> std::path::PathBuf {
+        let normalized = super::path::resolve_rel("/", path);
+        let mut out = self.root.clone();
+        for part in normalized.split('/') {
+            // `resolve_rel` has already collapsed these, but a second check
+            // costs nothing and this is the sandbox boundary.
+            if part.is_empty() || part == "." || part == ".." {
+                continue;
+            }
+            out.push(part);
+        }
+        out
+    }
+
+    fn io(e: std::io::Error, path: &str) -> FsError {
+        match e.kind() {
+            std::io::ErrorKind::NotFound => FsError::NotFound(path.into()),
+            std::io::ErrorKind::AlreadyExists => FsError::AlreadyExists(path.into()),
+            _ => FsError::Io(e.to_string()),
+        }
+    }
+}
+
+impl FileSystem for DiskFs {
+    fn exists(&self, path: &str) -> bool {
+        self.real(path).exists()
+    }
+
+    fn is_dir(&self, path: &str) -> bool {
+        self.real(path).is_dir()
+    }
+
+    fn read(&self, path: &str) -> FsResult<String> {
+        let real = self.real(path);
+        if real.is_dir() {
+            return Err(FsError::IsADirectory(path.into()));
+        }
+        std::fs::read_to_string(&real).map_err(|e| DiskFs::io(e, path))
+    }
+
+    fn write(&mut self, path: &str, contents: &str) -> FsResult<()> {
+        let real = self.real(path);
+        if let Some(parent) = real.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| DiskFs::io(e, path))?;
+        }
+        std::fs::write(&real, contents).map_err(|e| DiskFs::io(e, path))
+    }
+
+    fn append(&mut self, path: &str, contents: &str) -> FsResult<()> {
+        use std::io::Write;
+        let real = self.real(path);
+        if let Some(parent) = real.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| DiskFs::io(e, path))?;
+        }
+        let mut f = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&real)
+            .map_err(|e| DiskFs::io(e, path))?;
+        f.write_all(contents.as_bytes()).map_err(|e| DiskFs::io(e, path))
+    }
+
+    fn len(&self, path: &str) -> FsResult<i64> {
+        let meta = std::fs::metadata(self.real(path)).map_err(|e| DiskFs::io(e, path))?;
+        Ok(meta.len() as i64)
+    }
+
+    fn delete(&mut self, path: &str) -> FsResult<()> {
+        std::fs::remove_file(self.real(path)).map_err(|e| DiskFs::io(e, path))
+    }
+
+    fn read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>> {
+        let real = self.real(path);
+        if !real.is_dir() {
+            return Err(FsError::NotADirectory(path.into()));
+        }
+        let mut out = Vec::new();
+        for entry in std::fs::read_dir(&real).map_err(|e| DiskFs::io(e, path))? {
+            let entry = entry.map_err(|e| DiskFs::io(e, path))?;
+            out.push(DirEntry {
+                name: entry.file_name().to_string_lossy().into_owned(),
+                is_dir: entry.path().is_dir(),
+            });
+        }
+        out.sort_by(|a, b| a.name.cmp(&b.name));
+        Ok(out)
+    }
+
+    fn make_dir(&mut self, path: &str) -> FsResult<()> {
+        let real = self.real(path);
+        if real.exists() {
+            return Err(FsError::AlreadyExists(path.into()));
+        }
+        std::fs::create_dir_all(&real).map_err(|e| DiskFs::io(e, path))
+    }
+
+    fn remove_dir(&mut self, path: &str) -> FsResult<()> {
+        let real = self.real(path);
+        if !real.is_dir() {
+            return Err(FsError::NotADirectory(path.into()));
+        }
+        std::fs::remove_dir(&real).map_err(|e| match e.kind() {
+            // The platforms disagree on the code, so check emptiness.
+            _ if std::fs::read_dir(&real).map(|mut d| d.next().is_some()).unwrap_or(false) => {
+                FsError::NotEmpty(path.into())
+            }
+            _ => DiskFs::io(e, path),
+        })
+    }
+}
+
 /// Read a value from INI text, as `GetPrivateProfileString` does: sections
 /// in `[brackets]`, `key=value` lines, and a missing key yielding "".
 pub fn ini_get(text: &str, section: &str, key: &str) -> String {
@@ -383,6 +510,47 @@ mod tests {
             f.make_dir("/home/sub"),
             Err(FsError::AlreadyExists(_))
         ));
+    }
+
+    #[test]
+    fn the_disk_filesystem_stays_inside_its_root() {
+        let root = std::env::temp_dir().join(format!("dso-fs-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).unwrap();
+        let mut fs = DiskFs::new(&root);
+
+        fs.write("/a/b.txt", "inside").unwrap();
+        assert_eq!(fs.read("/a/b.txt").unwrap(), "inside");
+        assert!(root.join("a/b.txt").exists());
+
+        // A path that tries to climb out lands back at the root.
+        fs.write("/../escaped.txt", "still inside").unwrap();
+        assert!(root.join("escaped.txt").exists(), "must not escape the root");
+        assert!(!root.parent().unwrap().join("escaped.txt").exists());
+
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn the_disk_filesystem_lists_and_removes() {
+        let root = std::env::temp_dir().join(format!("dso-fs2-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).unwrap();
+        let mut fs = DiskFs::new(&root);
+
+        fs.write("/dir/one.txt", "1").unwrap();
+        fs.make_dir("/dir/sub").unwrap();
+        let names: Vec<String> =
+            fs.read_dir("/dir").unwrap().iter().map(|e| e.display_name()).collect();
+        assert_eq!(names, vec!["one.txt", "sub/"]);
+
+        assert!(matches!(fs.remove_dir("/dir"), Err(FsError::NotEmpty(_))));
+        fs.delete("/dir/one.txt").unwrap();
+        fs.remove_dir("/dir/sub").unwrap();
+        fs.remove_dir("/dir").unwrap();
+        assert!(!fs.exists("/dir"));
+
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]
