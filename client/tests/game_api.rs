@@ -1034,3 +1034,47 @@ fn a_bare_host_call_is_rewritten_but_still_works() {
     run_script(&mut it, &script).expect("the rewritten call runs");
     assert_eq!(host.console.borrow().output()[0], "hi");
 }
+
+// ---- corrections to the VB6 client --------------------------------------
+//
+// Two calls were wrong in the original. They are fixed here rather than
+// reproduced, so these tests pin the corrected shapes.
+
+#[test]
+fn transfer_sends_the_body_it_builds() {
+    // The VB6 client assembles this body and then sends a bare GET.
+    let (host, r) = run(
+        plain_host(),
+        r#"Dim x : x = Transfer("  someone  ", 250, "  for services  ")"#,
+    );
+    r.unwrap();
+    let server = host.server.borrow();
+    assert_eq!(server.paths(), vec!["transfer.php"]);
+    assert_eq!(
+        server.requests[0].body.as_deref(),
+        Some("to=someone&amount=250&description=for+services"),
+        "the transfer details must reach the server"
+    );
+}
+
+#[test]
+fn transfer_still_refuses_a_non_positive_amount() {
+    let (_, r) = run(plain_host(), r#"Dim x : x = Transfer("someone", 0, "why")"#);
+    assert!(r.unwrap_err().contains("Invalid amount"));
+}
+
+#[test]
+fn the_token_request_separates_its_fields() {
+    // The VB6 client omits the ampersand, running the flag and the domain
+    // together as `is_local_script=trued=example.com`.
+    let (host, r) = run(
+        plain_host(),
+        r#"Dim x : x = RemoteToken("example.com", "why")"#,
+    );
+    r.unwrap();
+    let server = host.server.borrow();
+    assert_eq!(
+        server.requests[0].body.as_deref(),
+        Some("is_local_script=true&d=example.com&info=why")
+    );
+}

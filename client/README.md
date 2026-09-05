@@ -176,16 +176,43 @@ DSO_USER=... DSO_PASS=... cargo test --test live_server -- --ignored --nocapture
 
 ### Targeting the browser
 
-The eventual target is WASM. The platform-dependent pieces already go
-through the `Host` trait — `now_unix_millis` and `random_bytes`, which
-`wasm32-unknown-unknown` cannot provide on its own — and `DiskFs` and the
-native HTTP client are both compiled out. What remains:
+The library builds for `wasm32-unknown-unknown`:
 
-- **zstd** is a C library. The crate advertises a `wasm` feature, which is
-  probably the answer, but it has not been built for the target here.
-- **`WaitFor` blocks**, which the browser main thread cannot. Either the
-  interpreter runs in a worker, or it has to become resumable. This is the
-  real architectural decision left.
+```sh
+cargo build --lib --no-default-features --target wasm32-unknown-unknown
+```
+
+`--no-default-features` drops the blocking HTTP client, which a browser
+build replaces. `DiskFs` is compiled out on that target too.
+
+The interpreter is meant to run in a **worker**, not on the main thread.
+That settles what would otherwise be the hard question: `WaitFor` blocks,
+and blocking is fine in a worker — synchronous `XMLHttpRequest` still works
+there, as does `Atomics.wait`. So [`GameServer`](src/game/server.rs) stays
+synchronous, and the interpreter needs no resumability.
+
+The same shape serves server-side execution, which is the point of putting
+every platform dependency behind a trait: running a script somewhere the
+player cannot tamper with it is a different set of `Console`, `FileSystem`
+and `GameServer` implementations, not a different interpreter.
+
+Two hooks on `Host` have no portable default and a browser build must
+supply them:
+
+| Hook | Browser |
+|---|---|
+| `now_unix_millis` | `Date.now()`. The default returns 0 on wasm, so dates start at the epoch until it is overridden. |
+| `random_bytes` | Handled already — `getrandom`'s `wasm_js` feature reaches the Web Crypto API. |
+
+### Corrections to the original
+
+Two calls were wrong in the VB6 client and are fixed here, with tests
+pinning the corrected shapes:
+
+- `Transfer` assembled a form body and then sent a bare `GET`, discarding
+  it, so the recipient, amount and description never reached the server.
+- `RemoteToken`/`ServerToken` omitted an `&`, running two fields together as
+  `is_local_script=trued=example.com`.
 
 ### Script encryption
 

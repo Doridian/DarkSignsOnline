@@ -778,13 +778,22 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 )
             }
             "transfer" => {
+                let target = arg_str(args, 0)?;
                 let amount = arg_int(args, 1, 0)?;
+                let description = arg_str(args, 2)?;
                 if amount < 1 {
                     return Err(misc_error(format!("Invalid amount: ${amount}.00!")));
                 }
-                // The client builds a body here but sends a bare GET; the
-                // behaviour is reproduced rather than corrected.
-                self.api(ApiRequest::get("transfer.php"))
+                // The VB6 client builds this body and then sends a bare GET,
+                // discarding it. Sending it is what the call was meant to do.
+                self.api(ApiRequest::post(
+                    "transfer.php",
+                    format!(
+                        "to={}&amount={amount}&description={}",
+                        values::url_encode(target.trim()),
+                        values::url_encode(description.trim())
+                    ),
+                ))
             }
             "sendmailtouser" => {
                 let from = arg_str(args, 0)?;
@@ -872,7 +881,9 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 self.api(ApiRequest::post(
                     "domain_token.php",
                     format!(
-                        "is_local_script={is_local}d={}&info={}",
+                        // The VB6 client omits this separator, running the
+                        // flag and the domain together.
+                        "is_local_script={is_local}&d={}&info={}",
                         values::url_encode(&domain),
                         values::url_encode(&info)
                     ),

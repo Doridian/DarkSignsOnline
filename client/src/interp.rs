@@ -109,23 +109,13 @@ pub trait Host {
 
     /// Fill `buffer` with cryptographically strong random bytes.
     ///
-    /// Used for encryption salts. The default reads the system source; a
-    /// browser build overrides it with `crypto.getRandomValues`. Returning
-    /// `false` means no randomness was available, and the caller reports
-    /// that rather than using a predictable salt.
+    /// Used for encryption salts. The default reaches the platform's own
+    /// source — `/dev/urandom`, `BCryptGenRandom` or the Web Crypto API,
+    /// whichever the target has. Returning `false` means none was
+    /// available, and the caller reports that rather than falling back to a
+    /// predictable salt.
     fn random_bytes(&self, buffer: &mut [u8]) -> bool {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            use std::io::Read;
-            std::fs::File::open("/dev/urandom")
-                .and_then(|mut f| f.read_exact(buffer))
-                .is_ok()
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            let _ = buffer;
-            false
-        }
+        getrandom::fill(buffer).is_ok()
     }
 }
 
