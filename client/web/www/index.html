@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dark Signs Online</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Dark Signs Online</h1>
+      <form id="login">
+        <input id="username" type="text" placeholder="username" autocomplete="username" />
+        <input id="password" type="password" placeholder="password" autocomplete="current-password" />
+        <button type="submit">Sign in</button>
+      </form>
+    </header>
+
+    <main>
+      <div id="output" role="log" aria-live="polite"></div>
+      <div id="entry">
+        <span id="prompt">/&gt;</span>
+        <input id="input" type="text" autocomplete="off" spellcheck="false" disabled
+               aria-label="Console input" />
+      </div>
+    </main>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

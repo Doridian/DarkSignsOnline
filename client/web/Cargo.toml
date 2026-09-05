@@ -1,0 +1,20 @@
+[package]
+name = "dso-web"
+version = "0.1.0"
+edition = "2021"
+description = "Browser front end for the DarkSigns client"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# The interpreter and host API, without the desktop HTTP client.
+vbscript = { package = "dso-client", path = "..", default-features = false }
+wasm-bindgen = "0.2.128"
+js-sys = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dependencies.web-sys]
+version = "0.3"
+features = ["XmlHttpRequest", "XmlHttpRequestResponseType", "console"]

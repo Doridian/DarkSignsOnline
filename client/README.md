@@ -49,6 +49,7 @@ Two suites, both run by `cargo test`:
 | `.ds` scripts | 298 of 301 parse; 242 of 298 also run to completion |
 | Host API | 74 integration tests, 117 unit tests |
 | Live server | 4 tests, ignored by default |
+| Browser build | `web/smoke.mjs`, driving the built wasm |
 
 Of the 55 scripts that do not run to completion, 42 sit in a `While True`
 menu loop waiting on player input and stop only when the step budget runs
@@ -173,6 +174,12 @@ it is ignored by default and reads credentials from `DSO_USER` and
 ```sh
 DSO_USER=... DSO_PASS=... cargo test --test live_server -- --ignored --nocapture
 ```
+
+### The browser client
+
+[`web/`](web/) is the browser front end: this library compiled to WASM,
+running in a worker, with a page that renders its console. See
+[`web/README.md`](web/README.md) for how to build and serve it.
 
 ### Targeting the browser
 

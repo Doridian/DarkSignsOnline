@@ -1,0 +1,153 @@
+:root {
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --fg: #cccccc;
+  --dim: #666666;
+  --accent: #3dcf44;
+  --error: #ff5555;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: Verdana, system-ui, sans-serif;
+  font-size: 14px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #222;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+}
+
+#login {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+input,
+button {
+  background: #111;
+  color: var(--fg);
+  border: 1px solid #333;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  border-radius: 2px;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 1rem;
+}
+
+#output {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Script output is whitespace-significant. */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.line {
+  min-height: 1.2em;
+  line-height: 1.35;
+}
+
+.align-center {
+  text-align: center;
+}
+.align-right {
+  text-align: right;
+}
+.no-prespace {
+  margin-left: 0;
+}
+
+.line.system {
+  color: var(--dim);
+}
+.line.echo {
+  color: var(--accent);
+}
+.line.error {
+  color: var(--error);
+}
+.channel-comm {
+  color: #e99a9c;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+.flash {
+  animation: blink 1s step-start infinite;
+}
+.flash-fast {
+  animation: blink 0.35s step-start infinite;
+}
+.flash-slow {
+  animation: blink 2s step-start infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flash,
+  .flash-fast,
+  .flash-slow {
+    animation: none;
+  }
+}
+
+#entry {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid #222;
+}
+
+#prompt {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+#input {
+  flex: 1;
+  border: none;
+  background: transparent;
+}
+
+#input:focus {
+  outline: none;
+}
