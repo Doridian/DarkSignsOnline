@@ -42,7 +42,7 @@ Two suites, both run by `cargo test`:
 | `error.vbs` | 165 assertions, all pass |
 | `regexp.vbs` | 108 assertions, all pass |
 | `noexplicit.vbs` | 5 assertions, all pass |
-| `api.vbs` | 2161 assertions, 3 fail (see below) |
+| `api.vbs` | 2161 assertions, 3 known failures (see below) |
 | `.ds` scripts | 298 of 301 parse; 235 of 298 also run to completion |
 
 Of the 63 scripts that do not run to completion under the stub host, 57 sit
@@ -56,15 +56,22 @@ The three `.ds` scripts that do not parse are not VBScript: `xnull.ds` and
 older `@label` / `input` / `!` DarkSigns command language. They are listed in
 `NOT_VBSCRIPT` in the test, which asserts they stay rejected.
 
+`cargo test` is green: the three `api.vbs` assertions are listed in
+`KNOWN_FAILURES` in `tests/wine.rs`, which also fails the test if one of them
+starts passing, so a fix cannot go unnoticed.
+
 ### Known limitation
 
 The `*B` string functions (`LenB`, `LeftB`, `RightB`, `MidB`, `ChrB`) treat a
-string as its little-endian UTF-16 byte image, but a `Value::Str` is a Rust
-`str`, so it cannot hold an odd number of bytes. `LeftB("ABC", 3)` therefore
-rounds up to a whole UTF-16 unit and reports `LenB` 4 instead of 3. Fixing
-this means changing the string representation to a byte sequence throughout,
-which is a large change for a legacy DBCS feature; the three failing
-`api.vbs` assertions are all this.
+string as its little-endian UTF-16 byte image, and that image can have an odd
+length: `LeftB("ABC", 3)` is three bytes, one and a half UTF-16 units, and
+`LenB` of it is 3. A `Value::Str` holds a Rust `str`, which cannot represent
+half a unit, so the result rounds up and `LenB` reports 4.
+
+Fixing this means holding strings as bytes rather than as `str`, which
+touches every string operation, comparison and conversion in the interpreter
+— a lot of churn for a legacy DBCS feature no DarkSigns script uses. The
+three `api.vbs` assertions it costs are the ones in `KNOWN_FAILURES`.
 
 ## Embedding
 
