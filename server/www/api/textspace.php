@@ -2,9 +2,7 @@
 
 require_once('function.php');
 
-$action = $_REQUEST['action'];
-
-$download = $_REQUEST['download'];
+$download = $_REQUEST['download'] ?? '';
 if (!empty($download)) {
     $download_int = (int)$download;
     if ($download_int < 1) {
@@ -24,14 +22,14 @@ if (!empty($download)) {
     die('4501'.$row['text']);
 }
 
-$upload = $_REQUEST['upload'];
+$upload = $_REQUEST['upload'] ?? '';
 if (!empty($upload)) {
     $upload_int = (int)$upload;
     if ($upload_int <= 1) {
         die_error('4500Invalid channel.', 400);
     }
 
-    $data = $_REQUEST['textdata'];
+    $data = $_REQUEST['textdata'] ?? '';
     $time = time();
 
     $stmt = $db->prepare('INSERT INTO textspace (`chan`, `owner`, `lastupdate`, `text`, `deleted`) VALUES (?, ?, ?, ?, 0)');

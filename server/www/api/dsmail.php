@@ -16,10 +16,10 @@ function filter_subject($subj) {
     return $subj;
 }
 
-$action = $_REQUEST['action'];
+$action = $_REQUEST['action'] ?? '';
 if ($action === 'inbox')
 {
-    $last = (int)$_REQUEST['last'];
+    $last = (int)($_REQUEST['last'] ?? 0);
     $stmt = $db->prepare('SELECT id, from_addr, subject, message, time FROM dsmail WHERE to_user = ? AND id > ? ORDER BY id ASC');
     $stmt->bind_param('ii', $user['id'], $last);
     $stmt->execute();
@@ -32,9 +32,9 @@ if ($action === 'inbox')
 }
 else if ($action === 'send')
 {
-    $to = $_REQUEST['to'];
-    $sub = filter_subject($_REQUEST['subject']);
-    $msg = $_REQUEST['message'];
+    $to = $_REQUEST['to'] ?? '';
+    $sub = filter_subject($_REQUEST['subject'] ?? '');
+    $msg = $_REQUEST['message'] ?? '';
     $toArr = explode(',', $to);
     
     if (sizeof($toArr) > 10)
@@ -67,7 +67,7 @@ else if ($action === 'send')
 }
 else if ($action === 'script_send_to_self')
 {
-    $server = $_REQUEST['server'];
+    $server = $_REQUEST['server'] ?? '';
     if (empty($server)) {
         $server = $user['username'] . '.usr';
     }
@@ -76,10 +76,10 @@ else if ($action === 'script_send_to_self')
         die_error('Invalid server');
     }
     
-    $from = $_REQUEST['from'];
+    $from = $_REQUEST['from'] ?? '';
     $to = $user['id'];
-    $subject = filter_subject($_REQUEST['subject']);
-    $message = $_REQUEST['message'];
+    $subject = filter_subject($_REQUEST['subject'] ?? '');
+    $message = $_REQUEST['message'] ?? '';
 
     $emlsplit = explode('@', $from);
     if (sizeof($emlsplit) !== 2) {

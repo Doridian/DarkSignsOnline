@@ -1,10 +1,10 @@
-<?
+<?php
 
 require_once('function.php');
 
 print_returnwith('2000', -1);
 
-$getfile = $_REQUEST['getfile'];
+$getfile = $_REQUEST['getfile'] ?? '';
 if (!empty($getfile)){
     $stmt = $db->prepare('SELECT filename, filedata FROM file_database WHERE id = ? AND deleted = 0 AND ver = ?');
     $stmt->bind_param('ii', $getfile, $ver);
@@ -21,7 +21,7 @@ if (!empty($getfile)){
 }
 
 
-$removenow = $_REQUEST['removenow'];
+$removenow = $_REQUEST['removenow'] ?? '';
 if (!empty($removenow)){
     $stmt = $db->prepare('UPDATE file_database SET deleted = 1 WHERE id = ? AND owner = ? AND ver = ?');
     $stmt->bind_param('iii', $removenow, $user['id'], $ver);
@@ -30,7 +30,7 @@ if (!empty($removenow)){
 }
 
 
-$getforremoval = $_REQUEST['getforremoval'];
+$getforremoval = $_REQUEST['getforremoval'] ?? '';
 if (!empty($getforremoval)){
     $stmt = $db->prepare('SELECT id, title, version, createtime FROM file_database WHERE owner = ? AND deleted = 0 AND ver = ?');
     $stmt->bind_param('ii', $user['id'], $ver);
@@ -44,7 +44,7 @@ if (!empty($getforremoval)){
     exit;
 }
 
-$getcategory = $_REQUEST['getcategory'];
+$getcategory = $_REQUEST['getcategory'] ?? '';
 if (!empty($getcategory)){
     $stmt = $db->prepare('SELECT id, title, version, owner, LENGTH(filedata) AS filesize, description, createtime, filename FROM file_database WHERE category = ? AND deleted = 0 AND ver = ?');
     $stmt->bind_param('si', $getcategory, $ver);
@@ -57,7 +57,7 @@ if (!empty($getcategory)){
     exit;
 }
 
-$shortfilename = $_REQUEST['shortfilename'];
+$shortfilename = $_REQUEST['shortfilename'] ?? '';
 if (!empty($shortfilename)){
     if (strpos($shortfilename, '/') !== false || strpos($shortfilename, '\\') !== false || strpos($shortfilename, ':') !== false) {
         die_error('Invalid filename.', 400);
@@ -66,7 +66,12 @@ if (!empty($shortfilename)){
     $timestamp = time();
     $aip = $_SERVER['REMOTE_ADDR'];
     $stmt = $db->prepare('INSERT INTO file_database (filename, filedata, version, title, description, category, createtime, ip, deleted, owner, ver) VALUES (?,?,?,?,?,?,?,?,0,?,?)');
-    $stmt->bind_param('ssssssisii', $shortfilename, $_REQUEST['filedata'], $_REQUEST['version'], $_REQUEST['title'], $_REQUEST['description'], $_REQUEST['category'], $timestamp, $aip, $user['id'], $ver);
+    $filedata = $_REQUEST['filedata'] ?? '';
+    $version = $_REQUEST['version'] ?? '';
+    $title = $_REQUEST['title'] ?? '';
+    $description = $_REQUEST['description'] ?? '';
+    $category = $_REQUEST['category'] ?? '';
+    $stmt->bind_param('ssssssisii', $shortfilename, $filedata, $version, $title, $description, $category, $timestamp, $aip, $user['id'], $ver);
     $stmt->execute();
 
     die("Upload complete!");
