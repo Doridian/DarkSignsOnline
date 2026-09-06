@@ -17,6 +17,7 @@ pub mod crypto;
 pub mod fs;
 #[cfg(feature = "native-http")]
 pub mod http;
+pub mod mail;
 pub mod markup;
 pub mod path;
 pub mod protocol;
@@ -72,6 +73,9 @@ pub struct Env {
     pub args: Vec<Value>,
     /// Account that owns the script, used to scope mission data.
     pub script_owner: String,
+    /// Which of the four consoles this script is running in, or 0 for a
+    /// script that is not running in one at all.
+    pub console_id: i64,
     /// Key a downloaded script was compiled with.
     pub file_key: String,
     /// Domain, port and address of the server the script is talking to.
@@ -103,6 +107,7 @@ impl Default for Env {
             cwd: "/".into(),
             args: Vec::new(),
             script_owner: "local".into(),
+            console_id: 0,
             file_key: String::new(),
             server_domain: String::new(),
             server_port: 0,
@@ -399,7 +404,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             }),
             "username" => Value::str(self.server.borrow().username()),
             "connectingip" => Value::str(self.env.borrow().connecting_ip.clone()),
-            "consoleid" => Value::I4(0),
+            "consoleid" => Value::I4(self.env.borrow().console_id as i32),
             "spooflocalconnectingip" => {
                 if self.env.borrow().is_local {
                     let v = arg_str(args, 0)?;
@@ -858,19 +863,37 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                     ),
                 ))
             }
+            // A connected script mailing the player, which is how the
+            // missions hand out their briefings.
+            //
+            // `server` is not optional in practice. The endpoint defaults it
+            // to the player's own `<name>.usr` and then refuses to send from
+            // an address whose domain has a different owner -- so a briefing
+            // from `terminal@darksigns.com` is rejected outright unless the
+            // domain the script is running on comes along with it.
             "sendmailtouser" => {
                 let from = arg_str(args, 0)?;
                 let subject = arg_str(args, 1)?;
                 let body = arg_str(args, 2)?;
-                self.api(ApiRequest::post(
+                let server = self.env.borrow().server_ip.clone();
+                let handle = self.api(ApiRequest::post(
                     "dsmail.php",
                     format!(
-                        "action=script_send_to_self&from={}&subject={}&message={}",
+                        "action=script_send_to_self&server={}&from={}&subject={}&message={}",
+                        values::url_encode(&server),
                         values::url_encode(&from),
                         values::url_encode(&subject),
                         values::url_encode(&body)
                     ),
-                ))
+                ));
+                // The client waits for the send before announcing it, and a
+                // handle nobody waits on is a request that is never made --
+                // which is what left the mission mail unsent.
+                if let Some(id) = server::decode_handle(&handle.to_vb_string()?) {
+                    self.server.borrow_mut().wait(id);
+                }
+                self.emit(Channel::Comm, &format!("You got a new DSMail from {from}"));
+                Value::Empty
             }
             // Connecting to a domain runs the script that domain answers
             // with; it does not hand back the response. `Fetch` is the same
@@ -1287,6 +1310,9 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
                 cwd: env.cwd.clone(),
                 args: script_args,
                 script_owner: owner,
+                // A connected script still writes to the console that
+                // reached out, so it keeps its number.
+                console_id: env.console_id,
                 file_key: d_key.to_string(),
                 server_domain: d_domain.to_string(),
                 server_port: script_port,

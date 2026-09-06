@@ -586,6 +586,48 @@ fn command_source(name: &str) -> String {
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("reading {}: {e}", path.display()))
 }
 
+/// A connected script mailing the player is how the missions hand out their
+/// briefings, and it went out with neither the domain it was sent from nor
+/// anything waiting for it -- so nothing was ever actually sent.
+#[test]
+fn send_mail_to_user_names_the_domain_and_waits_for_the_send() {
+    let server = ScriptedServer::new().answer("dsmail.php", "OK");
+    let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server).with_env(Env {
+        // What a script running on a connected domain sees.
+        server_ip: "12.34.56.78".into(),
+        server_domain: "darksigns.com".into(),
+        is_local: false,
+        ..Default::default()
+    });
+    let (host, result) = run(
+        host,
+        r#"SendMailToUser "terminal@darksigns.com", "Training Mission", "Objective: one" & vbCrLf & "Objective: two""#,
+    );
+    result.expect("script ran");
+
+    let server = host.server.borrow();
+    let sent = server.requests.first().expect("the request was made");
+    assert_eq!(sent.path, "dsmail.php");
+    assert_eq!(
+        sent.body.as_deref(),
+        Some(concat!(
+            "action=script_send_to_self&server=12.34.56.78",
+            "&from=terminal%40darksigns.com",
+            "&subject=Training+Mission",
+            "&message=Objective%3A+one%0D%0AObjective%3A+two",
+        )),
+        "without `server` the endpoint refuses a from-address it does not own"
+    );
+    assert!(
+        server.pending_count() == 0,
+        "the send is waited on; a handle nobody waits on is never sent"
+    );
+    assert_eq!(
+        host.console.borrow().comm_output(),
+        vec!["You got a new DSMail from terminal@darksigns.com"],
+    );
+}
+
 #[test]
 fn the_ping_command_reports_a_server_as_online() {
     let server = ScriptedServer::new().answer("ping.php", "1");

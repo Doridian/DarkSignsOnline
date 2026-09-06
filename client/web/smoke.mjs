@@ -15,6 +15,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const pkg = join(here, "www/pkg");
 
 const { default: init, Session, parseMarkup } = await import(join(pkg, "dso_web.js"));
+const { FONT_STACK } = await import(join(here, "www/fonts.js"));
 await init({ module_or_path: await readFile(join(pkg, "dso_web_bg.wasm")) });
 
 /** Collect console events the way the worker forwards them to the page. */
@@ -32,8 +33,10 @@ const session = new Session(
   () => (queuedInput.length ? queuedInput.shift() : null),
   () => 121, // 'y'
   (path, contents) => (contents === null ? saved.delete(path) : saved.set(path, contents)),
-  80,
+  2, // the console this session is, which scripts read as ConsoleID
+  FONT_STACK,
 );
+session.setLayout(1200, 40);
 
 // Output, with markup turned into styled runs.
 session.runScript('Say "{{green}}hello"', []);
@@ -109,6 +112,46 @@ const title = banner.find((e) => e.kind === "line" && e.runs.length === 3);
 assert.equal(title.align, "center");
 assert.equal(title.runs.map((r) => r.text).join(""), "[ D A R K S I G N S ]");
 assert.ok(title.runs.every((r) => r.font === "Impact" && r.size === 48 && !r.bold));
+
+// The console knows which of the four it is, which is what `newconsole.ds`
+// prints and what a script uses to address its own console.
+session.runScript('Say "id=" & ConsoleID', []);
+assert.equal(lines().at(-1), "id=2");
+
+// Measurements are pixels rather than character cells, and all three agree
+// on the unit, because scripts subtract one from another. Note that Node has
+// no OffscreenCanvas, so this exercises the estimate rather than the real
+// measurement -- what it pins down is that a bigger font is wider, which
+// counting characters got wrong.
+session.runScript('Say "w=" & ConsoleWidth() & " p=" & PreSpaceWidth()', []);
+assert.equal(lines().at(-1), "w=1200 p=40");
+
+session.runScript(
+  'Say "small=" & TextWidth("hello") & " big=" & TextWidth("{{48}}hello")',
+  [],
+);
+const [small, big] = lines()
+  .at(-1)
+  .match(/small=(\d+) big=(\d+)/)
+  .slice(1)
+  .map(Number);
+assert.ok(small > 0, "a measured width is not zero");
+assert.ok(big > small * 3, `48pt should dwarf 10pt, got ${small} and ${big}`);
+
+// The markup is measured, not counted: the tag itself takes no room.
+session.runScript('Say "tagged=" & TextWidth("{{red}}hello")', []);
+assert.equal(
+  Number(lines().at(-1).slice(7)),
+  small,
+  "a colour tag is markup, not text",
+);
+
+// A file another console deleted is dropped without being persisted again.
+session.seedFile("/home/shared.txt", "from another console");
+assert.equal(session.readFile("/home/shared.txt"), "from another console");
+session.forgetFile("/home/shared.txt");
+assert.throws(() => session.readFile("/home/shared.txt"));
+assert.equal(saved.has("/home/shared.txt"), false, "a synced change is not re-saved");
 
 // Markup parsing is available without running a script.
 const runs = JSON.parse(parseMarkup("{{red bold 20}}x"));

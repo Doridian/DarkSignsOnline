@@ -17,4 +17,12 @@ serde_json = "1"
 
 [dependencies.web-sys]
 version = "0.3"
-features = ["XmlHttpRequest", "XmlHttpRequestResponseType", "console"]
+features = [
+  "XmlHttpRequest",
+  "XmlHttpRequestResponseType",
+  "console",
+  # Measuring text for `TextWidth`, which a worker can do without the page.
+  "OffscreenCanvas",
+  "OffscreenCanvasRenderingContext2d",
+  "TextMetrics",
+]

@@ -176,6 +176,17 @@ impl RecordingConsole {
             .collect()
     }
 
+    /// Everything written to the communications channel, in order.
+    pub fn comm_output(&self) -> Vec<String> {
+        self.events
+            .iter()
+            .filter_map(|e| match e {
+                ConsoleEvent::Say { channel: Channel::Comm, text } => Some(text.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
     /// The main channel's output with markup removed and lines joined.
     pub fn plain_output(&self) -> String {
         self.output()

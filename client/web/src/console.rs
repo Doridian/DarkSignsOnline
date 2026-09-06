@@ -12,6 +12,8 @@ use wasm_bindgen::prelude::*;
 use vbscript::game::console::{Channel, Console, DrawMode};
 use vbscript::game::markup;
 
+use crate::metrics::TextMetrics;
+
 /// A styled run of text, ready to render.
 #[derive(Serialize)]
 pub struct Run {
@@ -100,8 +102,12 @@ pub struct WorkerConsole {
     emit: js_sys::Function,
     read_line: js_sys::Function,
     read_key: js_sys::Function,
-    /// Columns, for scripts that lay text out themselves.
-    pub width: i64,
+    /// The usable width of the console, in CSS pixels, and the indent an
+    /// ordinary line carries. Both are the page's to report, and both change
+    /// when the window is resized.
+    width: f64,
+    pre_space: f64,
+    metrics: TextMetrics,
 }
 
 impl WorkerConsole {
@@ -109,9 +115,17 @@ impl WorkerConsole {
         emit: js_sys::Function,
         read_line: js_sys::Function,
         read_key: js_sys::Function,
-        width: i64,
+        metrics: TextMetrics,
     ) -> WorkerConsole {
-        WorkerConsole { emit, read_line, read_key, width }
+        // Stand-ins until the page reports its own: a comfortable window and
+        // the client's `PreSpaceWidth`, which is 600 twips at 96dpi.
+        WorkerConsole { emit, read_line, read_key, width: 960.0, pre_space: 40.0, metrics }
+    }
+
+    /// Take the console's measurements from the page.
+    pub fn set_layout(&mut self, width: f64, pre_space: f64) {
+        self.width = width;
+        self.pre_space = pre_space;
     }
 
     fn send(&self, event: &Event) {
@@ -210,21 +224,21 @@ impl Console for WorkerConsole {
     }
 
     fn console_width(&self) -> i64 {
-        self.width
+        self.width as i64
     }
 
     fn pre_space_width(&self) -> i64 {
-        0
+        self.pre_space as i64
     }
 
     fn text_width(&self, text: &str) -> i64 {
-        // Character cells. Measuring the real font would mean a round trip
-        // to the page for every call, which scripts make in loops.
-        markup::parse(text).text().chars().count() as i64
+        // Pixels, like the other two, because scripts subtract these from
+        // one another. See `metrics` for why they are not character cells.
+        self.metrics.line_width(&markup::parse(text)).round() as i64
     }
 
-    fn text_height(&self, _text: &str) -> i64 {
-        1
+    fn text_height(&self, text: &str) -> i64 {
+        self.metrics.line_height(&markup::parse(text)).round() as i64
     }
 
     fn set_y_div(&mut self, value: i64) {

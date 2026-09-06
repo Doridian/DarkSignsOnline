@@ -7,6 +7,7 @@
 
 import init, { Session } from "./pkg/dso_web.js";
 import { FileStore } from "./storage.js";
+import { FONT_STACK } from "./fonts.js";
 
 /** Shared with the page so input can be delivered to a blocked worker. */
 let control = null; // Int32Array: [state, length]
@@ -19,6 +20,14 @@ const CLOSED = 2;
 
 let session = null;
 let store = null;
+/**
+ * The console's measurements, in CSS pixels.
+ *
+ * Held here because the page reports them as soon as it has laid the console
+ * out, which is well before this worker has finished loading its wasm. The
+ * latest report wins whenever the session is ready for it.
+ */
+let layout = { width: 960, preSpace: 40 };
 
 /** Send one console event to the page. */
 function emit(json) {
@@ -69,13 +78,20 @@ async function boot(message) {
   inputBytes = new Uint8Array(message.input);
   store = await FileStore.open();
 
+  // The page listens to each worker separately, so this only has to reach
+  // the session: it is what scripts read as `ConsoleID`.
   session = new Session(
     emit,
     readLineSync,
     readKeySync,
-    (path, contents) => store.record(path, contents),
-    message.width ?? 80,
+    fileChanged,
+    message.consoleId ?? 0,
+    FONT_STACK,
   );
+  if (message.width !== undefined) {
+    layout = { width: message.width, preSpace: message.preSpace };
+  }
+  session.setLayout(layout.width, layout.preSpace);
   if (message.apiRoot) {
     session.setApiRoot(message.apiRoot);
   }
@@ -96,6 +112,19 @@ async function boot(message) {
     persistent: store.available,
     restored: Object.keys(saved).length,
   });
+}
+
+/**
+ * A script wrote or deleted a file.
+ *
+ * The four consoles share one filesystem in the original client, but here
+ * each has a session of its own with its own copy of the tree. Only the
+ * console that made the change persists it; the page passes the change to
+ * the other three so their copies agree.
+ */
+function fileChanged(path, contents) {
+  store.record(path, contents);
+  postMessage({ type: "fileChanged", path, contents });
 }
 
 onmessage = async (e) => {
@@ -123,6 +152,66 @@ onmessage = async (e) => {
         postMessage({ type: "done", cwd: session.currentDirectory() });
         break;
 
+      case "runFile": {
+        // What `Start_Console` does: the console's opening script is run
+        // from the filesystem like any other, so an edited one takes effect.
+        let source;
+        try {
+          source = session.readFile(message.path);
+        } catch {
+          postMessage({ type: "missingFile", path: message.path });
+          postMessage({ type: "done", cwd: session.currentDirectory() });
+          break;
+        }
+        // ArgV(0) is the command, the way a script run from the prompt sees it.
+        session.runScript(source, [message.path]);
+        postMessage({ type: "done", cwd: session.currentDirectory() });
+        break;
+      }
+
+      case "syncFile":
+        // Another console's change, replayed so this session's copy of the
+        // tree matches. Seeding rather than writing, so it is not persisted
+        // a second time or echoed back.
+        if (message.contents === null) {
+          session.forgetFile(message.path);
+        } else {
+          session.seedFile(message.path, message.contents);
+        }
+        break;
+
+      case "layout":
+        layout = { width: message.width, preSpace: message.preSpace };
+        // A report that beat the wasm here is applied when `boot` finishes.
+        session?.setLayout(layout.width, layout.preSpace);
+        break;
+
+      // ---- mail ------------------------------------------------------
+      //
+      // The reader lives on the page, but the connection lives here, so it
+      // asks through whichever console is free. `token` comes back untouched
+      // so the page can match an answer to the window that wanted it.
+      case "mailList":
+        postMessage({ type: "mail", token: message.token, view: JSON.parse(session.mailList()) });
+        break;
+
+      case "mailFetch":
+        postMessage({ type: "mail", token: message.token, view: JSON.parse(session.mailFetch()) });
+        break;
+
+      case "mailMarkRead":
+        postMessage({
+          type: "mail",
+          token: message.token,
+          view: JSON.parse(session.mailMarkRead(message.id)),
+        });
+        break;
+
+      case "mailSend":
+        session.mailSend(message.to, message.subject, message.body);
+        postMessage({ type: "mailSent", token: message.token });
+        break;
+
       case "writeFile":
         session.writeFile(message.path, message.contents);
         break;
@@ -136,10 +225,17 @@ onmessage = async (e) => {
         postMessage({ type: "error", message: `unknown message ${message.type}` });
     }
   } catch (err) {
+    const text = typeof err === "string" ? err : (err?.message ?? String(err));
+    // A mail failure belongs in the window that asked, not in the console
+    // log: nothing was running there.
+    if (message.token !== undefined) {
+      postMessage({ type: "mailFailed", token: message.token, message: text });
+      return;
+    }
     // A script error is normal: report it and let the page carry on.
     postMessage({
       type: "error",
-      message: typeof err === "string" ? err : (err?.message ?? String(err)),
+      message: text,
       cwd: session ? session.currentDirectory() : "/",
     });
   }

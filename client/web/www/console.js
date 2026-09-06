@@ -4,6 +4,7 @@
 // them into elements and apply the bands `Draw` asks for.
 
 import { background } from "./draw.js";
+import { fontFor } from "./fonts.js";
 
 const FLASH_CLASS = {
   none: null,
@@ -11,20 +12,6 @@ const FLASH_CLASS = {
   fast: "flash-fast",
   slow: "flash-slow",
 };
-
-/** Fonts a script can name, with fallbacks for machines that lack them. */
-const FONT_STACK = {
-  Impact: '"Impact", "Haettenschweiler", "Arial Narrow Bold", sans-serif',
-  "Courier New": '"Courier New", "Liberation Mono", monospace',
-  "Lucida Console": '"Lucida Console", "DejaVu Sans Mono", monospace',
-  Verdana: '"Verdana", "DejaVu Sans", sans-serif',
-  Wingdings: '"Wingdings", sans-serif',
-  Webdings: '"Webdings", sans-serif',
-};
-
-function fontFor(name) {
-  return FONT_STACK[name] ?? `"${name}", "DejaVu Sans", sans-serif`;
-}
 
 export class ConsoleView {
   /**

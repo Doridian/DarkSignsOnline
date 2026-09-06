@@ -165,6 +165,12 @@ impl ScriptedServer {
     pub fn paths(&self) -> Vec<&str> {
         self.requests.iter().map(|r| r.path.as_str()).collect()
     }
+
+    /// Requests started but never waited on, which the transport would
+    /// therefore never have sent.
+    pub fn pending_count(&self) -> usize {
+        self.pending.len()
+    }
 }
 
 impl GameServer for ScriptedServer {

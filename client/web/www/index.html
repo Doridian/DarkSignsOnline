@@ -29,26 +29,34 @@
     <section id="comm" role="log" aria-label="Communications" aria-live="polite"></section>
 
     <!--
+      The four consoles, stacked with only the active one shown. Each keeps
+      its own log, prompt and input, because each has a worker of its own and
+      one blocked on `ReadLine` must not stop the others.
+    -->
+    <main id="consoles"></main>
+
+    <!--
       Script output, with the prompt as its last line. The entry lives inside
       the scrolling log rather than under it so that typing happens where the
       text ends, the way a terminal behaves.
     -->
-    <main id="output" role="log" aria-label="Console" aria-live="polite">
-      <div id="entry" class="line no-prespace idle">
-        <span id="prompt">/&gt;</span>
-        <input id="input" type="text" autocomplete="off" autocapitalize="off"
-               spellcheck="false" disabled aria-label="Console input" />
-      </div>
-    </main>
+    <template id="console-template">
+      <section class="console" role="log" aria-live="polite">
+        <div class="line no-prespace entry idle">
+          <span class="prompt">/&gt;</span>
+          <input class="input" type="text" autocomplete="off" autocapitalize="off"
+                 spellcheck="false" disabled />
+        </div>
+      </section>
+    </template>
+
+    <!-- DSMail, opened by the console's `mail` command. -->
+    <dialog id="mail" aria-label="DSO Mail"></dialog>
 
     <footer id="statusbar">
       <span id="hint">Type <b>HELP</b> for a list of commands.</span>
-      <nav id="tabs" aria-label="Consoles">
-        <button class="tab active" data-console="1">1</button>
-        <button class="tab" data-console="2">2</button>
-        <button class="tab" data-console="3">3</button>
-        <button class="tab" data-console="4">4</button>
-      </nav>
+      <!-- Filled in by the page, one per console, with F1-F4 as shortcuts. -->
+      <nav id="tabs" role="tablist" aria-label="Consoles"></nav>
     </footer>
 
     <script type="module" src="./main.js"></script>

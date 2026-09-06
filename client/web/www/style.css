@@ -152,13 +152,29 @@ button:hover {
 
 /* ---- console --------------------------------------------------------- */
 
-#output {
+/* The four consoles occupy one cell and are stacked in it, so switching
+   shows a different one without anything moving. */
+#consoles {
+  display: grid;
+  min-height: 0;
+}
+
+.console {
+  grid-area: 1 / 1;
   overflow-y: auto;
   padding: 0.4rem 0;
   /* Script output is whitespace-significant. */
   white-space: pre-wrap;
   word-break: break-word;
   min-height: 0;
+  /* Hidden rather than `display: none`: an inactive console stays laid out,
+     so it keeps its scroll position and its scripts keep measuring against
+     the width they will be shown at. */
+  visibility: hidden;
+}
+
+.console.active {
+  visibility: visible;
 }
 
 /* Spacing measured off the client: lines sit 19px apart, output is indented
@@ -210,6 +226,10 @@ button:hover {
 .line.error {
   color: var(--error);
 }
+/* Ctrl+B, which the client reports in the same orange it always has. */
+.line.stopped {
+  color: #ff9a3d;
+}
 
 @keyframes blink {
   50% {
@@ -238,27 +258,29 @@ button:hover {
 
 /* The last line of the log, not a bar beneath it. It inherits `.line`
    padding, so the prompt sits in the same column as everything above it. */
-#entry {
+.entry {
   display: flex;
   align-items: baseline;
 }
 
 /* A script's own prompt is part of its output and is coloured like it; the
    shell's `/home>` keeps the accent. */
-#prompt {
+.prompt {
   color: var(--prompt);
   font-weight: 700;
   white-space: pre-wrap;
 }
-#prompt.script {
+.prompt.script {
   color: inherit;
   font-weight: inherit;
 }
-#prompt:empty {
+.prompt:empty {
   display: none;
 }
 
-#input {
+/* Scoped to the entry so it outweighs the rule that dresses the sign-in
+   fields: the console's own input is part of the log, not a form control. */
+.entry .input {
   flex: 1;
   min-width: 0;
   border: none;
@@ -267,13 +289,210 @@ button:hover {
   font: inherit;
   padding: 0;
 }
-#input:focus {
+.entry .input:focus {
   outline: none;
 }
 /* Hidden rather than dimmed while a script is running: a terminal shows no
    caret when it is not listening. */
-#entry.idle {
+.entry.idle {
   display: none;
+}
+
+/* ---- mail ------------------------------------------------------------ */
+
+#mail {
+  width: min(56rem, 90vw);
+  height: min(38rem, 85vh);
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 12px;
+}
+#mail:not([open]) {
+  display: none;
+}
+#mail::backdrop {
+  background: rgb(0 0 0 / 60%);
+}
+#mail[open] {
+  display: grid;
+  /* Title bar, the inbox, the status line. */
+  grid-template-rows: auto 1fr auto;
+  min-height: 0;
+}
+
+.mail-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--titlebar);
+  border-bottom: 1px solid var(--rule);
+}
+
+.mail-spacer {
+  flex: 1;
+}
+
+.mail-button {
+  font-size: 11px;
+  padding: 0.15rem 0.5rem;
+}
+.mail-button:disabled {
+  color: var(--dim);
+  cursor: default;
+  border-color: transparent;
+}
+
+/* The list, and the message under it when one is open. */
+.mail-body {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+.mail-body:has(.mail-read) {
+  grid-template-rows: minmax(6rem, 2fr) minmax(0, 3fr);
+}
+
+.mail-list {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.mail-empty {
+  margin: 0;
+  padding: 0.6rem;
+  color: var(--dim);
+}
+
+/* A row, laid out as the original's three columns. */
+.mail-row {
+  display: grid;
+  grid-template-columns: 12rem 1fr 9rem;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.2rem 0.6rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fg);
+  font-weight: 400;
+  text-align: left;
+}
+.mail-row:hover {
+  background: var(--panel);
+  color: var(--fg);
+}
+/* Unread is bold, which is the only mark the original gives it. */
+.mail-row.unread {
+  font-weight: 700;
+  color: #ffffff;
+}
+.mail-row.current {
+  background: var(--panel);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.mail-from {
+  color: var(--gold);
+}
+.mail-subject,
+.mail-date {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mail-date {
+  color: var(--dim);
+  text-align: right;
+}
+
+.mail-read {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  border-top: 1px solid var(--rule);
+  background: var(--panel);
+}
+
+.mail-read-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.3rem 0.6rem;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--rule);
+}
+.mail-read-subject {
+  font-weight: 700;
+  color: #ffffff;
+}
+.mail-read-meta {
+  grid-row: 2;
+  color: var(--dim);
+}
+.mail-read-head .mail-button {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+
+.mail-read-body {
+  margin: 0;
+  padding: 0.6rem;
+  overflow: auto;
+  min-height: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "Courier New", "Liberation Mono", monospace;
+  font-size: 12px;
+}
+
+.mail-compose {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  min-height: 0;
+}
+
+.mail-field {
+  display: grid;
+  grid-template-columns: 5rem 1fr;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--dim);
+}
+.mail-field-body {
+  align-items: start;
+  min-height: 0;
+}
+.mail-field textarea {
+  height: 100%;
+  resize: none;
+  background: #0e1319;
+  color: var(--fg);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.3rem 0.4rem;
+  font-family: "Courier New", "Liberation Mono", monospace;
+  font-size: 12px;
+}
+
+.mail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.mail-status {
+  padding: 0.25rem 0.6rem;
+  border-top: 1px solid var(--rule);
+  background: var(--titlebar);
+  color: var(--dim);
+  font-size: 11px;
+  min-height: 1.5rem;
 }
 
 /* ---- status bar ------------------------------------------------------ */

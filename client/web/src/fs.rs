@@ -38,6 +38,14 @@ impl PersistentFs {
         result
     }
 
+    /// Drop a file another console deleted, without reporting it back.
+    pub fn seed_delete(&mut self, path: &str) -> FsResult<()> {
+        self.loading = true;
+        let result = self.memory.delete(path);
+        self.loading = false;
+        result
+    }
+
     fn changed(&self, path: &str, contents: Option<&str>) {
         if self.loading {
             return;

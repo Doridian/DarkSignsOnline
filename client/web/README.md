@@ -13,20 +13,50 @@ parks the worker until the page delivers a typed line.
 That is what lets [`GameServer`](../src/game/server.rs) stay synchronous and
 the interpreter stay straightforward.
 
+## Four consoles, four workers
+
+The client has four consoles, as the desktop one does, and each gets a worker
+and a `Session` of its own. They cannot share one: a console blocked in
+`ReadLine` blocks its whole worker, and the point of having four is that the
+other three keep working. Scripts read which one they are in as `ConsoleID`.
+
+What they do share is the player's files. Each session holds its own copy of
+the tree, so a write is reported to the page and passed on to the other three
+as a seed — a change that is neither persisted twice nor echoed back. Only
+the console that made it writes it to IndexedDB.
+
+`F1`–`F4` select a console, as in the original, and so do the tabs in the
+status bar. An inactive console is hidden but still laid out, so it keeps its
+scroll position and its scripts keep measuring against the width they will be
+shown at.
+
 ## Layout
 
 | File | Role |
 |---|---|
 | [`src/lib.rs`](src/lib.rs) | `Session`, the API the worker drives |
 | [`src/console.rs`](src/console.rs) | Console output as styled runs; input through blocking callbacks |
+| [`src/metrics.rs`](src/metrics.rs) | Measures text with an `OffscreenCanvas`, for `TextWidth` |
 | [`src/server.rs`](src/server.rs) | The game API over synchronous `XMLHttpRequest` |
 | [`src/host.rs`](src/host.rs) | Supplies the clock, which wasm has no portable source for |
 | [`www/worker.js`](www/worker.js) | Runs the interpreter; blocks on `Atomics.wait` for input |
-| [`www/main.js`](www/main.js) | The page: keyboard, prompt, and waking the worker |
+| [`www/main.js`](www/main.js) | The page: the four consoles, keyboard, and waking a worker |
 | [`www/console.js`](www/console.js) | Turns styled runs into elements |
+| [`www/mail.js`](www/mail.js) | The DSMail reader |
+| [`www/fonts.js`](www/fonts.js) | The font stacks, shared so text is measured in the face it is drawn in |
 
 Markup is parsed in Rust, so the page receives runs with a font, size and
 `#rrggbb` colour and never has to understand `{{...}}`.
+
+## Measurements
+
+`TextWidth`, `ConsoleWidth` and `PreSpaceWidth` are one unit in the original —
+twips — because scripts subtract one from another to decide where a column
+ends. Here that unit is the CSS pixel: the page reports the width of a console
+and the indent a line carries, and the worker measures text with an
+`OffscreenCanvas`. Measuring in the worker is what makes it affordable, since
+`TextWidth` is called in loops and a round trip to the page for each call
+would not be.
 
 ## Building
 
@@ -64,19 +94,47 @@ the IndexedDB the files use, because the form is on the main thread and a
 worker cannot reach `localStorage` at all. They are stored as typed. There is
 nowhere on a page to hide a password from anyone holding the browser, so the
 box is the honest control, and it is off unless ticked. A remembered sign-in
-is sent to the worker before the startup script runs, so the session is
+reaches all four workers before any startup script runs, so every console is
 already authorized by the time anything asks the server.
+
+## Starting up
+
+`Start_Console` is followed exactly: console 1 runs `/system/startup.ds` and
+the other three run `/system/newconsole.ds`, both from the player's own
+filesystem, so an edited copy takes effect. A remembered sign-in is handed to
+all four workers first, which is what lets the `LOGIN` and the `Include
+"/system/newconsole.ds"` at the end of `startup.ds` do their job and greet the
+player by name.
+
+## Mail
+
+`mail` at the prompt opens the reader, which is the only way in, as in the
+original. The window is a page, but the connection is a worker's: credentials
+never leave the workers, so the reader asks whichever console is free and that
+one speaks to `dsmail.php`. A console blocked in `ReadLine` is not free, and a
+question waits for one that is.
+
+The inbox is handed out incrementally — a request asks for everything newer
+than the highest id already held — so the client keeps its own copy in
+`/system/mail.dat`, the original's file in the original's format, complete
+with the read flag the server does not track. It is written through the
+filesystem like any other file, so it persists and the other three consoles
+see it. [`mail.rs`](../src/game/mail.rs) holds both formats and is where the
+tests are.
+
+Unlike the original, `MAIL` does not hold the script up while the window is
+open. It cannot: the worker that raised it is the one still running the
+script, and blocking it would leave nothing able to answer the window.
 
 ## What is not here yet
 
-- **The real `/system/startup.ds`.** The page runs an inlined copy of its
-  banner instead, so the `LOGIN` and `Include "/system/newconsole.ds"` at its
-  end never run and no "New Console #1" appears. That was the right call when
-  nothing could be signed in before the script ran; now that a remembered
-  sign-in happens first, the inlined copy could give way to the file.
-- **Text metrics.** `TextWidth` counts characters rather than measuring the
-  font, so scripts that lay out columns will be off. Measuring properly means
-  a round trip to the page for a call scripts make in loops, so it needs a
-  cache or an `OffscreenCanvas` in the worker.
-- **The rest of the UI.** Chat, mail, the editor and the file library are
-  console events the page currently logs and ignores.
+- **Chat.** The original opens a TLS socket to `irc.libera.chat:6697` and
+  speaks IRC. A browser has no raw sockets, so this cannot be a client-side
+  port at all — it needs something server-side to sit on the IRC connection
+  and offer a WebSocket, and that does not exist yet.
+- **The editor and the file library.** Both are console events the page
+  logs and ignores. Neither needs anything new to be possible; they are the
+  same shape as the mail window.
+- **Stopping a running script.** `Ctrl+B` reaches a console that is waiting
+  for input, which is all a blocked worker can hear; one busy in a loop runs
+  until its step budget is spent.
