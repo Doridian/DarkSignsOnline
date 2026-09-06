@@ -39,7 +39,7 @@ else if ($action === 'send')
     
     if (sizeof($toArr) > 10)
     {
-        die('Cant send mail to more than 10 people.');
+        die_error('Cant send mail to more than 10 people.');
     }
     
     $nameID = [];
@@ -48,7 +48,7 @@ else if ($action === 'send')
         $tmpID = userToId($name);
         if ($tmpID === -1)
         {
-            die('Unknown name: '.$name);
+            die_error('Unknown name: '.$name);
         }
         array_push($nameID, $tmpID);
     }
