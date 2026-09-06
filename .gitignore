@@ -1,13 +1,19 @@
 .DS_Store
 /client/dso.ini
 /client/user/system/mail.dat
-/client/user/downloads
-!/client/user/downloads/README.txt
-/client/user/home
+# The player's own files, save for the readme.txt that brings each directory
+# into being. Ignoring a directory outright is the end of it -- git does not
+# look inside one it has excluded, so no later `!` line can bring a file back
+# out -- hence the contents are ignored instead, and `music/` is re-included
+# before the file inside it can be.
+/client/user/downloads/*
+!/client/user/downloads/readme.txt
+/client/user/home/*
+!/client/user/home/music/
+/client/user/home/music/*
+!/client/user/home/music/readme.txt
 /client/user/system/libs/hash_*.ds
 /client/user/system/missions/*.ini
-!/client/user/home/README.txt
-!/client/user/home/music/README.txt
 /server/LICENSE
 /client/user/darksigns/DS_scr
 /client/user/darksigns/DS_scr_todo
