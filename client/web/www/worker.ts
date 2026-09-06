@@ -138,9 +138,25 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
       await boot(message);
       return;
     }
+
+    // The console's measurements, which need no session: they are kept here
+    // and handed to the wasm whenever it is ready. This is answered ahead of
+    // the guard below because it is the one thing the page really does send
+    // early -- its `ResizeObserver` fires as soon as the console has been
+    // laid out, which is long before a worker has fetched and started its
+    // wasm. Left to the guard, that first report became an error line on the
+    // console at every load. The measurement was no loss there, since the
+    // `boot` message carries one of its own, but a report that arrives early
+    // is meant to be kept until the session turns up rather than rejected.
+    if (message.type === "layout") {
+      layout = { width: message.width, preSpace: message.preSpace };
+      session?.setLayout(layout.width, layout.preSpace);
+      return;
+    }
+
     // Nothing else can be served before the wasm is up. The page does not
-    // send anything until every worker has reported `ready`, so this is a
-    // guard rather than a case that happens.
+    // send anything else until every worker has reported `ready`, so this is
+    // a guard rather than a case that happens.
     if (!session || !store) {
       throw new Error("this console is still starting up");
     }
@@ -189,12 +205,6 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
         } else {
           session.seedFile(message.path, message.contents);
         }
-        break;
-
-      case "layout":
-        layout = { width: message.width, preSpace: message.preSpace };
-        // A report that beat the wasm here is applied when `boot` finishes.
-        session?.setLayout(layout.width, layout.preSpace);
         break;
 
       // ---- what the windows ask -----------------------------------------
