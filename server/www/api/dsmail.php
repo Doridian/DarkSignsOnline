@@ -55,7 +55,7 @@ else if ($action === 'send')
 
     $time = time();
 
-    $msg_hash = dso_hash($message);
+    $msg_hash = dso_hash($msg);
     $uEmail = $user['username'] . '@users';
     foreach ($nameID AS $id)
     {
