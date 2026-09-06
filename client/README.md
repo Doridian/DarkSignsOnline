@@ -84,6 +84,13 @@ touches every string operation, comparison and conversion in the interpreter
 — a lot of churn for a legacy DBCS feature no DarkSigns script uses. The
 three `api.vbs` assertions it costs are the ones in `KNOWN_FAILURES`.
 
+The churn is the smaller half of the objection. Measured, the change is a
+~19:1 net slowdown on the script corpus, concentrated in `Say`, and doubles
+the string heap on the WASM build:
+[`docs/string-representation-performance.md`](docs/string-representation-performance.md)
+has the numbers, and the hybrid that would avoid them if the assertions ever
+need closing.
+
 ## The game API
 
 `src/game/` ports `clsScriptFunctions` from the VB6 client: the ~130
