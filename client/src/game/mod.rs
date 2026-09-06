@@ -191,7 +191,20 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
             }
         };
         if !capturing && !self.env.borrow().output_disabled {
-            self.console.borrow_mut().say(channel, text);
+            let mut console = self.console.borrow_mut();
+            match channel {
+                // `Say` splits on vbCrLf and calls `SayRaw` once per part,
+                // because a console row renders one line: handing the whole
+                // string over instead loses everything after the first
+                // newline, which is what `cat` on a multi-line file is.
+                Channel::Say => {
+                    for row in console_rows(text) {
+                        console.say(channel, row);
+                    }
+                }
+                // `SayCOMM` has no such loop -- a comm message is one line.
+                Channel::Comm | Channel::Chat => console.say(channel, text),
+            }
         }
     }
 
@@ -1474,6 +1487,35 @@ fn trailing_ints(args: &[ArgVal], from: usize) -> VbResult<Vec<i64>> {
         }
     }
     Ok(out)
+}
+
+/// Split console output into the rows a console draws.
+///
+/// The client splits on `vbCrLf`; a lone CR or LF ends a row here too, so a
+/// file written with bare newlines is not silently cut short. Empty rows are
+/// kept, including the trailing one a text ending in a newline produces --
+/// `Split` leaves that behind as well.
+fn console_rows(text: &str) -> Vec<&str> {
+    let bytes = text.as_bytes();
+    let mut rows = Vec::new();
+    let (mut start, mut i) = (0, 0);
+    while i < bytes.len() {
+        match bytes[i] {
+            b'\r' => {
+                rows.push(&text[start..i]);
+                i += if bytes.get(i + 1) == Some(&b'\n') { 2 } else { 1 };
+                start = i;
+            }
+            b'\n' => {
+                rows.push(&text[start..i]);
+                i += 1;
+                start = i;
+            }
+            _ => i += 1,
+        }
+    }
+    rows.push(&text[start..]);
+    rows
 }
 
 /// `Display`'s line window: `start` is 1-based, and `max` of 0 means all.

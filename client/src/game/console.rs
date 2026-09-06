@@ -29,7 +29,7 @@ impl DrawMode {
 }
 
 /// Where a line of output was sent.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Channel {
     /// Ordinary script output.
     Say,

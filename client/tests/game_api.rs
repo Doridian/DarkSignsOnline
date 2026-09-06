@@ -44,6 +44,24 @@ fn say_writes_a_line() {
     assert_eq!(out, vec!["hello"]);
 }
 
+/// `Say` splits on newlines and writes a row each, the way the client loops
+/// over `Split(sStr, vbCrLf)`. Without it everything past the first line is
+/// lost, since a console row renders one line.
+#[test]
+fn say_writes_one_row_per_line() {
+    let out = output_of(plain_host(), r#"Say "one" & vbCrLf & "two" & vbLf & "three""#);
+    assert_eq!(out, vec!["one", "two", "three"]);
+}
+
+/// A comm message stays whole: `SayCOMM` has no such loop.
+#[test]
+fn saycomm_does_not_split_its_line() {
+    let (host, result) = run(plain_host(), r#"SayComm "one" & vbCrLf & "two""#);
+    result.expect("script ran");
+    let out = host.console.borrow().comm_output();
+    assert_eq!(out, vec!["one\r\ntwo"]);
+}
+
 #[test]
 fn say_concatenates_its_parameter_list() {
     // The client's `Say` takes a ParamArray and joins it.
@@ -302,13 +320,15 @@ fn cat_reads_a_window_of_lines() {
         Say Cat("notes.txt", 2, 1)
         "#,
     );
-    assert_eq!(out, vec!["line two\r\n"]);
+    assert_eq!(out, vec!["line two", ""]);
 }
 
+/// A console row renders one line, so `Say` has to break the file up itself;
+/// handing it over whole showed the first line and dropped the rest.
 #[test]
 fn cat_without_a_window_reads_everything() {
     let out = output_of(fs_host(), r#"Say Cat("notes.txt")"#);
-    assert_eq!(out, vec!["line one\r\nline two\r\nline three\r\n"]);
+    assert_eq!(out, vec!["line one", "line two", "line three", ""]);
 }
 
 #[test]
