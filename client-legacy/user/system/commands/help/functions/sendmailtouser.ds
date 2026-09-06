@@ -1,2 +1,0 @@
-Option Explicit
-Say "{{green 12}}Function: SendMailToUser(sFrom[String], sSubject[String], sMessage[String]) -> Nothing"

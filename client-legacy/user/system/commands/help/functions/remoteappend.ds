@@ -1,3 +1,0 @@
-Option Explicit
-Say "{{green 12}}Function: RemoteAppend(Domain[String], filename[String], Contents[String]) -> HTTPRequest"
-Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

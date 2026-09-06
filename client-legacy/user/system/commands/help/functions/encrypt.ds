@@ -1,2 +1,0 @@
-Option Explicit
-Say "{{green 12}}Function: Encrypt(Data[String], Password[String], <NoWrap[Boolean,Default=False]>) -> String"

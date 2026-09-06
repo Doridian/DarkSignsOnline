@@ -1,3 +1,0 @@
-Option Explicit
-Say "{{green 12}}Function: SaySlowWithBGColor(RGBVal[Long], Delay[Long], Str[String], Style[String]) -> Nothing"
-Say "{{lred}}Restriction: Must be loaded with: DLOpen ""termlib"""

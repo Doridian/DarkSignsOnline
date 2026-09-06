@@ -1,3 +1,0 @@
-Option Explicit
-Say "{{green 12}}Command: DIR <Target[String,Default="".""]>"
-Say "{{lgrey}}Display files and folders in the active or given directory."

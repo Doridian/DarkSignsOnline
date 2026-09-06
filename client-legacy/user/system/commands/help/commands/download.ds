@@ -1,5 +1,0 @@
-Option Explicit
-Say "{{green 12}}Command: DOWNLOAD Server[String] Port[Integer] FileName[String]"
-Say "{{lgreen 12}}Example #1: DOWNLOAD mywebsite.com 80 thescript.ds"
-Say "{{lgrey}}Download a script file from a sever that you own."
-Say "{{lorange}}You can only upload and download scripts to domain names (servers) which you own."

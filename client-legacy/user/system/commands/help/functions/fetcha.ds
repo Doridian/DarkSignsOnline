@@ -1,2 +1,0 @@
-Option Explicit
-Say "{{green 12}}Function: FetchA(Domain[String], Port[Long], <XArr[Variant()]>) -> HTTPRequest"

@@ -1,2 +1,0 @@
-Option Explicit
-Say "{{green 12}}Function: RunCode(XArr(...) -> Variant)"

@@ -1,3 +1,0 @@
-Option Explicit
-Say "{{green 12}}Function: SetMissionProgress(MissionID[String], key[String], value[String]) -> Nothing"
-Say "{{lred}}Restriction: Must be loaded with: DLOpen ""termlib"""

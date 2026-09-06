@@ -1,2 +1,0 @@
-Option Explicit
-Say "{{green 12}}Function: SHA256(Data[String]) -> String"

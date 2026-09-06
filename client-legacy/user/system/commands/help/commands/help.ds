@@ -1,3 +1,0 @@
-Option Explicit
-Say "{{green 12}}Command: HELP <Topic[String]>"
-Say "{{lgrey}}Display the available console commands, functions and properties"

@@ -1,2 +1,0 @@
-Option Explicit
-Say "{{green 12}}Function: ConnectA(Domain[String], Port[Long], <XArr[Variant()]>) -> Nothing"

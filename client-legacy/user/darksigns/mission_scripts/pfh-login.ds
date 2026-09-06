@@ -1,6 +1,0 @@
-Option Explicit
-
-Say "Please enter username and password"
-ReadLine "Username:"
-ReadLine "Password:"
-Say "Invalid Password"
