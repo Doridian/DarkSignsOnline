@@ -48,7 +48,7 @@ const worker = new Worker("./worker.js", { type: "module" });
 worker.onmessage = (e) => {
   const message = e.data;
   switch (message.type) {
-    case "ready":
+    case "ready": {
       setPrompt(message.cwd);
       comm.add("Welcome to Dark Signs Delta.");
       if (!message.persistent) {
@@ -56,8 +56,17 @@ worker.onmessage = (e) => {
       } else if (message.restored > 0) {
         comm.add(`Restored ${message.restored} saved file(s).`);
       }
+      // Before the startup script, so a restored session is already
+      // authorized by the time anything it runs asks the server.
+      const saved = loadSavedCredentials();
+      if (saved) {
+        document.getElementById("username").value = saved.username;
+        document.getElementById("remember").checked = true;
+        signIn(saved.username, saved.password);
+      }
       runStartup();
       break;
+    }
 
     case "credentialsSet":
       setStatus(`You are online as ${pendingUser}.`, "online");
@@ -213,6 +222,52 @@ async function loadStartupFiles() {
 
 let pendingUser = "";
 
+// Saved sign-in, when the player asked for it.
+//
+// This is localStorage rather than the IndexedDB the files use, because the
+// form lives on this thread and a worker cannot reach localStorage at all.
+// The password is stored as typed: there is nowhere to hide it from anyone
+// with the browser, so the checkbox is the honest control and it defaults to
+// off. Every access is guarded, since a private window throws on the way in.
+const CREDENTIALS_KEY = "darksigns.credentials";
+
+function loadSavedCredentials() {
+  try {
+    const raw = localStorage.getItem(CREDENTIALS_KEY);
+    if (!raw) {
+      return null;
+    }
+    const saved = JSON.parse(raw);
+    return saved && saved.username && saved.password ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCredentials(username, password) {
+  try {
+    localStorage.setItem(CREDENTIALS_KEY, JSON.stringify({ username, password }));
+  } catch {
+    comm.add("Could not save your sign-in; this browser refused storage.");
+  }
+}
+
+function forgetCredentials() {
+  try {
+    localStorage.removeItem(CREDENTIALS_KEY);
+  } catch {
+    // Nothing was saved, or storage is denied. Either way there is nothing
+    // to clean up.
+  }
+}
+
+/** Hand the worker a set of credentials and reflect it in the titlebar. */
+function signIn(username, password) {
+  pendingUser = username;
+  worker.postMessage({ type: "credentials", username, password });
+  setStatus(`Signing in as ${username}...`, "connecting");
+}
+
 document.getElementById("login").addEventListener("submit", (e) => {
   e.preventDefault();
   pendingUser = document.getElementById("username").value.trim();
@@ -220,10 +275,14 @@ document.getElementById("login").addEventListener("submit", (e) => {
   if (!pendingUser || !password) {
     return;
   }
-  worker.postMessage({ type: "credentials", username: pendingUser, password });
+  if (document.getElementById("remember").checked) {
+    saveCredentials(pendingUser, password);
+  } else {
+    forgetCredentials();
+  }
+  signIn(pendingUser, password);
   // The password is handed to the worker and forgotten here.
   document.getElementById("password").value = "";
-  setStatus(`Signing in as ${pendingUser}...`, "connecting");
   input.focus();
 });
 

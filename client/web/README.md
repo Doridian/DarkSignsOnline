@@ -57,13 +57,23 @@ Cross-Origin-Embedder-Policy: require-corp
 `serve.js` sends them. Any static host will do as long as it does the same;
 the page says so plainly if it finds itself not cross-origin isolated.
 
+## Remembering a sign-in
+
+The "Remember me" box keeps the username and password in `localStorage` — not
+the IndexedDB the files use, because the form is on the main thread and a
+worker cannot reach `localStorage` at all. They are stored as typed. There is
+nowhere on a page to hide a password from anyone holding the browser, so the
+box is the honest control, and it is off unless ticked. A remembered sign-in
+is sent to the worker before the startup script runs, so the session is
+already authorized by the time anything asks the server.
+
 ## What is not here yet
 
-- **A sign-in that survives a reload.** Credentials live in memory, so a
-  refresh drops back to "Not signed in" and `startup.ds` stops at its `LOGIN`
-  before reaching `Include "/system/newconsole.ds"` — which is why a fresh
-  load shows no "New Console #1". Keeping them means writing a password to
-  IndexedDB, so it is a deliberate decision rather than an oversight.
+- **The real `/system/startup.ds`.** The page runs an inlined copy of its
+  banner instead, so the `LOGIN` and `Include "/system/newconsole.ds"` at its
+  end never run and no "New Console #1" appears. That was the right call when
+  nothing could be signed in before the script ran; now that a remembered
+  sign-in happens first, the inlined copy could give way to the file.
 - **Text metrics.** `TextWidth` counts characters rather than measuring the
   font, so scripts that lay out columns will be off. Measuring properly means
   a round trip to the page for a call scripts make in loops, so it needs a

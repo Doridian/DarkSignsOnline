@@ -68,10 +68,31 @@ body {
 #login {
   margin-left: auto;
   display: flex;
+  align-items: center;
   gap: 0.35rem;
 }
 
-input,
+#remember-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* The rule below dresses text fields; a checkbox wants none of it. */
+#login input[type="checkbox"] {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: auto;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+input:not([type="checkbox"]),
 button {
   background: #0e1319;
   color: var(--fg);
