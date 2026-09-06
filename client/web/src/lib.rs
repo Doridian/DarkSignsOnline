@@ -68,11 +68,14 @@ impl Session {
             DEFAULT_API_ROOT.to_string(),
             Credentials::default(),
         ))
-        .with_env(Env { cwd: "/".into(), ..Default::default() });
+        // A console starts in /home, not at the root: `frmConsole.frm` seeds
+        // `cPath` with "/home" for all four of them. `Env::default` is the
+        // neutral root a non-console script gets.
+        .with_env(Env { cwd: "/home".into(), ..Default::default() });
 
         Session {
             host: Rc::new(BrowserHost::new(inner)),
-            command_state: CommandState::default(),
+            command_state: CommandState::console(),
             api_root: RefCell::new(DEFAULT_API_ROOT.to_string()),
             credentials: RefCell::new(Credentials::default()),
         }

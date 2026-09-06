@@ -6,8 +6,9 @@
 //! looks like real script — an assignment, a keyword, punctuation VBScript
 //! uses — is passed through untouched.
 //!
-//! The rewriting only happens once a session has opted in with
-//! `Option DScript`; until then everything is script.
+//! An interactive console has the rewriting on from the start
+//! (`CommandState::console`). Elsewhere it is off until a line opts in with
+//! `Option DScript`, and `Option NoDScript` turns it back off.
 
 use super::values::is_hex;
 
@@ -84,6 +85,20 @@ impl CommandContext for NoContext {
 pub struct CommandState {
     /// Whether command rewriting is switched on.
     pub dscript: bool,
+}
+
+impl CommandState {
+    /// The state an interactive console starts in.
+    ///
+    /// Rewriting is on from the first line: `basCommands.InitConsoles` sets
+    /// `scrConsoleDScript(x) = True` for each of the four consoles, so a
+    /// player who types `help` gets the command, not a bare identifier. The
+    /// `Default` impl is the other case — `ParseCommandLineOptional` starts
+    /// from `False`, because script being parsed on a script's behalf has not
+    /// opted in.
+    pub fn console() -> Self {
+        Self { dscript: true }
+    }
 }
 
 #[derive(Debug)]
@@ -477,6 +492,27 @@ mod tests {
 
     fn dscript() -> CommandState {
         CommandState { dscript: true }
+    }
+
+    /// An interactive console rewrites commands from its very first line.
+    /// The console is the only caller that does not set this explicitly, so
+    /// a wrong default here reaches the player as `help` doing nothing at
+    /// all, while every test that sets `dscript` by hand still passes.
+    #[test]
+    fn console_starts_with_rewriting_on() {
+        assert!(CommandState::console().dscript);
+
+        let ctx = Ctx { commands: vec!["help"], defined: vec![] };
+        let mut state = CommandState::console();
+        let out = parse_command_line("help", &mut state, &ctx, false).expect("parses");
+        assert_eq!(out, "Call Run(\"help\")");
+    }
+
+    /// Script parsed on a script's behalf has not opted in, matching
+    /// `ParseCommandLineOptional`.
+    #[test]
+    fn default_state_leaves_rewriting_off() {
+        assert!(!CommandState::default().dscript);
     }
 
     fn parse(input: &str, ctx: &dyn CommandContext) -> String {

@@ -31,6 +31,8 @@ Markup is parsed in Rust, so the page receives runs with a font, size and
 ## Building
 
 ```sh
+# A distro Rust may already carry the target; check with
+# `ls $(rustc --print sysroot)/lib/rustlib` before reaching for rustup.
 rustup target add wasm32-unknown-unknown
 cargo install wasm-bindgen-cli --version 0.2.128
 
@@ -57,8 +59,11 @@ the page says so plainly if it finds itself not cross-origin isolated.
 
 ## What is not here yet
 
-- **Storage.** The filesystem is in memory, so a session starts fresh. It
-  wants IndexedDB behind the same [`FileSystem`](../src/game/fs.rs) trait.
+- **A sign-in that survives a reload.** Credentials live in memory, so a
+  refresh drops back to "Not signed in" and `startup.ds` stops at its `LOGIN`
+  before reaching `Include "/system/newconsole.ds"` — which is why a fresh
+  load shows no "New Console #1". Keeping them means writing a password to
+  IndexedDB, so it is a deliberate decision rather than an oversight.
 - **Text metrics.** `TextWidth` counts characters rather than measuring the
   font, so scripts that lay out columns will be off. Measuring properly means
   a round trip to the page for a call scripts make in loops, so it needs a
