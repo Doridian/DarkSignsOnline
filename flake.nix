@@ -136,7 +136,9 @@
         #
         # They are sent by the page itself rather than by the web server, so
         # that the page carries its own requirement wherever it is served
-        # from and `server.conf` needs nothing to say about it.
+        # from. Its worker is the exception: a dedicated worker's own response
+        # has to repeat `require-corp` or the browser refuses the script, and
+        # `worker.js` is a static file, so `server.conf` says that one.
         gamePhpHeaders = pkgs.writeText "game-headers.php" ''
           <?php
           header('Cross-Origin-Opener-Policy: same-origin');
