@@ -128,20 +128,37 @@
           '';
         };
 
+        # What turns the built `index.html` into `game.php`: the two headers
+        # that make the page cross-origin isolated, without which the browser
+        # withholds SharedArrayBuffer and the client's workers cannot block
+        # waiting for input. PHP eats the newline right after `?>`, so the
+        # page still begins with its doctype.
+        #
+        # They are sent by the page itself rather than by the web server, so
+        # that the page carries its own requirement wherever it is served
+        # from and `server.conf` needs nothing to say about it.
+        gamePhpHeaders = pkgs.writeText "game-headers.php" ''
+          <?php
+          header('Cross-Origin-Opener-Policy: same-origin');
+          header('Cross-Origin-Embedder-Policy: require-corp');
+          ?>
+        '';
+
         # One web root holding both. The client's page becomes `game.php` --
-        # a static file under a `.php` name, for consistency with
-        # `forgot_password.php` and the rest of the site; no PHP runs in it.
+        # under a `.php` name for consistency with `forgot_password.php` and
+        # the rest of the site, and now genuinely PHP: the prologue above and
+        # then the built page, unchanged.
         #
         # Its assets stay at the root beside it because the page addresses
         # them relatively: a document at `/game.php` resolves `./main.js` to
-        # `/main.js`. `server.conf` is what adds the two headers the page
-        # needs to be cross-origin isolated.
+        # `/main.js`.
         both = pkgs.runCommand "darksignsonline-both" { } ''
           root="$out/var/www/darksignsonline"
           mkdir -p "$out/var/www"
           cp -r --no-preserve=mode,ownership ${server}/var/www/darksignsonline "$root"
           cp -r --no-preserve=mode,ownership ${client}/var/www/darksignsonline/. "$root/"
-          mv "$root/index.html" "$root/game.php"
+          cat ${gamePhpHeaders} "$root/index.html" > "$root/game.php"
+          rm "$root/index.html"
         '';
       in
       {
