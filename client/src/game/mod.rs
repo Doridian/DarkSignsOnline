@@ -188,6 +188,46 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
             self.console.borrow_mut().say(channel, text);
         }
     }
+
+    /// `PrintVar`, which has three cases rather than the one it looks like.
+    ///
+    /// A lone string is said as-is, except that a pending request handle is
+    /// awaited first and its result printed instead — that is what lets a
+    /// script write `PrintVar Stats()` and see the answer rather than the
+    /// handle. Several values are labelled by position, as the client does.
+    fn print_var(&self, values: &[Value]) -> VbResult<()> {
+        let [only] = values else {
+            if values.is_empty() {
+                self.emit(Channel::Say, "No arguments to print{{orange}}");
+                return Ok(());
+            }
+            for (i, value) in values.iter().enumerate() {
+                self.emit(Channel::Say, &format!("ArgV({i}) {}", format_var(value)));
+            }
+            return Ok(());
+        };
+
+        let Ok(text) = only.to_vb_string() else {
+            self.emit(Channel::Say, &format_var(only));
+            return Ok(());
+        };
+        if !matches!(only, Value::Str(_)) {
+            self.emit(Channel::Say, &format_var(only));
+            return Ok(());
+        }
+        match server::decode_handle(&text) {
+            Some(id) => {
+                let shape = self.server.borrow().response_type(id);
+                let response = self.server.borrow_mut().wait(id);
+                let value = shape_response(&response, shape)?;
+                self.print_var(&[value])
+            }
+            None => {
+                self.emit(Channel::Say, &text);
+                Ok(())
+            }
+        }
+    }
 }
 
 /// Coerce one argument to a string, treating a missing one as empty.
@@ -584,11 +624,22 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 self.console.borrow_mut().mail();
                 Value::Empty
             }
-            "printvar" | "printvarsingleifset" => {
-                for i in 0..args.len() {
-                    let text = format_var(&arg_value(args, i));
-                    self.emit(Channel::Say, &text);
+            // The two differ in exactly one way, and merging them was what
+            // made a mistyped command print "empty": the console rewrites an
+            // unknown bare word to `PrintVarSingleIfSet name()`, so the value
+            // it prints is an unset variant. "IfSet" is the instruction to say
+            // nothing about that.
+            "printvarsingleifset" => {
+                let value = arg_value(args, 0);
+                if !matches!(value, Value::Empty) {
+                    self.print_var(&[value])?;
                 }
+                Value::Empty
+            }
+            "printvar" => {
+                let values: Vec<Value> =
+                    (0..args.len()).map(|i| arg_value(args, i)).collect();
+                self.print_var(&values)?;
                 Value::Empty
             }
 

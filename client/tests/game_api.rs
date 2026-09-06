@@ -1078,3 +1078,50 @@ fn the_token_request_separates_its_fields() {
         Some("is_local_script=true&d=example.com&info=why")
     );
 }
+
+// ---- PrintVar -----------------------------------------------------------
+
+/// The console rewrites an unknown bare word to `PrintVarSingleIfSet name()`.
+/// That argument is unset, and "IfSet" means it prints nothing — a typo at
+/// the prompt should be silent, not answer "Empty".
+#[test]
+fn print_var_single_if_set_says_nothing_about_an_unset_value() {
+    assert_eq!(output_of(plain_host(), "PrintVarSingleIfSet Missing()"), Vec::<String>::new());
+    assert_eq!(output_of(plain_host(), r#"PrintVarSingleIfSet "here""#), vec!["here"]);
+}
+
+/// `PrintVar` prints Empty rather than swallowing it; only the "IfSet"
+/// variant is silent.
+#[test]
+fn print_var_prints_an_unset_value() {
+    assert_eq!(output_of(plain_host(), "Dim v\nPrintVar v"), vec!["Empty"]);
+}
+
+#[test]
+fn print_var_complains_when_given_nothing() {
+    assert_eq!(
+        output_of(plain_host(), "PrintVar"),
+        vec!["No arguments to print{{orange}}"]
+    );
+}
+
+/// Several values are labelled by position.
+#[test]
+fn print_var_labels_multiple_values_by_position() {
+    assert_eq!(
+        output_of(plain_host(), r#"PrintVar "a", 2"#),
+        vec!["ArgV(0) a", "ArgV(1) 2"]
+    );
+}
+
+/// A lone string that is really a pending request is awaited, so a script can
+/// write `PrintVar Lookup(...)` and see the answer rather than the handle.
+#[test]
+fn print_var_waits_for_a_pending_request() {
+    let server = ScriptedServer::new().answer("lookup.php", "10.0.0.1");
+    let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server);
+    assert_eq!(
+        output_of(host, r#"PrintVar Lookup("example.com")"#),
+        vec!["10.0.0.1"]
+    );
+}

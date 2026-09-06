@@ -25,8 +25,13 @@ if [ ! -x "$bindgen" ]; then
 fi
 "$bindgen" --target web --out-dir "$here/www/pkg" --no-typescript "$wasm"
 
-# The shipped .ds scripts, which the client loads into its filesystem at
+# The shipped player directory, which the client loads into its filesystem at
 # startup. A manifest saves the page from having to guess what exists.
+#
+# Every file, not just *.ds: the READMEs are what bring /downloads and
+# /home/music into being, and a console starts in /home, so filtering them out
+# left it pointing at a directory that did not exist. The remote filesystem's
+# .run and .password files are game content too.
 scripts_src="$client/../client-legacy/user"
 scripts_out="$here/www/scripts"
 rm -rf "$scripts_out"
@@ -39,11 +44,11 @@ if [ -d "$scripts_src" ]; then
     cp "$file" "$scripts_out$rel"
     [ $first -eq 1 ] && first=0 || manifest+=","
     manifest+="\"$rel\""
-  done < <(find "$scripts_src" -name '*.ds' | sort)
+  done < <(find "$scripts_src" -type f | sort)
   manifest+="]"
   mkdir -p "$scripts_out"
   printf '%s' "$manifest" > "$scripts_out/manifest.json"
-  echo "bundled $(find "$scripts_out" -name '*.ds' | wc -l) scripts"
+  echo "bundled $(find "$scripts_out" -type f -not -name manifest.json | wc -l) files"
 fi
 
 echo "built into $here/www"
