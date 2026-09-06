@@ -1,2 +1,7 @@
+# Everything generated: the wasm module and its types, the shipped scripts,
+# and the JavaScript the TypeScript sources beside them compile to.
 /pkg
 /scripts
+*.js
+*.js.map
+words.ts

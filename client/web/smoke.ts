@@ -4,12 +4,14 @@
 // It drives the same API the worker does, so it catches a broken build
 // without needing a browser. Run it after build.sh:
 //
-//   node web/smoke.mjs
+//   node web/smoke.ts
 
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import assert from "node:assert/strict";
+
+import type { ConsoleEvent } from "./www/types.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pkg = join(here, "www/pkg");
@@ -19,20 +21,21 @@ const { FONT_STACK } = await import(join(here, "www/fonts.js"));
 await init({ module_or_path: await readFile(join(pkg, "dso_web_bg.wasm")) });
 
 /** Collect console events the way the worker forwards them to the page. */
-const events = [];
+const events: ConsoleEvent[] = [];
 const lines = () =>
   events
     .filter((e) => e.kind === "line")
-    .map((e) => e.runs.map((r) => r.text).join(""));
+    .map((e) => e.runs.map((run) => run.text).join(""));
 
 const queuedInput = ["typed answer"];
 /** Changes the worker would hand to IndexedDB. */
 const saved = new Map();
 const session = new Session(
-  (json) => events.push(JSON.parse(json)),
+  (json: string) => events.push(JSON.parse(json)),
   () => (queuedInput.length ? queuedInput.shift() : null),
   () => 121, // 'y'
-  (path, contents) => (contents === null ? saved.delete(path) : saved.set(path, contents)),
+  (path: string, contents: string | null) =>
+    contents === null ? saved.delete(path) : saved.set(path, contents),
   2, // the console this session is, which scripts read as ConsoleID
   FONT_STACK,
 );
@@ -41,7 +44,7 @@ session.setLayout(1200, 40);
 // Output, with markup turned into styled runs.
 session.runScript('Say "{{green}}hello"', []);
 const first = events.at(-1);
-assert.equal(first.kind, "line");
+assert.equal(first?.kind, "line");
 assert.equal(first.runs[0].text, "hello");
 assert.equal(first.runs[0].color, "#44cf3d", "green must survive the colour swap");
 
@@ -60,7 +63,7 @@ assert.ok(lines().includes("hi, world"), "command dispatch works");
 
 // The two hooks a browser has to supply.
 session.runScript('Say "year=" & Year(Now())', []);
-const year = Number(lines().at(-1).slice(5));
+const year = Number(lines().at(-1)?.slice(5));
 assert.ok(year >= 2024, `Date.now() should reach the script, got ${year}`);
 
 session.runScript(
@@ -109,9 +112,10 @@ assert.ok(
   "Draw reaches the renderer with its mode",
 );
 const title = banner.find((e) => e.kind === "line" && e.runs.length === 3);
+assert.ok(title && title.kind === "line", "the banner's title line is there");
 assert.equal(title.align, "center");
-assert.equal(title.runs.map((r) => r.text).join(""), "[ D A R K S I G N S ]");
-assert.ok(title.runs.every((r) => r.font === "Impact" && r.size === 48 && !r.bold));
+assert.equal(title.runs.map((run) => run.text).join(""), "[ D A R K S I G N S ]");
+assert.ok(title.runs.every((run) => run.font === "Impact" && run.size === 48 && !run.bold));
 
 // The console knows which of the four it is, which is what `newconsole.ds`
 // prints and what a script uses to address its own console.
@@ -130,18 +134,16 @@ session.runScript(
   'Say "small=" & TextWidth("hello") & " big=" & TextWidth("{{48}}hello")',
   [],
 );
-const [small, big] = lines()
-  .at(-1)
-  .match(/small=(\d+) big=(\d+)/)
-  .slice(1)
-  .map(Number);
+const measured = /small=(\d+) big=(\d+)/.exec(lines().at(-1) ?? "");
+assert.ok(measured, "the measurements were printed");
+const [small, big] = measured.slice(1).map(Number);
 assert.ok(small > 0, "a measured width is not zero");
 assert.ok(big > small * 3, `48pt should dwarf 10pt, got ${small} and ${big}`);
 
 // The markup is measured, not counted: the tag itself takes no room.
 session.runScript('Say "tagged=" & TextWidth("{{red}}hello")', []);
 assert.equal(
-  Number(lines().at(-1).slice(7)),
+  Number(lines().at(-1)?.slice(7)),
   small,
   "a colour tag is markup, not text",
 );

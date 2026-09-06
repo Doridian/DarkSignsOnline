@@ -298,30 +298,66 @@ button:hover {
   display: none;
 }
 
-/* ---- mail ------------------------------------------------------------ */
+/* ---- the sub-windows ------------------------------------------------- */
 
-#mail {
-  width: min(56rem, 90vw);
-  height: min(38rem, 85vh);
+/* Mail, the editor and the library share a frame: a title bar to drag them
+   by, a body, and a status line. */
+#mail,
+#editor,
+#library {
   padding: 0;
   border: 1px solid var(--rule);
   border-radius: 3px;
   background: var(--bg);
   color: var(--fg);
   font-size: 12px;
+  max-width: none;
+  max-height: none;
 }
-#mail:not([open]) {
+#mail:not([open]),
+#editor:not([open]),
+#library:not([open]) {
   display: none;
 }
-#mail::backdrop {
+#mail::backdrop,
+#editor::backdrop,
+#library::backdrop {
   background: rgb(0 0 0 / 60%);
 }
-#mail[open] {
+#mail[open],
+#editor[open],
+#library[open] {
   display: grid;
-  /* Title bar, the inbox, the status line. */
-  grid-template-rows: auto 1fr auto;
+  /* Title bar, body, status line. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
   min-height: 0;
 }
+
+#mail {
+  width: min(56rem, 90vw);
+  height: min(38rem, 85vh);
+}
+#editor {
+  width: min(72rem, 94vw);
+  height: min(46rem, 90vh);
+}
+#library {
+  width: min(72rem, 94vw);
+  height: min(42rem, 88vh);
+}
+
+/* The title bar is the handle. Nothing in it should select as it is
+   dragged, and the cursor says so before the drag starts. */
+.win-drag {
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+.win-drag.dragging {
+  cursor: grabbing;
+}
+
+/* ---- mail ------------------------------------------------------------ */
 
 .mail-bar {
   display: flex;
@@ -495,6 +531,379 @@ button:hover {
   min-height: 1.5rem;
 }
 
+/* ---- the editor ------------------------------------------------------ */
+
+.ed-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--titlebar);
+  border-bottom: 1px solid var(--rule);
+}
+.ed-title {
+  color: var(--gold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ed-spacer {
+  flex: 1;
+}
+
+.ed-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 17rem;
+  min-height: 0;
+}
+
+/* The gutter and the code, which scroll together. */
+.ed-pane {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 0;
+  background: #0a0e13;
+}
+
+/* Everything that has to line up says so once, here: the two layers of the
+   editor and the line numbers are drawn in the same metrics, because the
+   highlight sits exactly behind the text it colours. */
+.ed-numbers,
+.ed-highlight,
+.ed-input {
+  margin: 0;
+  border: 0;
+  font-family: "Courier New", "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  tab-size: 4;
+  white-space: pre;
+}
+
+.ed-gutter {
+  overflow: hidden;
+  border-right: 1px solid var(--rule);
+  background: #0d1219;
+}
+.ed-numbers {
+  padding: 0.5rem 0.5rem 0.5rem 0.7rem;
+  color: #4a5462;
+  text-align: right;
+  user-select: none;
+}
+
+.ed-code {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+}
+.ed-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  padding: 0.5rem 0.7rem;
+  color: var(--fg);
+  pointer-events: none;
+}
+.ed-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem 0.7rem;
+  resize: none;
+  overflow: auto;
+  background: transparent;
+  /* The text itself is drawn by the layer underneath; only the caret and
+     the selection belong to the textarea. */
+  color: transparent;
+  caret-color: var(--accent);
+  border-radius: 0;
+}
+.ed-input:focus {
+  outline: none;
+}
+.ed-input::selection {
+  background: #2b4a6b;
+}
+
+/* The colours. Comments recede, strings and the game's own markup stand
+   apart, and a name the interpreter knows is lit differently from one it
+   does not -- which is how a typo shows itself. */
+.tok-comment {
+  color: #5f6c7b;
+  font-style: italic;
+}
+.tok-string {
+  color: #c8a55b;
+}
+.tok-markup {
+  color: #d8622f;
+  font-weight: 700;
+}
+.tok-number {
+  color: #b48ce0;
+}
+.tok-keyword {
+  color: #4aa3ff;
+  font-weight: 700;
+}
+.tok-builtin {
+  color: #43c9b0;
+}
+.tok-constant {
+  color: #b48ce0;
+}
+.tok-api {
+  color: var(--accent);
+}
+.tok-member {
+  color: #9fd4ff;
+}
+.tok-op {
+  color: #8e99a8;
+}
+.tok-continuation {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* The API reference, which is the original's command list brought forward. */
+.ed-ref {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  border-left: 1px solid var(--rule);
+  background: var(--panel);
+}
+.ed-search {
+  margin: 0.4rem;
+  width: calc(100% - 0.8rem);
+}
+.ed-list {
+  overflow-y: auto;
+  min-height: 0;
+}
+.ed-ref-row {
+  display: block;
+  width: 100%;
+  padding: 0.15rem 0.5rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fg);
+  font-weight: 400;
+  text-align: left;
+}
+.ed-ref-row:hover {
+  background: #1f2731;
+}
+.ed-ref-name {
+  color: var(--accent);
+}
+.ed-ref-args {
+  display: block;
+  color: var(--dim);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ed-ref-foot {
+  margin: 0;
+  padding: 0.3rem 0.5rem;
+  border-top: 1px solid var(--rule);
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.ed-status {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.25rem 0.6rem;
+  border-top: 1px solid var(--rule);
+  background: var(--titlebar);
+  color: var(--dim);
+  font-size: 11px;
+  min-height: 1.6rem;
+}
+.ed-hint {
+  color: var(--accent);
+  font-family: "Courier New", "Liberation Mono", monospace;
+}
+.ed-position,
+.ed-state {
+  white-space: nowrap;
+}
+
+/* ---- the file library ------------------------------------------------- */
+
+.lib-body {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 1fr);
+  min-height: 0;
+}
+
+.lib-categories {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-height: 0;
+  border-right: 1px solid var(--rule);
+  background: var(--panel);
+}
+.lib-category {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fg);
+  font-weight: 400;
+  text-align: left;
+  padding: 0.25rem 0.6rem;
+}
+.lib-category:hover {
+  background: #1f2731;
+}
+.lib-category.current {
+  color: var(--gold);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.lib-table {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+.lib-table:has(.lib-detail) {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.lib-rows {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.lib-row {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) 5rem 6rem 8rem minmax(0, 2fr) 7rem;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.2rem 0.6rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fg);
+  font-weight: 400;
+  text-align: left;
+}
+.lib-row:hover {
+  background: var(--panel);
+}
+.lib-row.current {
+  background: var(--panel);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.lib-head {
+  border-bottom: 1px solid var(--rule);
+  background: var(--titlebar);
+  padding: 0;
+}
+.lib-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lib-sort {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dim);
+  text-align: left;
+  padding: 0.2rem 0;
+  font-size: 11px;
+}
+.lib-sort.sorted {
+  color: var(--gold);
+}
+.lib-arrow {
+  font-size: 9px;
+}
+
+/* Two columns rather than six: an upload is an id and a rendered line. */
+.lib-mine {
+  grid-template-columns: 5rem minmax(0, 1fr);
+}
+
+.lib-detail {
+  border-top: 1px solid var(--rule);
+  background: var(--panel);
+  padding: 0.5rem 0.6rem;
+}
+.lib-detail-title {
+  font-weight: 700;
+  color: #ffffff;
+}
+.lib-detail-meta {
+  color: var(--dim);
+}
+.lib-detail-body {
+  margin: 0.4rem 0;
+  white-space: pre-wrap;
+}
+
+.lib-panel,
+.lib-form {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  min-height: 0;
+}
+.lib-panel {
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+.lib-heading {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gold);
+}
+.lib-note {
+  margin: 0;
+  color: var(--dim);
+}
+
+.lib-channel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--dim);
+}
+.lib-channel input {
+  width: 6rem;
+}
+
+.lib-text {
+  min-height: 0;
+  height: 100%;
+  resize: none;
+  background: #0e1319;
+  color: var(--fg);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.4rem;
+  font-family: "Courier New", "Liberation Mono", monospace;
+  font-size: 12px;
+}
+
+.mail-button.current {
+  color: var(--gold);
+  border-color: var(--accent);
+}
+
 /* ---- status bar ------------------------------------------------------ */
 
 #statusbar {
@@ -510,6 +919,20 @@ button:hover {
 
 #hint b {
   color: var(--accent);
+}
+
+/* The library has no command in the original either: it is opened from the
+   console's own furniture, which here is the status bar. */
+#open-library {
+  padding: 0.05rem 0.4rem;
+  font-size: 11px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--dim);
+}
+#open-library:hover {
+  color: var(--gold);
+  border-color: var(--rule);
 }
 
 #tabs {

@@ -17,6 +17,7 @@ pub mod crypto;
 pub mod fs;
 #[cfg(feature = "native-http")]
 pub mod http;
+pub mod library;
 pub mod mail;
 pub mod markup;
 pub mod path;
@@ -152,7 +153,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
     }
 
     /// Resolve a script path against the working directory.
-    fn resolve(&self, p: &str) -> String {
+    pub fn resolve(&self, p: &str) -> String {
         path::resolve_rel(&self.env.borrow().cwd, p)
     }
 

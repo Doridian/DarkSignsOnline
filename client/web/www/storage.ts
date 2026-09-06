@@ -9,7 +9,7 @@ const DB_VERSION = 1;
 const STORE = "files";
 
 /** Open the database, creating the store on first use. */
-function open() {
+function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
@@ -25,14 +25,17 @@ function open() {
 }
 
 export class FileStore {
-  constructor(db) {
-    this.db = db;
-    /** Pending changes, keyed by path so a rewrite supersedes an earlier one. */
-    this.queue = new Map();
-    this.flushing = false;
-  }
+  /**
+   * Pending changes, keyed by path so a rewrite supersedes an earlier one.
+   * A null is a deletion.
+   */
+  queue = new Map<string, string | null>();
+  flushing = false;
 
-  static async open() {
+  /** `db` is null when storage is unavailable. */
+  constructor(readonly db: IDBDatabase | null) {}
+
+  static async open(): Promise<FileStore> {
     try {
       return new FileStore(await open());
     } catch (err) {
@@ -43,18 +46,19 @@ export class FileStore {
     }
   }
 
-  get available() {
+  get available(): boolean {
     return this.db !== null;
   }
 
   /** Every saved file, as a path→contents object. */
-  async loadAll() {
-    if (!this.db) {
+  async loadAll(): Promise<Record<string, string>> {
+    const db = this.db;
+    if (!db) {
       return {};
     }
     return new Promise((resolve) => {
-      const files = {};
-      const tx = this.db.transaction(STORE, "readonly");
+      const files: Record<string, string> = {};
+      const tx = db.transaction(STORE, "readonly");
       const cursor = tx.objectStore(STORE).openCursor();
       cursor.onsuccess = () => {
         const at = cursor.result;
@@ -62,7 +66,7 @@ export class FileStore {
           resolve(files);
           return;
         }
-        files[at.key] = at.value;
+        files[String(at.key)] = at.value;
         at.continue();
       };
       cursor.onerror = () => resolve(files);
@@ -74,7 +78,7 @@ export class FileStore {
    *
    * Returns immediately: the script that caused it is not waiting.
    */
-  record(path, contents) {
+  record(path: string, contents: string | null): void {
     if (!this.db) {
       return;
     }
@@ -82,7 +86,7 @@ export class FileStore {
     this.scheduleFlush();
   }
 
-  scheduleFlush() {
+  scheduleFlush(): void {
     if (this.flushing) {
       return;
     }
@@ -91,7 +95,7 @@ export class FileStore {
     queueMicrotask(() => this.flush());
   }
 
-  flush() {
+  flush(): void {
     const pending = this.queue;
     this.queue = new Map();
     this.flushing = false;
@@ -116,15 +120,16 @@ export class FileStore {
   }
 
   /** Forget everything, for a reset. */
-  async clear() {
-    if (!this.db) {
+  async clear(): Promise<void> {
+    const db = this.db;
+    if (!db) {
       return;
     }
-    await new Promise((resolve) => {
-      const tx = this.db.transaction(STORE, "readwrite");
+    await new Promise<void>((resolve) => {
+      const tx = db.transaction(STORE, "readwrite");
       tx.objectStore(STORE).clear();
-      tx.oncomplete = resolve;
-      tx.onerror = resolve;
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
     });
   }
 }

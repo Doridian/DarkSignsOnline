@@ -8,26 +8,36 @@
 // one, because a browser dialog inside a dialog buys nothing: selecting a
 // message opens it below the list, and composing replaces the list.
 
+import type { Ask, MailMessage, MailView } from "./types.js";
+import { draggable } from "./window.js";
+
+/** A message being written. */
+interface Draft {
+  to: string;
+  subject: string;
+  body: string;
+}
+
 /** How the server writes a date: `dd.mm.yyyy HH:MM:SS`. */
 const SERVER_DATE = /^(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}):(\d{2})$/;
 
 export class MailWindow {
-  /**
-   * @param {HTMLDialogElement} root the dialog
-   * @param {(message: object) => Promise<object>} ask sends one request to a
-   *   free console's worker and resolves with what it answers
-   */
-  constructor(root, ask) {
-    this.root = root;
-    this.ask = ask;
-    this.messages = [];
-    /** The message being read, or null while the list is showing. */
-    this.reading = null;
-    /** Set while a compose form is up, holding its draft. */
-    this.draft = null;
-    this.status = "";
-    this.busy = false;
+  messages: MailMessage[] = [];
+  /** The message being read, or null while the list is showing. */
+  reading: MailMessage | null = null;
+  /** Set while a compose form is up, holding its draft. */
+  draft: Draft | null = null;
+  status = "";
+  busy = false;
 
+  /**
+   * `ask` sends one request to a free console's worker and resolves with
+   * what it answers.
+   */
+  constructor(
+    readonly root: HTMLDialogElement,
+    readonly ask: Ask,
+  ) {
     this.root.addEventListener("close", () => {
       // A half-written message is kept, so closing the window by accident
       // does not throw it away.
@@ -35,7 +45,7 @@ export class MailWindow {
     });
   }
 
-  get open() {
+  get open(): boolean {
     return this.root.open;
   }
 
@@ -46,7 +56,7 @@ export class MailWindow {
    * the server is asked straight after -- which is what the original does
    * when its inbox form loads.
    */
-  async show() {
+  async show(): Promise<void> {
     if (!this.root.open) {
       this.root.showModal();
     }
@@ -55,7 +65,7 @@ export class MailWindow {
     await this.refresh();
   }
 
-  async refresh() {
+  async refresh(): Promise<void> {
     await this.load("mailFetch", (view) => {
       this.status =
         `Current emails: ${view.messages.length} New emails: ${view.added}`;
@@ -63,25 +73,29 @@ export class MailWindow {
   }
 
   /** Run one request against a worker, keeping the window honest meanwhile. */
-  async load(type, after, extra = {}) {
+  async load(
+    type: string,
+    after?: ((view: MailView) => void) | null,
+    extra: Record<string, unknown> = {},
+  ): Promise<void> {
     if (this.busy) {
       return;
     }
     this.busy = true;
     this.render();
     try {
-      const view = await this.ask({ type, ...extra });
+      const view: MailView = await this.ask({ type, ...extra });
       this.messages = view.messages;
       after?.(view);
     } catch (err) {
-      this.status = String(err.message ?? err);
+      this.status = complaint(err);
     } finally {
       this.busy = false;
       this.render();
     }
   }
 
-  async read(id) {
+  async read(id: number): Promise<void> {
     this.reading = this.messages.find((m) => m.id === id) ?? null;
     this.render();
     if (this.reading?.unread) {
@@ -92,7 +106,7 @@ export class MailWindow {
     }
   }
 
-  compose(draft = { to: "", subject: "", body: "" }) {
+  compose(draft: Draft = { to: "", subject: "", body: "" }): void {
     this.draft = draft;
     this.reading = null;
     this.status = "";
@@ -103,7 +117,7 @@ export class MailWindow {
    * Reply, quoting the original the way the client does: the body is prefixed
    * line by line with `#`, under a short header.
    */
-  reply(message) {
+  reply(message: MailMessage): void {
     const quoted = message.body
       .split(/\r\n|\r|\n/)
       .map((line) => `#${line}`)
@@ -117,7 +131,10 @@ export class MailWindow {
     });
   }
 
-  async send() {
+  async send(): Promise<void> {
+    if (!this.draft) {
+      return;
+    }
     const { to, subject, body } = this.draft;
     if (to.trim() === "") {
       this.status = "Say who it is going to.";
@@ -136,14 +153,14 @@ export class MailWindow {
       await this.refresh();
     } catch (err) {
       this.busy = false;
-      this.status = String(err.message ?? err);
+      this.status = complaint(err);
       this.render();
     }
   }
 
   // ---- rendering -------------------------------------------------------
 
-  render() {
+  render(): void {
     this.root.replaceChildren(
       this.header(),
       this.draft ? this.composer() : this.inbox(),
@@ -151,8 +168,8 @@ export class MailWindow {
     );
   }
 
-  header() {
-    const bar = el("header", "mail-bar");
+  header(): HTMLElement {
+    const bar = el("header", "mail-bar win-drag");
     const title = el("strong", null, this.draft ? "New message" : "DSO Mail");
     bar.append(title, el("span", "mail-spacer"));
     if (!this.draft) {
@@ -162,10 +179,13 @@ export class MailWindow {
       );
     }
     bar.append(button("Close", () => this.root.close()));
+    // The bar is rebuilt on every render, so the window is told each time
+    // which element to be dragged by; it keeps wherever it was put.
+    draggable(this.root, bar);
     return bar;
   }
 
-  inbox() {
+  inbox(): HTMLElement {
     const body = el("div", "mail-body");
     const list = el("div", "mail-list");
     list.setAttribute("role", "list");
@@ -191,31 +211,33 @@ export class MailWindow {
     }
     body.append(list);
 
-    if (this.reading) {
+    const reading = this.reading;
+    if (reading) {
       const pane = el("article", "mail-read");
       const head = el("header", "mail-read-head");
       head.append(
-        el("div", "mail-read-subject", this.reading.subject || "(no subject)"),
-        el("div", "mail-read-meta", `${this.reading.from} · ${this.reading.date}`),
-        button("Reply", () => this.reply(this.reading), this.busy),
+        el("div", "mail-read-subject", reading.subject || "(no subject)"),
+        el("div", "mail-read-meta", `${reading.from} · ${reading.date}`),
+        button("Reply", () => this.reply(reading), this.busy),
       );
-      pane.append(head, el("pre", "mail-read-body", this.reading.body));
+      pane.append(head, el("pre", "mail-read-body", reading.body));
       body.append(pane);
     }
     return body;
   }
 
-  composer() {
+  composer(): HTMLElement {
+    const draft = this.draft as Draft;
     const form = el("form", "mail-compose");
-    const to = field(form, "To", "text", this.draft.to, (v) => (this.draft.to = v));
-    field(form, "Subject", "text", this.draft.subject, (v) => (this.draft.subject = v));
+    const to = field(form, "To", "text", draft.to, (v) => (draft.to = v));
+    field(form, "Subject", "text", draft.subject, (v) => (draft.subject = v));
 
     const label = el("label", "mail-field mail-field-body");
     label.append(el("span", null, "Message"));
-    const area = document.createElement("textarea");
-    area.value = this.draft.body;
+    const area = el("textarea");
+    area.value = draft.body;
     area.rows = 12;
-    area.addEventListener("input", () => (this.draft.body = area.value));
+    area.addEventListener("input", () => (draft.body = area.value));
     label.append(area);
     form.append(label);
 
@@ -234,11 +256,11 @@ export class MailWindow {
       this.send();
     });
     // Focus wherever the message is unfinished, which for a reply is the body.
-    queueMicrotask(() => (this.draft.to === "" ? to : area).focus());
+    queueMicrotask(() => (draft.to === "" ? to : area).focus());
     return form;
   }
 
-  footer() {
+  footer(): HTMLElement {
     const bar = el("footer", "mail-status");
     bar.textContent = this.busy && this.status === "" ? "Working..." : this.status;
     return bar;
@@ -246,24 +268,33 @@ export class MailWindow {
 }
 
 /** `alice@users` is shown as `alice`; anything else is left whole. */
-function nameOf(address) {
+function nameOf(address: string): string {
   return address.endsWith("@users") ? address.slice(0, -"@users".length) : address;
 }
 
 /** Drop the seconds, which no inbox column has ever needed. */
-function shortDate(date) {
+function shortDate(date: string): string {
   const parts = SERVER_DATE.exec(date);
   return parts ? `${parts[1]}.${parts[2]}.${parts[3]} ${parts[4]}:${parts[5]}` : date;
 }
 
-function el(tag, className, text) {
+/** What went wrong, in the words it came with. */
+function complaint(err: unknown): string {
+  return String(err instanceof Error ? err.message : err);
+}
+
+function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  className?: string | null,
+  text?: string,
+): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
 }
 
-function button(label, onClick, disabled = false) {
+function button(label: string, onClick: () => void, disabled = false): HTMLButtonElement {
   const node = el("button", "mail-button", label);
   node.type = "button";
   node.disabled = disabled;
@@ -271,10 +302,16 @@ function button(label, onClick, disabled = false) {
   return node;
 }
 
-function field(form, label, type, value, onInput) {
+function field(
+  form: HTMLElement,
+  label: string,
+  type: string,
+  value: string,
+  onInput: (value: string) => void,
+): HTMLInputElement {
   const wrap = el("label", "mail-field");
   wrap.append(el("span", null, label));
-  const input = document.createElement("input");
+  const input = el("input");
   input.type = type;
   input.value = value;
   input.addEventListener("input", () => onInput(input.value));

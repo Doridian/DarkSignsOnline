@@ -1,0 +1,17 @@
+{
+  "name": "dso-web",
+  "private": true,
+  "type": "module",
+  "description": "The DarkSigns client in a browser: the interpreter compiled to WASM, running in a worker.",
+  "scripts": {
+    "build:ts": "tsc -p tsconfig.json && tsc -p tsconfig.worker.json",
+    "check": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.worker.json --noEmit && tsc -p tsconfig.node.json",
+    "test": "node --test vbs.test.ts",
+    "serve": "node serve.ts",
+    "smoke": "node smoke.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "typescript": "^7.0.2"
+  }
+}

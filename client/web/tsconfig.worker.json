@@ -1,0 +1,12 @@
+{
+  "// ": "The worker, where `postMessage` is the worker's own and there is no document.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "WebWorker"],
+    "outDir": "www",
+    "rootDir": "www"
+  },
+  "include": ["www/worker.ts", "www/storage.ts"],
+  "// exclude": "Explicit, and empty: outDir is the source directory, which TypeScript would otherwise take as a reason to exclude everything.",
+  "exclude": []
+}

@@ -175,11 +175,21 @@ it is ignored by default and reads credentials from `DSO_USER` and
 DSO_USER=... DSO_PASS=... cargo test --test live_server -- --ignored --nocapture
 ```
 
+### DSMail and the file library
+
+Two pieces of the client are windows rather than script API, and each has its
+wire format here so the front end only ever sees rows:
+[`mail.rs`](src/game/mail.rs) for `dsmail.php` and both of its formats, and
+[`library.rs`](src/game/library.rs) for `file_database.php` and
+`textspace.php` — the categories, the listing, an upload's checks, and where
+a download is written.
+
 ### The browser client
 
 [`web/`](web/) is the browser front end: this library compiled to WASM,
-running in a worker, with a page that renders its console. See
-[`web/README.md`](web/README.md) for how to build and serve it.
+running in a worker, with a page that renders its console. Its page is
+TypeScript. See [`web/README.md`](web/README.md) for how to build and serve
+it, and for the editor and the library windows.
 
 ### Targeting the browser
 

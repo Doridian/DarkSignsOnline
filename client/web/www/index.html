@@ -50,11 +50,21 @@
       </section>
     </template>
 
+    <!--
+      The sub-windows. Each is filled in by its own module and each is
+      dragged by its title bar, since a modal dialog covers the console it
+      was opened from.
+    -->
     <!-- DSMail, opened by the console's `mail` command. -->
     <dialog id="mail" aria-label="DSO Mail"></dialog>
+    <!-- The editor, opened by `EDIT <file>`. -->
+    <dialog id="editor" aria-label="Editor"></dialog>
+    <!-- The file library and the text space, opened from the status bar. -->
+    <dialog id="library" aria-label="File Library"></dialog>
 
     <footer id="statusbar">
       <span id="hint">Type <b>HELP</b> for a list of commands.</span>
+      <button id="open-library" type="button">File Library</button>
       <!-- Filled in by the page, one per console, with F1-F4 as shortcuts. -->
       <nav id="tabs" role="tablist" aria-label="Consoles"></nav>
     </footer>

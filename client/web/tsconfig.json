@@ -1,0 +1,11 @@
+{
+  "// ": "The page and its windows, compiled into www/ beside their sources. The worker has its own project, because its globals and the DOM's cannot both be in scope.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "outDir": "www",
+    "rootDir": "www"
+  },
+  "include": ["www/*.ts"],
+  "exclude": ["www/worker.ts", "www/storage.ts"]
+}

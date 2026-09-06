@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "www");
 const port = Number(process.env.PORT ?? 8080);
 
-const TYPES = {
+const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -25,7 +25,7 @@ const TYPES = {
 
 createServer(async (req, res) => {
   // Normalising first keeps a request from climbing out of the root.
-  const requested = normalize(decodeURIComponent(new URL(req.url, "http://x").pathname));
+  const requested = normalize(decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname));
   const path = join(root, requested === "/" ? "/index.html" : requested);
 
   if (!path.startsWith(root)) {

@@ -3,10 +3,18 @@
 // The worker sends styled runs rather than markup, so this only has to turn
 // them into elements and apply the bands `Draw` asks for.
 
-import { background } from "./draw.js";
+import { background, evenBands, fixedBands } from "./draw.js";
 import { fontFor } from "./fonts.js";
 
-const FLASH_CLASS = {
+import type {
+  DrawCustomEvent,
+  DrawEvenEvent,
+  DrawEvent,
+  LineEvent,
+  PartialLine,
+} from "./types.js";
+
+const FLASH_CLASS: Record<string, string | null> = {
   none: null,
   normal: "flash",
   fast: "flash-fast",
@@ -14,25 +22,25 @@ const FLASH_CLASS = {
 };
 
 export class ConsoleView {
+  /** The most recent line, so `SayLine` can replace it and `Draw` reach it. */
+  lastLine: HTMLElement | null = null;
+
   /**
-   * @param {HTMLElement} root where lines are appended
-   * @param {HTMLElement|null} anchor an element kept last, ahead of which
-   *   lines are inserted -- the input line lives inside the log so that
-   *   typing happens where the text ends.
+   * `root` is where lines are appended, and `anchor` an element kept last,
+   * ahead of which they are inserted -- the input line lives inside the log
+   * so that typing happens where the text ends.
    */
-  constructor(root, anchor = null) {
-    this.root = root;
-    this.anchor = anchor;
-    /** The most recent line, so `SayLine` can replace it and `Draw` reach it. */
-    this.lastLine = null;
-  }
+  constructor(
+    readonly root: HTMLElement,
+    readonly anchor: HTMLElement | null = null,
+  ) {}
 
   /** Add a line, leaving the anchor last. */
-  add(el) {
+  add(el: HTMLElement): void {
     this.root.insertBefore(el, this.anchor);
   }
 
-  clear() {
+  clear(): void {
     for (const child of [...this.root.children]) {
       if (child !== this.anchor) {
         child.remove();
@@ -42,16 +50,16 @@ export class ConsoleView {
   }
 
   /** Remove the last line, which is what `LineUp` does. */
-  lineUp() {
+  lineUp(): void {
     if (!this.lastLine) return;
     // Read the neighbour before unlinking; the anchor is not a line.
-    const previous = this.lastLine.previousElementSibling;
+    const previous = this.lastLine.previousElementSibling as HTMLElement | null;
     this.lastLine.remove();
     this.lastLine = previous;
   }
 
   /** Append a line, or replace the previous one. */
-  line(event) {
+  line(event: LineEvent | PartialLine): void {
     const el = document.createElement("div");
     el.className = `line align-${event.align}`;
     if (!event.preSpace) {
@@ -105,19 +113,43 @@ export class ConsoleView {
    * `Draw` addresses a row rather than the text on it, which is how the
    * startup script builds its banner: a line, then a band behind it.
    */
-  draw(event) {
+  draw(event: DrawEvent): void {
+    this.bandBehindLast(background(event.color, event.mode, event.segments));
+  }
+
+  /**
+   * Paint a band of set widths behind the most recent line.
+   *
+   * `DrawCustom` gives each piece a width in the same pixels `TextWidth`
+   * reports, so the band is laid out in those and whatever is left of the
+   * line stays as it was.
+   */
+  drawCustom(event: DrawCustomEvent): void {
+    this.bandBehindLast(fixedBands(event.bands));
+  }
+
+  /** `DrawEven` splits the whole line equally between its colours. */
+  drawEven(event: DrawEvenEvent): void {
+    this.bandBehindLast(evenBands(event.colors));
+  }
+
+  /**
+   * Put a background behind the last line, adding a line if there is none:
+   * a band addresses a row rather than the text on it, so an empty row is
+   * still a row.
+   */
+  bandBehindLast(background: string): void {
     if (!this.lastLine) {
-      // A band with no line yet still takes up a row.
       this.line({ runs: [], align: "left", preSpace: true, replace: false });
     }
-    this.lastLine.style.background = background(event.color, event.mode, event.segments);
+    (this.lastLine as HTMLElement).style.background = background;
   }
 
   /**
    * Echo a submitted line: the prompt keeps its own colour, and what was
    * typed is shown plainly, the way the console draws it.
    */
-  echo(promptText, text, scriptPrompt = false) {
+  echo(promptText: string, text: string, scriptPrompt = false): void {
     const el = document.createElement("div");
     el.className = "line no-prespace echo";
     const label = document.createElement("span");
@@ -130,7 +162,7 @@ export class ConsoleView {
   }
 
   /** A message that did not come from a script. */
-  system(text, kind = "system") {
+  system(text: string, kind = "system"): void {
     const el = document.createElement("div");
     el.className = `line ${kind}`;
     el.textContent = text;
@@ -139,18 +171,16 @@ export class ConsoleView {
     this.scrollToBottom();
   }
 
-  scrollToBottom() {
+  scrollToBottom(): void {
     this.root.scrollTop = this.root.scrollHeight;
   }
 }
 
 /** The communications log along the top of the window. */
 export class CommView {
-  constructor(root) {
-    this.root = root;
-  }
+  constructor(readonly root: HTMLElement) {}
 
-  add(text) {
+  add(text: string): void {
     const line = document.createElement("div");
     line.className = "comm-line";
 

@@ -10,6 +10,7 @@
 //! belong to the front end.
 
 use super::crypto;
+use super::protocol::{strip_code, strip_tags, summary};
 use super::values;
 
 /// Where the client keeps its copy of the inbox.
@@ -20,10 +21,6 @@ const SEPARATOR: &str = ":--:";
 
 /// Ids arrive as `X_<n>`, which is also how the store holds them.
 const ID_PREFIX: &str = "X_";
-
-/// How long a complaint may get before it stops being worth reading. A PHP
-/// fatal carries a stack trace, and only its first sentence says anything.
-const SUMMARY_LIMIT: usize = 200;
 
 /// One message.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -38,20 +35,6 @@ pub struct Message {
     pub date: String,
     /// The client's own flag. A message arrives unread.
     pub unread: bool,
-}
-
-/// Drop the four-digit status code `dsmail.php` puts in front of every
-/// answer.
-///
-/// Most endpoints stopped sending it at protocol 2; this one asks for it
-/// unconditionally, so the code is part of its replies and has to come off
-/// before anything else is read.
-pub fn strip_code(body: &str) -> &str {
-    let text = body.trim_start_matches(['\r', '\n']);
-    match text.len() >= 4 && text[..4].bytes().all(|b| b.is_ascii_digit()) {
-        true => &text[4..],
-        false => text,
-    }
 }
 
 /// Parse an `action=inbox` answer.
@@ -166,41 +149,6 @@ pub fn send_result(body: &str) -> Result<(), String> {
     }
 }
 
-/// A body reduced to one readable line, for showing a player.
-///
-/// The tags come off and the whitespace collapses, so a fatal's several lines
-/// of HTML read as the sentence they start with — which is the half that says
-/// what went wrong, the rest being a stack trace and a file name.
-pub fn summary(body: &str) -> String {
-    let mut out = String::new();
-    for word in strip_tags(body).split_whitespace() {
-        if !out.is_empty() {
-            out.push(' ');
-        }
-        out.push_str(word);
-        if out.len() >= SUMMARY_LIMIT {
-            out.push('…');
-            break;
-        }
-    }
-    out
-}
-
-/// Drop HTML tags, which only ever come from PHP's own diagnostics.
-fn strip_tags(text: &str) -> String {
-    let mut out = String::with_capacity(text.len());
-    let mut inside = false;
-    for c in text.chars() {
-        match c {
-            '<' => inside = true,
-            '>' => inside = false,
-            _ if !inside => out.push(c),
-            _ => {}
-        }
-    }
-    out
-}
-
 /// `X_<id>:--:<from>:--:<subject>:--:<body>:--:<date>`, with the subject and
 /// body base64'd.
 fn parse_record(line: &str) -> Option<Message> {
@@ -237,14 +185,6 @@ mod tests {
 
     fn encoded(text: &str) -> String {
         crypto::encode_base64(text.as_bytes())
-    }
-
-    #[test]
-    fn the_status_code_comes_off_the_front() {
-        assert_eq!(strip_code("7000X_1:--:a"), "X_1:--:a");
-        assert_eq!(strip_code("success"), "success");
-        // A short body is left alone rather than truncated.
-        assert_eq!(strip_code("no"), "no");
     }
 
     #[test]
@@ -400,6 +340,6 @@ mod tests {
             complaint.starts_with("Fatal error: Uncaught mysqli_sql_exception: Duplicate entry"),
             "the useful part is the front of it, got {complaint:?}"
         );
-        assert!(complaint.chars().count() <= SUMMARY_LIMIT + 40, "and it is trimmed");
+        assert!(complaint.chars().count() <= 240, "and it is trimmed");
     }
 }

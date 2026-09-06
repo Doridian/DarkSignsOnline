@@ -109,6 +109,59 @@ pub fn requires_login(path: &str) -> bool {
     !path.starts_with("auth.php")
 }
 
+/// How long a complaint may get before it stops being worth reading. A PHP
+/// fatal carries a stack trace, and only its first sentence says anything.
+const SUMMARY_LIMIT: usize = 200;
+
+/// Drop the four-digit status code an endpoint puts in front of its answer.
+///
+/// Most of them stopped sending it at protocol 2. `dsmail.php`,
+/// `file_database.php` and `textspace.php` did not — the first two ask for it
+/// unconditionally and the third writes it by hand — so the code is part of
+/// their replies and has to come off before anything else is read.
+pub fn strip_code(body: &str) -> &str {
+    let text = body.trim_start_matches(['\r', '\n']);
+    match text.len() >= 4 && text[..4].bytes().all(|b| b.is_ascii_digit()) {
+        true => &text[4..],
+        false => text,
+    }
+}
+
+/// A body reduced to one readable line, for showing a player.
+///
+/// The tags come off and the whitespace collapses, so a fatal's several lines
+/// of HTML read as the sentence they start with — which is the half that says
+/// what went wrong, the rest being a stack trace and a file name.
+pub fn summary(body: &str) -> String {
+    let mut out = String::new();
+    for word in strip_tags(body).split_whitespace() {
+        if !out.is_empty() {
+            out.push(' ');
+        }
+        out.push_str(word);
+        if out.len() >= SUMMARY_LIMIT {
+            out.push('…');
+            break;
+        }
+    }
+    out
+}
+
+/// Drop HTML tags, which only ever come from PHP's own diagnostics.
+pub fn strip_tags(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut inside = false;
+    for c in text.chars() {
+        match c {
+            '<' => inside = true,
+            '>' => inside = false,
+            _ if !inside => out.push(c),
+            _ => {}
+        }
+    }
+    out
+}
+
 /// Shape a raw HTTP result the way the request asked for.
 pub fn shape(code: i64, body: String, response_type: ResponseType) -> ServerResponse {
     let _ = response_type;
@@ -189,6 +242,24 @@ mod tests {
         // The version header travels on every target; without it the server
         // drops into its legacy response mode.
         assert!(names.contains(&PROTOCOL_VERSION_HEADER));
+    }
+
+    #[test]
+    fn the_status_code_comes_off_the_front() {
+        assert_eq!(strip_code("7000X_1:--:a"), "X_1:--:a");
+        assert_eq!(strip_code("success"), "success");
+        // A short body is left alone rather than truncated.
+        assert_eq!(strip_code("no"), "no");
+    }
+
+    #[test]
+    fn a_complaint_is_reduced_to_its_first_readable_sentence() {
+        assert_eq!(
+            summary("<br />\n<b>Warning</b>: something<br />\nUnknown name: nobody"),
+            "Warning: something Unknown name: nobody"
+        );
+        let long = summary(&"word ".repeat(100));
+        assert!(long.ends_with('…'), "a stack trace is trimmed, got {long:?}");
     }
 
     #[test]

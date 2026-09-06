@@ -29,6 +29,14 @@ pub struct Run {
     pub flash: &'static str,
 }
 
+/// One band of a `DrawCustom` rule: how wide it is, in the same pixels
+/// `TextWidth` reports, and what colour it is.
+#[derive(Serialize)]
+pub struct Band {
+    pub width: i64,
+    pub color: String,
+}
+
 /// Something the console was told to do.
 #[derive(Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -48,9 +56,9 @@ pub enum Event {
     #[serde(rename_all = "camelCase")]
     Draw { y: i64, color: String, mode: String, segments: i64 },
     #[serde(rename_all = "camelCase")]
-    DrawCustom { y: i64, values: Vec<i64> },
+    DrawCustom { y: i64, bands: Vec<Band> },
     #[serde(rename_all = "camelCase")]
-    DrawEven { y: i64, colors: Vec<i64> },
+    DrawEven { y: i64, colors: Vec<String> },
     Edit { path: String },
     Music { command: String },
     Mail,
@@ -186,11 +194,25 @@ impl Console for WorkerConsole {
     }
 
     fn draw_custom(&mut self, y: i64, values: &[i64]) {
-        self.send(&Event::DrawCustom { y, values: values.to_vec() });
+        // The arguments alternate width and colour, and a trailing width
+        // with no colour after it draws nothing -- which is what the
+        // client's own loop does with an odd count.
+        let bands = values
+            .chunks_exact(2)
+            .map(|pair| Band {
+                // A band is at least one unit wide, as `DrawCustomA` insists.
+                width: pair[0].max(1),
+                color: css_color(pair[1] as i32),
+            })
+            .collect();
+        self.send(&Event::DrawCustom { y, bands });
     }
 
     fn draw_even(&mut self, y: i64, colors: &[i64]) {
-        self.send(&Event::DrawEven { y, colors: colors.to_vec() });
+        self.send(&Event::DrawEven {
+            y,
+            colors: colors.iter().map(|c| css_color(*c as i32)).collect(),
+        });
     }
 
     fn read_line(&mut self, prompt: &str, rgb: i64) -> Option<String> {

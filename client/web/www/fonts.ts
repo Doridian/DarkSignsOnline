@@ -6,7 +6,7 @@
 // fallback that ends up on screen.
 
 /** Family name to the CSS stack it is rendered with. */
-export const FONT_STACK = {
+export const FONT_STACK: Record<string, string> = {
   Impact: '"Impact", "Haettenschweiler", "Arial Narrow Bold", sans-serif',
   "Courier New": '"Courier New", "Liberation Mono", monospace',
   "Lucida Console": '"Lucida Console", "DejaVu Sans Mono", monospace',
@@ -15,6 +15,6 @@ export const FONT_STACK = {
   Webdings: '"Webdings", sans-serif',
 };
 
-export function fontFor(name) {
+export function fontFor(name: string): string {
   return FONT_STACK[name] ?? `"${name}", "DejaVu Sans", sans-serif`;
 }

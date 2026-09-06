@@ -1,0 +1,10 @@
+{
+  "// ": "The two scripts and the test that run under node rather than in a browser. Node runs TypeScript directly, so nothing here is emitted.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["serve.ts", "smoke.ts", "vbs.test.ts"]
+}

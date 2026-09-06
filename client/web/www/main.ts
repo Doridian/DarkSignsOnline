@@ -10,14 +10,12 @@
 // share -- the player's files -- is kept in step by passing every change
 // through this page.
 
-import { ConsoleView, CommView } from "./console.js";
+import { CommView, ConsoleView } from "./console.js";
+import { CLOSED, INPUT_CAPACITY, READY } from "./control.js";
+import { EditorWindow } from "./editor.js";
+import { LibraryWindow } from "./library.js";
 import { MailWindow } from "./mail.js";
-
-const READY = 1;
-const CLOSED = 2;
-
-/** Room for one line of input. */
-const INPUT_CAPACITY = 8192;
+import type { Asked, ConsoleEvent, FromWorker, ToWorker } from "./types.js";
 
 /** As many as the original client has, and the same F-keys select them. */
 const CONSOLE_COUNT = 4;
@@ -26,13 +24,30 @@ const CONSOLE_COUNT = 4;
 const STARTUP_SCRIPT = "/system/startup.ds";
 const NEW_CONSOLE_SCRIPT = "/system/newconsole.ds";
 
-const comm = new CommView(document.getElementById("comm"));
-const mail = new MailWindow(document.getElementById("mail"), (request) => ask(request));
-const container = document.getElementById("consoles");
-const tabs = document.getElementById("tabs");
-const template = document.getElementById("console-template");
-const statusDot = document.getElementById("status-dot");
-const statusText = document.getElementById("status-text");
+const comm = new CommView(element("comm"));
+const container = element("consoles");
+const tabs = element("tabs");
+const template = element("console-template") as HTMLTemplateElement;
+const statusDot = element("status-dot");
+const statusText = element("status-text");
+
+const mail = new MailWindow(dialog("mail"), (request) => ask(request));
+const library = new LibraryWindow(dialog("library"), (request) => ask(request));
+// The editor runs what it was editing in the console that opened it, which
+// is only possible when that console is not already busy with something.
+const editor = new EditorWindow(dialog("editor"), (request) => ask(request), (id, path) => {
+  const target = consoles[id - 1] ?? consoles[0];
+  if (target.busy || target.awaitingInput) {
+    return false;
+  }
+  setActive(target);
+  target.view.echo(target.prompt.textContent ?? "", path, false);
+  target.runFile(path);
+  return true;
+});
+
+/** The windows that cover the console, so a key can tell whether one is up. */
+const windows = [mail, library, editor];
 
 if (!crossOriginIsolated) {
   comm.add(
@@ -42,8 +57,25 @@ if (!crossOriginIsolated) {
   );
 }
 
+/** One of the page's own elements, which are all in `index.html`. */
+function element(id: string): HTMLElement {
+  const found = document.getElementById(id);
+  if (!found) {
+    throw new Error(`the page is missing #${id}`);
+  }
+  return found;
+}
+
+function dialog(id: string): HTMLDialogElement {
+  return element(id) as HTMLDialogElement;
+}
+
+function field(id: string): HTMLInputElement {
+  return element(id) as HTMLInputElement;
+}
+
 /** Reflect the connection in the title bar. */
-function setStatus(text, state) {
+function setStatus(text: string, state: "offline" | "connecting" | "online"): void {
   statusText.textContent = text;
   statusDot.className = state;
 }
@@ -57,14 +89,30 @@ function setStatus(text, state) {
  * exactly as they were.
  */
 class GameConsole {
-  constructor(id) {
-    this.id = id;
+  /** The tab in the status bar that selects this console. */
+  tab = document.createElement("button");
+  readonly root: HTMLElement;
+  readonly entry: HTMLElement;
+  readonly prompt: HTMLElement;
+  readonly input: HTMLInputElement;
+  readonly view: ConsoleView;
+  /** The control block and the line buffer, both shared with the worker. */
+  readonly control: Int32Array<SharedArrayBuffer>;
+  readonly inputBytes: Uint8Array<SharedArrayBuffer>;
+  readonly worker: Worker;
+  /** Set while the worker is blocked waiting for a line. */
+  awaitingInput = false;
+  /** Set while a command is running, so a second is not started. */
+  busy = false;
+  cwd = "/";
 
-    const fragment = template.content.cloneNode(true);
-    this.root = fragment.querySelector(".console");
-    this.entry = this.root.querySelector(".entry");
-    this.prompt = this.root.querySelector(".prompt");
-    this.input = this.root.querySelector(".input");
+  /** `id` is which of the four this is. */
+  constructor(readonly id: number) {
+    const fragment = template.content.cloneNode(true) as DocumentFragment;
+    this.root = fragment.querySelector(".console") as HTMLElement;
+    this.entry = this.root.querySelector(".entry") as HTMLElement;
+    this.prompt = this.root.querySelector(".prompt") as HTMLElement;
+    this.input = this.root.querySelector(".input") as HTMLInputElement;
     this.root.setAttribute("aria-label", `Console ${id}`);
     this.input.setAttribute("aria-label", `Console ${id} input`);
     container.append(this.root);
@@ -78,19 +126,13 @@ class GameConsole {
     );
     this.inputBytes = new Uint8Array(new SharedArrayBuffer(INPUT_CAPACITY));
 
-    /** Set while the worker is blocked waiting for a line. */
-    this.awaitingInput = false;
-    /** Set while a command is running, so a second is not started. */
-    this.busy = false;
-    this.cwd = "/";
-
     this.worker = new Worker("./worker.js", { type: "module" });
-    this.worker.onmessage = (e) => handleMessage(this, e.data);
+    this.worker.onmessage = (e: MessageEvent<FromWorker>) => handleMessage(this, e.data);
 
     this.input.addEventListener("keydown", (e) => this.onKeyDown(e));
   }
 
-  post(message) {
+  post(message: ToWorker): void {
     this.worker.postMessage(message);
   }
 
@@ -101,11 +143,11 @@ class GameConsole {
    * rather than to whatever asked -- a script that prompts with "Name>" still
    * gets one.
    */
-  setPromptText(text) {
+  setPromptText(text: string): void {
     this.prompt.textContent = text === "" ? "" : `${text} `;
   }
 
-  setPrompt(cwd) {
+  setPrompt(cwd?: string): void {
     this.cwd = cwd ?? this.cwd;
     this.prompt.classList.remove("script");
     this.setPromptText(`${this.cwd}>`);
@@ -117,7 +159,7 @@ class GameConsole {
    * A terminal shows no caret while it is not listening, and the line has to
    * stay at the end of the log so that typing continues where the text does.
    */
-  showEntry(visible) {
+  showEntry(visible: boolean): void {
     this.entry.classList.toggle("idle", !visible);
     if (visible) {
       this.root.append(this.entry);
@@ -130,7 +172,7 @@ class GameConsole {
   }
 
   /** Take the caret, but only when this console is the one on screen. */
-  focus() {
+  focus(): void {
     if (this.root.classList.contains("active") && !this.input.disabled) {
       // Without `preventScroll` the browser drags the prompt into view,
       // which throws away the place a console was left at when it is
@@ -139,8 +181,10 @@ class GameConsole {
     }
   }
 
-  /** Hand a typed line to the worker that is blocked waiting for one. */
-  deliverInput(text) {
+  /**
+   * Hand a typed line to the worker that is blocked waiting for one.
+   */
+  deliverInput(text: string): void {
     const encoded = new TextEncoder().encode(text);
     const length = Math.min(encoded.length, INPUT_CAPACITY);
     this.inputBytes.set(encoded.subarray(0, length));
@@ -151,13 +195,13 @@ class GameConsole {
   }
 
   /** Tell a blocked worker that no more input is coming. */
-  closeInput() {
+  closeInput(): void {
     Atomics.store(this.control, 0, CLOSED);
     Atomics.notify(this.control, 0);
     this.awaitingInput = false;
   }
 
-  onKeyDown(e) {
+  onKeyDown(e: KeyboardEvent): void {
     // Ctrl+B stops a script in the original client. It only reaches one that
     // is waiting for input: a script busy in a loop cannot be interrupted,
     // since the worker running it is not listening for anything.
@@ -181,7 +225,7 @@ class GameConsole {
     if (this.awaitingInput) {
       // The script asked, so the echo keeps its prompt and the answer
       // together.
-      this.view.echo(this.prompt.textContent, line, true);
+      this.view.echo(this.prompt.textContent ?? "", line, true);
       this.showEntry(false);
       this.deliverInput(line);
       return;
@@ -190,7 +234,7 @@ class GameConsole {
       return;
     }
 
-    this.view.echo(this.prompt.textContent, line, false);
+    this.view.echo(this.prompt.textContent ?? "", line, false);
     if (line.trim() === "") {
       return;
     }
@@ -199,23 +243,25 @@ class GameConsole {
     this.post({ type: "command", line });
   }
 
-  /** Run a script from the player's filesystem, the way a command does. */
-  runFile(path) {
+  /**
+   * Run a script from the player's filesystem, the way a command does.
+   */
+  runFile(path: string): void {
     this.busy = true;
     this.showEntry(false);
     this.post({ type: "runFile", path });
   }
 }
 
-const consoles = [];
+const consoles: GameConsole[] = [];
 for (let id = 1; id <= CONSOLE_COUNT; id += 1) {
   consoles.push(new GameConsole(id));
 }
 
 /** The console on screen; the other three keep running out of sight. */
-let active = null;
+let active: GameConsole = consoles[0] as GameConsole;
 
-function setActive(target) {
+function setActive(target: GameConsole): void {
   active = target;
   for (const other of consoles) {
     const isActive = other === target;
@@ -230,28 +276,34 @@ function setActive(target) {
 
 // The tabs, and the F1-F4 that select the same four consoles in the original.
 for (const item of consoles) {
-  const tab = document.createElement("button");
+  const tab = item.tab;
   tab.className = "tab";
   tab.type = "button";
   tab.textContent = String(item.id);
   tab.setAttribute("role", "tab");
   tab.title = `Console ${item.id} (F${item.id})`;
   tab.addEventListener("click", () => setActive(item));
-  item.tab = tab;
   tabs.append(tab);
 }
 
 window.addEventListener("keydown", (e) => {
   const match = /^F([1-4])$/.exec(e.key);
-  if (!match || e.ctrlKey || e.altKey || e.metaKey || mail.open) {
+  if (!match || e.ctrlKey || e.altKey || e.metaKey || windows.some((w) => w.open)) {
     return;
   }
   // F1 and F3 are the browser's otherwise; in a console they are the client's.
   e.preventDefault();
-  setActive(consoles[Number(match[1]) - 1]);
+  const chosen = consoles[Number(match[1]) - 1];
+  if (chosen) {
+    setActive(chosen);
+  }
 });
 
 setActive(consoles[0]);
+
+// The file library, which the original opens from a label on the console
+// rather than from a command. The status bar is where that label is here.
+element("open-library").addEventListener("click", () => void library.show());
 
 // ---- asking a worker ----------------------------------------------------
 //
@@ -262,33 +314,41 @@ setActive(consoles[0]);
 // `Atomics.wait` and would not read the message until someone typed.
 
 /** In-flight questions, by the token that identifies each answer. */
-const asked = new Map();
+const asked = new Map<
+  number,
+  { resolve: (value: unknown) => void; reject: (err: Error) => void }
+>();
 /** Questions with no free console yet, in the order they were asked. */
-const waiting = [];
+const waiting: Asked[] = [];
 let nextToken = 1;
 
-function ask(request) {
+/** Ask whichever console is free, and resolve with its answer. */
+function ask(request: { type: string } & Record<string, unknown>): Promise<any> {
   return new Promise((resolve, reject) => {
     const token = nextToken;
     nextToken += 1;
     asked.set(token, { resolve, reject });
-    waiting.push({ ...request, token });
+    // The shape is the window's; only the token is added here, and only the
+    // worker reads the rest of it.
+    waiting.push({ ...request, token } as Asked);
     dispatchAsked();
   });
 }
 
 /** Hand out as many waiting questions as there are free consoles to take them. */
-function dispatchAsked() {
+function dispatchAsked(): void {
   while (waiting.length > 0) {
     const free = consoles.find((c) => !c.busy && !c.awaitingInput);
-    if (!free) {
+    const question = waiting[0];
+    if (!free || !question) {
       return;
     }
-    free.post(waiting.shift());
+    waiting.shift();
+    free.post(question);
   }
 }
 
-function settleAsked(token, value, error) {
+function settleAsked(token: number, value?: unknown, error?: string): void {
   const promise = asked.get(token);
   if (!promise) {
     return;
@@ -301,8 +361,8 @@ function settleAsked(token, value, error) {
   }
 }
 
-/** Messages from one console's worker. */
-function handleMessage(target, message) {
+/** Messages from one console's worker. `target` is the console it came from. */
+function handleMessage(target: GameConsole, message: FromWorker): void {
   switch (message.type) {
     case "ready":
       target.setPrompt(message.cwd);
@@ -379,27 +439,26 @@ function handleMessage(target, message) {
       dispatchAsked();
       break;
 
-    case "mail":
-      settleAsked(message.token, message.view);
+    // The answer to something a window asked. Every request carries a token
+    // and every answer brings it back, so which window gets it is not this
+    // function's business.
+    case "answer":
+      settleAsked(message.token, message.value);
       break;
 
-    case "mailSent":
-      settleAsked(message.token);
-      break;
-
-    case "mailFailed":
+    case "failed":
       settleAsked(message.token, null, message.message);
       break;
   }
 }
 
-function renderEvent(target, event) {
+function renderEvent(target: GameConsole, event: ConsoleEvent): void {
   switch (event.kind) {
     case "line":
       // The communications channel is one panel for the whole client, not
       // one per console.
       if (event.channel === "comm") {
-        comm.add(event.runs.map((r) => r.text).join(""));
+        comm.add(event.runs.map((run) => run.text).join(""));
       } else {
         target.view.line(event);
       }
@@ -412,6 +471,18 @@ function renderEvent(target, event) {
       break;
     case "draw":
       target.view.draw(event);
+      break;
+    case "drawCustom":
+      target.view.drawCustom(event);
+      break;
+    case "drawEven":
+      target.view.drawEven(event);
+      break;
+    case "edit":
+      // `EDIT` opens the editor. Like mail it does not hold the script up:
+      // the worker that raised this is the one still running it, and it is
+      // also the one the editor asks to read and write the file.
+      void editor.openFile(event.path, target.id);
       break;
     case "mail":
       // `MAIL` opens the reader. Unlike the original it does not hold the
@@ -435,7 +506,7 @@ function renderEvent(target, event) {
  * a guess. They are read from the stylesheet so that only one place decides
  * them.
  */
-function measureLayout() {
+function measureLayout(): { width: number; preSpace: number } {
   const [first] = consoles;
   const style = getComputedStyle(first.entry);
   const gutter = parseFloat(style.paddingLeft) || 0;
@@ -451,7 +522,7 @@ function measureLayout() {
   };
 }
 
-function reportLayout() {
+function reportLayout(): void {
   const layout = measureLayout();
   for (const item of consoles) {
     item.post({ type: "layout", ...layout });
@@ -463,7 +534,11 @@ function reportLayout() {
 new ResizeObserver(reportLayout).observe(container);
 
 let readyCount = 0;
-let storageReport = null;
+/**
+ * What the first console said about the saved files, kept until all four are
+ * up and there is somewhere to report it.
+ */
+let storageReport: { persistent: boolean; restored: number } | null = null;
 
 /**
  * Everything is up: sign in if we can, then open the four consoles.
@@ -472,17 +547,17 @@ let storageReport = null;
  * by the time `startup.ds` runs -- it calls `LOGIN` and prints the player's
  * name, neither of which works before then.
  */
-function allReady() {
-  if (!storageReport.persistent) {
+function allReady(): void {
+  if (storageReport && !storageReport.persistent) {
     comm.add("Storage is unavailable; this session will not be saved.");
-  } else if (storageReport.restored > 0) {
+  } else if (storageReport && storageReport.restored > 0) {
     comm.add(`Restored ${storageReport.restored} saved file(s).`);
   }
 
   const saved = loadSavedCredentials();
   if (saved) {
-    document.getElementById("username").value = saved.username;
-    document.getElementById("remember").checked = true;
+    field("username").value = saved.username;
+    field("remember").checked = true;
     signIn(saved.username, saved.password);
   }
 
@@ -494,7 +569,7 @@ function allReady() {
 }
 
 // Start the workers with the shared buffers and the commands the shell needs.
-async function boot() {
+async function boot(): Promise<void> {
   const files = await loadStartupFiles();
   const layout = measureLayout();
   for (const item of consoles) {
@@ -515,10 +590,10 @@ async function boot() {
  * Fetched once and handed to all four workers, since they seed the same tree
  * into four sessions.
  */
-async function loadStartupFiles() {
-  const files = {};
+async function loadStartupFiles(): Promise<Record<string, string>> {
+  const files: Record<string, string> = {};
   try {
-    const manifest = await fetch("./scripts/manifest.json").then((r) => r.json());
+    const manifest: string[] = await fetch("./scripts/manifest.json").then((r) => r.json());
     await Promise.all(
       manifest.map(async (path) => {
         const response = await fetch(`./scripts${path}`);
@@ -544,7 +619,7 @@ let pendingUser = "";
 // off. Every access is guarded, since a private window throws on the way in.
 const CREDENTIALS_KEY = "darksigns.credentials";
 
-function loadSavedCredentials() {
+function loadSavedCredentials(): { username: string; password: string } | null {
   try {
     const raw = localStorage.getItem(CREDENTIALS_KEY);
     if (!raw) {
@@ -557,7 +632,7 @@ function loadSavedCredentials() {
   }
 }
 
-function saveCredentials(username, password) {
+function saveCredentials(username: string, password: string): void {
   try {
     localStorage.setItem(CREDENTIALS_KEY, JSON.stringify({ username, password }));
   } catch {
@@ -565,7 +640,7 @@ function saveCredentials(username, password) {
   }
 }
 
-function forgetCredentials() {
+function forgetCredentials(): void {
   try {
     localStorage.removeItem(CREDENTIALS_KEY);
   } catch {
@@ -580,7 +655,7 @@ function forgetCredentials() {
  * All four, because each has its own connection: they are separate sessions
  * that happen to belong to one player.
  */
-function signIn(username, password) {
+function signIn(username: string, password: string): void {
   pendingUser = username;
   for (const item of consoles) {
     item.post({ type: "credentials", username, password });
@@ -588,21 +663,21 @@ function signIn(username, password) {
   setStatus(`Signing in as ${username}...`, "connecting");
 }
 
-document.getElementById("login").addEventListener("submit", (e) => {
+element("login").addEventListener("submit", (e) => {
   e.preventDefault();
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value;
+  const username = field("username").value.trim();
+  const password = field("password").value;
   if (!username || !password) {
     return;
   }
-  if (document.getElementById("remember").checked) {
+  if (field("remember").checked) {
     saveCredentials(username, password);
   } else {
     forgetCredentials();
   }
   signIn(username, password);
   // The password is handed to the workers and forgotten here.
-  document.getElementById("password").value = "";
+  field("password").value = "";
   active.focus();
 });
 

@@ -5,21 +5,19 @@
 // main thread. Here both are fine — a synchronous XMLHttpRequest works, and
 // `Atomics.wait` lets us park until the page sends input.
 
-import init, { Session } from "./pkg/dso_web.js";
-import { FileStore } from "./storage.js";
+import { CLOSED, WAITING } from "./control.js";
 import { FONT_STACK } from "./fonts.js";
+import init, { Session, libraryCategories, textspaceChannels } from "./pkg/dso_web.js";
+import { FileStore } from "./storage.js";
+import type { Asked, ToWorker } from "./types.js";
 
 /** Shared with the page so input can be delivered to a blocked worker. */
-let control = null; // Int32Array: [state, length]
-let inputBytes = null; // Uint8Array holding the encoded answer
+let control: Int32Array | null = null; // [state, length]
+/** The encoded answer. */
+let inputBytes: Uint8Array | null = null;
 
-/** Control-block states. */
-const WAITING = 0;
-const READY = 1;
-const CLOSED = 2;
-
-let session = null;
-let store = null;
+let session: Session | null = null;
+let store: FileStore | null = null;
 /**
  * The console's measurements, in CSS pixels.
  *
@@ -30,8 +28,13 @@ let store = null;
 let layout = { width: 960, preSpace: 40 };
 
 /** Send one console event to the page. */
-function emit(json) {
+function emit(json: string): void {
   postMessage({ type: "console", event: JSON.parse(json) });
+}
+
+/** Answer a window's question, with the token it asked under. */
+function answer(asked: Asked, value: unknown): void {
+  postMessage({ type: "answer", token: asked.token, value });
 }
 
 /**
@@ -40,8 +43,8 @@ function emit(json) {
  * Returns null when input has been closed, which ends the running script
  * the way closing the console does in the original client.
  */
-function readLineSync(prompt, _rgb) {
-  if (!control) {
+function readLineSync(prompt: string, _rgb: number): string | null {
+  if (!control || !inputBytes) {
     return null;
   }
   // The prompt travels with the request so the page can set it beside the
@@ -63,7 +66,7 @@ function readLineSync(prompt, _rgb) {
 }
 
 /** Block until the page supplies a single key, returning its char code. */
-function readKeySync() {
+function readKeySync(): number {
   const line = readLineSync("", -1);
   if (line === null || line.length === 0) {
     return 0;
@@ -71,7 +74,7 @@ function readKeySync() {
   return line.charCodeAt(0);
 }
 
-async function boot(message) {
+async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void> {
   await init();
 
   control = new Int32Array(message.control);
@@ -122,19 +125,27 @@ async function boot(message) {
  * console that made the change persists it; the page passes the change to
  * the other three so their copies agree.
  */
-function fileChanged(path, contents) {
-  store.record(path, contents);
+/** `contents` is null for a deletion. */
+function fileChanged(path: string, contents: string | null): void {
+  store?.record(path, contents);
   postMessage({ type: "fileChanged", path, contents });
 }
 
-onmessage = async (e) => {
+onmessage = async (e: MessageEvent<ToWorker>) => {
   const message = e.data;
   try {
-    switch (message.type) {
-      case "boot":
-        await boot(message);
-        break;
+    if (message.type === "boot") {
+      await boot(message);
+      return;
+    }
+    // Nothing else can be served before the wasm is up. The page does not
+    // send anything until every worker has reported `ready`, so this is a
+    // guard rather than a case that happens.
+    if (!session || !store) {
+      throw new Error("this console is still starting up");
+    }
 
+    switch (message.type) {
       case "credentials":
         session.setCredentials(message.username, message.password);
         postMessage({ type: "credentialsSet" });
@@ -186,34 +197,92 @@ onmessage = async (e) => {
         session?.setLayout(layout.width, layout.preSpace);
         break;
 
-      // ---- mail ------------------------------------------------------
+      // ---- what the windows ask -----------------------------------------
       //
-      // The reader lives on the page, but the connection lives here, so it
-      // asks through whichever console is free. `token` comes back untouched
-      // so the page can match an answer to the window that wanted it.
+      // Mail, the editor and the file library are pages, but the connection
+      // and the files live here, so each of them asks through whichever
+      // console is free. `token` comes back untouched, so the page can match
+      // an answer to the window that wanted it.
       case "mailList":
-        postMessage({ type: "mail", token: message.token, view: JSON.parse(session.mailList()) });
+        answer(message, JSON.parse(session.mailList()));
         break;
 
       case "mailFetch":
-        postMessage({ type: "mail", token: message.token, view: JSON.parse(session.mailFetch()) });
+        answer(message, JSON.parse(session.mailFetch()));
         break;
 
       case "mailMarkRead":
-        postMessage({
-          type: "mail",
-          token: message.token,
-          view: JSON.parse(session.mailMarkRead(message.id)),
-        });
+        answer(message, JSON.parse(session.mailMarkRead(message.id)));
         break;
 
       case "mailSend":
         session.mailSend(message.to, message.subject, message.body);
-        postMessage({ type: "mailSent", token: message.token });
+        answer(message, null);
         break;
+
+      case "libraryTables":
+        answer(message, {
+          categories: JSON.parse(libraryCategories()),
+          channels: textspaceChannels(),
+        });
+        break;
+
+      case "libraryList":
+        answer(message, JSON.parse(session.libraryList(message.category)));
+        break;
+
+      case "libraryDownload":
+        answer(message, JSON.parse(session.libraryDownload(message.id)));
+        break;
+
+      case "libraryRemovable":
+        answer(message, JSON.parse(session.libraryRemovable()));
+        break;
+
+      case "libraryRemove":
+        answer(message, session.libraryRemove(message.id));
+        break;
+
+      case "libraryUpload":
+        answer(
+          message,
+          session.libraryUpload(
+            message.category,
+            message.title,
+            message.version,
+            message.description,
+            message.path,
+          ),
+        );
+        break;
+
+      case "textspaceLoad":
+        answer(message, session.textspaceLoad(message.channel));
+        break;
+
+      case "textspaceSave":
+        answer(message, session.textspaceSave(message.channel, message.text));
+        break;
+
+      case "listFiles":
+        answer(message, JSON.parse(session.listFiles()));
+        break;
+
+      // The editor opens a file that need not exist yet, so a missing one
+      // is an empty buffer rather than a failure.
+      case "readFile": {
+        const exists = session.fileExists(message.path);
+        answer(message, {
+          path: message.path,
+          contents: exists ? session.readFile(message.path) : "",
+          exists,
+        });
+        break;
+      }
 
       case "writeFile":
         session.writeFile(message.path, message.contents);
+        answer(message, null);
         break;
 
       case "reset":
@@ -221,15 +290,24 @@ onmessage = async (e) => {
         postMessage({ type: "wasReset" });
         break;
 
-      default:
-        postMessage({ type: "error", message: `unknown message ${message.type}` });
+      default: {
+        // Unreachable as far as the types go. A message from a page that
+        // has been reloaded onto a newer build is not, so it says so rather
+        // than being dropped.
+        const unknown = message as { type: string };
+        postMessage({
+          type: "error",
+          message: `unknown message ${unknown.type}`,
+          cwd: session.currentDirectory(),
+        });
+      }
     }
   } catch (err) {
-    const text = typeof err === "string" ? err : (err?.message ?? String(err));
-    // A mail failure belongs in the window that asked, not in the console
-    // log: nothing was running there.
-    if (message.token !== undefined) {
-      postMessage({ type: "mailFailed", token: message.token, message: text });
+    const text = err instanceof Error ? err.message : String(err);
+    // A window's failure belongs in that window, not in the console log:
+    // nothing was running there.
+    if ("token" in message) {
+      postMessage({ type: "failed", token: message.token, message: text });
       return;
     }
     // A script error is normal: report it and let the page carry on.
