@@ -180,12 +180,17 @@ impl Console for WorkerConsole {
     }
 
     fn read_line(&mut self, prompt: &str, rgb: i64) -> Option<String> {
-        if !prompt.is_empty() {
-            self.say(Channel::Say, prompt);
-        }
+        // The prompt goes to the page rather than out as a line of its own:
+        // what the player types belongs on the same line as the question, the
+        // way a terminal does it. The page puts the two back together when it
+        // echoes the answer.
         let answer = self
             .read_line
-            .call1(&JsValue::NULL, &JsValue::from_f64(rgb as f64))
+            .call2(
+                &JsValue::NULL,
+                &JsValue::from_str(prompt),
+                &JsValue::from_f64(rgb as f64),
+            )
             .ok()?;
         // A null answer means the page closed the input, which ends the
         // script the way closing the console does.

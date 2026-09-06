@@ -27,23 +27,40 @@ function fontFor(name) {
 }
 
 export class ConsoleView {
-  /** @param {HTMLElement} root where lines are appended */
-  constructor(root) {
+  /**
+   * @param {HTMLElement} root where lines are appended
+   * @param {HTMLElement|null} anchor an element kept last, ahead of which
+   *   lines are inserted -- the input line lives inside the log so that
+   *   typing happens where the text ends.
+   */
+  constructor(root, anchor = null) {
     this.root = root;
+    this.anchor = anchor;
     /** The most recent line, so `SayLine` can replace it and `Draw` reach it. */
     this.lastLine = null;
   }
 
+  /** Add a line, leaving the anchor last. */
+  add(el) {
+    this.root.insertBefore(el, this.anchor);
+  }
+
   clear() {
-    this.root.replaceChildren();
+    for (const child of [...this.root.children]) {
+      if (child !== this.anchor) {
+        child.remove();
+      }
+    }
     this.lastLine = null;
   }
 
   /** Remove the last line, which is what `LineUp` does. */
   lineUp() {
     if (!this.lastLine) return;
+    // Read the neighbour before unlinking; the anchor is not a line.
+    const previous = this.lastLine.previousElementSibling;
     this.lastLine.remove();
-    this.lastLine = this.root.lastElementChild;
+    this.lastLine = previous;
   }
 
   /** Append a line, or replace the previous one. */
@@ -86,7 +103,7 @@ export class ConsoleView {
       el.style.background = this.lastLine.style.background;
       this.lastLine.replaceWith(el);
     } else {
-      this.root.append(el);
+      this.add(el);
     }
     this.lastLine = el;
     this.scrollToBottom();
@@ -106,12 +123,28 @@ export class ConsoleView {
     this.lastLine.style.background = background(event.color, event.mode, event.segments);
   }
 
+  /**
+   * Echo a submitted line: the prompt keeps its own colour, and what was
+   * typed is shown plainly, the way the console draws it.
+   */
+  echo(promptText, text, scriptPrompt = false) {
+    const el = document.createElement("div");
+    el.className = "line no-prespace echo";
+    const label = document.createElement("span");
+    label.className = scriptPrompt ? "prompt-echo script" : "prompt-echo";
+    label.textContent = promptText;
+    el.append(label, document.createTextNode(text));
+    this.add(el);
+    this.lastLine = el;
+    this.scrollToBottom();
+  }
+
   /** A message that did not come from a script. */
   system(text, kind = "system") {
     const el = document.createElement("div");
     el.className = `line ${kind}`;
     el.textContent = text;
-    this.root.append(el);
+    this.add(el);
     this.lastLine = el;
     this.scrollToBottom();
   }

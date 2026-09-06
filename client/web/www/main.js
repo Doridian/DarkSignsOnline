@@ -13,7 +13,8 @@ const CLOSED = 2;
 /** Room for one line of input. */
 const INPUT_CAPACITY = 8192;
 
-const view = new ConsoleView(document.getElementById("output"));
+const entry = document.getElementById("entry");
+const view = new ConsoleView(document.getElementById("output"), entry);
 const comm = new CommView(document.getElementById("comm"));
 const input = document.getElementById("input");
 const prompt = document.getElementById("prompt");
@@ -84,27 +85,27 @@ worker.onmessage = (e) => {
 
     case "wantInput":
       // The worker is parked; the next line typed goes to it rather than
-      // being treated as a new command.
+      // being treated as a new command. Its prompt, if it asked with one,
+      // belongs on the input line rather than on a line of its own.
       awaitingInput = true;
-      input.disabled = false;
-      input.focus();
+      prompt.classList.add("script");
+      setPromptText(message.prompt ?? "");
+      showEntry(true);
       break;
 
     case "done":
       busy = false;
       awaitingInput = false;
       setPrompt(message.cwd);
-      input.disabled = false;
-      input.focus();
+      showEntry(true);
       break;
 
     case "error":
       view.system(message.message, "error");
       busy = false;
       awaitingInput = false;
-      if (message.cwd) setPrompt(message.cwd);
-      input.disabled = false;
-      input.focus();
+      setPrompt(message.cwd);
+      showEntry(true);
       break;
   }
 };
@@ -135,8 +136,37 @@ function renderEvent(event) {
   }
 }
 
+/**
+ * Set the text beside the caret.
+ *
+ * The console draws `prompt & " "`, so the space belongs to the client rather
+ * than to whatever asked -- a script that prompts with "Name>" still gets one.
+ */
+function setPromptText(text) {
+  prompt.textContent = text === "" ? "" : `${text} `;
+}
+
 function setPrompt(cwd) {
-  prompt.textContent = `${cwd ?? "/"}>`;
+  prompt.classList.remove("script");
+  setPromptText(`${cwd ?? "/"}>`);
+}
+
+/**
+ * Show or hide the input line.
+ *
+ * A terminal shows no caret while it is not listening, and the line has to
+ * stay at the end of the log so that typing continues where the text does.
+ */
+function showEntry(visible) {
+  entry.classList.toggle("idle", !visible);
+  if (visible) {
+    entry.parentElement.appendChild(entry);
+    input.disabled = false;
+    input.focus();
+    view.scrollToBottom();
+  } else {
+    input.disabled = true;
+  }
 }
 
 /** Hand a typed line to the worker that is blocked waiting for one. */
@@ -166,8 +196,9 @@ input.addEventListener("keydown", (e) => {
   input.value = "";
 
   if (awaitingInput) {
-    // Echo it, since the script asked for it rather than the shell.
-    view.system(line, "echo");
+    // The script asked, so the echo keeps its prompt and the answer together.
+    view.echo(prompt.textContent, line, true);
+    showEntry(false);
     deliverInput(line);
     return;
   }
@@ -175,12 +206,12 @@ input.addEventListener("keydown", (e) => {
     return;
   }
 
-  view.system(`${prompt.textContent} ${line}`, "echo");
+  view.echo(prompt.textContent, line, false);
   if (line.trim() === "") {
     return;
   }
   busy = true;
-  input.disabled = true;
+  showEntry(false);
   worker.postMessage({ type: "command", line });
 });
 
@@ -294,7 +325,7 @@ document.getElementById("login").addEventListener("submit", (e) => {
  */
 function runStartup() {
   busy = true;
-  input.disabled = true;
+  showEntry(false);
   worker.postMessage({ type: "script", source: STARTUP, args: [] });
 }
 

@@ -31,11 +31,13 @@ function emit(json) {
  * Returns null when input has been closed, which ends the running script
  * the way closing the console does in the original client.
  */
-function readLineSync(_rgb) {
+function readLineSync(prompt, _rgb) {
   if (!control) {
     return null;
   }
-  postMessage({ type: "wantInput", mode: "line" });
+  // The prompt travels with the request so the page can set it beside the
+  // caret instead of printing it as a finished line.
+  postMessage({ type: "wantInput", mode: "line", prompt: prompt ?? "" });
   Atomics.store(control, 0, WAITING);
   Atomics.wait(control, 0, WAITING);
 
@@ -43,12 +45,17 @@ function readLineSync(_rgb) {
     return null;
   }
   const length = Atomics.load(control, 1);
-  return new TextDecoder().decode(inputBytes.subarray(0, length));
+  // `slice` and not `subarray`: the buffer is shared, and TextDecoder refuses
+  // a view onto shared memory outright. A subarray is such a view, so decoding
+  // one threw, the error unwound through the script, and every ReadLine ended
+  // the script instead of returning a line. `slice` copies into a buffer of
+  // its own, which decode accepts.
+  return new TextDecoder().decode(inputBytes.slice(0, length));
 }
 
 /** Block until the page supplies a single key, returning its char code. */
 function readKeySync() {
-  const line = readLineSync(-1);
+  const line = readLineSync("", -1);
   if (line === null || line.length === 0) {
     return 0;
   }

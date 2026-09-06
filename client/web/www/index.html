@@ -28,14 +28,18 @@
     <!-- The communications log: server and client notices, newest last. -->
     <section id="comm" role="log" aria-label="Communications" aria-live="polite"></section>
 
-    <!-- Script output. -->
-    <main id="output" role="log" aria-label="Console" aria-live="polite"></main>
-
-    <div id="entry">
-      <span id="prompt">/&gt;</span>
-      <input id="input" type="text" autocomplete="off" autocapitalize="off"
-             spellcheck="false" disabled aria-label="Console input" />
-    </div>
+    <!--
+      Script output, with the prompt as its last line. The entry lives inside
+      the scrolling log rather than under it so that typing happens where the
+      text ends, the way a terminal behaves.
+    -->
+    <main id="output" role="log" aria-label="Console" aria-live="polite">
+      <div id="entry" class="line no-prespace idle">
+        <span id="prompt">/&gt;</span>
+        <input id="input" type="text" autocomplete="off" autocapitalize="off"
+               spellcheck="false" disabled aria-label="Console input" />
+      </div>
+    </main>
 
     <footer id="statusbar">
       <span id="hint">Type <b>HELP</b> for a list of commands.</span>

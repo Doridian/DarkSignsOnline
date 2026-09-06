@@ -42,7 +42,10 @@ assert.equal(first.kind, "line");
 assert.equal(first.runs[0].text, "hello");
 assert.equal(first.runs[0].color, "#44cf3d", "green must survive the colour swap");
 
-// Input reaches the script.
+// Input reaches the script. Note that this cannot catch how the worker reads
+// a line in a browser: it hands the callback a plain string, where the worker
+// decodes out of shared memory, and only a browser refuses that. See the note
+// on `slice` in worker.js.
 session.runScript('Say "you said: " & ReadLine("Name?")', []);
 assert.ok(lines().includes("you said: typed answer"));
 

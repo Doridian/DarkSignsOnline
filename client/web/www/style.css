@@ -28,8 +28,8 @@ body {
 body {
   margin: 0;
   display: grid;
-  /* Title bar, comm log, console, input, status bar. */
-  grid-template-rows: auto auto 1fr auto auto;
+  /* Title bar, comm log, console (the prompt is inside it), status bar. */
+  grid-template-rows: auto auto 1fr auto;
   background: var(--bg);
   color: var(--fg);
   font-family: Verdana, "DejaVu Sans", system-ui, sans-serif;
@@ -177,8 +177,19 @@ button:hover {
 .line.system {
   color: var(--dim);
 }
+/* An echoed line: what was typed reads as ordinary text, and only the prompt
+   in front of it is coloured. */
 .line.echo {
+  color: var(--fg);
+}
+.prompt-echo {
   color: var(--accent);
+  font-weight: 700;
+  white-space: pre-wrap;
+}
+.prompt-echo.script {
+  color: inherit;
+  font-weight: inherit;
 }
 .line.error {
   color: var(--error);
@@ -209,31 +220,44 @@ button:hover {
 
 /* ---- input ----------------------------------------------------------- */
 
+/* The last line of the log, not a bar beneath it. It inherits `.line`
+   padding, so the prompt sits in the same column as everything above it. */
 #entry {
   display: flex;
-  gap: 0.4rem;
-  align-items: center;
-  padding: 0.3rem 0.6rem;
-  border-top: 1px solid var(--rule);
+  align-items: baseline;
 }
 
+/* A script's own prompt is part of its output and is coloured like it; the
+   shell's `/home>` keeps the accent. */
 #prompt {
   color: var(--accent);
   font-weight: 700;
-  white-space: nowrap;
+  white-space: pre-wrap;
+}
+#prompt.script {
+  color: inherit;
+  font-weight: inherit;
+}
+#prompt:empty {
+  display: none;
 }
 
 #input {
   flex: 1;
+  min-width: 0;
   border: none;
   background: transparent;
-  padding: 0.15rem 0;
+  color: inherit;
+  font: inherit;
+  padding: 0;
 }
 #input:focus {
   outline: none;
 }
-#input:disabled {
-  opacity: 0.5;
+/* Hidden rather than dimmed while a script is running: a terminal shows no
+   caret when it is not listening. */
+#entry.idle {
+  display: none;
 }
 
 /* ---- status bar ------------------------------------------------------ */
