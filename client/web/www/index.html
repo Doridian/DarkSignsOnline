@@ -7,23 +7,40 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <header>
-      <h1>Dark Signs Online</h1>
-      <form id="login">
-        <input id="username" type="text" placeholder="username" autocomplete="username" />
-        <input id="password" type="password" placeholder="password" autocomplete="current-password" />
+    <header id="titlebar">
+      <span id="status-dot" class="offline" aria-hidden="true"></span>
+      <span id="status-text">Not signed in.</span>
+
+      <form id="login" autocomplete="on">
+        <input id="username" type="text" placeholder="username" autocomplete="username"
+               aria-label="Username" />
+        <input id="password" type="password" placeholder="password"
+               autocomplete="current-password" aria-label="Password" />
         <button type="submit">Sign in</button>
       </form>
     </header>
 
-    <main>
-      <div id="output" role="log" aria-live="polite"></div>
-      <div id="entry">
-        <span id="prompt">/&gt;</span>
-        <input id="input" type="text" autocomplete="off" spellcheck="false" disabled
-               aria-label="Console input" />
-      </div>
-    </main>
+    <!-- The communications log: server and client notices, newest last. -->
+    <section id="comm" role="log" aria-label="Communications" aria-live="polite"></section>
+
+    <!-- Script output. -->
+    <main id="output" role="log" aria-label="Console" aria-live="polite"></main>
+
+    <div id="entry">
+      <span id="prompt">/&gt;</span>
+      <input id="input" type="text" autocomplete="off" autocapitalize="off"
+             spellcheck="false" disabled aria-label="Console input" />
+    </div>
+
+    <footer id="statusbar">
+      <span id="hint">Type <b>HELP</b> for a list of commands.</span>
+      <nav id="tabs" aria-label="Consoles">
+        <button class="tab active" data-console="1">1</button>
+        <button class="tab" data-console="2">2</button>
+        <button class="tab" data-console="3">3</button>
+        <button class="tab" data-console="4">4</button>
+      </nav>
+    </footer>
 
     <script type="module" src="./main.js"></script>
   </body>

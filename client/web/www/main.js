@@ -4,7 +4,7 @@
 // only subtle part is input: the worker blocks on `Atomics.wait`, so a typed
 // line is written into a SharedArrayBuffer and the worker is woken.
 
-import { ConsoleView } from "./console.js";
+import { ConsoleView, CommView } from "./console.js";
 
 const WAITING = 0;
 const READY = 1;
@@ -14,8 +14,11 @@ const CLOSED = 2;
 const INPUT_CAPACITY = 8192;
 
 const view = new ConsoleView(document.getElementById("output"));
+const comm = new CommView(document.getElementById("comm"));
 const input = document.getElementById("input");
 const prompt = document.getElementById("prompt");
+const statusDot = document.getElementById("status-dot");
+const statusText = document.getElementById("status-text");
 
 /** Set while the worker is blocked waiting for a line. */
 let awaitingInput = false;
@@ -23,13 +26,17 @@ let awaitingInput = false;
 let busy = false;
 
 if (!crossOriginIsolated) {
-  view.system(
-    "This page is not cross-origin isolated, so SharedArrayBuffer is " +
-      "unavailable and scripts cannot read input. Serve it with " +
-      "Cross-Origin-Opener-Policy: same-origin and " +
+  comm.add(
+    "This page is not cross-origin isolated, so scripts cannot read input. " +
+      "It needs Cross-Origin-Opener-Policy: same-origin and " +
       "Cross-Origin-Embedder-Policy: require-corp.",
-    "error",
   );
+}
+
+/** Reflect the connection in the title bar. */
+function setStatus(text, state) {
+  statusText.textContent = text;
+  statusDot.className = state;
 }
 
 const control = new Int32Array(new SharedArrayBuffer(2 * Int32Array.BYTES_PER_ELEMENT));
@@ -43,9 +50,23 @@ worker.onmessage = (e) => {
   switch (message.type) {
     case "ready":
       setPrompt(message.cwd);
-      view.system("Client ready. Type HELP for a list of commands.");
-      input.disabled = false;
-      input.focus();
+      comm.add("Welcome to Dark Signs Delta.");
+      if (!message.persistent) {
+        comm.add("Storage is unavailable; this session will not be saved.");
+      } else if (message.restored > 0) {
+        comm.add(`Restored ${message.restored} saved file(s).`);
+      }
+      runStartup();
+      break;
+
+    case "credentialsSet":
+      setStatus(`You are online as ${pendingUser}.`, "online");
+      comm.add(`You have been authorized as ${pendingUser}.`);
+      comm.add("Welcome to the Dark Signs Network!");
+      break;
+
+    case "wasReset":
+      comm.add("Saved files cleared. Reload to start fresh.");
       break;
 
     case "console":
@@ -82,7 +103,12 @@ worker.onmessage = (e) => {
 function renderEvent(event) {
   switch (event.kind) {
     case "line":
-      view.line(event);
+      // The communications channel has its own panel.
+      if (event.channel === "comm") {
+        comm.add(event.runs.map((r) => r.text).join(""));
+      } else {
+        view.line(event);
+      }
       break;
     case "clear":
       view.clear();
@@ -185,14 +211,67 @@ async function loadStartupFiles() {
   return files;
 }
 
+let pendingUser = "";
+
 document.getElementById("login").addEventListener("submit", (e) => {
   e.preventDefault();
-  const username = document.getElementById("username").value;
+  pendingUser = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value;
-  worker.postMessage({ type: "credentials", username, password });
-  view.system(`Signed in as ${username}.`);
+  if (!pendingUser || !password) {
+    return;
+  }
+  worker.postMessage({ type: "credentials", username: pendingUser, password });
+  // The password is handed to the worker and forgotten here.
   document.getElementById("password").value = "";
+  setStatus(`Signing in as ${pendingUser}...`, "connecting");
   input.focus();
 });
+
+/**
+ * Run the startup script, which paints the banner.
+ *
+ * It is a normal script, so anything it prints goes through the same path
+ * as everything else.
+ */
+function runStartup() {
+  busy = true;
+  input.disabled = true;
+  worker.postMessage({ type: "script", source: STARTUP, args: [] });
+}
+
+// The shipped startup.ds logs in and opens a new console, neither of which
+// makes sense before the player has signed in. This is the banner from it.
+const STARTUP = String.raw`
+Say ""
+Draw -1, RGB(0, 0, 0), "solid"
+Say "{{center courier_new 32}}"
+Draw -1, RGB(60, 120, 60), "fadeinverse"
+Say "{{center impact nobold 48 lyellow}}[{{|}}{{white impact nobold 48}} D A R K S I G N S {{|}}]{{lyellow impact nobold 48}}"
+Draw -1, RGB(60, 120, 60), "fadecenter"
+Say "ONLINE{{center impact nobold 84}}"
+Draw -1, RGB(60, 120, 60), "fadecenter"
+Say "{{center courier_new 8}}"
+Draw -1, RGB(60, 120, 60), "fadeinverse"
+Say "Type HELP for a list of commands.{{center courier_new 16}}"
+Draw -1, RGB(60, 120, 60), "fadeinverse"
+Say "{{center courier_new 8}}"
+Draw -1, RGB(60, 120, 60), "fadeinverse"
+Say ""
+Draw -1, RGB(0, 0, 0), "solid"
+Say ""
+Say "It is " & Time & " on the " & Date & ".{{grey}}"
+Say "You can EDIT this startup script file by typing: EDIT system\startup.ds{{lgrey}}"
+Say ""
+`;
+
+// Tabs are drawn but not wired up: the session is single-console for now.
+for (const tab of document.querySelectorAll(".tab")) {
+  tab.addEventListener("click", () => {
+    for (const other of document.querySelectorAll(".tab")) {
+      other.classList.toggle("active", other === tab);
+    }
+    input.focus();
+  });
+}
 
 boot();

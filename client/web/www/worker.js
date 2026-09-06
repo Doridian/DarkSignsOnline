@@ -6,6 +6,7 @@
 // `Atomics.wait` lets us park until the page sends input.
 
 import init, { Session } from "./pkg/dso_web.js";
+import { FileStore } from "./storage.js";
 
 /** Shared with the page so input can be delivered to a blocked worker. */
 let control = null; // Int32Array: [state, length]
@@ -17,6 +18,7 @@ const READY = 1;
 const CLOSED = 2;
 
 let session = null;
+let store = null;
 
 /** Send one console event to the page. */
 function emit(json) {
@@ -58,15 +60,35 @@ async function boot(message) {
 
   control = new Int32Array(message.control);
   inputBytes = new Uint8Array(message.input);
+  store = await FileStore.open();
 
-  session = new Session(emit, readLineSync, readKeySync, message.width ?? 80);
+  session = new Session(
+    emit,
+    readLineSync,
+    readKeySync,
+    (path, contents) => store.record(path, contents),
+    message.width ?? 80,
+  );
   if (message.apiRoot) {
     session.setApiRoot(message.apiRoot);
   }
+
+  // The shipped scripts first, then whatever the player has saved, so an
+  // edited command survives a client update.
   for (const [path, contents] of Object.entries(message.files ?? {})) {
-    session.writeFile(path, contents);
+    session.seedFile(path, contents);
   }
-  postMessage({ type: "ready", cwd: session.currentDirectory() });
+  const saved = await store.loadAll();
+  for (const [path, contents] of Object.entries(saved)) {
+    session.seedFile(path, contents);
+  }
+
+  postMessage({
+    type: "ready",
+    cwd: session.currentDirectory(),
+    persistent: store.available,
+    restored: Object.keys(saved).length,
+  });
 }
 
 onmessage = async (e) => {
@@ -96,6 +118,11 @@ onmessage = async (e) => {
 
       case "writeFile":
         session.writeFile(message.path, message.contents);
+        break;
+
+      case "reset":
+        await store.clear();
+        postMessage({ type: "wasReset" });
         break;
 
       default:

@@ -1,86 +1,149 @@
+/* The client's look, following the desktop original: a near-black blue
+   ground, green accents, and a console that fills the window. */
+
 :root {
   color-scheme: dark;
-  --bg: #0a0a0a;
-  --fg: #cccccc;
-  --dim: #666666;
+
+  --bg: #0b0f14;
+  --panel: #161b22;
+  --titlebar: #1a2129;
+  --rule: #232b35;
+
+  --fg: #d8d8d8;
+  --dim: #7a8290;
   --accent: #3dcf44;
-  --error: #ff5555;
+  --gold: #d8a629;
+  --error: #ff5f56;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  /* Title bar, comm log, console, input, status bar. */
+  grid-template-rows: auto auto 1fr auto auto;
   background: var(--bg);
   color: var(--fg);
-  font-family: Verdana, system-ui, sans-serif;
-  font-size: 14px;
+  font-family: Verdana, "DejaVu Sans", system-ui, sans-serif;
+  font-size: 13px;
+  overflow: hidden;
 }
 
-header {
+/* ---- title bar ------------------------------------------------------- */
+
+#titlebar {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid #222;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--titlebar);
+  border-bottom: 1px solid var(--rule);
+  font-weight: 700;
 }
 
-header h1 {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--accent);
-  letter-spacing: 0.15em;
+#status-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 1px;
+}
+#status-dot.offline {
+  background: var(--error);
+}
+#status-dot.connecting {
+  background: var(--gold);
+}
+#status-dot.online {
+  background: var(--accent);
 }
 
 #login {
   margin-left: auto;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 input,
 button {
-  background: #111;
+  background: #0e1319;
   color: var(--fg);
-  border: 1px solid #333;
-  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--rule);
+  padding: 0.25rem 0.4rem;
   font: inherit;
+  font-weight: 400;
   border-radius: 2px;
+}
+
+input::placeholder {
+  color: var(--dim);
 }
 
 button {
   cursor: pointer;
+  font-weight: 700;
 }
-
 button:hover {
   border-color: var(--accent);
+  color: var(--accent);
 }
 
-main {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem 1rem;
+/* ---- communications log ---------------------------------------------- */
+
+#comm {
+  height: 7.5rem;
+  overflow-y: auto;
+  padding: 0.3rem 0.6rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--rule);
+  font-size: 11px;
+  line-height: 1.45;
 }
+
+.comm-line {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.comm-time {
+  flex: 0 0 4.5rem;
+  color: var(--gold);
+  font-weight: 700;
+  text-align: right;
+}
+
+.comm-text {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* ---- console --------------------------------------------------------- */
 
 #output {
-  flex: 1;
-  min-height: 0;
   overflow-y: auto;
+  padding: 0.4rem 0;
   /* Script output is whitespace-significant. */
   white-space: pre-wrap;
   word-break: break-word;
+  min-height: 0;
 }
 
 .line {
-  min-height: 1.2em;
-  line-height: 1.35;
+  min-height: 1.25em;
+  line-height: 1.3;
+  padding: 0 0.6rem;
+}
+
+/* `noprespace` removes the console's usual left indent. */
+.line.no-prespace {
+  padding-left: 0;
 }
 
 .align-center {
@@ -88,9 +151,6 @@ main {
 }
 .align-right {
   text-align: right;
-}
-.no-prespace {
-  margin-left: 0;
 }
 
 .line.system {
@@ -101,9 +161,6 @@ main {
 }
 .line.error {
   color: var(--error);
-}
-.channel-comm {
-  color: #e99a9c;
 }
 
 @keyframes blink {
@@ -129,16 +186,19 @@ main {
   }
 }
 
+/* ---- input ----------------------------------------------------------- */
+
 #entry {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   align-items: center;
-  padding-top: 0.5rem;
-  border-top: 1px solid #222;
+  padding: 0.3rem 0.6rem;
+  border-top: 1px solid var(--rule);
 }
 
 #prompt {
   color: var(--accent);
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -146,8 +206,47 @@ main {
   flex: 1;
   border: none;
   background: transparent;
+  padding: 0.15rem 0;
 }
-
 #input:focus {
   outline: none;
+}
+#input:disabled {
+  opacity: 0.5;
+}
+
+/* ---- status bar ------------------------------------------------------ */
+
+#statusbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0.6rem;
+  background: var(--titlebar);
+  border-top: 1px solid var(--rule);
+  font-size: 11px;
+  color: var(--dim);
+}
+
+#hint b {
+  color: var(--accent);
+}
+
+#tabs {
+  margin-left: auto;
+  display: flex;
+  gap: 0.15rem;
+}
+
+.tab {
+  min-width: 1.4rem;
+  padding: 0.05rem 0.3rem;
+  font-size: 11px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--dim);
+}
+.tab.active {
+  color: var(--gold);
+  border-color: var(--rule);
 }

@@ -8,6 +8,7 @@
 //! for output and input, then asks it to run a line or a script.
 
 mod console;
+mod fs;
 mod host;
 mod server;
 
@@ -17,13 +18,14 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 use vbscript::game::cli::CommandState;
-use vbscript::game::fs::{FileSystem, MemoryFs};
+use vbscript::game::fs::FileSystem;
 use vbscript::game::protocol::{Credentials, DEFAULT_API_ROOT};
 use vbscript::game::{run_script, Env, GameHost};
 use vbscript::interp::Interp;
 use vbscript::value::Value;
 
 use console::WorkerConsole;
+use fs::PersistentFs;
 use host::BrowserHost;
 use server::XhrServer;
 
@@ -38,7 +40,7 @@ const STEP_BUDGET: u64 = 50_000_000;
 /// talks to. The page holds one of these for as long as it is open.
 #[wasm_bindgen]
 pub struct Session {
-    host: Rc<BrowserHost<WorkerConsole, MemoryFs, XhrServer>>,
+    host: Rc<BrowserHost<WorkerConsole, PersistentFs, XhrServer>>,
     command_state: CommandState,
     /// Kept so either setting can change without discarding the other.
     api_root: RefCell<String>,
@@ -58,10 +60,11 @@ impl Session {
         emit: js_sys::Function,
         read_line: js_sys::Function,
         read_key: js_sys::Function,
+        on_file_change: js_sys::Function,
         width: i32,
     ) -> Session {
         let console = WorkerConsole::new(emit, read_line, read_key, width as i64);
-        let inner = GameHost::new(console, MemoryFs::new(), XhrServer::new(
+        let inner = GameHost::new(console, PersistentFs::new(on_file_change), XhrServer::new(
             DEFAULT_API_ROOT.to_string(),
             Credentials::default(),
         ))
@@ -98,8 +101,22 @@ impl Session {
         self.reconnect();
     }
 
-    /// Put a file into the session's filesystem, which is how the shipped
-    /// `.ds` commands get there.
+    /// Put a file into the session's filesystem without persisting it.
+    ///
+    /// This is how both the shipped scripts and the saved ones are loaded;
+    /// applying the saved copies last is what lets a player's edit survive
+    /// a client update.
+    #[wasm_bindgen(js_name = seedFile)]
+    pub fn seed_file(&self, path: &str, contents: &str) -> Result<(), JsValue> {
+        self.host
+            .inner
+            .fs
+            .borrow_mut()
+            .seed(path, contents)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// Write a file the way a script would, so the change is persisted.
     #[wasm_bindgen(js_name = writeFile)]
     pub fn write_file(&self, path: &str, contents: &str) -> Result<(), JsValue> {
         self.host
