@@ -59,7 +59,7 @@ else if ($action === 'send')
     $uEmail = $user['username'] . '@users';
     foreach ($nameID AS $id)
     {
-        $stmt = $db->prepare("INSERT INTO dsmail (from_addr, to_user, subject, message, time, message_hash) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT IGNORE INTO dsmail (from_addr, to_user, subject, message, time, message_hash) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->bind_param('sissis', $uEmail, $id, $sub, $msg, $time, $msg_hash);
         $stmt->execute();
     }
