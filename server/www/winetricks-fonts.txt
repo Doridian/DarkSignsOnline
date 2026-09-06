@@ -1,0 +1,13 @@
+winetricks corefonts
+winetricks arial
+winetricks comicsans
+winetricks courier
+winetricks georgia
+winetricks impact
+winetricks lucida
+winetricks tahoma
+winetricks times
+winetricks trebuchet
+winetricks verdana
+winetricks opensymbol
+winetricks webdings

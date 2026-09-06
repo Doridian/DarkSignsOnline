@@ -23,7 +23,7 @@
     With a recent "influx" of users I've been reminded this client had some Linux issues<br />
     Today (with 0.99.32 and newer), some advancements have been made in that regard!<br />
     The client will now no longer crash if a font the game wants to use is not installed<br />
-    If you want to have all fonts available the game might use, <a href="https://github.com/Doridian/DarkSignsOnline/blob/42f00bb/winetricks-fonts.txt">here is a handy list of<br />
+    If you want to have all fonts available the game might use, <a href="/winetricks-fonts.txt">here is a handy list of<br />
     <i>winetricks</i> commands to run</a>
     </span><br /><br />
 
