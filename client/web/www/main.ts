@@ -130,6 +130,7 @@ class GameConsole {
     this.worker.onmessage = (e: MessageEvent<FromWorker>) => handleMessage(this, e.data);
 
     this.input.addEventListener("keydown", (e) => this.onKeyDown(e));
+    this.root.addEventListener("click", (e) => this.onClick(e));
   }
 
   post(message: ToWorker): void {
@@ -169,6 +170,26 @@ class GameConsole {
     } else {
       this.input.disabled = true;
     }
+  }
+
+  /**
+   * A click anywhere in the log puts the caret back at the prompt, the way a
+   * terminal does -- except when the click just selected something, since
+   * taking the caret would collapse a selection about to be copied.
+   */
+  onClick(event: MouseEvent): void {
+    const target = event.target as Element | null;
+    // Whatever the console draws that handles its own clicks keeps them.
+    if (target?.closest("a, button, input, textarea, select")) {
+      return;
+    }
+    // A click collapses any selection there was, so one still standing here
+    // is the one this click made: a drag across the log, or a double-click.
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) {
+      return;
+    }
+    this.focus();
   }
 
   /** Take the caret, but only when this console is the one on screen. */

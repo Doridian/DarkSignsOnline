@@ -162,6 +162,9 @@ button:hover {
 .console {
   grid-area: 1 / 1;
   overflow-y: auto;
+  /* The whole area is the terminal: a click in it takes the caret, so the
+     cursor says so over the blank space below the last line too. */
+  cursor: text;
   padding: 0.4rem 0;
   /* Script output is whitespace-significant. */
   white-space: pre-wrap;
