@@ -4,10 +4,19 @@ require_once('function_base.php');
 
 header('Content-Type: text/plain');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: *');
-header('Access-Control-Allow-Headers: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+// These have to be named rather than wildcarded. The `*` value does not
+// cover Authorization -- the Fetch standard excludes it -- so a browser
+// client sending Basic auth fails the preflight and never makes the call.
+// DSO-Protocol-Version is a custom header, so it is not safelisted either.
+header('Access-Control-Allow-Headers: Authorization, Content-Type, DSO-Protocol-Version');
 header('Access-Control-Expose-Headers: *');
-header('Access-Control-Allow-Credentials: true');
+// Basic auth makes a preflight unavoidable for a cross-origin browser
+// client, so let it cache the answer rather than asking before every call.
+header('Access-Control-Max-Age: 86400');
+// Deliberately no Access-Control-Allow-Credentials: a browser rejects it
+// outright alongside a wildcard origin, and the clients send Authorization
+// as an ordinary header rather than using credentials mode.
 if (strtoupper($_SERVER['REQUEST_METHOD']) === 'OPTIONS') {
     // Preflight CORS request, just smile and 200
     exit;
