@@ -66,54 +66,64 @@ Same-origin means no CORS and no COEP question for API calls at all.
 
 ## If the client is on a different origin
 
-Two things in the current API configuration will break it.
+Authentication itself is fine — the API takes HTTP basic auth and the
+desktop client has always used it. What is new is CORS, which only exists in
+a browser: the desktop client speaks to the API through WinHTTP, sends no
+`Origin`, and is never preflighted. So a working desktop client says nothing
+about whether a browser can reach the same endpoint.
+
+Two things in the API's headers mattered for a browser, and both are now
+fixed in `server/www/api/function.php`.
 
 ### `Authorization` is not covered by the wildcard
 
-The API answers a preflight with:
+The API used to answer a preflight with:
 
 ```
 access-control-allow-headers: *
 ```
 
 The wildcard deliberately **does not** cover `Authorization` — the Fetch
-standard excludes it, and every current browser enforces that. The client
-sends `Authorization` on every call, so the preflight fails and no request
-is made. It has to be named:
+standard excludes it, and current browsers enforce that. The client sends
+`Authorization` on every call, so the preflight failed and the request was
+never made. It is now named:
 
-```nginx
-add_header Access-Control-Allow-Headers
-    "Authorization, Content-Type, DSO-Protocol-Version" always;
+```
+Access-Control-Allow-Headers: Authorization, Content-Type, DSO-Protocol-Version
 ```
 
-`DSO-Protocol-Version` also needs naming: it is a custom header, so it is
-not safelisted either, and it is what keeps the server out of its legacy
-response mode.
+`DSO-Protocol-Version` needs naming too: it is a custom header, so it is not
+safelisted, and it is what keeps the server out of its legacy response mode.
 
-Note that a custom header means **every** cross-origin API call is
-preflighted. Same-origin avoids that round trip entirely.
+Because `Authorization` is not a safelisted header, **every** cross-origin
+API call is preflighted no matter what else changes. `Access-Control-Max-Age`
+now lets the browser cache that answer for a day. Serving the client from the
+API's own origin avoids the round trip altogether.
 
-### `*` with credentials is not a valid pair
+There is a query-string alternative to the version header —
+`function_base.php` also accepts `?dso_version=2` — but it does not avoid the
+preflight, since `Authorization` forces one on its own.
 
-The API currently sends both:
+### `*` with credentials was not a valid pair
+
+The API also sent:
 
 ```
 access-control-allow-origin: *
 access-control-allow-credentials: true
 ```
 
-A browser rejects that combination outright for any credentialed request.
-It does not bite today, because the client sets `Authorization` as an
-ordinary header rather than using `withCredentials` — so the request is not
-credentialed in the CORS sense. It will bite the moment anything uses
-cookies. Either drop `Access-Control-Allow-Credentials`, or echo the
-specific origin instead of `*`.
+A browser rejects that combination for any credentialed request. It never
+bit, because both clients set `Authorization` as an ordinary header rather
+than using credentials mode, so the request is not credentialed in the CORS
+sense. The header has been dropped rather than left as a trap for whatever
+tries cookies next.
 
 ### Add a resource policy
 
 Cross-origin responses fetched with CORS satisfy COEP on their own, so the
-API works once the header above is fixed. Sending this as well costs
-nothing and covers anything later fetched without CORS:
+API works with the change above. Sending this as well costs nothing and
+covers anything later fetched without CORS:
 
 ```nginx
 add_header Cross-Origin-Resource-Policy "cross-origin" always;
