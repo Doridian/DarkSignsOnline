@@ -78,7 +78,10 @@ export class ConsoleView {
       span.textContent = run.text;
       span.style.color = run.color;
       span.style.fontFamily = fontFor(run.font);
-      span.style.fontSize = `${run.size}px`;
+      // The client's sizes are points, as VB6 fonts are. CSS agrees about
+      // what a point is, so the unit does the conversion: the default 10
+      // lands at 13.3px rather than a too-small 10px.
+      span.style.fontSize = `${run.size}pt`;
       span.style.fontWeight = run.bold ? "700" : "400";
       if (run.italic) span.style.fontStyle = "italic";
 

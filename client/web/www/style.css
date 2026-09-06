@@ -14,6 +14,11 @@
   --accent: #3dcf44;
   --gold: #d8a629;
   --error: #ff5f56;
+  /* The prompt is the client's `lblue`, which its RGB packing puts at cyan. */
+  --prompt: #00ffff;
+
+  --gutter: 4px;
+  --prespace: 40px;
 }
 
 * {
@@ -156,15 +161,26 @@ button:hover {
   min-height: 0;
 }
 
+/* Spacing measured off the client: lines sit 19px apart, output is indented
+   by `PreSpaceWidth` (600 twips, which is 40px at 96dpi) past a 4px gutter,
+   and a `noprespace` line keeps only the gutter. Bold is the console's
+   default weight, so anything not carrying its own run styling inherits it. */
 .line {
-  min-height: 1.25em;
-  line-height: 1.3;
-  padding: 0 0.6rem;
+  /* 19px between lines of the default 10pt text. Unitless so a line carrying
+     a larger run -- the startup banner is 48pt -- grows to hold it. */
+  min-height: 19px;
+  line-height: 1.425;
+  /* The console's own face, which a line without run styling of its own --
+     a blank one, an echo, the prompt -- is drawn in. */
+  font-family: Verdana, "DejaVu Sans", system-ui, sans-serif;
+  font-size: 10pt;
+  font-weight: 700;
+  padding: 0 0.6rem 0 calc(var(--gutter) + var(--prespace));
 }
 
 /* `noprespace` removes the console's usual left indent. */
 .line.no-prespace {
-  padding-left: 0;
+  padding-left: var(--gutter);
 }
 
 .align-center {
@@ -180,10 +196,10 @@ button:hover {
 /* An echoed line: what was typed reads as ordinary text, and only the prompt
    in front of it is coloured. */
 .line.echo {
-  color: var(--fg);
+  color: #ffffff;
 }
 .prompt-echo {
-  color: var(--accent);
+  color: var(--prompt);
   font-weight: 700;
   white-space: pre-wrap;
 }
@@ -230,7 +246,7 @@ button:hover {
 /* A script's own prompt is part of its output and is coloured like it; the
    shell's `/home>` keeps the accent. */
 #prompt {
-  color: var(--accent);
+  color: var(--prompt);
   font-weight: 700;
   white-space: pre-wrap;
 }
