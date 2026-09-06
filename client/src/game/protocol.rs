@@ -64,10 +64,22 @@ pub fn build_request(
     credentials: &Credentials,
     client_version: &str,
 ) -> HttpRequest {
-    let mut headers = vec![
-        (PROTOCOL_VERSION_HEADER.to_string(), PROTOCOL_VERSION.to_string()),
-        ("User-Agent".to_string(), user_agent(client_version)),
-    ];
+    let mut headers = vec![(
+        PROTOCOL_VERSION_HEADER.to_string(),
+        PROTOCOL_VERSION.to_string(),
+    )];
+
+    // Not in a browser. `User-Agent` is a forbidden header name: script is
+    // not allowed to set it, and the browser sends its own regardless. The
+    // two engines disagree about how to refuse, which is the whole problem --
+    // Chromium drops it silently, while Firefox honours the call and then
+    // lists `user-agent` in `Access-Control-Request-Headers`. No server that
+    // does not name it back gets past the preflight, and it cannot sensibly
+    // name back a header the client was never allowed to send.
+    #[cfg(not(target_arch = "wasm32"))]
+    headers.push(("User-Agent".to_string(), user_agent(client_version)));
+    #[cfg(target_arch = "wasm32")]
+    let _ = client_version;
 
     let (method, body) = match &request.body {
         Some(b) => {
@@ -162,6 +174,21 @@ mod tests {
             user_agent("1.2.3"),
             "Mozilla/4.0 (compatible; Win32; VbAsyncSocket; DarkSignsOnline/1.2.3)"
         );
+    }
+
+    /// A browser must not be handed a `User-Agent` to set. Chromium ignores
+    /// the attempt, but Firefox makes it part of the preflight and then fails
+    /// the request with "CORS Missing Allow Header", because no server names
+    /// back a header the client had no business sending.
+    #[test]
+    fn user_agent_is_sent_only_where_it_is_allowed() {
+        let req =
+            build_request("https://example.test/api/", &ApiRequest::get("a.php"), &creds(), "1");
+        let names: Vec<&str> = req.headers.iter().map(|(k, _)| k.as_str()).collect();
+        assert_eq!(names.contains(&"User-Agent"), !cfg!(target_arch = "wasm32"));
+        // The version header travels on every target; without it the server
+        // drops into its legacy response mode.
+        assert!(names.contains(&PROTOCOL_VERSION_HEADER));
     }
 
     #[test]
