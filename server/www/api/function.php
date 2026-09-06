@@ -51,9 +51,7 @@ if (!$user || !password_verify($_SERVER['PHP_AUTH_PW'], $user['password'])) {
 
 unset($user['password']);
 
-function validIP($ip)
-{
-    global $db;
+function validIP($ip) {
     $domain = explode('.', $ip);
     if (sizeof($domain) !== 4) {
         return false;
@@ -97,8 +95,7 @@ function getDomainById($id) {
     return false;
 }
 
-function getIpDomain($ip)
-{
+function getIpDomain($ip) {
     global $db;
 
     $stmt = $db->prepare("SELECT ip, host FROM domains WHERE ip=? OR host=?");
@@ -117,8 +114,7 @@ function getIpDomain($ip)
     }
 }
 
-function getCash($user_id)
-{
+function getCash($user_id) {
     global $db;
     $stmt = $db->prepare("SELECT cash FROM users WHERE id=?");
     $stmt->bind_param('i', $user_id);
@@ -131,8 +127,7 @@ function getCash($user_id)
     }
 }
 
-function transaction($from_id, $to_id, $description, $amount, $returnkeycodeinstead = 0)
-{
+function transaction($from_id, $to_id, $description, $amount, $returnkeycodeinstead = 0) {
     global $db;
     $vercode = make_keycode();
 
