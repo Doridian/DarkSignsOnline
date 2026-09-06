@@ -152,7 +152,7 @@
         # Its assets stay at the root beside it because the page addresses
         # them relatively: a document at `/game.php` resolves `./main.js` to
         # `/main.js`.
-        both = pkgs.runCommand "darksignsonline-both" { } ''
+        site = pkgs.runCommand "darksignsonline" { } ''
           root="$out/var/www/darksignsonline"
           mkdir -p "$out/var/www"
           cp -r --no-preserve=mode,ownership ${server}/var/www/darksignsonline "$root"
@@ -163,10 +163,10 @@
       in
       {
         packages = {
-          default = both;
+          default = site;
+          darksignsonline = site;
           darksignsonline-server = server;
           darksignsonline-client = client;
-          darksignsonline-both = both;
         };
 
         devShells.default = pkgs.mkShell {

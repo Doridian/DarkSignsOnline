@@ -136,13 +136,13 @@ Cross-Origin-Embedder-Policy: require-corp
 `serve.ts` sends them. Any static host will do as long as it does the same;
 the page says so plainly if it finds itself not cross-origin isolated.
 
-In production the page is `/game.php` on the game server's own origin --
-`darksignsonline-both` puts the two web roots together and gives the built
-`index.html` a PHP prologue that sends the two headers, so the page asks for
-them itself and the web server's configuration says nothing about it. Same
-origin means the API calls need no CORS at all. The assets sit at the root
-beside it, because a document at `/game.php` resolves the page's own
-`./main.js` to `/main.js`.
+In production the page is `/game.php` on the game server's own origin -- the
+`darksignsonline` package puts the two web roots together and gives the
+built `index.html` a PHP prologue that sends the two headers, so the page
+asks for them itself and the web server's configuration says nothing about
+it. Same origin means the API calls need no CORS at all. The assets sit at
+the root beside it, because a document at `/game.php` resolves the page's
+own `./main.js` to `/main.js`.
 
 ## Remembering a sign-in
 

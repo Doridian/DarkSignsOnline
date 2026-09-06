@@ -22,11 +22,11 @@ jobs:
 
   # Nothing is published: a deployment builds the flake from a commit. This
   # only proves the commit is one that can be deployed.
-  both:
-    name: Build both
+  site:
+    name: Build the site
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
     - uses: cachix/install-nix-action@v31
     - name: Build
-      run: nix build --print-build-logs .#darksignsonline-both
+      run: nix build --print-build-logs .#darksignsonline
