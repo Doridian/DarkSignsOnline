@@ -27,7 +27,7 @@
                       |
                       <a href="/forgot_password.php">Forgot password</a>
                       |
-                      <a href="/game.php">Play</a>
+                      <a href="/game/">Play</a>
                       |
                       <a href="https://web.archive.org/web/20110127191230/http://www.darksignsonline.com/wiki/Main_Page">Wiki (archive.org)</a>
                       |

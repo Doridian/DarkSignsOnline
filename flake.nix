@@ -128,11 +128,11 @@
           '';
         };
 
-        # What turns the built `index.html` into `game.php`: the two headers
-        # that make the page cross-origin isolated, without which the browser
-        # withholds SharedArrayBuffer and the client's workers cannot block
-        # waiting for input. PHP eats the newline right after `?>`, so the
-        # page still begins with its doctype.
+        # What turns the built `index.html` into `game/index.php`: the two
+        # headers that make the page cross-origin isolated, without which the
+        # browser withholds SharedArrayBuffer and the client's workers cannot
+        # block waiting for input. PHP eats the newline right after `?>`, so
+        # the page still begins with its doctype.
         #
         # They are sent by the page itself rather than by the web server, so
         # that the page carries its own requirement wherever it is served
@@ -146,21 +146,24 @@
           ?>
         '';
 
-        # One web root holding both. The client's page becomes `game.php` --
-        # under a `.php` name for consistency with `forgot_password.php` and
-        # the rest of the site, and now genuinely PHP: the prologue above and
-        # then the built page, unchanged.
+        # One web root holding both. The client gets `game/` to itself: the
+        # page is that directory's `index.php`, so `/game` (which nginx
+        # redirects to `/game/`) is the whole address a player needs, and
+        # every asset the client ships sits under the same prefix rather than
+        # scattered through the site's root.
         #
-        # Its assets stay at the root beside it because the page addresses
-        # them relatively: a document at `/game.php` resolves `./main.js` to
-        # `/main.js`.
+        # The page is genuinely PHP: the prologue above and then the built
+        # page, unchanged. It addresses its assets relatively, so a document
+        # at `/game/` resolves `./main.js` to `/game/main.js` with nothing to
+        # rewrite.
         site = pkgs.runCommand "darksignsonline" { } ''
           root="$out/var/www/darksignsonline"
           mkdir -p "$out/var/www"
           cp -r --no-preserve=mode,ownership ${server}/var/www/darksignsonline "$root"
-          cp -r --no-preserve=mode,ownership ${client}/var/www/darksignsonline/. "$root/"
-          cat ${gamePhpHeaders} "$root/index.html" > "$root/game.php"
-          rm "$root/index.html"
+          mkdir -p "$root/game"
+          cp -r --no-preserve=mode,ownership ${client}/var/www/darksignsonline/. "$root/game/"
+          cat ${gamePhpHeaders} "$root/game/index.html" > "$root/game/index.php"
+          rm "$root/game/index.html"
         '';
       in
       {

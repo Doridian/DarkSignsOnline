@@ -106,7 +106,7 @@ npm install         # typescript, for the page
 npm run check       # type-checks all three projects, emitting nothing
 npm test            # the editor's highlighting and indenting rules
 node smoke.ts       # drives the built module the way the worker does
-node serve.ts       # http://localhost:8080
+node serve.ts       # http://localhost:8080/game/
 ```
 
 Without nix you need the wasm target and a `wasm-bindgen` CLI of exactly the
@@ -136,13 +136,18 @@ Cross-Origin-Embedder-Policy: require-corp
 `serve.ts` sends them. Any static host will do as long as it does the same;
 the page says so plainly if it finds itself not cross-origin isolated.
 
-In production the page is `/game.php` on the game server's own origin -- the
-`darksignsonline` package puts the two web roots together and gives the
-built `index.html` a PHP prologue that sends the two headers, so the page
-asks for them itself and the web server's configuration says nothing about
-it. Same origin means the API calls need no CORS at all. The assets sit at
-the root beside it, because a document at `/game.php` resolves the page's
-own `./main.js` to `/main.js`.
+In production the page is `/game/` on the game server's own origin -- the
+`darksignsonline` package puts the two web roots together, giving the client
+the `game/` directory to itself, and gives the built `index.html` a PHP
+prologue that sends the two headers, so the page asks for them itself and the
+web server's configuration says nothing about it. It is that directory's
+`index.php`, so nginx redirects `/game` to `/game/` and serves it from there.
+Same origin means the API calls need no CORS at all. Every asset sits under
+the same prefix, because a document at `/game/` resolves the page's own
+`./main.js` to `/game/main.js`.
+
+`serve.ts` mounts the page at `/game/` too, so a path that works in
+development is a path that works deployed.
 
 ## Remembering a sign-in
 
