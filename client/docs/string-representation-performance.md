@@ -120,7 +120,87 @@ pointers.
 
 The price is correctness surface rather than speed. Every `match` on
 `Value::Str` needs a companion arm, and one missed in a `_ =>` case is a
-silent wrong answer rather than a compile error.
+silent wrong answer rather than a compile error. Adding the arm to `Value`
+and never constructing it costs +4.1 ns on the assign floor and +1.1% on the
+corpus — per call that is the predicted branch, at the noise floor as
+expected; aggregated over 301 scripts it is small but resolvable.
+
+## An odd-length flag instead of bytes
+
+A cheaper-looking variation: keep `Rc<str>` and record separately that the
+byte image is one byte shorter than `bytes_of(s)`. `LeftB("ABC", 3)` becomes
+the string `"AB"` plus an odd flag; `LenB` returns `2 * units - 1`. The
+decomposition always works — an odd byte image is `n/2` whole units plus one
+trailing low byte, and that byte is storable as a U+0000..U+00FF character
+whose zero high byte is exactly the one the flag drops.
+
+Prototyped both ways it can be spelled, on the probes above plus the corpus.
+Medians of 3 runs, each itself a median of 5. This harness discards console
+output instead of recording it, so its baseline corpus is 1.249 s rather than
+the 1.70 s above; read the rows against each other, not against the sections
+above:
+
+| | `Value` | `r = a` | `Say a` | `r = a & b` | corpus |
+|---|---|---|---|---|---|
+| `Str(Rc<str>)` today | 24 B | 96.6 ns | 192.4 ns | 146.0 ns | 1.249 s |
+| `Str(Rc<str>, bool)` | **32 B** | 111.4 ns | 188.8 ns | 159.9 ns | 1.308 s (+4.8%) |
+| `StrOdd(Rc<str>)` arm | 24 B | 99.3 ns | 188.0 ns | 146.8 ns | 1.281 s (+2.6%) |
+| …with `&` left alone | 24 B | 99.6 ns | 185.3 ns | 146.3 ns | 1.264 s (+1.2%) |
+| control: arm never built | 24 B | 100.7 ns | — | — | 1.263 s (+1.1%) |
+
+Both spellings work. All three `KNOWN_FAILURES` in
+[`wine.rs`](../tests/wine.rs) close and the other 240 tests stay green. `Say`
+does not move, because `to_vb_string()` is still a refcount bump on the even
+path — the +58 ns decode that sinks `Rc<[u8]>` never appears. That is the
+whole appeal, and it is real.
+
+**As a `bool` field it is the expensive spelling.** `Str(Rc<str>, bool)` lays
+out as a 24-byte struct — 16 for the fat pointer, one for the flag, seven for
+padding — so `Value` grows to 32 bytes. That is 8 bytes on *every* variant, in
+every variable slot, array element and argument, and it shows: +15% on the
+assign floor, +4.8% on the corpus. Nothing is bought with it; the flag is
+never read on any of those paths.
+
+**As a second arm it is free, and then it is just the hybrid above with a
+weaker payload.** The last row of the table is the control: the entire residual
+cost is having two string arms at all, not the odd-length logic, which prices
+at zero. But `StrOdd(Rc<str>)` and `StrB(Rc<[u8]>)` cost the same and the byte
+arm fixes strictly more.
+
+**It fixes length, not content.** `Rc<str>` still cannot hold an unpaired
+surrogate, and a misaligned slice manufactures them: re-pairing makes the low
+byte of the *next* character the high byte of a unit, so any character in
+U+xxD8..U+xxDF — `Ø`, `Ü`, `ß` — lands in the surrogate range. Measured on the
+prototype:
+
+| | correct | prototype |
+|---|---|---|
+| `MidB("A" & ChrW(220), 2, 3)` | `00 DC 00` | `FD FF 00` |
+| `MidB("A" & ChrW(223), 2, 3)` | `00 DF 00` | `FD FF 00` |
+
+The length is right and the bytes are not. This is not a regression — today's
+`from_utf16_lossy` corrupts the same slices — but it is the half of the
+problem `Rc<[u8]>` fixes and the flag cannot, at identical cost.
+
+**The compile surface inverts.** Against pristine `HEAD`, adding the `bool`
+field is 46 compile errors and adding the variant is 6: an arity change forces
+every one of the 44 `Value::Str` sites to be visited, while a new variant is
+caught only in the handful of exhaustive matches and the other ~38 sites fall
+through `_` silently. That is the flag's one genuine advantage over the byte
+arm — and the field spelling, the only one that has it, is the one that costs
+4.8%.
+
+**What a half unit means elsewhere is unpinned.** Only `LenB` has a reference
+answer. The prototype had to invent the rest, and two of its guesses
+contradict each other: the host boundary drops the half character, VB6's
+`SysStringLen` style, while `&` re-pairs on the byte images — so
+`"[" & LeftB("ABC", 3) & "]"` prints `[A嵂` rather than `[A]`. Either rule is
+defensible; nothing in the repo decides it. Whichever representation is
+chosen inherits that question.
+
+Feasible, then, and not useful: the cheap spelling is the one that only fixes
+half the problem for the same price as the arm already recorded above, and the
+spelling with a safety argument costs 4.8% of the corpus to buy it.
 
 ## Verdict
 
