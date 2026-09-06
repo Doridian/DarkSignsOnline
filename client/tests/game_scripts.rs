@@ -45,10 +45,7 @@ impl Host for RecordingHost {
 }
 
 fn scripts() -> Vec<PathBuf> {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("client has a parent directory")
-        .join("client-legacy/user");
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("user");
     let mut out = Vec::new();
     collect(&root, &mut out);
     out.sort();
@@ -162,10 +159,7 @@ fn run_scripts() {
 /// Load the `.ds` corpus into an in-memory filesystem under the paths the
 /// scripts expect, so `Include` and `Run` resolve against it.
 fn corpus_fs() -> MemoryFs {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("client has a parent directory")
-        .join("client-legacy/user");
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("user");
     let mut fs = MemoryFs::new();
     for f in scripts() {
         if let (Ok(text), Ok(rel)) = (std::fs::read_to_string(&f), f.strip_prefix(&root)) {

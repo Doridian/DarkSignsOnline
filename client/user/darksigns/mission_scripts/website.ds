@@ -1,0 +1,89 @@
+Option Explicit
+
+'Script v2 MicMast.com 80
+'Let's go
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    SaySlow 1, "ByeBye", "orange"
+    Quit
+End Sub
+
+Sub HandleTestPHP()
+    SaySlow 1, "MicMast.com/test.php", "yellow"
+    SaySlow 1, "--------------------------------", "yellow"
+    SaySlow 1, "My php coding testsite", "yellow"
+    SaySlow 1, "Tat is supposed to be the local time " & ConsoleEscape(Time) & " =]", "yellow"
+    Say ""
+    SaySlow 1, "The date is " & ConsoleEscape(Date) & " I'm getting good!", "Yellow"
+    Say ""
+    SaySlow 1, "Now this is kinky look at this!", "yellow"
+    SaySlow 1, "Delete All the Hard Returns, otherwhise you will get errors!", "yellow"
+    SaySlow 1, "AoQDxDH~SPwSNmLL)LMrDM}FMBBEQlLPxHGwPDpAO{KHjFR}", "yellow"
+    SaySlow 1, "QO�TR7OC)JKWQHxJI�HP)BF}FDqAIrRP|KH)CRrOF|DI)ANwBPnJK�", "yellow"
+    SaySlow 1, "KQ}BHCGO)QAVNB�QD�SCzHLkLPtQDmHBsELQOHBrTB�GFnDE", "yellow"
+    SaySlow 1, ")RPtJIkHGxSO)ORzJPxTImMCmJF|TK�DNzIK)IJlSJ�EDtLLkCEmMGx", "yellow"
+    SaySlow 1, "OIkAA7TS)ERaHS�RBpLE)GAvGL�QC�GK�HPxQFvNDmSF)EBmLH�S", "yellow"
+    SaySlow 1, "E)NQvNErFClFRvGKjPF|FG}SP}GMxNN7PMvGF�HJ�N", "yellow"
+    SaySlow 1, "Cool! it worked!!! My first encrypted words!!", "yellow"
+    Say ""
+    Pause
+End Sub
+
+While True
+    SaySlow 1, "Connect to micmast.com", "yellow"
+    SaySlow 1, "------------------------------------", "yellow"
+    SaySlow 1, "-  1.   Index.html", "yellow"
+    SaySlow 1, "-  2.   tuts.html", "yellow"
+    SaySlow 1, "-  3.   test.php", "yellow"
+    SaySlow 1, "-  4.   funny.html", "yellow"
+    SaySlow 1, "-  5.   disconnect", "yellow"
+    SaySlow 1, "------------------------------------", "yellow"
+    Dim mmInput
+    mmInput = QReadLine("Where do you want to go today?")
+
+    If mmInput = "1" Then
+        SaySlow 1, "micmast.com/index.html", "yellow"
+        SaySlow 1, "------------------------------------", "yellow"
+        SaySlow 1, "Welcome to my personal homepage", "yellow"
+        SaySlow 1, "This site contains some test scripts, some link to my favo tuts and a funny section", "yellow"
+        SaySlow 1, "The funny section you will enjoy!", "yellow"
+        SaySlow 1, "---------------------------------------------", "yellow"
+        Pause
+    ElseIf mmInput = "2" Then
+        SaySlow 1, "MicMast.com/tuts.html", "yellow"
+        SaySlow 1, "---------------------------------", "yellow"
+        SaySlow 1, "Tut-page: My favo tut pages", "yellow"
+        SaySlow 1, "http://neworder.box.sk", "yellow"
+        SaySlow 1, "http://www.cyberarmy.com", "yellow"
+        SaySlow 1, "http://www.trincoll.edu/depts/cpsc/cryptography/caeser.html", "yellow"
+        SaySlow 1, "http://www.businessweek.com/1997/06/b351314.htm", "yellow"
+        SaySlow 1, "http://___._________.__ (censored =] )", "yellow"
+        Pause
+    ElseIf mmInput = "3" Then
+        HandleTestPHP
+    ElseIf mmInput = "4" Then
+        SaySlow 1, "MicMast.com/funny.html", "yellow"
+        SaySlow 1, "-----------------------------------", "yellow"
+        SaySlow 1, "   \~~~~/", "yellow"
+        SaySlow 1, "    |       |", "yellow"
+        SaySlow 1, "    [-OO-]", "yellow"
+        SaySlow 1, "    |  ()  |", "yellow"
+        SaySlow 1, "    |       |", "yellow"
+        SaySlow 1, "    `-----'", "yellow"
+        SaySlow 1, " hehe dilbert", "yellow"
+        SaySlow 1, "     ,----.", "yellow"
+        SaySlow 1, "   CO-|| Y", "yellow"
+        SaySlow 1, "   O   || |", "yellow"
+        SaySlow 1, "    |   D J", "yellow"
+        SaySlow 1, "   // /\""", "yellow"
+        SaySlow 1, "  `'`'", "yellow"
+        SaySlow 1, " What a nice dog!", "yellow"
+        Pause
+    ElseIf mmInput = "5" Then
+        Disconnect
+    End If
+Wend
+
+

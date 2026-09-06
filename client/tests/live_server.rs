@@ -82,10 +82,7 @@ fn lookup_reports_a_known_domain() {
 fn the_ping_command_runs_against_the_real_server() {
     // The shipped command, unmodified, against the live API.
     let source = std::fs::read_to_string(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .join("client-legacy/user/system/commands/ping.ds"),
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("user/system/commands/ping.ds"),
     )
     .unwrap();
 

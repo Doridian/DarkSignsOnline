@@ -1,158 +1,37 @@
 on:
+  pull_request: {}
   workflow_call: {}
 
 concurrency:
   group: client-${{ github.ref }}
-  cancel-in-progress: ${{ startsWith(github.ref, 'refs/tags/') }}
+  cancel-in-progress: true
 
 name: Build client
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   client:
     name: Build client
-    runs-on: vb6
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
-      with:
-        submodules: true
-    - uses: dorny/paths-filter@v4
-      id: changes
-      with:
-        filters: |
-          client:
-            - 'client/**'
-            - '.github/workflows/client.yml'
-            - '.gitmodules'
-            - 'LICENSE'
-    # Reconfigure VBP version information
-    - name: Add version info if this is a tag
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        $ErrorActionPreference = 'Stop'
-        Set-PSDebug -Trace 1
+    - uses: cachix/install-nix-action@v31
 
-        $version = $env:GITHUB_REF -replace 'refs/tags/', ''
-        # Remove possible v* prefix
-        $version = $version -replace '^v', ''
-        $version = $version -replace '^V', ''
+    # Through the dev shell, so the rustc and clippy answered to here are the
+    # ones flake.lock pins and the ones `nix build` uses.
+    - name: Clippy
+      run: >
+        nix develop --command
+        cargo clippy --manifest-path client/Cargo.toml --workspace --all-targets
+        -- -D warnings
+    - name: Test
+      run: >
+        nix develop --command
+        cargo test --manifest-path client/Cargo.toml --workspace
 
-        # Error if version is not a valid version
-        if($version -notmatch '^\d+\.\d+\.\d+$') {
-          throw (New-Object System.ArgumentException("Invalid version format: $version"))
-        }
-        # Split version
-        $version = $version -split '\.'
-
-        $vbp = Get-Content .\client\DSO.vbp
-        $vbp = $vbp -replace '^MajorVer=.*$', "MajorVer=$($version[0])"
-        $vbp = $vbp -replace '^MinorVer=.*$', "MinorVer=$($version[1])"
-        $vbp = $vbp -replace '^RevisionVer=.*$', "RevisionVer=$($version[2])"
-        $vbp | Set-Content .\client\DSO.vbp
-    - name: Add git hash to the version info
-      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
-      run: |
-        $ErrorActionPreference = 'Stop'
-        Set-PSDebug -Trace 1
-
-        $hash = git rev-parse HEAD
-        $vbp = Get-Content .\client\DSO.vbp
-        $vbp = $vbp -replace '^VersionComments=.*$', "VersionComments=""git-$hash"""
-        $vbp = $vbp -replace '^VersionFileDescription=.*$', "VersionFileDescription=""DSO public build $hash"""
-        $vbp | Set-Content .\client\DSO.vbp
-    # Build process
-    - name: Build client
-      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
-      timeout-minutes: 1
-      run: |
-        $ErrorActionPreference = 'Stop'
-        Set-PSDebug -Trace 1
-
-        Remove-Item -Force ".\logs" -Recurse -ErrorAction Continue
-        mkdir ".\logs"
-
-        Remove-Item -Force ".\client\dist" -Recurse -ErrorAction Continue
-        mkdir ".\client\dist"
-        Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\VB98\Vb6.exe" -ArgumentList "/make",".\client\DSO.vbp","/outdir",".\client\dist\","/out",".\logs\client-build.log" -Wait -PassThru
-        Get-Content .\logs\client-build.log
-        if(![System.IO.File]::Exists(".\client\dist\dso.exe")) {
-          throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Build failure?", $path))
-        }
-        cd ".\client\dist"
-        Copy-Item -Recurse -Force ..\user .\
-        Remove-Item -Recurse -Force .\user\darksigns
-        Copy-Item ..\libs\VbAsyncSocket\LICENSE .\LICENSE-VbAsyncSocket.txt
-        Copy-Item ..\libs\VBCCR\LICENSE.md .\LICENSE-VBCCR.txt
-        Copy-Item ..\libs\runtime\*.dll .\
-        Copy-Item "$env:SYSTEMROOT\SysWOW64\msvbvm60.dll" .\
-        Copy-Item ..\..\LICENSE .\LICENSE.txt
-        & "C:\Program Files\7-Zip\7z.exe" a -tzip "..\..\client.zip" -r * "-x!dso.pdb"
-    - name: Ensure Defender doesn't false-positive us
-      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
-      timeout-minutes: 2
-      run: |
-        $ErrorActionPreference = 'Stop'
-        Set-PSDebug -Trace 1
-
-        Remove-Item -Force "R:\check" -Recurse -ErrorAction Continue
-        mkdir "R:\check"
-
-        Copy-Item -Force ".\client\dist\dso.exe" "R:\check\dso.exe"
-        Copy-Item -Force ".\client.zip" "R:\check\client.zip"
-
-        Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
-        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -SignatureUpdate -http
-        Get-Content "$env:TEMP\MpCmdRun.log"
-
-        Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
-        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "R:\check\dso.exe"
-        Get-Content "$env:TEMP\MpCmdRun.log"
-        if(![System.IO.File]::Exists("R:\check\dso.exe")) {
-          throw (New-Object System.IO.FileNotFoundException("dso.exe not found. Defender likely nabbed it...", $path))
-        }
-
-        Remove-Item -Force "$env:TEMP\MpCmdRun.log" -ErrorAction Continue
-        & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "R:\check\client.zip"
-        Get-Content "$env:TEMP\MpCmdRun.log"
-        if(![System.IO.File]::Exists("R:\check\client.zip")) {
-          throw (New-Object System.IO.FileNotFoundException("client.zip not found. Defender likely nabbed it...", $path))
-        }
-    #  Artifact handlers
-    - name: Upload build artifacts
-      if: steps.changes.outputs.client == 'true' || startsWith(github.ref, 'refs/tags/')
-      uses: actions/upload-artifact@v7
-      with:
-        name: client
-        path: client.zip
-        if-no-files-found: error
-    - name: Release mainline
-      uses: softprops/action-gh-release@v3
-      if: github.ref == 'refs/heads/main' && steps.changes.outputs.client == 'true'
-      with:
-        tag_name: latest
-        files: client.zip
-        fail_on_unmatched_files: true
-        prerelease: true
-    - name: Tag Repo
-      uses: richardsimko/update-tag@v3
-      if: github.ref == 'refs/heads/main' && steps.changes.outputs.client == 'true'
-      with:
-        tag_name: latest
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Release tag
-      uses: softprops/action-gh-release@v3
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: client.zip
-        fail_on_unmatched_files: true
-    #  Always/Failure handlers
-    - name: Upload build logs
-      if: always()
-      uses: actions/upload-artifact@v7
-      with:
-        name: logs
-        path: |
-          logs/client-build.log
+    # The wasm module, the shipped script bundle and the page. Its check phase
+    # type-checks all three TypeScript projects and runs the page's own tests.
+    - name: Build
+      run: nix build --print-build-logs .#darksignsonline-client

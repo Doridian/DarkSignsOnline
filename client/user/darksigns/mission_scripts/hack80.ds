@@ -1,0 +1,317 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Function FileIsRemoteapp(Data)
+    FileIsRemoteapp = (InStr(Data, vbCrLf & "XREMOTEAPPSIGNATURE=TRUE" & vbCrLf) > 0)
+End Function
+
+Dim RemoteappUploaded
+RemoteappUploaded = BoolMissionProgress("DS", "hack80_remoteapp")
+
+Dim CDir, CUser
+
+Function GetUserPW(UName)
+    If UName = "level1" Then
+        GetUserPW = "level1"
+    ElseIf UName = "level2" Then
+        GetUserPW = "ijusthackedyou"
+    ElseIf UName = "admin" Then
+        GetUserPW = "jubathehutisfat"
+    Else
+        GetUserPW = ""
+    End If
+End Function
+
+Sub SetCDir(NewDirI)
+    If NewDirI = "~" Then
+        NewDirI = "/home/" & CUser
+    End If
+
+    Dim NewDir
+    NewDir = ResolvePathRel(CDir, NewDirI)
+
+    If Left(NewDir, 6) = "/home/" And NewDir <> "/home/" & CUser Then
+        Say "System Permission Error [not authorized]{{orange}}"
+        Exit Sub
+    End If
+
+    If NewDir = "/" Or NewDir = "/home" Or NewDir = "/home/level1" Or NewDir = "/home/level2" Or NewDir = "/home/admin" Then
+        CDir = NewDir
+        Say "Current Directory: " & ConsoleEscape(CDir)  & "{{orange}}"
+        Exit Sub
+    End If
+
+    Say "{{red}}Invalid directory [" & ConsoleEscape(NewDirI) & "]"
+End Sub
+
+Say "HackMe.com - That's right, HACKME{{red}}"
+
+Function ResolveHackFile(fileName)
+    fileName = ResolvePathRel(CDir, fileName) 
+    ResolveHackFile = ""
+    If CUser = "level1" And fileName = "/home/level1/hello.exe" Then
+        ResolveHackFile = "Well done the password for level2 user is:" & vbCrLf & _
+                            "ijusthackedyou"
+    ElseIf CUser = "level1" And fileName = "/home/level1/testscript" Then
+        ResolveHackFile = "Hello World"
+    ElseIf CUser = "level2" And fileName = "/home/level2/init.conf" Then  
+        ResolveHackFile = "1 - debug false"
+    ElseIf CUser = "level2" And fileName = "/home/level2/xftp.exe" Then
+        Say "Unable to Open File [file is an executable]{{orange}}"
+    ElseIf CUser = "admin" And fileName = "/home/admin/links" Then
+        ResolveHackFile = "1 - telnet.pokemonworld.com" & vbCrLf & _
+                            "2 - telnet.globalsport.com" & vbCrLf & _
+                            "3 - ftp.willowfootball.org" & vbCrLf & _
+                            "4 - media.net" & vbCrLf & _
+                            "5 - ftp.stlukes.christ.org" & vbCrLf & _
+                            "6 - ftp.blindballet.org" & vbCrLf & _
+                            "7 - telnet.happyhackers.net" & vbCrLf & _
+                            "8 - codered.com"
+    ElseIf CUser = "admin" And fileName = "/home/admin/passwds.enc" Then
+        ResolveHackFile = "1 - EHNSKKWI&&^\""xxxxxxxxx@xxxxxxxxx" & vbCrLf & _
+                            "2 - HN7JDH'%FCD2623Z\""$JJFLKJD" & vbCrLf & _
+                            "3 - JND&^&Tds87hARASjk23D)&^"
+    ElseIf RemoteappUploaded And CUser = "admin" And fileName = "/home/admin/remoteapp" Then
+        Say "Unable to Open File [file is an executable]{{orange}}"
+    Else
+        Say "Unable to Open File [file not found or access denied]{{orange}}"
+    End If
+End Function
+
+Sub HackXFTPPrompt()
+    Say "Welcome to XFTP v1.0{{purple}}"
+    Say "Check out our website at xftp.com for bug reports, documentation and general news{{purple}}"
+
+    While True
+        Dim xftpinput
+        xftpinput = QReadLine(">{{white}}")
+        Select Case xftpinput
+            Case "exit", "logout"
+                Exit Sub
+            Case "help"
+                Say "CD - usage:  cd <folder>{{blue}}"
+                Say "Changes the current directory. Use cd.. to go back one folder.{{white}}"
+                Say "EXIT - usage: exit{{blue}}"
+                Say "Discconects from XFTP{{white}}"
+                Say "GET - usage: get <filename>{{blue}}"
+                Say "Downloads <filename> to your current local directory{{white}}"
+                Say "HELP - usage: help{{blue}}"
+                Say "Displays this help file{{white}}"
+                Say "LOGIN - usage: login{{blue}}"
+                Say "Prompts user for a username and password.{{white}}"
+                Say "If currect logs in as that user.{{white}}"
+                Say "LOGOUT - useage: logout{{blue}}"
+                Say "Logs out the current user and makes them anonymous user{{white}}"
+                Say "LS - usage: ls{{blue}}"
+                Say "Lists all files and folder in the current directory{{white}}"
+                Say "PUT - usage: put <filename>{{blue}}"
+                Say "Uploads <filname> to current remote directory{{white}}"
+                Say "RUN - usage: run <filename>{{blue}}"
+                Say "Executes <filename> remotely{{white}}"
+                Say "USERS - usage: users{{blue}}"
+                Say "Displays current user account being used{{white}}"
+                Say "VERSION - usage: version{{blue}}"
+                Say "Displays XFTP version{{white}}"
+            Case "users"
+                Say "Current user: anonymous{{white}}"
+            Case "login"
+                Dim loginUser
+                loginUser = ReadLine("Enter user name>")
+                Dim loginPW
+                loginPW = ReadLine("Enter Password>")
+                If Len(loginUser) > 36 Or Len(loginPW) > 36 Then
+                    Say "Fatal program fault [XFTP.EXE]{{red}}"
+                    Say "Closing program and returning to command prompt{{red}}"
+                    CUser = "admin"
+                    CDir = "/"
+                    Exit Sub
+                Else
+                    Say "User name/Password error{{white}}"
+                End If
+            Case "version"
+                Say "XFTP Version 1.0{{purple}}"
+                Say "Build 1.8825{{purple}}"
+            Case "cd", "get", "put", "run", "ls"
+                Say "Server filesystem component damaged{{red}}"
+        End Select
+    Wend
+End Sub
+
+Sub HackMePrompt()
+    CDir = "/"
+    CUser = "level1"
+
+    While True
+        Dim fileName, fileData
+        Dim pInput
+        pInput = QReadLine("HackMe.com>")
+        If pInput = "cwd" Then
+            Say "Current Directory: " & ConsoleEscape(CDir) & "{{orange}}"
+        ElseIf pInput = "ls" Then
+            If CDir = "/" Then
+                Say "[ home ]{{orange}}"
+            ElseIf CDir = "/home" Then
+                Say "[ admin ]    [ level1 ]    [ level2 ]{{orange}}"
+            ElseIf CDir = "/home/level1" Then
+                Say "HELLO.EXE    TESTSCRIPT{{orange}}"
+            ElseIf CDir = "/home/level2" Then
+                Say "INIT.CONF    XFTP.EXE{{orange}}"
+            ElseIf CDir = "/home/admin" Then
+                If RemoteappUploaded Then
+                    Say "LINKS    PASSWDS.ENC    REMOTEAPP{{orange}}"
+                Else
+                    Say "LINKS    PASSWDS.ENC{{orange}}"
+                End If
+            End If
+        ElseIf pInput = "cd.." Then
+            SetCDir ".."
+        ElseIf pInput = "cd" Then
+            SetCDir "/"
+        ElseIf Left(pInput, 3) = "cd " Then
+            SetCDir Mid(pInput, 4)
+        ElseIf pInput = "users" Then
+            Say "Username: " & ConsoleEscape(CUser) & "{{orange}}"
+        ElseIf pInput = "passwd" Then
+            Say "Password: " & ConsoleEscape(GetUserPW(CUser)) & "{{orange}}"
+        ElseIf pInput = "version" Then
+            Say "Goldie OS v5.3{{orange}}"
+            Say "Build v5.2372531{{orange}}"
+        ElseIf pInput = "login" Then
+            Dim newUser, newPW
+            newUser = QReadLine("Username>")
+            newPW = QReadLine("Password>")
+            If newPW <> "" And newUser <> "" And GetUserPW(newUser) = newPW Then
+                CUser = newUser
+                CDir = "/home/" & CUser
+                Say "Logged in as " & ConsoleEscape(CUser) & "{{orange}}"
+            Else
+                Say "Bad username/password{{orange}}"
+            End If
+        ElseIf pInput = "cat" Then
+            fileName = QReadLine("Enter the file you wish to view>")
+            fileName = ResolvePathRel(CDir, fileName) 
+            fileData = ResolveHackFile(fileName)
+            If fileData <> "" Then
+                Say ConsoleEscape(fileData)
+            End If     
+            Pause
+        ElseIf pInput = "get" Then
+            fileName
+            fileName = QReadLine("Enter the file you wish to download>")
+            fileName = ResolvePathRel(CDir, fileName) 
+            fileData = ResolveHackFile(fileName)
+            If fileData <> "" then
+                RequestWriteFile fileData
+                Say "File Downloaded [" & ConsoleEscape(fileName) & "]{{orange}}"
+            End If
+        ElseIf pInput = "put" Then
+            If CDir <> "/home/admin" Then
+                Say "File Error [folder is read only]{{orange}}"
+            Else
+                fileName = QReadLine("Enter the target filename>")
+                fileName = ResolvePathRel(CDir, fileName)
+                fileData = RequestReadFile()
+                If CUser = "admin" And fileName = "/home/admin/remoteapp" Then
+                    If FileIsRemoteapp(fileData) Then
+                        RemoteappUploaded = True
+                        BoolSetMissionProgress "DS", "hack80_remoteapp"
+                        Say "File Uploaded [remoteapp]{{orange}}"
+                    Else
+                        Say "File Error [invalid file format]{{orange}}"
+                    End If
+                Else
+                    Say "File Error [access denied]{{orange}}"
+                End If
+            End If
+        ElseIf pInput = "run" Then
+            fileName = QReadLine("Enter the file you wish to run>")
+            fileName = ResolvePathRel(CDir, fileName)
+            If CUser = "admin" And RemoteappUploaded And fileName = "/home/admin/remoteapp" Then
+                If Not BoolMissionProgress("DS", "hack80_done") Then
+                    IncMissionProgress "DS", "dos_bw"
+                    BoolSetMissionProgress "DS", "hack80_done"
+                End If
+                SaySlow 100, "INFECTED", "red"
+                Quit
+            ElseIf CUser = "level2" And fileName = "/home/level2/xftp.exe" Then
+                HackXFTPPrompt
+            Else
+                Say "Permission Error [access denied or not executable]{{orange}}"
+            End If
+        ElseIf pInput = "evar" Then
+            If CUser <> "level1" Then
+                Say "Environment Varibles:{{orange}}"
+                Say "PATH = /{{orange}}"
+            Else
+                Say "Permission Error [access denied]{{orange}}"
+            End If
+        ElseIf pInput = "help" Then
+            Say "CAT - usage: cat{{blue}}"
+            Say "Display the contains of a file{{white}}"
+            Say "CD - usage: cd <folder>{{blue}}"
+            Say "Change current directory to <folder>. Use cd.. to goto the folder below current.{{white}}"
+            Say "Use cd ~ to goto current users home directory{{white}}"
+            Say "CWD - usage: cwd{{blue}}"
+            Say "Displays the current directory{{white}}"
+            Say "EVAR - usage: evar{{blue}}"
+            Say "Displays all environment varibles{{white}}"
+            Say "EXIT - usage: exit{{blue}}"
+            Say "Discconects from host{{white}}"
+            Say "HELP - usage: help{{blue}}"
+            Say "Displays this help screen{{white}}"
+            Say "LOGIN - usage: login{{blue}}"
+            Say "Login as a different user{{white}}"
+            Say "LS - usage: ls{{blue}}"
+            Say "Lists all files and folders in current directory{{white}}"
+            Say "PASSWD - usage: passwd{{blue}}"
+            Say "Displays the current users password{{white}}"
+            Say "PUT - usage: put{{blue}}"
+            Say "Upload a file to the current directory{{white}}"
+            Say "RUN - usage: run{{blue}}"
+            Say "Run a file from the current directory{{white}}"
+            Say "USERS - usage: users{{blue}}"
+            Say "Displays the current user that you are loged in as{{white}}"
+            Say "VERSION - usage: version{{blue}}"
+            Say "Displays the current OS version{{white}}"
+            Pause
+        ElseIf pInput = "exit" Then
+            Disconnect
+        End If
+    Wend
+End Sub
+
+While True
+    Say ""
+    Say "[ 1 ] How it works{{orange}}"
+    Say "[ 2 ] Start hacking{{orange}}"
+    Say "[ 3 ] Exit{{orange}}"
+    Dim mmInput
+    mmInput = QReadLine("Pick a menu option>")
+
+    If mmInput = "1" Then
+        Say "How HackMe.com Works{{red}}"
+        Say ""
+        Say "The aim of HackMe.com is to hack the website server. There are of course{{orange}}"
+        Say "some rules that need to be laid down first tho:{{orange}}"
+        Say "- You must respect the server and not damage it in anyway{{orange}}"
+        Say "- No DoS attacks are aloud to be luanched from the server{{orange}}"
+        Say "- No bounces and/or making a proxy out of the server{{orange}}"
+        Say "- We will co-operate fully with the law to bring you to justice if you break any law while on this server{{orange}}"
+        Pause
+    ElseIf mmInput = "2" Then
+        Say "You will now be put into a command prompt which you can start your hacking{{orange}}"
+        Say "challenge. For full command listing and overall help type help in the console.{{orange}}"
+        Say ""
+        Say "Good Luck"
+        Pause
+        HackMePrompt
+    ElseIf mmInput = "3" Then
+        Disconnect
+    End If
+Wend

@@ -1,0 +1,208 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub SayBG(Str)
+    SayWithBGColor &HFFFFFF, Str
+End Sub
+
+Sub PauseBG()
+    Pause "{{noprespace red}}", &HFFFFFF
+End Sub
+
+Function GKeyQuick(Prompt)
+    GKeyQuick = GetAsciiWithCPromptBG(&HFFFFFF, Prompt & "{{red}}")
+End Function
+
+Function QReadLineBGMe(Prompt)
+    QReadLineBGMe = QReadLineBG(&HFFFFFF, Prompt)
+End Function
+
+Sub Disconnect()
+    Quit
+End Sub
+
+Sub MainMenu()
+    While True
+        SayBG "###########################################{{blue}}"
+        SayBG "# Welcome to Palmer file hosting          #{{blue}}"
+        SayBG "###########################################{{blue}}"
+        SayBG "1) What we can offer{{red}}"
+        SayBG "2) About the company{{red}}"
+        SayBG "3) Logout{{red}}"
+        Dim gkey
+        gkey = GKeyQuick("Select your option")
+        If gkey = Asc("1") Then
+            ProductMenu
+        ElseIf gkey = Asc("2") Then
+            CompanyMenu
+        ElseIf gkey = Asc("3") Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+Sub HardwareMenu()
+    While True
+        SayBG "##### More about the hardware #####{{blue}}"
+        SayBG "Our file hosting network is made up of one computer which you connect to. This computer{{black}}"
+        SayBG "then links to the other computers on the network (where everyone's data is stored) without{{black}}"
+        SayBG "you noticing. The network is a superfast Sisquo TripleGold and is made up of Hutchinson A12{{black}}"
+        SayBG "computers.{{black}}"
+        SayBG "1) More on Sisquo TripleGold networks{{red}}"
+        SayBG "2) More on Hutchinson A12 computers{{red}}"
+        SayBG "3) Go back{{red}}"
+        Dim gkey3
+        gkey3 = GKeyQuick("Select your option")
+        If gkey3 = Asc("1") Then
+            SayBG "##### More on Sisquo TripleGold networks #####{{blue}}"
+            SayBG "The Sisquo TripleGold network is a state of the art network package using technologies{{black}}"
+            SayBG "at the pinacle of networking. This radio based network offers speeds of 170 gbps which{{black}}"
+            SayBG "is far higher than all other radio based network. It also offers a brand new security{{black}}"
+            SayBG "system called RedBack which integrates itself within normal packets thus avoiding the{{black}}"
+            SayBG "need for the infamously buggy 'packet security'. Thus you have a network that offers{{black}}"
+            SayBG "all the advantages of a radio based network except without the typical low speeds{{black}}"
+            SayBG "and a network that won't crash every hour.{{black}}"
+            PauseBG
+        ElseIf gkey3 = Asc("2") Then
+            SayBG "##### More on Hutchinson A12 computers #####{{blue}}"
+            SayBG "The Hutchinson A12 computers are some of the most powerful computers available to non{{black}}"
+            SayBG "military organisations. Bosting the unique A12 processor (offering 6Ghz equivalent){{black}}"
+            SayBG "a 6Gb of RAM they will be able to quickly encrypt, read, manipulate even the largest{{black}}"
+            SayBG "files.  Each one also offers a Tb of harddisk space with the opportunities to {{black}}"
+            SayBG "expand that exponentially.{{black}}"
+            PauseBG
+        ElseIf gkey3 = Asc("3") Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+Sub ProductMenu()
+    While True
+        SayBG "##### What we can offer you #####{{blue}}"
+        SayBG "Palmer File Hosting offer cheap, reliable File Hosting using software of a high quality.{{black}}"
+        SayBG "Out software is self written and of a high quality. We use top level machines to ensure{{black}}"
+        SayBG "the best possible service. Our company is built on family values and thus we offer{{black}}"
+        SayBG "you a service with the best software and hardware, has affordable prices and is with a{{black}}"
+        SayBG "company you won't be ashamed to use.{{black}}"
+        SayBG "1) What you get in your account{{red}}"
+        SayBG "2) Prices{{red}}"
+        SayBG "3) More about the hardware{{red}}"
+        SayBG "4) More about our file hosting programs{{red}}"
+        SayBG "5) Back to main menu{{red}}"
+        Dim gkey2
+        gkey2 = GKeyQuick("Select your option")
+        If gkey2 = Asc("1") Then
+            SayBG "##### What you get in your account #####{{blue}}"
+            SayBG "You have two username and password combinations in your account.{{black}}"
+            SayBG "The first is called your main account and is for a service on port 23, this offers:{{black}}"
+            SayBG "you can login to a filemanager program from which you can upload and download files. This program{{black}}"
+            SayBG "also offers the ability to change properties on a file, assign password protection and hide files.{{black}}"
+            SayBG "From here you can also encrypt files using our own custom written encryption. Account maintenance{{black}}"
+            SayBG "such as changing your password can be done here.{{black}}"
+            SayBG "This account also acts as an email address and using our simple email program you can move attatchments{{black}}"
+            SayBG "to your file hosting area.{{black}}"
+            SayBG " ---{{black}}"
+            SayBG "Your second is called your filesharing account and is for a service on port 625, this offers:{{black}}"
+            SayBG "This service is simply for filedownloading. Using your second username and password combination you{{black}}"
+            SayBG "can quickly retrieve files for when you don't want to use the main program. Since this program{{black}}"
+            SayBG "is only for downloading you can give this password to others so they can download shared files.{{black}}"
+            SayBG " ---{{black}}"
+            SayBG "You will also have access to 24 hour tech support so that should you have any problem at any time we{{black}}"
+            SayBG "will be able to solve it for you{{black}}"
+            PauseBG
+        ElseIf gkey2 = Asc("2") Then
+            SayBG "##### Account prices #####{{blue}}"
+            SayBG "For 25 credits a month you can get a standard account. This allows for 2Gb of space.{{black}}"
+            SayBG "For 15 credits a month you can get a light account. This allows for 1Gb of space.{{black}}"
+            SayBG "For 35 credits a month you can get a delux account. This allows for 5Gb of space.{{black}}"
+            SayBG "With a delux account you can also buy extra space at the rate of 10 credits per Gb.{{black}}"
+            SayBG "To order an account please phone us on area code 86FF2 number 789AA43FB76{{red}}"
+            PauseBG
+        ElseIf gkey2 = Asc("3") Then
+            HardwareMenu
+        ElseIf gkey2 = Asc("4") Then
+            SayBG "##### Our file hosting software #####{{blue}}"
+            SayBG "Our file hosting software is custom written and tailor made for easy use, reliability,{{black}}"
+            SayBG "security and flexiblity. The software can be bought for 100 credits and includes the{{black}}"
+            SayBG "source code should you wish to customise it (note, we cannot be held responcible for{{black}}"
+            SayBG "the program post customisation). {{black}}"
+            SayBG "You can find out more about the software, and use it in the public section of the{{black}}"
+            SayBG "downloading program on port 625. There you can download various documents about how{{black}}"
+            SayBG "the program works and what it can offer you.{{red}}"
+            PauseBG
+        ElseIf gkey2 = Asc("5") Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+Sub CompanyMenu()
+    While True
+        SayBG "##### About the company #####{{blue}}"
+        SayBG "Palmer filesharing is a company based around family values and thus we feel it important{{black}}"
+        SayBG "that you know all about the company.{{black}}"
+        SayBG "1) Company History{{red}}"
+        SayBG "2) Staff{{red}}"
+        SayBG "3) Go back{{red}}"
+        Dim gkey4
+        gkey4 = GKeyQuick("Select your option")
+        If gkey4 = Asc("1") Then
+            SayBG "##### Company History #####{{blue}}"
+            SayBG "Established in 2009 following Laura Palmer finishing college and putting forward a proposal{{black}}"
+            SayBG "for a company to her parents Palmer file hosting has expanded hugely over the past 3 years.{{black}}"
+            SayBG "Initially the company was simply Laura doing the tech work, her father Leland as accountant{{black}}"
+            SayBG "and her mother Sarah as joint CEO and publicist. Using a customised version of the{{black}}"
+            SayBG "standard filehosting software the company was almost immediately recognised for quality{{black}}"
+            SayBG "of service and reliability.{{black}}"
+            SayBG "The company has grown and grown but the family values remained the same aside from when Leland{{black}}"
+            SayBG "was imprisoned for 37 cases of armed robbery that company has done well. Laura is infact the{{black}}"
+            SayBG "only Palmer still in the company as her mother chose to return to her maiden name following{{black}}"
+            SayBG "the divorce.{{black}}"
+            SayBG "In 2011 work was finished on a homemade filehosting program written by Laura. Once released{{black}}"
+            SayBG "it caught on and the money made from selling the software allowed the company to expand even{{black}}"
+            SayBG "further. The initial program was very basic which made it popular as it provided for every{{black}}"
+            SayBG "need without being complex. We are currently using a new version of the software which{{black}}"
+            SayBG "has only just been released however looks set to be better than the previous version in almost{{black}}"
+            SayBG "every way.{{red}}"
+            PauseBG
+        ElseIf gkey4 = Asc("2") Then
+            SayBG "##### Staff Contact Details #####{{blue}}"
+            SayBG "Name: Laura Palmer{{black}}"
+            SayBG "Position: Head technition and joint CEO{{black}}"
+            SayBG "E-mail: lp@palmer.hosting.net{{black}}"
+            SayBG " ---{{black}}"
+            SayBG "Name: Sarah Hurley{{black}}"
+            SayBG "Position: Joint CEO and head of Publicity{{black}}"
+            SayBG "E-mail: sh@palmer.hosting.net{{black}}"
+            SayBG " ---{{black}}"
+            SayBG "Name: Bob Lydecker{{black}}"
+            SayBG "Position: Head of Technical support{{black}}"
+            SayBG "E-mail: bobl@palmer.hosting.net"
+            SayBG " ---{{black}}"
+            SayBG "Name: Waldo Laouisou{{black}}"
+            SayBG "Position: Technical support{{black}}"
+            SayBG "E-mail: waldon@palmer.hosting.net{{black}}"
+            SayBG " ---{{black}}"
+            SayBG "Name: Wael Fadda{{black}}"
+            SayBG "Position: System administrator{{black}}"
+            SayBG "E-mail: fadda@palmer.hosting.net{{black}}"
+            SayBG " ---{{black}}"
+            SayBG "Name: John Dahmer{{black}}"
+            SayBG "Position: Accountant{{black}}"
+            SayBG "E-mail: jdahmer@palmer.hosting.net{{black}}"
+            SayBG " ---{{black}}"
+            SayBG "Name: Chris Daniels{{black}}"
+            SayBG "Position: Technition{{black}}"
+            SayBG "E-mail: daniels@palmer.hosting.net{{black}}"
+            SayBG " ---{{black}}"
+            PauseBG
+        ElseIf gkey4 = Asc("3") Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+MainMenu
+Disconnect

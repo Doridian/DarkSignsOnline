@@ -1,0 +1,129 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Quit
+End Sub
+
+While True
+    SaySlow 1, "FIND.com", "white"
+    SaySlow 1, "Internet Resources", "white"
+    SaySlow 1, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=", "white"
+    SaySlow 1, "    1 -     Jobs on FIND.com", "white"
+    SaySlow 1, "    2 -     Writing a Review", "white"
+    SaySlow 1, "    3 -     Domains and Registration", "white"
+    SaySlow 1, "    4 -     Latest News", "white"
+    SaySlow 1, "    5 -     Online Services", "white"
+    SaySlow 1, "    6 -     Server Exit", "white"
+    SaySlow 1, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=", "white"
+    Dim MMOption
+    MMOption = QReadLine("Enter A Number from 1 to 6>")
+    Select Case MMOption
+        Case "1":
+            Say "FIND.com - Jobs{{blue}}"
+            Say ""
+            Say "Using the Internet to find a new job has come a long way from the{{white}}"
+            Say "early sprinkling of email lists and Usenet groups that advertised opening{{white}}"
+            Say "to the once-geeky Internet community of the 1980's. Today, web-based{{white}}"
+            Say "career sources offer job databases where you can find new jobs and{{white}}"
+            Say "apply directly online. Its not just for geeks anymore, either.{{white}}"
+            Say ""
+            Say "Every employer, from fast-food franchises to government{{white}}"
+            Say "agencies and multinational corporations advertise online.{{white}}"
+            Say "FIND.com will have more infomation on jobs soon.{{white}}"
+            Pause
+        Case "2":
+            Say "FIND.com - Writing{{blue}}"
+            Say ""
+            Say "In the introduction, you should...{{white}}"
+            Say ""
+            Say "Define or identify the general topic, issue, or area of concern,{{white}}"
+            Say "thus providing an appropriate context for reviewing the literature.{{white}}"
+            Say ""
+            Say "Point out overall trends in what has been published about the topic;{{white}}"
+            Say "or conflicts in theory, methodology, evidence, and conclusions; or{{white}}"
+            Say "gaps in research and scholarship; or a single problem or new{{white}}"
+            Say "perspective of immediate interest.{{white}}"
+            Say ""
+            Say "Establish the writer's reason (point of view) for reviewing the{{white}}"
+            Say "literature; explain the criteria to be used in analyzing and comparing{{white}}"
+            Say "literature and the organization of the review (sequence); and, when{{white}}"
+            Say "necessary, state why certain literature is or is not included (scope).{{white}}"
+            Pause
+            Say "In the body, you should...{{white}}"
+            Say ""
+            Say "Group research studies and other types of literature{{white}}"
+            Say "(reviews, theoretical articles, case studies, etc.) according to common{{white}}"
+            Say "denominators such as qualitative versus quantitative approaches,{{white}}"
+            Say "conclusions of authors, specific purpose or objective, chronology, etc.{{white}}"
+            Say ""
+            Say "Summarize individual studies or articles with as much or as little{{white}}"
+            Say "detail as each merits according to its comparative importance in the{{white}}"
+            Say "literature, remembering that space (length) denotes significance.{{white}}"
+            Say ""
+            Say "Provide the reader with strong 'umbrella' sentences at beginnings of{{white}}"
+            Say "paragraphs, 'signposts' throughout, and brief 'so what' summary{{white}}"
+            Say "sentences at intermediate points in the review to aid in understanding{{white}}"
+            Say "comparisons and analyses.{{white}}"
+            Pause
+            Say "Writing the conclusion In the conclusion, you should...{{white}}"
+            Say "Summarize major contributions of significant studies and articles{{white}}"
+            Say "to the body of knowledge under review, maintaining the focus{{white}}"
+            Say "established in the introduction.{{white}}"
+            Pause
+        Case "3":
+            Say "FIND.com - Domains and Registration{{blue}}"
+            Say ""
+            Say "What is the domain name system?{{white}}"
+            Say ""
+            Say "The Domain Name System (DNS) helps users to find their way{{white}}"
+            Say "around the Internet. Every computer on the Internet has a unique{{white}}"
+            Say "address - just like a telephone number - which is a rather complicated{{white}}"
+            Say "string of numbers. It is called its 'IP address' (IP stands for 'Internet Protocol').{{white}}"
+            Say ""
+            Say "IP Addresses are hard to remember. The DNS makes using the Internet{{white}}"
+            Say "easier by allowing a familiar string of letters (the 'domain name') to be{{white}}"
+            Say "used instead of the arcane IP address. So instead of typing 207.151.159.3,{{white}}"
+            Say "you can type internic.net. It is a 'mnemonic' device that makes{{white}}"
+            Say "addresses easier to remember.{{white}}"
+            Pause
+        Case "4":
+            Say "FIND.com - Latest News{{blue}}"
+            Say ""
+            Say "Big Bubbles in Bermuda Triangle{{white}}"
+            Say ""
+            Say "Some scientists think giant gas bubbles in the Bermuda Triangle could{{white}}"
+            Say "be what is sucking ships down into the deep. Hollywood special effects artist Phil Beck,{{white}}"
+            Say "of Awesome FX, has recreated the phenomenon in order to test this theory.{{white}}"
+            Pause
+            Say "Terminal Zero Releases Dark Signs{{white}}"
+            Say ""
+            Say "An Australian based software development company Terminal Zero has recently{{white}}"
+            Say "released its groundbreaking new hacking and cracking game - Dark Signs.{{white}}"
+            Pause
+            Say "The fish are really big!{{white}}"
+            Say "Scientists researching deep in the pacific have found the largest sea creatures{{white}}"
+            Say "known to exist! They know believe that the deeper they go, the larger the life{{white}}"
+            Say "they will find.{{white}}"
+            Pause
+        Case "5":
+            Say "FIND.com - Online Services{{blue}}"
+            Say ""
+            Say "FIND.com offers services including web hosting, database management,{{white}}"
+            Say "internet access, and much more.{{white}}"
+            Say ""
+            Say "FIND.com can also provide online services including security for online{{white}}"
+            Say "businesses, as well as provide information and system upgrades, for example{{white}}"
+            Say "the recent bug in a version of remote resource servers that allows the user{{white}}"
+            Say "open http access if the key code is RRS441 and for more information{{white}}"
+            Say "regarding our services, please contact us by phone +613 7528288{{white}}"
+            Say "(Business Hours Only){{white}}"
+            Pause
+        Case "6":
+            Disconnect
+        Case Else:
+            Say "You entered an invalid option{{white}}"
+            Pause
+    End Select
+Wend

@@ -1,7 +1,4 @@
 .DS_Store
-/client/dist
-/logs
-/client.zip
 /client/dso.ini
 /client/user/system/mail.dat
 /client/user/downloads

@@ -1,0 +1,185 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Disconnecting{{yellow}}"
+    Quit
+End Sub
+
+Say "Welcome to oldgames Backup server (IPFTP v6.14c){{rgb:39168}}"
+Say "This server requires a valid user name and password{{rgb:39168}}"
+Dim user, pass
+user = QReadLine("Username>")
+pass = QReadLine("Password>")
+
+If user <> "save" or pass <> "617" Then
+    Say "Wrong username/password{{red}}"
+    Disconnect
+End If
+
+Sub ViewFiles()
+    Say "Listing files{{rgb:39168}}"
+    If BoolMissionProgress("DS", "oldg_ftp_checkdone") Then
+        Say "1. game543.bin{{rgb:39168}}"
+        Say "2. game868686.bin{{rgb:39168}}"
+        Say "3. unknown.ukn{{rgb:39168}}"
+    Else
+        Say "1. )=_%&/*Gds{{rgb:39168}}"
+        Say "2. %_h\'*gs+/({{rgb:39168}}"
+        Say "3. %__hs\'&6((*{{rgb:39168}}"
+    End If
+
+    If Not BoolMissionProgress("DS", "oldg_ftp_otlrestored") Then
+        Say "4. otl.scr{{rgb:39168}}"
+    End If
+End Sub
+
+Sub RestoreFileUNK()
+    Dim fnamein
+    fnamein = QReadLine("In order to restore this file you need to specify the correct filename>{{rgb:39168}}")
+    If fnamein <> "l00017242.log" Then
+        Say "Error while trying to restore the file{{red}}"
+        Exit Sub
+    End If
+
+    Say "Restoring file L00017242.log{{rgb:39168}}"
+    SaySlow 50, ".................................", "rgb:39168"
+    Say "File L00017242.log successfully restored{{rgb:39168}}"
+
+    Say "Downloading file L00017242.log{{rgb:39168}}"
+
+    Dim LogData
+    LogData = "Starting log file..." & vbCrLf
+    LogData = LogData & "User 1 connected from user5115-dialup.internetprovider.com" & vbCrLf
+    LogData = LogData & "User 2 connected from user1252-dsl.broadband.com" & vbCrLf
+    LogData = LogData & "User 2 downloads game 9890" & vbCrLf
+    LogData = LogData & "User 2 disconnected" & vbCrLf
+    LogData = LogData & "User 1 downloads game 868686" & vbCrLf
+    LogData = LogData & "User 1 banned for 1 hour, trying to access unauthorized area." & vbCrLf
+    LogData = LogData & "User 3 connected from user6134-dialup.internetprovider.com" & vbCrLf
+    LogData = LogData & "User 3 banned for 1 hour, trying to access unauthorized area." & vbCrLf
+    LogData = LogData & "L00017242.log Log file closed." & vbCrLf
+
+    RequestWriteFile LogData
+    SaySlow 100, ".....................................", "rgb:39168"
+End Sub
+
+Sub RestoreFile()
+    Dim gkeyrf
+    Say "Please select the file you want to restore by its number{{rgb:39168}}"
+    gkeyrf = GetAsciiWithPrompt()
+    
+    If gkeyrf = Asc("3") And BoolMissionProgress("DS", "oldg_ftp_checkdone") Then
+        RestoreFileUNK
+        Exit Sub
+    End If
+
+    If gkeyrf = Asc("4") And Not BoolMissionProgress("DS", "oldg_ftp_otlrestored") Then
+        Say "Restoring file otl.scr{{rgb:39168}}"
+        SaySlow 50, "........", "rgb:39168"
+        Say "File otl.scr successfully restored{{rgb:39168}}"
+        BoolSetMissionProgress "DS", "oldg_ftp_otlrestored"
+        Exit Sub
+    End If
+
+    Say "Error while trying to restore the file{{red}}"
+End Sub
+
+Sub CheckHD()
+    Say "The check of the hard disk will now begin{{blue}}"
+    Say "This operation can take several minutes to complete. Please wait...{{blue}}"
+    SaySlow 2, "...........................................................................................  25%", "blue"
+    SaySlow 2, "...........................................................................................  50%", "blue"
+    If BoolMissionProgress("DS", "oldg_ftp_checkdone") Then
+        SaySlow 2, "...........................................................................................  75%", "blue"
+        SaySlow 2, "........................................................................................... 100%", "blue"
+    Else
+        SaySlow 2, "........................................................................... 70 %", "blue"
+        SaySlow 10, ".................. 75 %", "blue"
+        Say "Corrupted data has been found, the program will now try to restore the data{{blue}}"
+        SaySlow 50, ".................. 80 %", "blue"
+        SaySlow 100, ".................. 85 %", "blue"
+        SaySlow 2, ".................... 90 %", "blue"
+        SaySlow 2, "........................................................ 100%", "blue"
+        Say "1 file(s) successfully restored.{{blue}}"
+        Say "Some data could be restored. You can download it through the menu.{{blue}}"
+        Say "The checking is now complete.{{blue}}"
+        BoolSetMissionProgress "DS", "oldg_ftp_checkdone"
+    End If
+    Pause
+End Sub
+
+Sub DownloadCorruptedData()
+    Say "Downloading file data.corrupted{{rgb:39168}}"
+
+    Dim DataCorr
+    DataCorr = "SDFKFPSIFGWEIsepogiosf3942334@#%" & vbCrLf
+    DataCorr = DataCorr & "4J3Tcv6`567565o" & vbCrLf
+    DataCorr = DataCorr & "\565756734dsgfd8sK'" & vbCrLf
+    DataCorr = DataCorr & "==2309124b" & vbCrLf
+    DataCorr = DataCorr & "]EAS03%@_%#$====q" & vbCrLf
+    DataCorr = DataCorr & "g file created ..." & vbCrLf
+    DataCorr = DataCorr & "User 1 connected from user5614-dialup.intern--___U" & vbCrLf
+    DataCorr = DataCorr & "User 1 SADF#0rt3@%_^(@$)_(DFSgsdgslhs)" & vbCrLf
+    DataCorr = DataCorr & "User 1 _x__ted file L$@#%$(42.log" & vbCrLf
+    DataCorr = DataCorr & "Us_!!_9i_ttcy; __v _E!__>L" & vbCrLf
+    DataCorr = DataCorr & "Warning : This action may corrupt your data !" & vbCrLf
+    DataCorr = DataCorr & "Error caused in log system rA5Ax_{m_rA5Ax__m" & vbCrLf
+
+    RequestWriteFile DataCorr
+    SaySlow 100, "Downloading .....................................", "rgb:39168"
+    Say "Donwload complete{{rgb:39168}}"
+    Pause
+End Sub
+
+Sub OtherTools()
+    If Not BoolMissionProgress("DS", "oldg_ftp_otlrestored") Then
+        Say "Error found in otl.scr, unable to make the listing{{red}}"
+        Exit Sub
+    End If
+
+    While True
+        Dim gkeyot
+        Say "1. Check HD for corruption{{rgb:39168}}"
+        If BoolMissionProgress("DS", "oldg_ftp_checkdone") Then
+            Say "2. Download corrupted data{{rgb:39168}}"
+        End If
+        Say "0. Main menu{{rgb:39168}}"
+        gkeyot = GetAsciiWithPrompt()
+
+        If gkeyot = Asc("1") Then
+            CheckHD
+        ElseIf gkeyot = Asc("2") And BoolMissionProgress("DS", "oldg_ftp_checkdone") Then
+            DownloadCorruptedData
+        ElseIf gkeyot = Asc("0") Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+While True
+    Say "Commands available to you:{{rgb:39168}}"
+    Say "1. View files{{rgb:39168}}"
+    Say "2. Restore file{{rgb:39168}}"
+    Say "3. Other tools{{rgb:39168}}"
+    Say "0. Disconnect{{rgb:39168}}"
+
+    Dim gkey
+    gkey = GetAsciiWithPrompt()
+    If gkey = Asc("1") Then
+        ViewFiles
+        Say "Returning to main menu{{yellow}}"
+        Pause
+    ElseIf gkey = Asc("2") Then
+        RestoreFile
+        Say "Returning to main menu{{yellow}}"
+        Pause
+    ElseIf gkey = Asc("3") Then
+        OtherTools
+        Say "Returning to main menu{{yellow}}"
+        Pause
+    ElseIf gkey = Asc("0") Then
+        Disconnect
+    End If
+Wend

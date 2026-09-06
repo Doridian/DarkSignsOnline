@@ -1,0 +1,73 @@
+Option Explicit
+'Script on micmast.com 25
+'Let's go
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    SaySlow 1, "ByeBye", "orange"
+    Quit
+End Sub
+
+SaySlow 1, "##################", "yellow"
+SaySlow 1, "# Micmast WebServer      #", "yellow"
+SaySlow 1, "##### version 1.0         #", "yellow"
+SaySlow 1, "#################", "yellow"
+
+Sub MBLogin()
+    Dim mbInput
+    mbInput = QReadLine("Enter Username:{{yellow}}")
+    If mbInput <> "root" Then
+        SaySlow 1, "Username not found", "red"
+        Exit Sub
+    End If
+    SaySlow 1, "Username Accepted", "yellow"
+    mbInput = QReadLine("Enter Password:{{yellow}}")
+    If mbInput <> "root" Then
+        SaySlow 1, "Password not found", "red"
+        Exit Sub
+    End If
+    SaySlow 1, "Password Accepted", "yellow"
+
+    While True
+        SaySlow 1, "Welcome Micmast, you have 2 new mail(s)", "yellow"
+        SaySlow 1, "---------------------------------", "yellow"
+        SaySlow 1, "  1.    Confirmation Mail Required", "yellow"
+        SaySlow 1, "  2.    Confirmation received. Access Granted", "yellow"
+        SaySlow 1, "---------------------------------", "yellow"
+        mbInput = QReadLine("Enter number of mail to read the mail (0 to quit)>{{yellow}}")
+        If mbInput = "1" Then
+            SaySlow 1, "Confirmation required to access the secret network.", "yellow"
+            SaySlow 1, "Click on the link below!", "yellow"
+            SaySlow 1, "specialstorage.com", "yellow"
+            Pause
+        ElseIf mbInput = "2" Then
+            SaySlow 1, "Account approved", "yellow"
+            SaySlow 1, "Username: micmast", "yellow"
+            SaySlow 1, "password: urgettingsomewhere", "yellow"
+            Pause
+        ElseIf mbInput = "0" Then
+            Exit Sub
+        End If
+    Wend
+End Sub
+
+While True
+    Dim mmInput
+    mmInput = QReadLine("Type 'help' for the help file>")
+    If mmInput = "help" Then
+        SaySlow 1, "Micmast WebServer Help File", "yellow"
+        SaySlow 1, "---------------------------------", "yellow"
+        SaySlow 1, "Version: get version", "yellow"
+        SaySlow 1, "Login: Log into mail account", "yellow"
+        SaySlow 1, "Exit: exit server", "yellow"
+        SaySlow 1, "---------------------------------", "yellow"
+    ElseIf mmInput = "version" Then
+        SaySlow 1, "Version 1.0", "yellow"
+        SaySlow 1, "Based on Unix System", "yellow"
+    ElseIf mmInput = "login" Then
+        MBLogin
+    ElseIf mmInput = "exit" Then
+        Disconnect
+    End If
+Wend

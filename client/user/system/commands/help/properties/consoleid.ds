@@ -1,0 +1,4 @@
+Option Explicit
+Say "{{green 12}}Property: ConsoleID[String]"
+Say "{{lgreen 12}}Example read: SomeVar = ConsoleID"
+Say "{{yellow}}Access level: Read-Only"

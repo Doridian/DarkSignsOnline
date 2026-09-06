@@ -1,0 +1,4 @@
+Option Explicit
+Say "{{green 12}}Property: ServerPort[Long]"
+Say "{{lgreen 12}}Example read: SomeVar = ServerPort"
+Say "{{yellow}}Access level: Read-Only"

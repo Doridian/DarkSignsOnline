@@ -1,0 +1,80 @@
+Option Explicit
+
+If ArgC() < 3 Then
+    Err.Raise vbObjectError + 2110, , "Usage: connect portscan.dsn 81 <IP> <start port> <end port>"
+    Quit
+End If
+
+' Well, we dont have portscans in DSO, so this fakes them in for DS classic
+
+Function IsIP(sCand)
+    Dim sSplit
+    sSplit = Split(sCand, ".")
+    If UBound(sSplit) <> 3 Then
+        IsIP = False
+        Exit Function
+    End If
+    Dim j, sSpl, sNum
+    For j = 0 To 3
+        sSpl = sSplit(j)
+        If Not IsNumeric(sSpl) Then
+            IsIP = False
+            Exit Function
+        End If
+        sNum = CInt(sSpl)
+        If sNum < 0 Or sNum > 255 Then
+            IsIP = False
+            Exit Function
+        End If
+    Next
+    IsIP = True
+End Function
+
+Dim sInput
+sInput = ArgV(1)
+
+Dim sIp
+If IsIP(sInput) Then
+    sIp = sInput
+Else
+    sIp = WaitFor(GetIP(sInput))
+    If sIp = "" Then
+        Err.Raise vbObjectError + 2110, , "Failed to resolve domain to IP"
+        Quit
+    End If
+End If
+
+Dim sScanFile
+sScanFile = sIp & ".ports"
+If IsLocal() Then
+    sScanFile = RemoteView("portscan.dsn", sScanFile, 2)
+Else
+    sScanFile = FileServer(sScanFile, 2)
+End If
+
+Dim sPortA, sPortB
+sPortA = CInt(ArgV(2))
+sPortB = CInt(ArgV(3))
+
+Dim sScanRes
+sScanRes = ""
+On Error Resume Next
+sScanRes = WaitFor(sScanFile)
+On Error GoTo 0
+If sScanRes = "" Then
+    Err.Raise vbObjectError + 2110, , "Failed to retrieve portscan results"
+    Quit
+End If
+
+Dim sPortCur, sCPos, sPreLen, sEPos
+sPortCur = sPortA
+Do
+    Wait 10
+    sCPos = InStr(sScanRes, vbCrLf & sPortCur & "=")
+    If sCPos > 0 Then
+        sPreLen = Len(vbCrLf & sPortCur & "=")
+        sEPos = InStr(sCPos + sPreLen, sScanRes, vbCrLf)
+        Say sPortCur & "=" & Mid(sScanRes, sCPos + sPreLen, (sEPos - sCPos) - sPreLen)
+    End If
+    sPortCur = sPortCur + 1
+Loop Until sPortCur > sPortB

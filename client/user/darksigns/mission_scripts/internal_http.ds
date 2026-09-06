@@ -1,0 +1,39 @@
+Option Explicit
+
+DLOpen "termlib"
+
+'INTERNAL HTTP
+'this script runs as the basic information / website for the in-game internalservices.org
+
+Sub Disconnect()
+    SaySlow 1, "Connection Terminated", "orange"
+    Quit
+End Sub
+
+SaySlow 1, "Connected on Port 80 to Internal Services", "green"
+SaySlow 1, "To register an account, contact root@internalservices.org", "grey"
+SaySlow 1, "If you do not have an account, please log out on", "grey"
+
+Dim user, pass
+user = QReadLine("Enter Account Username>{{grey}}")
+pass = QReadLine("Enter Account Password>{{grey}}")
+
+If user <> "sdigital" Then
+    Say "Access Denied - Invalid Username{{orange}}"
+    Pause
+    Disconnect
+End If
+
+If pass <> "digital" Then
+    Say "Access Denied - Invalid Password{{orange}}"
+    Pause
+    Disconnect
+End If
+
+Say "[New Account]{{white}}"
+Say "Your Account is Unverified. Before you can make full use of this{{white}}"
+Say "account, you must verify it contacting us on (012) 762 7078.{{white}}"
+Say "As you can understand, we must take every precaution to protect{{white}}"
+Say "this account, and your privacy.{{white}}"
+Pause
+Disconnect

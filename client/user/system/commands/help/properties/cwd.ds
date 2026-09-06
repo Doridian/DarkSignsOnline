@@ -1,0 +1,7 @@
+Option Explicit
+Say "{{green 12}}Property: CWD[String]"
+Say "{{lgreen 12}}Example read: SomeVar = CWD"
+Say "{{lgreen 12}}Example write: CWD = SomeVar"
+Say "{{yellow}}Access level: Read/Write"
+Say "{{lred}}READ restriction: Can only be used locally (local script or CLI)"
+Say "{{lred}}WRITE restriction: Can only be used locally (local script or CLI)"

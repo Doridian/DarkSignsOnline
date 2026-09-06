@@ -1,0 +1,214 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "____________________________________________________________________________________{{green}}"
+Say ""
+Say "                                                                   The THC HQ{{green}}"
+Say "____________________________________________________________________________________{{green}}"
+
+Sub VirriMenu()
+    While True
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "          User: jpain         -         Location : Virri         -         THC Rule!{{green}}"
+        Say "____________________________________________________________________________________{{green}}"
+        Say "Viewing virri from the last : 7 days{{green}}"
+        Say "      [If you have a proper account you will be able to change this, this is just a taste]{{green}}"
+        Say "Outpost 0E0A Virri - Download (1) the virus, (2) the antidote{{green}}"
+        Say "(b)ack{{green}}"
+        Dim jpVkey
+        jpVkey = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If jpVkey = "b" Then
+            Exit Sub
+        ElseIf jpVkey = "1" Then
+            Say "Downloading Virus outpost.virus{{green}}"
+            Dim vData
+            vData = "Zipped using easyzip" & vbCrLf & _
+                "asd87q09w84q09weqmweiqwepoqweiq09weim09qwime-09mqwe907qw9087e908qw7e98q7w98e7" & vbCrLf & _
+                "aqoisdasd7an908s7d987as98d7asijdoajslkdjalksdj;a;sd'aksdkaskda;lskd;laks;ldkk" & vbCrLf & _
+                "qopw4893480923u4i23jlk4jlk3jlkwje;rjwelkrjwelkrjwlkejrlkwjelrkjwelkrjwelkrjlw" & vbCrLf & _
+                "oias7udofjna[fjogjfdlgkd;fkgd;f'gdfgp[iodpof[igpodifgpoidpofigpodifgpoidfggdf" & vbCrLf & _
+                "0980a9s8d09asdkjasdlkna;slkdjalksdjlaksjdlasdlmas.,dma.s,d,masdlkajsdk;jasdkl" & vbCrLf & _
+                "pasoid[aspodias[pdiapos[id[paoisdp[oigpfjgdfjlgkdjflkgjdf;lkgjdflk;jgdfkgjdfj" & vbCrLf
+            RequestWriteFile vData
+            Say "Downloaded{{green}}"
+            Pause
+        ElseIf jpVkey = "2" Then
+            Say "Downloading Antidote outpost.antidote{{green}}"
+            Dim aData
+            aData = "Congratulations Agent!" & vbCrLf & _
+                "seeing as you don't have eazyzip, we'll take over from here" & vbCrLf & _
+                "You're user up code is 316geographic" & vbCrLf
+            RequestWriteFile aData
+            Say "Downloaded{{green}}"
+            Pause
+        End If
+    Wend
+End Sub
+
+Sub ExploitsMenu()
+    While True
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "          User: jpain         -         Location : Exploits Menu         -         THC Rule!{{green}}"
+        Say "____________________________________________________________________________________{{green}}"
+        Say "Viewing exploits from the last : 7 days{{green}}"
+        Say "      [If you have a proper account you will be able to change this, this is just a taste]{{green}}"
+        Say "1) UHB Login script{{green}}"
+        Say "2) Various DScript variable bugs{{green}}"
+        Say "(b)ack to main menu{{green}}"
+        Dim exmSel
+        exmSel = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If exmSel = "b" Then
+            Exit Sub
+        ElseIf exmSel = "1" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: jpain           -         Location : The UHB exploit         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "UHB Login script exploit - Found by Beater{{green}}"
+            Say "UHB have a stupid system where even if you have the username and password{{green}}"
+            Say "you still have to be on a list of authorised IP addresses{{green}}"
+            Say "however, the programmers are also morons{{green}}"
+            Say "One of the 'authorised' IPs is the actual IP of the machine itself{{green}}"
+            Say "  and there is a debug profile open which acts as a proxy{{green}}"
+            Say "username: proxy password: proxy{{green}}"
+            Say "and since it's a special program, you don't need to be on an authorised IP to use it{{green}}"
+            Say "                    By Beater{{green}}"
+            Say "(b)ack to exploits menu                 - (s)ave file and go back to menu{{green}}"
+            Dim uhbSel
+            uhbSel = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+            If uhbSel = "b" Then
+                Exit Sub
+            ElseIf uhbSel = "s" Then
+                Dim uhbData
+                uhbData = "UHB Login script exploit - Found by Beater" & vbCrLf & _
+                    "UHB have a stupid system where even if you have the username and password" & vbCrLf & _
+                    "you still have to be on a list of authorised IP addresses" & vbCrLf & _
+                    "however, the programmers are also morons" & vbCrLf & _
+                    "One of the 'authorised' IPs is the actual IP of the machine itself" & vbCrLf & _
+                    "  and there is a debug profile open which acts as a proxy" & vbCrLf & _
+                    "username: proxy password: proxy" & vbCrLf & _
+                    "and since it's a special program, you don't need to be on an authorised IP to use it" & vbCrLf & _
+                    "                    By Beater" & vbCrLf
+                RequestWriteFile uhbData
+                Say "Saved{{green}}"
+                Pause
+            End If
+        ElseIf exmSel = "2" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: jpain           -         Location : Various DScript variable bugs         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Various DScript variable bugs - By Hatred{{green}}"
+            Say "These bugs have been made into a challenge for possible THC members, so don't distro it{{green}}"
+            Say "everyone knows about non free'ed variables and how you can access them after the program ends{{green}}"
+            Say "however, you can also access what variable functions returned last in the same way{{green}}"
+            Say "plus variable functions aren't free'ed - even better{{green}}"
+            Say "However, should you want to read the contents of a variable you can always cancel the script{{green}}"
+            Say "before it's free'ed and read it, use CTRL+X {{green}}"
+            Say "finally, strings are treated funny in DScript. I'm not sure about everything you can do, but entering{{green}}"
+            Say "a variable name between the two percentages will turn it into it's contents{{green}}"
+            Say "so if you can display some user input, you can view any variable{{green}}"
+            Say "if you can edit the contents of a variable and you{{green}}"
+            Say "make input = (percentage)passwd(percentage) [proper percentages of course]{{green}}"
+            Say "and input will equal whatever passwd does at the time{{green}}"
+            Say "              By Hatred{{green}}"
+            Say "(b)ack to exploits menu                 - (s)ave file and go back to menu{{green}}"
+            Dim dsvSel
+            dsvSel = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+            If dsvSel = "b" Then
+                Exit Sub
+            ElseIf dsvSel = "s" Then
+                Dim dsvData
+                dsvData = "Various DScript variable bugs - By Hatred" & vbCrLf & _
+                    "These bugs have been made into a challenge for possible THC members, so don't distro it" & vbCrLf & _
+                    "everyone knows about non free'ed variables and how you can access them after the program ends" & vbCrLf & _
+                    "however, you can also access what variable functions returned last in the same way" & vbCrLf & _
+                    "plus variable functions aren't free'ed - even better" & vbCrLf & _
+                    "However, should you want to read the contents of a variable you can always cancel the script" & vbCrLf & _
+                    "before it's free'ed and read it, use CTRL+X " & vbCrLf & _
+                    "finally, strings are treated funny in DScript. I'm not sure about everything you can do, but entering" & vbCrLf & _
+                    "a variable name between the two percentages will turn it into it's contents" & vbCrLf & _
+                    "if you can edit the contents of a variable and you" & vbCrLf & _
+                    "make input = (percentage)passwd(percentage) [proper percentages of course]" & vbCrLf & _
+                    "and input will equal whatever passwd does at the time" & vbCrLf & _
+                    "              By Hatred" & vbCrLf
+                RequestWriteFile dsvData
+                Say "Saved.{{green}}"
+                Pause
+            End If
+        End If
+    Wend
+End Sub
+
+Sub JPainMenu()
+    While True
+        Say "____________________________________________________________________________________{{green}}"
+        Say ""
+        Say "          User: jpain         -         Location : main menu         -         THC Rule!{{green}}"
+        Say "____________________________________________________________________________________{{green}}"
+        Say "e(x)ploits{{green}}"
+        Say "(v)irri{{green}}"
+        Say "(p)rojects{{green}}"
+        Say "(m)essage boards{{green}}"
+        Say "(a)vailable missions{{green}}"
+        Say "(e)xit{{green}}"
+        Dim jpGkey
+        jpGkey = LCase(Chr(GetAsciiWithCPrompt("Choose")))
+        If jpGkey = "e" Then
+            Exit Sub
+        ElseIf jpGkey = "m" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: jpain         -         Location : Message Board         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "no guest access for you jpain, too insecure{{green}}"
+            Dim userinput, passwd
+            userinput = QReadLine("Message Board Username:{{green}}")
+            passwd = QReadLine("Message Board Passwd:{{green}}")
+            SaySlow 100, "Wrong!!!", "green"
+        ElseIf jpGkey = "x" Then
+            ExploitsMenu
+        ElseIf jpGkey = "p" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: jpain         -         Location : current projects         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Project : Outpost 0E0A{{green}}"
+            Say "we have found out that this ring have been monitoring us. this is not good{{green}}"
+            Say "the project is in early stages but we will destroy them{{green}}"
+            Say "currently, gage has released a virus, see the virus section{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "Project : BOB{{green}}"
+            Say "following certain hacks which he has done, the police are very interested in this loran{{green}}"
+            Say "we are going to catch him in exchange for the release of certain THC members{{green}}"
+            Say "more information is stored on the lower ebworth server{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Pause
+        ElseIf jpGkey = "a" Then
+            Say "____________________________________________________________________________________{{green}}"
+            Say ""
+            Say "          User: jpain         -         Location : available missions         -         THC Rule!{{green}}"
+            Say "____________________________________________________________________________________{{green}}"
+            Say "There are currently no available missions{{green}}"
+            Pause
+        ElseIf jpGkey = "v" Then
+            VirriMenu
+        End If
+    Wend
+End Sub
+
+Say "Login for real accounts{{green}}"
+Dim userinput, passwd
+userinput = QReadLine("Username:")
+If userinput = "jpain" Then
+    If ConnectingIP = "24.53.123.5" Then
+        JPainMenu
+    Else
+        SaySlow 100, "Invalid location", "green"
+    End If
+Else
+    SaySlow 100, "Wrong!!!", "green"
+End If

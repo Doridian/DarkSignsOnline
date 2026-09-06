@@ -89,11 +89,17 @@ so `Session` and its methods are typed from the Rust rather than by hand.
 
 ## Building
 
+The whole build is a flake package, and that is what CI and a deployment
+use:
+
 ```sh
-# A distro Rust may already carry the target; check with
-# `ls $(rustc --print sysroot)/lib/rustlib` before reaching for rustup.
-rustup target add wasm32-unknown-unknown
-cargo install wasm-bindgen-cli --version 0.2.128
+nix build .#darksignsonline-client   # the page, ready to serve
+```
+
+By hand, in a shell that has the toolchain:
+
+```sh
+nix develop         # rustc, wasm-bindgen, node, and clang for zstd's wasm build
 npm install         # typescript, for the page
 
 ./build.sh          # wasm, the script bundle, and the page; `debug` for a debug build
@@ -101,6 +107,17 @@ npm run check       # type-checks all three projects, emitting nothing
 npm test            # the editor's highlighting and indenting rules
 node smoke.ts       # drives the built module the way the worker does
 node serve.ts       # http://localhost:8080
+```
+
+Without nix you need the wasm target and a `wasm-bindgen` CLI of exactly the
+version `client/Cargo.lock` pins, because it refuses a module whose schema
+another version wrote:
+
+```sh
+# A distro Rust may already carry the target; check with
+# `ls $(rustc --print sysroot)/lib/rustlib` before reaching for rustup.
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli --version 0.2.127
 ```
 
 `build.sh` also copies the shipped `.ds` scripts into `www/scripts` with a
@@ -118,6 +135,13 @@ Cross-Origin-Embedder-Policy: require-corp
 
 `serve.ts` sends them. Any static host will do as long as it does the same;
 the page says so plainly if it finds itself not cross-origin isolated.
+
+In production the page is `/game.php` on the game server's own origin --
+`darksignsonline-both` puts the two web roots together, and
+[`server.conf`](../../server/rootfs/etc/nginx/server.conf) is where the two
+headers are set. Same origin means the API calls need no CORS at all. The
+assets sit at the root beside it, because a document at `/game.php` resolves
+the page's own `./main.js` to `/main.js`.
 
 ## Remembering a sign-in
 

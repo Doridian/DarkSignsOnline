@@ -1,0 +1,12 @@
+Option Explicit
+
+DLOpen "termlib"
+
+SaySlow 1, "Index File Not Found", "white"
+SaySlow 1, "------------------------", "white"
+SaySlow 1, "FILENAME | SIZE", "white"
+SaySlow 1, "[.]", "white"
+SaySlow 1, "[..]", "white"
+SaySlow 1, "NETWORK.INFO | 1 KB", "white"
+
+SaySlow 1, "Connection Closed", "blue"

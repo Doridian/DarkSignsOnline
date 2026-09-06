@@ -28,7 +28,7 @@ Two suites, both run by `cargo test`:
   test driver (`ok`, `getVT`, `testObj`, `collectionObj`, …).
 - **`tests/game_api.rs`** runs VBScript against the host API, including the
   shipped `ping`, `pingport`, `dir`, `ls` and `compile` commands unmodified.
-- **`tests/game_scripts.rs`** parses the `.ds` corpus in `../client-legacy/user`.
+- **`tests/game_scripts.rs`** parses the `.ds` corpus in `user/`.
   Its ignored `run_scripts` test also *executes* the corpus against a host
   that answers every call with `Empty`, and prints the host names the scripts
   reach for — a worklist for implementing the real game host:

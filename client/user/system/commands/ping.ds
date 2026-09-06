@@ -1,0 +1,14 @@
+'CommandDefinition(IPOrDomain As String)
+'Example #1: PING birds.com
+'{{lgrey}}Check if the specified server exist on the network.
+'{{lorange}}You can modify this command in the file /system/commands/ping.ds
+Option Explicit
+
+Dim Result
+Result = WaitFor(IsDomainOnline(ArgV(1)))
+
+If Result Then
+    Say "{{green}}Server " & ArgV(1) & " is online."
+Else
+    Say "{{red}}Server " & ArgV(1) & " is offline."
+End If

@@ -1,0 +1,3 @@
+Option Explicit
+Say "{{green 12}}Command: LISTCOLORS"
+Say "{{lgrey}}Display the available colors and color codes in the console."

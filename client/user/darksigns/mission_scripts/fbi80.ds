@@ -1,0 +1,160 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "FBI Public Relations Access Website{{green}}"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Sub WantedMenu()
+    While True
+        Say ""
+        Say "--- FBI 10 Most Wanted ---{{green}}"
+        Say "1 - Osma Ben Ledin{{blue}}"
+        Say "2 - Robert Nilgate{{blue}}"
+        Say "3 - Joe Filler{{blue}}"
+        Say "4 - Marco Heli{{blue}}"
+        Say "5 - Yesu Junkie{{blue}}"
+        Say "6 - James Fisher{{blue}}"
+        Say "7 - Eric Webb{{blue}}"
+        Say "8 - Richard Lokie{{blue}}"
+        Say "9 - Michael Brown{{blue}}"
+        Say "10 - Stewart Blake{{blue}}"
+        Say "11 - Back to main menu{{blue}}"
+        Dim MMInput
+        MMInput = QReadLine("Make your menu selection < 1 - 10 >")
+        Say ""
+        If MMInput = "1" Then
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Osma Ben Ledin{{blue}}"
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Wanted on account of:{{blue}}"
+            Say "- MURDER OF U.S. NATIONALS OUTSIDE THE UNITED STATES{{blue}}"
+            Say "- CONSPIRACY TO MURDER U.S. NATIONALS OUTSIDE THE UNITED STATES{{blue}}"
+            Say "- ATTACK ON A FEDERAL FACILITY RESULTING IN DEATH{{blue}}"
+            Say "CONSIDERED ARMED AND EXTREMELY DANGEROUS{{red}}"
+        ElseIf MMInput = "2" Then
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Robert Nilgate{{blue}}"
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Wanted on account of:{{blue}}"
+            Say "- UNLAWFUL FLIGHT TO AVOID PROSECUTION{{blue}}"
+            Say "- ARSON OF AN OCCUPIED STRUCTURE{{blue}}"
+            Say "- FIRST DEGREE MURDER{{blue}}"
+            Say "CONSIDERED ARMED AND EXTREMELY DANGEROUS{{red}}"
+        ElseIf MMInput = "3" Then
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Joe Filler{{blue}}"
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Wanted on account of:{{blue}}"
+            Say "- UNLAWFUL FLIGHT TO AVOID PROSECUTION{{blue}}"
+            Say "- BANK ROBBERY{{blue}}"
+            Say "- THEFT FROM INTERSTATE SHIPMENT{{blue}}"
+            Say "CONSIDERED ARMED AND EXTREMELY DANGEROUS{{red}}"
+        ElseIf MMInput = "4" Then
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Marco Heli{{blue}}"
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Wanted on account of:{{blue}}"
+            Say "- UNLAWFUL FLIGHT TO AVOID PROSECUTION{{blue}}"
+            Say "- DRUG TRAFFICKING{{blue}}"
+            Say "- CONSPIRACY TO DRUG TRAFFICKING{{blue}}"
+            Say "- MURDER(FIVE COUNTS){{blue}}"
+            Say "- KIDNAPPING TO HOLD FOR RANSOME{{blue}}"
+            Say "CONSIDERED ARMED AND EXTREMELY DANGEROUS{{red}}"
+        ElseIf MMInput = "5" Then
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Yesu Junkie{{blue}}"
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Wanted on account of:{{blue}}"
+            Say "- UNLAWFUL FLIGHT TO AVOID PROSECUTION{{blue}}"
+            Say "- MURDER{{blue}}"
+            Say "- ATTEMPTED BURGLARY{{blue}}"
+            Say "CONSIDERED ARMED AND EXTREMELY DANGEROUS{{red}}"
+        ElseIf MMInput = "6" Then
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "James Fisher{{blue}}"
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Wanted on account of:{{blue}}"
+            Say "- UNLAWFUL FLIGHT TO AVOID PROSECUTION{{blue}}"
+            Say "- RACKETEERING INFLUENCED AND CORRUPT ORGANIZATIONS (RICO){{blue}}"
+            Say "- CONSPIRACY TO COMMIT MURDER{{blue}}"
+            Say "- MONEY LAUNDERING{{blue}}"
+            Say "- NARCOTICS DISTRIBUTION{{blue}}"
+            Say "- CONSPIRACY TO COMMIT EXTORTION{{blue}}"
+            Say "- EXTORTION{{blue}}"
+            Say "CONSIDERED ARMED AND EXTREMELY DANGEROUS{{red}}"
+        ElseIf MMInput = "7" Then
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Eric Webb{{blue}}"
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Wanted on account of:{{blue}}"
+            Say "- UNLAWFUL FLIGHT TO AVOID PROSECUTION{{blue}}"
+            Say "- EXPLOSIVE ATTACK ON A GOVERMENT BUILDING RESULTING IN DEATH{{blue}}"
+            Say "CONSIDERED ARMED AND EXTREMELY DANGEROUS{{red}}"
+        ElseIf MMInput = "8" Then
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Richard Lokie{{blue}}"
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Wanted on account of:{{blue}}"
+            Say "- UNLAWFUL FLIGHT TO AVOID PROSECUTION{{blue}}"
+            Say "- MURDER(TWO COUNTS){{blue}}"
+            Say "- AGGRAVATED STALKING RESULTING IN DEATH{{blue}}"
+            Say "CONSIDERED ARMED AND EXTREMELY DANGEROUS{{red}}"
+        ElseIf MMInput = "9" Then
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Michael Brown{{blue}}"
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Wanted on account of:{{blue}}"
+            Say "- UNLAWFUL FLIGHT TO AVOID PROSECUTION{{blue}}"
+            Say "- DRUG TRAFFICKING{{blue}}"
+            Say "- CONSPIRACY TO DRUG TRAFFICKING{{blue}}"
+            Say "- MURDER(FIVE COUNTS){{blue}}"
+            Say "- KIDNAPPING TO HOLD FOR RANSOM{{blue}}"
+            Say "CONSIDERED ARMED AND EXTREMELY DANGEROUS{{red}}"
+        ElseIf MMInput = "10" Then
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Stewart Blake{{blue}}"
+            Say "--------------------------------------------------------------------------------{{white}}"
+            Say "Wanted on account of:{{blue}}"
+            Say "- UNLAWFUL FLIGHT TO AVOID PROSECUTION{{blue}}"
+            Say "- SEXUAL EXPLOITATION OF CHILDREN{{blue}}"
+            Say "- POSSESSION OF CHILD PORNOGRAPHY (THREE COUNTS){{blue}}"
+            Say "- LEWD ACTS UPON A CHILD (FOUR COUNTS){{blue}}"
+            Say "CONSIDERED ARMED AND EXTREMELY DANGEROUS{{red}}"
+        ElseIf MMInput = "11" Then
+            Exit Sub
+        Else
+            Say "Invalid input{{orange}}"
+        End If
+        Pause
+    Wend
+End Sub
+
+Sub LocalOfficeMenu()
+    Say "To find your local FBI office or U.S. Embassy OR Consulate please use your{{blue}}"
+    Say "normal phonebook or business directories{{blue}}"
+    Pause
+End Sub
+
+While True
+    Say ""
+    Say "1 >> FBI 10 Most Wanted{{blue}}"
+    Say "2 >> Your Local FBI Office{{blue}}"
+    Say "3 >> Exit{{blue}}"
+    Dim MMInput
+    MMInput = QReadLine("Make your menu selection < 1 - 3 >")
+    If MMInput = "1" Then
+        WantedMenu
+    ElseIf MMInput = "2" Then
+        LocalOfficeMenu
+    ElseIf MMInput = "3" Then
+        Disconnect
+    Else
+        Say "Invalid input{{orange}}"
+        Pause
+    End If
+Wend

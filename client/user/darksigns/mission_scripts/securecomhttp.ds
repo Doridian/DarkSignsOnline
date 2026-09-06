@@ -1,0 +1,149 @@
+Option Explicit
+'SECURITY.com stuff
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    SaySlow 1, "Connection Terminated", "orange"
+    Quit
+End Sub
+
+Sub SayExploitFuzzyMail()
+    Say "Exploit Information: FuzzyMail 2.0{{white}}"
+    Say "Some FuzzyMail servers have the default admin password unchanged.{{white}}"
+    Say "The default username is ADMIN and default password is FUZZY{{white}}"
+    Say "Obviously it can be fixed by changing the password, if you have not{{white}}"
+    Say "already changed it.{{white}}"
+End Sub
+
+Sub SayExploitXNull()
+    Say "XNull Port 89 Exploit{{white}}"
+    Say "This has been tested and works on several machines running the XNULL service.{{white}}"
+    Say "By sending a malformed command, malicous users are able to copy files from the{{white}}"
+    Say "remote server to their own local computer, for example use the below command.{{white}}"
+    Say ""
+    Say "run filecopy.exe [FILENAME]{{white}}"
+    Say "Replace [FILENAME] with the name of any file.{{white}}"
+    Say "ADMINISTRATORS, this can easily be disabled by deselecting the 'allow run' option.{{white}}"
+    Say "A patch should also be released by the company soon.{{white}}"
+End Sub
+
+Sub SayExploitXFTP()
+    Say "XFTP Buffer Overflow{{white}}"
+    Say "There is a critial buffer overflow vulnerability in all v1.x versions.{{white}}"
+    Say "The bof is found in the login module, when the bof is run the user is taken{{white}}"
+    Say "to the command prompt with whatever user started the program privileges.{{white}}"
+    Say ""
+    Say "The buffer size is only 36 and anything above that will cause the buffer to overflow.{{white}}"
+    Say "This can happen to with both the username and password.{{white}}"
+    Say "This is a critical vulnerability that needs to be patched right away.{{white}}"
+    Say "Fix: apply patch to fix{{white}}"
+End Sub
+
+Sub SayExploitJazzyWeb()
+    Say "JazzyWeb Header Redirection{{white}}"
+    Say "It is possible to redirect a browser by entering{{white}}"
+    Say "header::location::<server>{{white}}"
+    Say "(Where <server> is the destination) as a menu option.{{white}}"
+    Say "Fix: Apply patch NOW{{white}}"
+End Sub
+
+Sub SayExploitGunner()
+    Say "Gunner Telnet - runmodule vulnerability{{white}}"
+    Say "It is possible to run modules that a user has not got permission to.{{white}}"
+    Say "The problem lies in the RUN command, if the user enters...{{white}}"
+    Say "> runmodule <module name>{{white}}"
+    Say "That module will be run no matter what permissions the user has.{{white}}"
+    Say ""
+    Say "Example...{{white}}"
+    Say "> run{{white}}"
+    Say "> runmodule uploadandrun(){{white}}"
+    Say "This would allow the user to upload a file and then run it automaticlly.{{white}}"
+    Say "Fix: Apply patch immediately{{white}}"
+End Sub
+
+Sub RecentVulns()
+    While True
+        SaySlow 1, "(1) FuzzyMail Exploit", "white"
+        SaySlow 1, "(2) XNull Exploit", "white"
+        SaySlow 1, "(3) XFTP", "white"
+        SaySlow 1, "(4) JazzyWeb", "white"
+        SaySlow 1, "(5) Back to Menu", "white"
+
+        Dim choiceRecent
+        choiceRecent = QReadLine("Enter an option (1 to 5) from the menu above{{grey}}>")
+        If choiceRecent = "1" Then
+            SayExploitFuzzyMail()
+        ElseIf choiceRecent = "2" Then
+            SayExploitXNull()
+        ElseIf choiceRecent = "3" Then
+            SayExploitXFTP()
+        ElseIf choiceRecent = "4" Then
+            SayExploitJazzyWeb()
+        ElseIf choiceRecent = "5" Then
+            Exit Sub
+        Else
+            Say "Invalid option.{{red}}"
+        End If
+        Pause
+    Wend
+End Sub
+
+Sub SearchMenu()
+    Say "Search the archives for older exploits{{white}}"
+    Say ""
+    Dim choiceSrch
+    choiceSrch = QReadLine("Enter software name{{grey}}>")
+    If choiceSrch = "fuzzymail" Then
+        SayExploitFuzzyMail()
+    ElseIf choiceSrch = "xnull" Then
+        SayExploitXNull()
+    ElseIf choiceSrch = "xftp" Then
+        SayExploitXFTP()
+    ElseIf choiceSrch = "gunner" Then
+        SayExploitGunner()
+    ElseIf choiceSrch = "jazzyweb" Then
+        SayExploitJazzyWeb()
+    Else
+        Say ""
+        Say "Search Error [can not find " & choiceSrch & "]{{orange}}"
+        Say ""
+    End If
+    Pause
+End Sub
+
+While True
+    SaySlow 1, "Security.com Public Services", "green"
+    SaySlow 1, "Navigation Menu", "white"
+    SaySlow 1, "You will be automatically disconnected if you are not part of our network.", "white"
+
+    SaySlow 1, "(1) View Recent Vulnerability List", "grey"
+    SaySlow 1, "(2) Search Exploit / Vulnerability Archives", "grey"
+    SaySlow 1, "(3) Submit Exploit / Vulnerability", "grey"
+    SaySlow 1, "(4) About SECURITY.com", "grey"
+    SaySlow 1, "(5) Disconnect", "grey"
+
+    Dim choice
+    choice = QReadLine("Enter an option (1 to 5) from the menu above{{grey}}>")
+    If choice = "1" Then
+        RecentVulns
+    ElseIf choice = "2" Then
+        SearchMenu
+    ElseIf choice = "3" Then
+        SaySlow 1, "We appreciate public members submission security related information", "white"
+        SaySlow 1, "on all aspects of Internet servers and networking.", "white"
+        Say ""
+        SaySlow 1, "To make a submission, please send it through email to admin@security.com", "white"
+        Pause
+    ElseIf choice = "4" Then
+        SaySlow 1, "SECURITY.com provides a public information base for matters relating to", "white"
+        SaySlow 1, "Internet and Networking Security. We hope this will help system administrators", "white"
+        SaySlow 1, "to keep their system secure from computer crackers.", "white"
+        Pause
+    ElseIf choice = "5" Then
+        Disconnect
+    Else
+        Say "Invalid option.{{red}}"
+        Pause
+    End If
+Wend

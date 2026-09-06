@@ -1,0 +1,33 @@
+Option Explicit
+
+DLOpen "termlib"
+
+If BoolMissionProgress("DS", "oldg_http_visited") Then
+    Say "Sorry, due to maintenance this server is not available{{rgb:39168}}"
+    Say "Come back later{{rgb:39168}}"
+    Quit
+End If
+
+Say "Welcome to oldgames.com{{rgb:39168}}"
+Say "Here you can find the good old games{{rgb:39168}}"
+Say "Now listing the menu :{{rgb:39168}}"
+Say "1. List of games{{rgb:39168}}"
+Say "2. Downloads{{rgb:39168}}"
+Say "3. &$x,&$x,{{rgb:39168}}"
+Say "error{{red}}"
+Say "intrusion detected...{{red}}"
+Say "Connection lost{{red}}"
+
+SendMailToUser "jobs@securedigital.com", "job", "There is a problem." & vbCrLf & _
+                                                "A hired hacker stole the game we asked you to download." & vbCrLf & _
+                                                "Look in the logs if there is some trace of the hacker." & vbCrLf & _
+                                                "Find him, and bring the game back to us."
+
+SendMailToUser "jsmith@newpute.com", "Help", "Can you please help me gaining access to backdoors.com?" & vbCrLf & _
+                                                "I need access to it so i can have the su3 password of newpute.com bbs." & vbCrLf & _
+                                                "The admin is on holiday and i cannot verify my account, so i want the password of su3 to activate my account myself." & vbCrLf & _
+                                                "Can you please help me ?"
+
+BoolSetMissionProgress "DS", "oldg_http_visited"
+
+Quit

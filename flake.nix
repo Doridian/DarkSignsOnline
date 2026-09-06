@@ -1,5 +1,8 @@
 {
+  description = "Dark Signs Online: the PHP game server and the browser client";
+
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -13,22 +16,149 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        gitrev = self.rev or "${self.dirtyRev}-dirty";
-        package = pkgs.stdenvNoCC.mkDerivation {
+        inherit (pkgs) lib;
+
+        # The only identity a build has. Deployments come from a commit, so
+        # the commit is what the site's footer links to.
+        gitrev = self.rev or self.dirtyRev or "unknown";
+
+        # wasm-bindgen refuses a module whose schema was written by a
+        # different version of itself, and the two halves come from
+        # different places: the crate from Cargo.lock, the CLI from nixpkgs.
+        # Fail here, with the two versions in hand, rather than deep in a
+        # build log.
+        wasmBindgen =
+          let
+            lock = builtins.fromTOML (builtins.readFile ./client/Cargo.lock);
+            locked = (lib.findFirst (p: p.name == "wasm-bindgen") null lock.package).version;
+            cli = pkgs.wasm-bindgen-cli;
+          in
+          lib.throwIf (cli.version != locked)
+            "wasm-bindgen-cli is ${cli.version} but client/Cargo.lock pins the wasm-bindgen crate at ${locked}; the two have to match"
+            cli;
+
+        # typescript, from package-lock.json. No hash to keep in step: the
+        # lock file's own integrity fields are what fetches each tarball.
+        nodeModules = pkgs.importNpmLock.buildNodeModules {
+          npmRoot = ./client/web;
+          inherit (pkgs) nodejs;
+        };
+
+        server = pkgs.stdenvNoCC.mkDerivation {
           name = "darksignsonline-server";
-          version = gitrev;
           src = ./server/www;
+          dontUnpack = true;
           installPhase = ''
+            runHook preInstall
             mkdir -p "$out/var/www"
             cp -r "$src" "$out/var/www/darksignsonline"
-            chmod 700 "$out/var/www/darksignsonline/api"
+            chmod -R u+w "$out/var/www/darksignsonline"
+            cp ${./LICENSE} "$out/var/www/darksignsonline/LICENSE"
             echo '${gitrev}' > "$out/var/www/darksignsonline/api/gitrev.txt"
+            runHook postInstall
           '';
         };
+
+        client = pkgs.stdenv.mkDerivation {
+          name = "darksignsonline-client";
+          # Nix takes the git tree, so everything `build.sh` generates --
+          # `target`, `node_modules`, `www/pkg`, `www/scripts`, the
+          # JavaScript beside the TypeScript -- is already left out by the
+          # .gitignore that names it.
+          src = ./client;
+
+          cargoDeps = pkgs.rustPlatform.importCargoLock { lockFile = ./client/Cargo.lock; };
+
+          nativeBuildInputs = [
+            pkgs.rustPlatform.cargoSetupHook
+            pkgs.cargo
+            pkgs.rustc
+            wasmBindgen
+            pkgs.nodejs
+            # zstd-sys compiles C, and for wasm32 only clang can. Unwrapped,
+            # because the wrappers hand it the host's target and includes.
+            pkgs.llvmPackages.clang-unwrapped
+            pkgs.llvmPackages.bintools-unwrapped
+          ];
+
+          env = {
+            CC_wasm32_unknown_unknown = "${pkgs.llvmPackages.clang-unwrapped}/bin/clang";
+            AR_wasm32_unknown_unknown = "${pkgs.llvmPackages.bintools-unwrapped}/bin/llvm-ar";
+            CARGO_NET_OFFLINE = "true";
+          };
+
+          buildPhase = ''
+            runHook preBuild
+            export HOME="$NIX_BUILD_TOP/home"
+            mkdir -p "$HOME"
+            ln -s ${nodeModules}/node_modules web/node_modules
+            bash web/build.sh
+            runHook postBuild
+          '';
+
+          # The page's own checks: the third TypeScript project (the
+          # scripts and the test, which the browser projects do not
+          # cover) and the editor's highlighting and indenting rules.
+          doCheck = true;
+          checkPhase = ''
+            runHook preCheck
+            npm --prefix web run --silent check
+            npm --prefix web test
+            runHook postCheck
+          '';
+
+          installPhase = ''
+            runHook preInstall
+            mkdir -p "$out/var/www/darksignsonline"
+            cp -r web/www/. "$out/var/www/darksignsonline/"
+            rm -f "$out/var/www/darksignsonline/.gitignore"
+            # The TypeScript beside the JavaScript it compiled to, and the
+            # types wasm-bindgen emits for it. Neither is served.
+            find "$out/var/www/darksignsonline" -name '*.ts' -delete
+            runHook postInstall
+          '';
+        };
+
+        # One web root holding both. The client's page becomes `game.php` --
+        # a static file under a `.php` name, for consistency with
+        # `forgot_password.php` and the rest of the site; no PHP runs in it.
+        #
+        # Its assets stay at the root beside it because the page addresses
+        # them relatively: a document at `/game.php` resolves `./main.js` to
+        # `/main.js`. `server.conf` is what adds the two headers the page
+        # needs to be cross-origin isolated.
+        both = pkgs.runCommand "darksignsonline-both" { } ''
+          root="$out/var/www/darksignsonline"
+          mkdir -p "$out/var/www"
+          cp -r --no-preserve=mode,ownership ${server}/var/www/darksignsonline "$root"
+          cp -r --no-preserve=mode,ownership ${client}/var/www/darksignsonline/. "$root/"
+          mv "$root/index.html" "$root/game.php"
+        '';
       in
       {
-        packages.default = package;
-        packages.darksignsonline-server = package;
+        packages = {
+          default = both;
+          darksignsonline-server = server;
+          darksignsonline-client = client;
+          darksignsonline-both = both;
+        };
+
+        devShells.default = pkgs.mkShell {
+          packages = [
+            pkgs.cargo
+            pkgs.rustc
+            pkgs.clippy
+            pkgs.rustfmt
+            wasmBindgen
+            pkgs.nodejs
+            pkgs.llvmPackages.clang-unwrapped
+            pkgs.llvmPackages.bintools-unwrapped
+          ];
+          env = {
+            CC_wasm32_unknown_unknown = "${pkgs.llvmPackages.clang-unwrapped}/bin/clang";
+            AR_wasm32_unknown_unknown = "${pkgs.llvmPackages.bintools-unwrapped}/bin/llvm-ar";
+          };
+        };
       }
     );
 }

@@ -1,0 +1,42 @@
+Option Explicit
+
+DLOpen "termlib"
+
+'DECRYPTION
+Sub Disconnect()
+    SaySlow 1, "Connection Closed", "orange"
+    Quit
+End Sub
+
+While True
+    SaySlow 1, "'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'", "grey"
+    Say ""
+    SaySlow 1, ".  -  -  -   i n t e r n i c   -  -  -   s e r v i c e s   -  -  -  .", "white"
+    SaySlow 1, "._._._._._._._._._._._._._._._._._._._._._._._._._._.", "grey"
+    Say ""
+    SaySlow 1, "1) Recent Registrations", "blue"
+    SaySlow 1, "2) Exit", "blue"
+    Dim MMInput
+    MMInput = QReadLine("Please Enter 1 or 2>")
+    If MMInput = "1" Then
+        SaySlow 1, "'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'_'", "grey"
+        Say ""
+        SaySlow 1, ".  -  -  -   r e c e n t   -  -  -   d o m a i n s   -  -  -  .", "white"
+        SaySlow 1, "._._._._._._._._._._._._._._._._._._._._._._._._._._.", "grey"
+        Say ""
+        SaySlow 20, "webcache02.securedigital.com", "grey"
+        SaySlow 20, "micmast.com", "white"
+        SaySlow 20, "newpute.com", "white"
+        SaySlow 20, "depressed.net  (Registered with private company REGDOMAINZ)", "white"
+        SaySlow 20, "securedigital.com", "white"
+        SaySlow 20, "internal-9.ndrgrnd.pipelink.gov  (Registered with private company REGDOMAINZ)", "white"
+        SaySlow 20, "targetmailer.com  (Registered with private company REGDOMAINZ)", "white"
+        SaySlow 20, "darksigns.com", "white"
+        SaySlow 20, "jobs.securedigital.com", "white"
+        Pause
+    ElseIf MMInput = "2" Then
+        Disconnect
+    Else
+        SaySlow 1, "Invalid Option [" & ConsoleEscape(MMInput) & "]", "white"
+    End If
+Wend

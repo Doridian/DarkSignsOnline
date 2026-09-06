@@ -1,0 +1,79 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "Hello and welcome to WillowFootball.org's FTP server{{white}}"
+Say "This server is private, so if your not ment to be here, Please leave now.{{white}}"
+Dim FTPName
+FTPName = "willow21"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Function FileIsRemoteapp(Data)
+    FileIsRemoteapp = (InStr(Data, vbCrLf & "XREMOTEAPPSIGNATURE=TRUE" & vbCrLf) > 0)
+End Function
+
+Dim FTPDoneName
+FTPDoneName = "ftp_" & FTPName & "_done"
+Dim FTPRemoteappName
+FTPRemoteappName = "ftp_" & FTPName & "_remoteapp"
+
+Dim RemoteappUploaded
+RemoteappUploaded = BoolMissionProgress("DS", FTPRemoteappName)
+
+While True
+    Dim FileName
+    Dim MMInput
+    MMInput = QReadLine(">")
+    If MMInput = "help" Then
+        Say "EXIT - usage: exit{{blue}}"
+        Say "Disconnects you from the remote host{{white}}"
+        Say "HELP - usage: help{{blue}}"
+        Say "Displays this help screen{{white}}"
+        Say "LS - usage: ls{{blue}}"
+        Say "Lists all files and folders in current directory{{white}}"
+        Say "PUT - usage: put{{blue}}"
+        Say "Upload a file to the current directory{{white}}"
+        Say "RUN - usage: run{{blue}}"
+        Say "Runs a remote file{{white}}"
+        Say "VERSION - usage: version{{blue}}"
+        Say "Displays the OS version and build{{white}}"
+    ElseIf MMInput = "put" Then
+        FileName = RequestReadFile()
+        SaySlow 100, "...........................................", "white"
+        If FileIsRemoteapp(FileName) Then
+            Say "File Uploaded{{white}}"
+            RemoteappUploaded = True
+            BoolSetMissionProgress "DS", FTPRemoteappName
+        Else
+            Say "Error uploading file [incompatible with server]{{red}}"
+        End If
+    ElseIf MMInput = "ls" Then
+        If RemoteappUploaded Then
+            Say "REMOTEAPP{{white}}"
+        Else
+            Say "NO FILES{{white}}"
+        End If
+    ElseIf MMInput = "run" Then
+        FileName = QReadLine("Enter the file you wish to run>")
+        If RemoteappUploaded And FileName = "remoteapp" Then
+            If Not BoolMissionProgress("DS", FTPDoneName) Then
+                IncMissionProgress "DS", "dos_bw"
+                BoolSetMissionProgress "DS", FTPDoneName
+            End If
+            SaySlow 100, "INFECTED", "red"
+        Else
+            Say "File Error [can not find " & ConsoleEscape(FileName) & "]{{orange}}"
+        End If
+    ElseIf MMInput = "version" Then
+        Say "Version: FTPD v1.0{{white}}"
+        Say "Build: 0.821885{{white}}"
+    ElseIf MMInput = "exit" Then
+        Disconnect
+    Else
+        Say "System Command Error [" &ConsoleEscape( MMInput) & "]{{orange}}"
+    End If
+Wend

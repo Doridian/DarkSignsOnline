@@ -1,0 +1,76 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Sub Password38()
+    Say "To: Alan Johnson((alanjohnson@fbi.gov){{white}}"
+    Say "Document: 22643{{white}}"
+    Say "Encryption: 7{{white}}"
+    Say ""
+    Say "We have a problem, there is a renegade group calling themselves ZRIO. They have hired{{white}}"
+    Say "a number of hackers to hack into goverment servers and gain as much information as they{{white}}"
+    Say "can. One hacker in particular going by the alias of %myusername% has been the most active.{{white}}"
+    Say "We need this problem handled in the usual way. We can't let anyone know about project{{white}}"
+    Say "Genocide at any cost. Doing so would bring chaos to the world over. We need this{{white}}"
+    Say "sorted out right away, we have sent the usual backup email just in case this package{{white}}"
+    Say "does not arrive as planed.{{white}}"
+    Say ""
+    Pause
+    Say ""
+    Say "For your own sakes you need to make sure this email doesn't reach the intended inbox.{{white}}"
+    Say "Take a look at crackertools.com they usually have helpful tools.{{white}}"
+    Say ""
+    Say "- ZRIO{{white}}"
+    Pause
+End sub
+
+Sub Password91()
+    Say "Downloading [ips.txt]...{{yellow}}"
+    Dim ipsTxt
+    ipsTxt = "103.45.32.3" & vbCrLf & _
+        "72.32.23.54" & vbCrLf & _
+        "194.20.37.51" & vbCrLf & _
+        "130.239.47.117" & vbCrLf & _
+        "215.170.237.35" & vbCrLf & _
+        "193.228.123.186" & vbCrLf & _
+        "23.22.213.146" & vbCrLf & _
+        "98.90.114.41" & vbCrLf & _
+        "159.114.182.232" & vbCrLf & _
+        "188.174.32.138" & vbCrLf & _
+        "115.113.51.237" & vbCrLf & _
+        "71.20.174.218" & vbCrLf & _
+        "73.121.96.239" & vbCrLf & _
+        "92.183.28.121" & vbCrLf & _
+        "71.100.81.138" & vbCrLf & _
+        "92.164.16.23" & vbCrLf & _
+        "145.217.69.76" & vbCrLf & _
+        "28.137.198.15" & vbCrLf & _
+        "49.78.59.115" & vbCrLf & _
+        "120.106.216.70" & vbCrLf & _
+        "51.136.67.87" & vbCrLf & _
+        "103.45.33.3" & vbCrLf & _
+        "-----------------------------" & vbCrLf & _
+        "Once you have the installer, upload it to ZRIO.org" & vbCrLf
+    RequestWriteFile ipsTxt
+    Say "Download complete{{green}}"
+End Sub
+
+Dim mmInput
+mmInput = QReadLine("Username>{{blue}}")
+If mmInput <> "zrio" Then
+    Disconnect
+End If
+
+mmInput = QReadLine("Password>{{blue}}")
+If mminput = "geno38" Then
+    Password38
+ElseIf mminput = "geno91" Then
+    Password91
+Else
+    Disconnect
+End If

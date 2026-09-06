@@ -1,0 +1,6 @@
+Option Explicit
+
+Dim strContents, strCompiled
+strContents = Display(ArgV(1))
+strCompiled = CompileStr(strContents)
+Overwrite ArgV(2), strCompiled

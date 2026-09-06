@@ -1,0 +1,85 @@
+Option Explicit
+
+If ArgC() < 2 Then
+    Err.Raise vbObjectError + 2110, , "Usage: connect ipscan.dsn 81 <start IP> <end IP>"
+    Quit
+End If
+
+' Well, we dont have ipscan in DSO, so this fakes them in for DS classic
+
+Function IsIP(sCand)
+    Dim sSplit
+    sSplit = Split(sCand, ".")
+    If UBound(sSplit) <> 3 Then
+        IsIP = False
+        Exit Function
+    End If
+    Dim j, sSpl, sNum
+    For j = 0 To 3
+        sSpl = sSplit(j)
+        If Not IsNumeric(sSpl) Then
+            IsIP = False
+            Exit Function
+        End If
+        sNum = CInt(sSpl)
+        If sNum < 0 Or sNum > 255 Then
+            IsIP = False
+            Exit Function
+        End If
+    Next
+    IsIP = True
+End Function
+
+Function IncIP(sInIP)
+    Dim sSplit
+    sSplit = Split(sInIP, ".")
+    Dim j, sSpl, sNum
+    For j = 3 To 0 Step -1
+        sSpl = sSplit(j)
+        sNum = CInt(sSpl)
+        If sNum < 255 Then
+            sSplit(j) = CStr(sNum + 1)
+            Exit For
+        End If
+        sSplit(j) = "0"
+    Next
+    IncIP = Join(sSplit, ".")
+End Function
+
+Dim sInput, sInput2
+sInput = ArgV(1)
+If Not IsIP(sInput) Then
+    Err.Raise vbObjectError + 2002, , "Invalid IP address"
+End If
+sInput2 = ArgV(2)
+If Not IsIP(sInput2) Then
+    Err.Raise vbObjectError + 2003, , "Invalid IP address"
+End If
+
+Dim sScanFile
+If IsLocal() Then
+    sScanFile = RemoteView("ipscan.dsn", "ip.list", 2)
+Else
+    sScanFile = FileServer("ip.list", 2)
+End If
+Dim sScanRes
+sScanRes = ""
+On Error Resume Next
+sScanRes = WaitFor(sScanFile)
+On Error GoTo 0
+If sScanRes = "" Then
+    Err.Raise vbObjectError + 2001, , "No IP list found"
+End If
+
+sInput2 = IncIp(sInput2)
+
+Dim sIp, inSayLine
+sIp = sInput
+inSayLine = False
+Do
+    Wait 10
+    If InStr(sScanRes, vbCrLf & sIp & vbCrLf) > 0 Then
+        Say sIp
+    End If
+    sIp = IncIP(sIp)
+Loop Until sIp = sInput2

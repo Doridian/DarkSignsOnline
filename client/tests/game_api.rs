@@ -599,9 +599,7 @@ fn a_remote_script_may_still_talk_to_the_server() {
 
 fn command_source(name: &str) -> String {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .join("client-legacy/user/system/commands")
+        .join("user/system/commands")
         .join(format!("{name}.ds"));
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("reading {}: {e}", path.display()))
 }

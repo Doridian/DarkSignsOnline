@@ -1,0 +1,6 @@
+Option Explicit
+Say "{{green 12}}Property: DisableFlashing[]"
+Say "{{lgreen 12}}Example read: SomeVar = DisableFlashing"
+Say "{{lgreen 12}}Example write: DisableFlashing = SomeVar"
+Say "{{yellow}}Access level: Read/Write"
+Say "{{lred}}WRITE restriction: Can only be used locally (local script or CLI)"

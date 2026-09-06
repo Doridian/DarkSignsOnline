@@ -1,0 +1,40 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say "Disconnecting{{yellow}}"
+    Quit
+End Sub
+
+Sub CompanyMenu()
+    Say "Our company has been created at the beginning of the ""old"" internet,{{rgb:39168}}"
+    Say "our goal is to provide access to the internet to everyone.{{rgb:39168}}"
+    Say "We survived the numerous changes in internet because our company is{{rgb:39168}}"
+    Say "based on strong basis.{{rgb:39168}}"
+    Say "We take care of our clients and they know we are here at any time.{{rgb:39168}}"
+    Say "Our staff is highly qualified, we recruit them in the higher{{rgb:39168}}"
+    Say "universities around the world.{{rgb:39168}}"
+    Say "The security of our network is guaranteed by old hackers, we hire the{{rgb:39168}}"
+    Say "best hackers to make our network the most secure of the world.{{rgb:39168}}"
+    Say "We think hackers are the more suitable people for this task.{{rgb:39168}}"
+    Pause
+End Sub
+
+While True
+    Say "Welcome to internetprovider.com{{rgb:39168}}"
+    Say "1. About the company{{rgb:39168}}"
+    Say "2. Request a free access{{rgb:39168}}"
+    Say "0. Disconnect{{rgb:39168}}"
+
+    Dim gkey
+    gkey = GetAsciiWithPrompt()
+    If gkey = Asc("1") Then
+        CompanyMenu
+    ElseIf gkey = Asc("2") Then
+        Say "Sorry, this option is acutally disabled.{{red}}"
+        Pause
+    ElseIf gkey = Asc("0") Then
+        Disconnect
+    End If
+Wend

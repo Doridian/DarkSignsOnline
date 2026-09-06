@@ -1,0 +1,6 @@
+Option Explicit
+Say "{{green 12}}Property: UserName[String]"
+Say "{{lgreen 12}}Example read: SomeVar = UserName"
+Say "{{lgreen 12}}Example write: UserName = SomeVar"
+Say "{{yellow}}Access level: Read/Write"
+Say "{{lred}}WRITE restriction: Can only be used locally (local script or CLI)"

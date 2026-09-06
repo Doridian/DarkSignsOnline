@@ -1,0 +1,94 @@
+Option Explicit
+'SECURE DIGITAL SENDMAIL SERVER
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    SaySlow 1, "Connection Terminated", "orange"
+    Quit
+End Sub
+
+SaySlow 1, "Secure Digital Mail Server", "green"
+SaySlow 1, "Warning - This is a private mail server. You will be automatically disconnected", "orange"
+SaySlow 1, "if you are not part of our network.", "orange"
+
+SaySlow 10, "Verifying your network information...", "grey"
+SaySlow 1, "You have been identified...", "green"
+
+SaySlow 1, "IP Address - " & ConsoleEscape(ConnectingIP), "yellow"
+
+If ConnectingIP <> "17.191.200.201" Then
+    SaySlow 1, "ACCESS DENIED - Multiple unsuccessful attempts will be logged automatically.", "red"
+    Disconnect
+End If
+
+SaySlow 10, "USER VERIFIED...", "green"
+SaySlow 10, "Welcome back to the network.", "green"
+
+Sub MailMenu()
+    While True
+        Say "        ##########################################{{blue}}"
+        Say "       ###########################################{{blue}}"
+        Say "      ##                                                                      ##  SECURE ##{{blue}}"
+        Say "     ##      > SECURE DIGITAL MAIL SERVICE <         ## DIGITAL ##{{blue}}"
+        Say "    ##                                                                         ###########{{blue}}"
+        Say "    ##############################################{{blue}}"
+        Say "    ##############################################{{blue}}"
+        Say "    ##                                                                                               ##{{purple}}"
+        Say "    ##                        You have 2 New Messages                             ##{{purple}}"
+        Say "    ##                                                                                               ##{{purple}}"
+        Say "    ##                        (1) Read Message #1                                     ##{{purple}}"
+        Say "    ##                        (2) Read Message #2                                     ##{{purple}}"
+        Say "    ##                        (3) Logout                                                      ##{{purple}}"
+        Say "    ##                                                                                               ##{{purple}}"
+        Say "    ##############################################{{blue}}"
+
+        Dim choice
+        choice = QReadLine("Enter Option (1-3)>{{grey}}")
+        If choice = "1" Then
+            Say "MAIL FROM - techsupport@securedigital.com{{white}}"
+            Say "SUBJECT - Query #128328 Re: Proxy Security{{white}}"
+            Say ""
+            Say "Thankyou for your recent email regarding security{{white}}"
+            Say "of the secure digital proxy server. We can assure you{{white}}"
+            Say "that in the *highly unlikely* event that anyone out{{white}}"
+            Say "there will think of using it to access our internal{{white}}"
+            Say "networks, we will be constantly monitoring to avoid any{{white}}"
+            Say "possible issues, and inform yourself the moment anything{{white}}"
+            Say "occurrs.{{white}}"
+            Say ""
+            Say "FROM - Secure Digital Tech Support Team{{white}}"
+            Pause
+        ElseIf choice = "2" Then
+            Say "MAIL FROM - accounts@internalservices.org{{white}}"
+            Say "SUBJECT - Your Account Is Now Active{{white}}"
+            Say ""
+            Say "Your account with us is now ready for you to use.{{white}}"
+            Say "Use the following details to log in. Please contact us{{white}}"
+            Say "immediately if you need anything.{{white}}"
+            Say ""
+            Say "Username - sdigital{{white}}"
+            Say "Password - digital{{white}}"
+            Say ""
+            Say "FROM - Secure Digital Tech Support Team{{white}}"
+            Pause
+        ElseIf choice = "3" Then
+            Disconnect
+        End If
+    Wend
+End Sub
+
+While True
+    Dim mailUser, mailPass
+
+    mailUser = QReadLine("Enter Mailbox Username>{{grey}}")
+    mailPass = QReadLine("Enter Mailbox Password>{{grey}}")
+
+    If mailUser = "secure" And mailPass = "digital" Then
+        SaySlow 1, "User and Password ok...", "green"
+        Pause
+        MailMenu
+    Else
+        SaySlow 1, "Access Denied - Invalid Username or Password", "orange"
+    End If
+Wend

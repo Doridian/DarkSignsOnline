@@ -1,0 +1,49 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Say "To enter this site you need a username and correct password"
+Dim ans1, ans2
+
+Sub Disconnect()
+    Say "Disconnecting{{yellow}}"
+    Quit
+End Sub
+
+ans1 = QReadLine("Username>")
+ans2 = QReadLine("Password>")
+
+If ans1 <>"gota" Or ans2 <> "1979" Then
+    Say "Wrong username / password{{reg}}"
+    Disconnect
+End If
+
+While True
+    Say "Welcome to Admin Area of internetprovider.com{{rgb:39168}}"
+    Say "Menu:{{rgb:39168}}"
+    Say "1. View logs{{rgb:39168}}"
+    Say "2. Find a user{{rgb:39168}}"
+    Say "0. Disconnect{{rgb:39168}}"
+    Dim getkey
+    getkey = GetAsciiWithPrompt()
+    If getkey = Asc("1") Then
+        Say "Error: You don't have acces to this command.{{red}}"
+        Pause
+    ElseIf getkey = Asc("2") Then
+        Dim Hostname
+        Say "To find a user, just type their username{{grey}}"
+        Say "Ex: user94-dialup.internetprovider.com{{grey}}"
+        Say "Ex: Hostname : user94{{grey}}"
+        Hostname = QReadLine("Hostname>")
+        If Hostname = "user5115" Then
+            Say "This user is still connected. Use port 2541 to connect to them.{{green}}"
+            Say "The connection password is: fretpor{{green}}"
+            Pause
+        Else
+            Say "User not connected.{{red}}"
+            Pause
+        End If
+    ElseIf getkey = Asc("0") Then
+        Disconnect
+    End If
+Wend

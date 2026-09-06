@@ -2,39 +2,7 @@
 
 require_once('function.php');
 
-if (empty($_REQUEST['version'])) {
-    die('0000OK');
-}
-
-$version = strtolower(trim($_REQUEST['version']));
-if (empty($version)) {
-    die('0000OK');
-}
-
-if ($version === 'dev') {
-    die('0000OK');
-}
-
-$release_track = 'stable';
-if (strpos($version, '.') === false) {
-    $release_track = 'nightly';
-    die('0000OK'); // nightly doesn't auto-update for now
-}
-
-global $db;
-$stmt = $db->prepare('SELECT json FROM releases WHERE name = ?');
-$stmt->bind_param('s', $release_track);
-$stmt->execute();
-$result = $stmt->get_result();
-$row = $result->fetch_assoc();
-if (empty($row)) {
-    die('0000OK');
-}
-
-$release =  json_decode($row['json']);
-
-if ($version !== strtolower($release->name)) {
-    die('0002Client update available! Please download version ' . $release->name . ' at https://darksignsonline.com/download.php');
-}
-
+// The legacy client's update check. There are no tagged releases to compare
+// against any more -- the browser client is served from this site and a
+// deployment is a commit -- so nothing is ever out of date.
 die('0000OK');

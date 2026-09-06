@@ -1,0 +1,4 @@
+Option Explicit
+Say "{{green 12}}Property: ConnectingIP[String]"
+Say "{{lgreen 12}}Example read: SomeVar = ConnectingIP"
+Say "{{yellow}}Access level: Read-Only"

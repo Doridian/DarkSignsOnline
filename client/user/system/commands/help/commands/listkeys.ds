@@ -1,0 +1,3 @@
+Option Explicit
+Say "{{green 12}}Command: LISTKEYS"
+Say "{{lgrey}}Display the available shortcut keys and their actions in the console."

@@ -1,0 +1,19 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Sub Disconnect()
+    Say ""
+    Say "Connection closed by remote host{{orange}}"
+    Quit
+End Sub
+
+Dim prxinput
+prxinput = Replace(QReadLine(">"), " ", "")
+If prxinput <> "getdb()" Then
+    Disconnect
+End If
+
+Say "Server: db.postoffice.mil{{white}}"
+Say "Service: FCDB(FirstClass DataBase){{white}}"
+Disconnect

@@ -1,0 +1,46 @@
+Option Explicit
+
+DLOpen "termlib"
+
+Dim Temp
+
+Dim WhatDo
+WhatDo = QReadLine("What do you want to do (upload, runtest)?")
+
+If WhatDo = "upload" Then
+    Dim fData
+    fData = RequestReadFile()
+    Dim utData
+    If IsLocal() Then
+        utData = RemoteWrite("server.com", "script.run", "PUBLIC" & vbCrLf & fData)
+    Else
+        utData = ServerWrite("script.run", "PUBLIC" & vbCrLf & fData)
+    End If
+    WaitFor utData
+    Say "File uploaded."
+ElseIf WhatDo = "runtest" Then
+    Dim fData2
+    fData2 = "If Temp < 10 Then" & vbCrLf & _
+            "    Say ""Less than 10.""" & vbCrLf & _
+            "End If" & vbCrLf
+    Dim rtData
+    If IsLocal() Then
+        rtData = RemoteWrite("server.com", "script.run", "PUBLIC" & vbCrLf & fData2)
+    Else
+        rtData = ServerWrite("script.run", "PUBLIC" & vbCrLf & fData2)
+    End If
+    WaitFor rtData
+    Say "Script written."
+    Temp = CInt(QReadLine("Number?"))
+    Say "Running script..."
+    Dim sData
+    If IsLocal() Then
+        sData = RemoteView("server.com", "script.run", 2)
+    Else
+        sData = FileServer("script.run", 2)
+    End If
+    sData = WaitFor(sData)
+    IncludeCode sData
+Else
+    Say "Invalid command."
+End If

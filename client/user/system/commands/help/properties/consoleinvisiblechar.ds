@@ -1,0 +1,4 @@
+Option Explicit
+Say "{{green 12}}Property: ConsoleInvisibleChar[String]"
+Say "{{lgreen 12}}Example read: SomeVar = ConsoleInvisibleChar"
+Say "{{yellow}}Access level: Read-Only"

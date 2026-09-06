@@ -1,0 +1,7 @@
+Option Explicit
+
+Say "Null Connection{{white}}"
+While True
+    ReadLine "Enter Input (CTRL + B to Cancel)>{{grey}}"
+    Say "Thanks for nothing...{{white}}"
+Wend

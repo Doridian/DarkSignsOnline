@@ -2,23 +2,31 @@ on:
   push:
     branches:
       - main
-    tags-ignore:
-      - latest
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: ${{ startsWith(github.ref, 'refs/tags/') }}
+  cancel-in-progress: true
 
-name: Release
+name: Main
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 jobs:
-  #client:
-  #  uses: ./.github/workflows/client.yml
-  #  secrets: inherit
+  client:
+    uses: ./.github/workflows/client.yml
+    secrets: inherit
   server:
     uses: ./.github/workflows/server.yml
     secrets: inherit
+
+  # Nothing is published: a deployment builds the flake from a commit. This
+  # only proves the commit is one that can be deployed.
+  both:
+    name: Build both
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - uses: cachix/install-nix-action@v31
+    - name: Build
+      run: nix build --print-build-logs .#darksignsonline-both
