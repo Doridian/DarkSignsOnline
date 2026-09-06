@@ -78,6 +78,17 @@ The page is TypeScript, compiled in place: `www/*.ts` are the sources and the
 Nothing bundles them -- `tsc` emits one module per source and the browser
 loads them as they are.
 
+`www/` is therefore sources and output together, and not what gets served.
+`dist/` is: [`stamp.ts`](stamp.ts) copies each file the page can reach into it
+under a name carrying the hash of its contents -- `main.<hash>.js`,
+`pkg/dso_web_bg.<hash>.wasm`, every shipped `.ds` -- and rewrites every
+reference to match. A URL then names one file of one build, which is what lets
+the deployed site mark them `immutable` and lets a name from a build that is
+gone answer 404 instead of something subtly wrong. `index.html` keeps its
+name, being the address a player types, and is the only response that has to
+be revalidated. A file nothing points at is not copied, which is why
+`types.js` -- compiled from types alone, and empty -- does not ship.
+
 Three projects, because their globals differ: `tsconfig.json` is the page,
 `tsconfig.worker.json` the worker (whose `postMessage` is not the window's),
 and `tsconfig.node.json` the two scripts and the test that run under node.
@@ -120,8 +131,10 @@ rustup target add wasm32-unknown-unknown
 cargo install wasm-bindgen-cli --version 0.2.128
 ```
 
-`build.sh` also copies the shipped `.ds` scripts into `www/scripts` with a
-manifest, which the page loads into the session's filesystem at startup.
+`build.sh` also copies the shipped `.ds` scripts into `www/scripts`, which the
+page loads into the session's filesystem at startup. `stamp.ts` writes the
+manifest naming them, mapping each file's path in the game's filesystem to the
+URL it is served under, since only it knows the second.
 
 ## Serving it
 
@@ -155,7 +168,17 @@ everything under that prefix. The client is static: the page is the
 directory's `index.html`, and nginx redirects `/game` to `/game/` and serves
 it from there. Same origin means the API calls need no CORS at all. Every
 asset sits under the same prefix, because a document at `/game/` resolves the
-page's own `./main.js` to `/game/main.js`.
+page's own `./main.<hash>.js` to `/game/main.<hash>.js`.
+
+The one thing a host must get right besides the headers is that the page is
+not cached the way its assets are. Their names are content hashes, so
+`server.conf` marks them `immutable` and a browser never asks about them
+again; `index.html` is the name that stays put, so it is served `no-cache` and
+revalidated on every load. Getting that backwards is not a stale page but a
+broken one: the deployed files come out of the nix store, where every mtime is
+the epoch, so `Last-Modified` is a date in 1970 and a browser left to guess
+gives the response five years of freshness. That is how one deploy left a
+browser calling the new `pkg/dso_web.js` into the old wasm module.
 
 `serve.ts` mounts the page at `/game/` too, so a path that works in
 development is a path that works deployed.

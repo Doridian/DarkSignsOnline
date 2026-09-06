@@ -71,7 +71,7 @@
         client = pkgs.stdenv.mkDerivation {
           name = "darksignsonline-client";
           # Nix takes the git tree, so everything `build.sh` generates --
-          # `target`, `node_modules`, `www/pkg`, `www/scripts`, the
+          # `target`, `node_modules`, `www/pkg`, `www/scripts`, `dist`, the
           # JavaScript beside the TypeScript -- is already left out by the
           # .gitignore that names it.
           src = ./client;
@@ -116,14 +116,14 @@
             runHook postCheck
           '';
 
+          # web/dist, not web/www: the served copy, which `stamp.ts` writes
+          # from what the build has produced. It holds what the page loads and
+          # nothing else -- no sources, no intermediates -- and every asset in
+          # it is named for the hash of its contents.
           installPhase = ''
             runHook preInstall
             mkdir -p "$out/var/www/darksignsonline"
-            cp -r web/www/. "$out/var/www/darksignsonline/"
-            rm -f "$out/var/www/darksignsonline/.gitignore"
-            # The TypeScript beside the JavaScript it compiled to, and the
-            # types wasm-bindgen emits for it. Neither is served.
-            find "$out/var/www/darksignsonline" -name '*.ts' -delete
+            cp -r web/dist/. "$out/var/www/darksignsonline/"
             runHook postInstall
           '';
         };

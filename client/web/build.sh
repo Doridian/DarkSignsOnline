@@ -53,7 +53,8 @@ quoted() { sed 's/.*/"&"/' | paste -sd, -; }
 echo "wrote the editor's vocabulary"
 
 # The shipped player directory, which the client loads into its filesystem at
-# startup. A manifest saves the page from having to guess what exists.
+# startup. `stamp.ts` writes the manifest that names these, since only it
+# knows the URL each ends up served at.
 #
 # Every file, not just *.ds: the READMEs are what bring /downloads and
 # /home/music into being, and a console starts in /home, so filtering them out
@@ -63,19 +64,12 @@ scripts_src="$client/user"
 scripts_out="$here/www/scripts"
 rm -rf "$scripts_out"
 if [ -d "$scripts_src" ]; then
-  manifest="["
-  first=1
   while IFS= read -r file; do
     rel="${file#"$scripts_src"}"
     mkdir -p "$scripts_out$(dirname "$rel")"
     cp "$file" "$scripts_out$rel"
-    [ $first -eq 1 ] && first=0 || manifest+=","
-    manifest+="\"$rel\""
   done < <(find "$scripts_src" -type f | sort)
-  manifest+="]"
-  mkdir -p "$scripts_out"
-  printf '%s' "$manifest" > "$scripts_out/manifest.json"
-  echo "bundled $(find "$scripts_out" -type f -not -name manifest.json | wc -l) files"
+  echo "bundled $(find "$scripts_out" -type f | wc -l) files"
 fi
 
 # The page itself: TypeScript sources in www/, compiled in place to the
@@ -85,4 +79,9 @@ fi
 echo "compiling the page"
 npm --prefix "$here" run --silent build:ts
 
-echo "built into $here/www"
+# The served copy. Every asset is named for the hash of what is in it, so a
+# URL means one file of one build and a deploy can never leave a browser
+# holding half of the last one. www/ keeps the sources and the intermediates.
+node "$here/stamp.ts"
+
+echo "built into $here/dist"

@@ -6,5 +6,5 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["serve.ts", "smoke.ts", "vbs.test.ts"]
+  "include": ["serve.ts", "smoke.ts", "stamp.ts", "vbs.test.ts"]
 }

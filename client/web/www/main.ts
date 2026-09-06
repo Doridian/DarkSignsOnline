@@ -614,10 +614,15 @@ async function boot(): Promise<void> {
 async function loadStartupFiles(): Promise<Record<string, string>> {
   const files: Record<string, string> = {};
   try {
-    const manifest: string[] = await fetch("./scripts/manifest.json").then((r) => r.json());
+    // Each file's place in the game's filesystem, which is the name it is
+    // seeded under, against the URL it is served at. The two differ because a
+    // served name carries the hash of its contents -- see `stamp.ts`.
+    const manifest: Record<string, string> = await fetch("./scripts/manifest.json").then((r) =>
+      r.json(),
+    );
     await Promise.all(
-      manifest.map(async (path) => {
-        const response = await fetch(`./scripts${path}`);
+      Object.entries(manifest).map(async ([path, url]) => {
+        const response = await fetch(url);
         if (response.ok) {
           files[path] = await response.text();
         }

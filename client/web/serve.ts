@@ -15,7 +15,9 @@ import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = join(fileURLToPath(new URL(".", import.meta.url)), "www");
+// dist/, not www/: the served copy, whose asset names carry the hash of
+// their contents. `build.sh` writes it -- see `stamp.ts`.
+const root = join(fileURLToPath(new URL(".", import.meta.url)), "dist");
 const port = Number(process.env.PORT ?? 8080);
 
 // The prefix the client is served under, matching production, where the page
