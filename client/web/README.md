@@ -133,18 +133,29 @@ Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 ```
 
-`serve.ts` sends them. Any static host will do as long as it does the same;
-the page says so plainly if it finds itself not cross-origin isolated.
+**Send them for every file the client ships, not just the page.** A dedicated
+worker inherits the document's embedder policy, and the browser refuses a
+worker script whose own response does not repeat it. WebKit applies that to
+the whole module graph: `control.js`, `fonts.js`, `storage.js` and
+`pkg/dso_web.js` are each refused without the header, the worker never starts,
+and all four consoles stay dead. Chromium and Firefox only enforce it on
+`worker.js` itself, so a host that gets this wrong works everywhere except
+Safari -- which is to say everywhere except iOS, where WebKit is the only
+engine there is.
 
-In production the page is `/game/` on the game server's own origin -- the
+`serve.ts` sends both headers on every response, which is why development
+never showed this. The page says so plainly if it finds itself not
+cross-origin isolated, but a page that *is* isolated can still have a worker
+refused, and that failure is silent unless the console is open.
+
+In production the page is `/game/` on the game server's own origin. The
 `darksignsonline` package puts the two web roots together, giving the client
-the `game/` directory to itself, and gives the built `index.html` a PHP
-prologue that sends the two headers, so the page asks for them itself and the
-web server's configuration says nothing about it. It is that directory's
-`index.php`, so nginx redirects `/game` to `/game/` and serves it from there.
-Same origin means the API calls need no CORS at all. Every asset sits under
-the same prefix, because a document at `/game/` resolves the page's own
-`./main.js` to `/game/main.js`.
+the `game/` directory to itself, and `server.conf` sends both headers for
+everything under that prefix. The client is static: the page is the
+directory's `index.html`, and nginx redirects `/game` to `/game/` and serves
+it from there. Same origin means the API calls need no CORS at all. Every
+asset sits under the same prefix, because a document at `/game/` resolves the
+page's own `./main.js` to `/game/main.js`.
 
 `serve.ts` mounts the page at `/game/` too, so a path that works in
 development is a path that works deployed.

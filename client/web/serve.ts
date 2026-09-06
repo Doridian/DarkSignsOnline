@@ -4,7 +4,11 @@
 // It exists mainly for two headers: SharedArrayBuffer is only available to a
 // cross-origin isolated page, and without it the worker cannot block waiting
 // for input. Any static server will do in production as long as it sends
-// these.
+// these -- on every file, not just the page. WebKit refuses every script a
+// module worker imports unless that response repeats the embedder policy, so
+// a server that sends them only for the page and worker.js leaves the client
+// dead on iOS. Sending them for everything, as below, is the simple way to be
+// right; `server.conf` does the same for the deployed site.
 
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
@@ -15,7 +19,7 @@ const root = join(fileURLToPath(new URL(".", import.meta.url)), "www");
 const port = Number(process.env.PORT ?? 8080);
 
 // The prefix the client is served under, matching production, where the page
-// is /game/index.php and every asset it ships sits beside it. The page only
+// is /game/index.html and every asset it ships sits beside it. The page only
 // ever addresses its own files relatively, so the prefix costs it nothing --
 // but serving it here too means a path that works in development is a path
 // that works deployed.
