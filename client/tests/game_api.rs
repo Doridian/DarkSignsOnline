@@ -1144,3 +1144,106 @@ fn print_var_waits_for_a_pending_request() {
         vec!["10.0.0.1"]
     );
 }
+
+// ---- Connect / Fetch ----------------------------------------------------
+
+/// Build the `:-:` record `domain_connect.php` answers with.
+fn domain_record(domain: &str, port: &str, ip: &str, owner: &str, key: &str, script: &str) -> String {
+    format!(
+        "{domain}:-:{port}:-:{ip}:-:{owner}:-:{key}:-:{}",
+        vbscript::game::crypto::encode_base64(script.as_bytes())
+    )
+}
+
+fn connect_host(record: &str) -> Host {
+    let server = ScriptedServer::new().answer("domain_connect.php", record);
+    GameHost::new(RecordingConsole::new(), MemoryFs::new(), server)
+}
+
+/// Connecting runs the domain's script. It does not hand back the response —
+/// that was the bug: the raw record was printed instead of being acted on.
+#[test]
+fn connect_runs_the_script_the_domain_serves() {
+    let record = domain_record("darksigns.com", "80", "1.2.3.4", "root", "", r#"Say "you are in""#);
+    let out = output_of(connect_host(&record), r#"Connect "darksigns.com", 80"#);
+    assert_eq!(out, vec!["{{green}}Connecting to DARKSIGNS.COM:80...", "you are in"]);
+}
+
+/// Fetch takes the same journey silently and returns the output.
+#[test]
+fn fetch_returns_the_script_output_instead_of_printing_it() {
+    let record = domain_record("darksigns.com", "80", "1.2.3.4", "root", "", r#"Say "hello""#);
+    let out = output_of(
+        connect_host(&record),
+        r#"Say TrimWithNewline(Fetch("darksigns.com", 80))"#,
+    );
+    assert_eq!(out, vec!["hello"]);
+}
+
+/// The script runs as the domain, not as the local machine.
+#[test]
+fn a_connected_script_sees_the_domain_environment() {
+    let script = r#"Say ServerDomain & "|" & ServerPort & "|" & ServerIP & "|" & IsLocal()"#;
+    let record = domain_record("darksigns.com", "80", "1.2.3.4", "root", "", script);
+    let out = output_of(connect_host(&record), r#"Connect "darksigns.com", 80"#);
+    assert_eq!(out[1], "darksigns.com|80|1.2.3.4|False");
+}
+
+/// Argument zero is the domain's own script URL; the caller's extra
+/// arguments follow it.
+#[test]
+fn connect_passes_its_arguments_to_the_script() {
+    let record = domain_record(
+        "darksigns.com", "80", "1.2.3.4", "root", "",
+        r#"Say ArgV(0) & "|" & ArgV(1)"#,
+    );
+    let out = output_of(connect_host(&record), r#"Connect "darksigns.com", 80, "hello""#);
+    assert_eq!(out[1], "dso://darksigns.com:80|hello");
+}
+
+/// A domain registered by address serves a script compiled under the address
+/// key, so the hostname key is tried first and the address is the fallback.
+#[test]
+fn connect_falls_back_to_the_address_key() {
+    let compiled = vbscript::game::crypto::compile_script(
+        r#"Say "keyed to the address""#,
+        "dso://1.2.3.4:80",
+        [7u8; 16],
+    )
+    .expect("compiles");
+    let record = domain_record("darksigns.com", "80", "1.2.3.4", "root", "", &compiled);
+    let out = output_of(connect_host(&record), r#"Connect "darksigns.com", 80"#);
+    assert_eq!(out[1], "keyed to the address");
+}
+
+/// A local script stays local afterwards, whatever the connected one did.
+#[test]
+fn the_local_environment_comes_back_after_connecting() {
+    let record = domain_record("darksigns.com", "80", "1.2.3.4", "root", "", "Say ServerDomain");
+    let out = output_of(
+        connect_host(&record),
+        "Connect \"darksigns.com\", 80\r\nSay \"local=\" & IsLocal() & \" domain=[\" & ServerDomain & \"]\"",
+    );
+    assert_eq!(out.last().unwrap(), "local=True domain=[]");
+}
+
+#[test]
+fn connect_reports_a_domain_that_is_not_there() {
+    let server = ScriptedServer::new()
+        .answer_with("domain_connect.php", vbscript::game::server::ServerResponse {
+            code: 404,
+            body: String::new(),
+        });
+    let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server);
+    let (_, result) = run(host, r#"Connect "nowhere.com", 80"#);
+    assert!(
+        result.as_ref().unwrap_err().contains("Not found"),
+        "got {result:?}"
+    );
+}
+
+#[test]
+fn connect_rejects_an_impossible_port() {
+    let (_, result) = run(connect_host(""), r#"Connect "darksigns.com", 0"#);
+    assert!(result.unwrap_err().contains("Invalid Port Number: 0"));
+}

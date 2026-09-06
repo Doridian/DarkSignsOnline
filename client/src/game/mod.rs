@@ -170,9 +170,9 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
     pub(crate) fn emit(&self, channel: Channel, text: &str) {
         // Capture is checked and appended under one borrow, which is
         // released before anything else runs.
-        if self.env.borrow().output_disabled {
-            return;
-        }
+        // Collecting comes first and disabling second, the order `Say` uses.
+        // A script whose output is both collected and hidden -- which is what
+        // `Fetch` asks for -- still fills the buffer it is going to return.
         let capturing = {
             let mut env = self.env.borrow_mut();
             match &mut env.captured {
@@ -184,7 +184,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
                 None => false,
             }
         };
-        if !capturing {
+        if !capturing && !self.env.borrow().output_disabled {
             self.console.borrow_mut().say(channel, text);
         }
     }
@@ -385,6 +385,18 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 }
             }
             "islocal" => Value::Bool(self.env.borrow().is_local),
+            // What a connected script knows about the domain it is serving.
+            // Local scripts see the empty values a local environment carries.
+            "serverdomain" => Value::str(self.env.borrow().server_domain.clone()),
+            "serverip" => Value::str(self.env.borrow().server_ip.clone()),
+            "serverport" => Value::I4(self.env.borrow().server_port as i32),
+            // Never the password itself, only whether there is one -- the
+            // client is careful about this and a connected script is remote
+            // code that has no business reading it.
+            "password" => Value::str(match self.server.borrow().username().is_empty() {
+                true => "",
+                false => "[hidden]",
+            }),
             "username" => Value::str(self.server.borrow().username()),
             "connectingip" => Value::str(self.env.borrow().connecting_ip.clone()),
             "consoleid" => Value::I4(0),
@@ -860,16 +872,23 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                     ),
                 ))
             }
+            // Connecting to a domain runs the script that domain answers
+            // with; it does not hand back the response. `Fetch` is the same
+            // journey with the output collected and returned instead of
+            // shown. The `A` variants take the script's arguments as one
+            // array rather than as trailing parameters.
             "fetch" | "fetcha" | "connect" | "connecta" => {
                 let domain = arg_str(args, 0)?;
                 let port = arg_int(args, 1, 0)?;
-                if !(1..=65535).contains(&port) {
-                    return Err(misc_error(format!("Invalid Port Number: {port}")));
-                }
-                self.api(ApiRequest::post_empty(format!(
-                    "domain_connect.php?d={}&port={port}",
-                    values::url_encode(&domain)
-                )))
+                let params = match name.ends_with('a') {
+                    true => match arg_value(args, 2) {
+                        Value::Array(a) => a.data.to_vec(),
+                        Value::Empty => Vec::new(),
+                        single => vec![single],
+                    },
+                    false => args.iter().skip(2).map(|a| a.value()).collect(),
+                };
+                self.connect_raw(it, &domain, port, params, name.starts_with("connect"))?
             }
 
             // The remote and server filesystem calls share one endpoint,
@@ -1155,6 +1174,159 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
 
     /// Run a nested script. `capture` redirects its output into a string
     /// instead of the console, which is what `Capture` is for.
+    /// `Connect` and `Fetch`: run the script a game domain serves.
+    ///
+    /// The response describes the domain -- its canonical name, port, address,
+    /// owner and file key -- and carries the script itself. The script then
+    /// runs in an environment built from those fields rather than the local
+    /// one, which is what gives `ServerDomain`, `ServerIP` and `ScriptOwner`
+    /// something to say inside it, and what makes `IsLocal` false so the
+    /// local filesystem stays out of reach.
+    ///
+    /// `Connect` is a Sub: it announces itself and lets the script's output
+    /// through to the console. `Fetch` is silent and returns that output. A
+    /// `Connect` made from inside a `Capture` behaves like `Fetch` and says
+    /// the collected text, which is how the client nests the two.
+    fn connect_raw(
+        &self,
+        it: &mut Interp,
+        domain: &str,
+        port: i64,
+        params: Vec<Value>,
+        connect: bool,
+    ) -> VbResult<Value> {
+        if !(1..=65535).contains(&port) {
+            return Err(misc_error(format!("Invalid Port Number: {port}")));
+        }
+
+        let (redirect, disable) = if connect {
+            let env = self.env.borrow();
+            (env.output_redirected && env.output_disabled, env.output_disabled)
+        } else {
+            (true, true)
+        };
+
+        if connect {
+            self.emit(
+                Channel::Say,
+                &format!("{{{{green}}}}Connecting to {}:{port}...", domain.to_uppercase()),
+            );
+        }
+
+        let id = self.server.borrow_mut().send(ApiRequest::post_empty(format!(
+            "domain_connect.php?d={}&port={port}",
+            values::url_encode(domain)
+        )));
+        let response = self.server.borrow_mut().wait(id);
+        match response.code {
+            404 => {
+                return Err(misc_error(format!(
+                    "Could not connect to{}:{port} -> Not found",
+                    domain.to_uppercase()
+                )))
+            }
+            403 => {
+                return Err(misc_error(format!(
+                    "Could not connect to{}:{port} -> Access denied",
+                    domain.to_uppercase()
+                )))
+            }
+            _ => {
+                shape_response(&response, server::ResponseType::Raw)?;
+            }
+        }
+
+        // domain :-: port :-: ip :-: owner :-: file key :-: script
+        let fields: Vec<&str> = response.body.split(":-:").collect();
+        let [d_domain, d_port, d_ip, d_owner, d_key, d_code] = fields[..] else {
+            return Err(misc_error(format!(
+                "Could not connect to {}:{port} -> malformed response",
+                domain.to_uppercase()
+            )));
+        };
+
+        // A port the server does not state is deliberately absurd rather than
+        // zero: zero would read as a local script and unlock the filesystem.
+        let stated: i64 = d_port
+            .trim()
+            .chars()
+            .take_while(char::is_ascii_digit)
+            .collect::<String>()
+            .parse()
+            .unwrap_or(0);
+        let script_port = if stated > 0 { stated } else { 99999 };
+        let owner = match d_owner {
+            "" => "unknown".to_string(),
+            other => other.to_string(),
+        };
+        let code = String::from_utf8_lossy(
+            &crypto::decode_base64(d_code).map_err(|e| misc_error(e.to_string()))?,
+        )
+        .into_owned();
+
+        // The script is keyed to whichever name the domain answers to. Try
+        // the hostname, and fall back to the address when that does not open
+        // it -- a domain registered by address was compiled under one.
+        let by_domain = format!("dso://{}:{script_port}", d_domain.to_lowercase());
+        let by_ip = format!("dso://{}:{script_port}", d_ip.to_lowercase());
+        let key = match crypto::decrypt_script(&code, &by_domain) {
+            Ok(_) => by_domain.clone(),
+            Err(_) => by_ip,
+        };
+        let source = crypto::decrypt_script(&code, &key)
+            .map_err(|e| misc_error(format!("[DECODING {by_domain}] {e}")))?;
+
+        // A whole environment, not an edit of this one: the connected script
+        // gets its own arguments, owner and libraries, and the previous set
+        // comes back untouched however it ends.
+        let mut script_args = vec![Value::str(by_domain.clone())];
+        script_args.extend(params);
+        let saved = {
+            let mut env = self.env.borrow_mut();
+            let fresh = Env {
+                cwd: env.cwd.clone(),
+                args: script_args,
+                script_owner: owner,
+                file_key: d_key.to_string(),
+                server_domain: d_domain.to_string(),
+                server_port: script_port,
+                server_ip: d_ip.to_string(),
+                connecting_ip: env.server_ip.clone(),
+                is_local: false,
+                quit: false,
+                captured: redirect.then(String::new),
+                output_disabled: disable,
+                output_redirected: redirect,
+                loaded_libraries: std::collections::BTreeSet::new(),
+            };
+            std::mem::replace(&mut *env, fresh)
+        };
+
+        let result = it.execute(&source, false);
+
+        let collected = {
+            let mut env = self.env.borrow_mut();
+            let finished = std::mem::replace(&mut *env, saved);
+            finished.captured.unwrap_or_default()
+        };
+
+        match result {
+            Ok(()) => {}
+            // A connected script that quits stops itself, not its caller.
+            Err(e) if e.number == QUIT_ERROR => {}
+            Err(e) => return Err(VbError::new(e.number, format!("[RUNNING {by_domain}] {e}"))),
+        }
+
+        if connect {
+            // Only when the caller was collecting output itself.
+            if redirect {
+                self.emit(Channel::Say, &collected);
+            }
+            return Ok(Value::Empty);
+        }
+        Ok(Value::str(collected))
+    }
+
     fn run_nested(
         &self,
         it: &mut Interp,
