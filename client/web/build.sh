@@ -3,7 +3,7 @@
 #
 # Needs the wasm target and a matching wasm-bindgen CLI:
 #   rustup target add wasm32-unknown-unknown
-#   cargo install wasm-bindgen-cli --version 0.2.127
+#   cargo install wasm-bindgen-cli --version 0.2.128
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,7 +20,7 @@ wasm="$client/target/wasm32-unknown-unknown/$profile/dso_web.wasm"
 bindgen="$(command -v wasm-bindgen || echo "$HOME/.cargo/bin/wasm-bindgen")"
 if [ ! -x "$bindgen" ]; then
   echo "wasm-bindgen not found; install it with:" >&2
-  echo "  cargo install wasm-bindgen-cli --version 0.2.127" >&2
+  echo "  cargo install wasm-bindgen-cli --version 0.2.128" >&2
   exit 1
 fi
 # Types are emitted along with the module: the page is checked as

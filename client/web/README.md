@@ -117,7 +117,7 @@ another version wrote:
 # A distro Rust may already carry the target; check with
 # `ls $(rustc --print sysroot)/lib/rustlib` before reaching for rustup.
 rustup target add wasm32-unknown-unknown
-cargo install wasm-bindgen-cli --version 0.2.127
+cargo install wasm-bindgen-cli --version 0.2.128
 ```
 
 `build.sh` also copies the shipped `.ds` scripts into `www/scripts` with a

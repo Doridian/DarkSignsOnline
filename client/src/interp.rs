@@ -360,10 +360,8 @@ impl Interp {
                 StmtKind::Class(c) => {
                     self.classes.insert(c.name.to_ascii_lowercase().into(), c.clone());
                 }
-                StmtKind::Option(o) => {
-                    if !o.eq_ignore_ascii_case("explicit") {
-                        self.unknown_options.push(o.clone());
-                    }
+                StmtKind::Option(o) if !o.eq_ignore_ascii_case("explicit") => {
+                    self.unknown_options.push(o.clone());
                 }
                 // Constants are visible throughout their scope, including
                 // before the `Const` line and inside a branch that never runs.

@@ -460,7 +460,7 @@ impl<'a> Lexer<'a> {
         while self.peek().is_ascii_digit() {
             self.pos += 1;
         }
-        if self.peek() == b'.' && !(self.peek_at(1) == b'.') {
+        if self.peek() == b'.' && self.peek_at(1) != b'.' {
             // A `.` directly after digits is a decimal point unless what
             // follows makes it a member access on a numeric literal, which
             // VBScript does not allow anyway.

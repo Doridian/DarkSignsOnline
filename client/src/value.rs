@@ -538,7 +538,7 @@ pub fn compare(
     let b_str = matches!(b, Value::Str(_));
 
     // Two strings compare as text, and Empty behaves as "" beside a string.
-    if (a_str && b_str) || (a_str && b.is_empty()) || (b_str && a.is_empty()) {
+    if (a_str && (b_str || b.is_empty())) || (b_str && a.is_empty()) {
         let x = a.to_vb_string()?;
         let y = b.to_vb_string()?;
         return Ok(Some(compare_str(&x, &y, text_mode)));
@@ -560,7 +560,7 @@ pub fn compare(
         // A literal number pulls the string into a number, so a string that
         // is not numeric is a type mismatch. Boolean, Byte and Currency are
         // the exceptions: they always render as text.
-        if !(num_lit && !compares_as_string(num)) {
+        if !num_lit || compares_as_string(num) {
             let x = a.to_vb_string()?;
             let y = b.to_vb_string()?;
             return Ok(Some(compare_str(&x, &y, text_mode)));

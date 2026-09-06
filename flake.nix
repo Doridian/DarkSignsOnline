@@ -2,7 +2,7 @@
   description = "Dark Signs Online: the PHP game server and the browser client";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -23,19 +23,28 @@
         gitrev = self.rev or self.dirtyRev or "unknown";
 
         # wasm-bindgen refuses a module whose schema was written by a
-        # different version of itself, and the two halves come from
-        # different places: the crate from Cargo.lock, the CLI from nixpkgs.
-        # Fail here, with the two versions in hand, rather than deep in a
-        # build log.
+        # different version of itself, so the CLI is built from the version
+        # the crate is locked to rather than from whatever nixpkgs happens to
+        # ship. Bumping the crate changes the two hashes below, and nix says
+        # what they became.
         wasmBindgen =
           let
             lock = builtins.fromTOML (builtins.readFile ./client/Cargo.lock);
-            locked = (lib.findFirst (p: p.name == "wasm-bindgen") null lock.package).version;
-            cli = pkgs.wasm-bindgen-cli;
+            version = (lib.findFirst (p: p.name == "wasm-bindgen") null lock.package).version;
+            src = pkgs.fetchCrate {
+              pname = "wasm-bindgen-cli";
+              inherit version;
+              hash = "sha256-a7lcXJnnZkYReja+iUO7NqqrWyv3toxnUgQb8s4IS5s=";
+            };
           in
-          lib.throwIf (cli.version != locked)
-            "wasm-bindgen-cli is ${cli.version} but client/Cargo.lock pins the wasm-bindgen crate at ${locked}; the two have to match"
-            cli;
+          pkgs.buildWasmBindgenCli {
+            inherit src;
+            cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
+              inherit src;
+              inherit (src) pname version;
+              hash = "sha256-R1Tas33Ursy8kqsxguAkG0ZhNed2n5uFTAhw1l2qlLY=";
+            };
+          };
 
         # typescript, from package-lock.json. No hash to keep in step: the
         # lock file's own integrity fields are what fetches each tarball.
