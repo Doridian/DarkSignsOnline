@@ -1617,12 +1617,11 @@ impl Interp {
                 };
             }
         }
-        // Not a procedure and not a variable: creating it on demand matches
-        // VBScript when Option Explicit is off.
-        if !self.option_explicit && args.is_empty() {
-            self.declare(name.clone(), Value::Empty);
-            return Ok(Value::Empty);
-        }
+        // Nothing by that name, and getting here means it was written with
+        // parentheses -- `eval_index` is the only caller. That is a call, not
+        // a read, so it fails even with Option Explicit off; `foo()` and
+        // `foo(1)` are undefined in exactly the same way. A bare `foo` is a
+        // different thing entirely and `eval_ident` still declares it Empty.
         Err(err::sub_not_defined(name))
     }
 

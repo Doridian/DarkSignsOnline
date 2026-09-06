@@ -1081,13 +1081,32 @@ fn the_token_request_separates_its_fields() {
 
 // ---- PrintVar -----------------------------------------------------------
 
-/// The console rewrites an unknown bare word to `PrintVarSingleIfSet name()`.
-/// That argument is unset, and "IfSet" means it prints nothing — a typo at
-/// the prompt should be silent, not answer "Empty".
+/// "IfSet" means an unset value prints nothing at all.
 #[test]
 fn print_var_single_if_set_says_nothing_about_an_unset_value() {
-    assert_eq!(output_of(plain_host(), "PrintVarSingleIfSet Missing()"), Vec::<String>::new());
+    assert_eq!(
+        output_of(plain_host(), "Dim v\nPrintVarSingleIfSet v"),
+        Vec::<String>::new()
+    );
     assert_eq!(output_of(plain_host(), r#"PrintVarSingleIfSet "here""#), vec!["here"]);
+}
+
+/// A command that does not exist reports so whether or not it was given
+/// arguments. The console writes both forms as a call — `nosuchthing()` and
+/// `nosuchthing("x")` — and neither is defined, so neither passes silently.
+#[test]
+fn an_unknown_command_is_an_error_with_or_without_arguments() {
+    for source in [
+        "PrintVarSingleIfSet nosuchthing()",
+        r#"PrintVarSingleIfSet nosuchthing("x")"#,
+    ] {
+        let (_, result) = run(plain_host(), source);
+        assert_eq!(
+            result.unwrap_err(),
+            "Error 35: Sub or function not defined: 'nosuchthing'",
+            "for {source}"
+        );
+    }
 }
 
 /// `PrintVar` prints Empty rather than swallowing it; only the "IfSet"
