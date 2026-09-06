@@ -3,16 +3,34 @@
 //!
 //! Game paths are `/`-separated and rooted at the player's directory.
 //! Backslashes are accepted as separators because the VB6 client ran on
-//! Windows and scripts were written both ways.
+//! Windows and scripts were written both ways. For the same reason paths are
+//! case-insensitive, so resolving one also folds its case -- see
+//! [`fold_case`].
 
-/// Resolve `path` against `base`, collapsing `.` and `..` segments.
+/// Fold a path to the one spelling the filesystem stores it under.
+///
+/// The VB6 client ran on Windows, where `/Home/A.TXT` and `/home/a.txt` are
+/// the same file, and scripts were written accordingly. Rather than search
+/// case-insensitively at every lookup, every path is folded on the way in
+/// and the backing store only ever holds the folded form, so a lookup stays
+/// a plain string comparison and a listing shows one spelling of a name
+/// instead of whichever the writer happened to type.
+///
+/// ASCII only, which is the folding the interpreter uses for identifiers,
+/// and it keeps a path the same length however it is spelled.
+pub fn fold_case(path: &str) -> String {
+    path.to_ascii_lowercase()
+}
+
+/// Resolve `path` against `base`, collapsing `.` and `..` segments and
+/// folding the result's case.
 ///
 /// A path starting with `/` or `\` is absolute and ignores `base`. The
 /// result keeps a leading `/` when absolute and a leading `./` when not,
 /// matching what the client stores in the console's working directory.
 pub fn resolve_rel(base: &str, path: &str) -> String {
     if path.is_empty() {
-        return base.to_string();
+        return fold_case(base);
     }
 
     let joined = if path.starts_with('/') || path.starts_with('\\') {
@@ -21,7 +39,7 @@ pub fn resolve_rel(base: &str, path: &str) -> String {
         format!("{base}/{path}")
     };
 
-    let joined = joined.replace('\\', "/");
+    let joined = fold_case(&joined.replace('\\', "/"));
     // A leading `/` marks the path absolute; the flag survives the split.
     let absolute = joined.starts_with('/');
 
@@ -121,6 +139,15 @@ mod tests {
         // The root keeps its slash.
         assert_eq!(resolve_rel_trimmed("/", "/"), "/");
         assert_eq!(resolve_rel_trimmed("/home", ".."), "/");
+    }
+
+    #[test]
+    fn resolving_folds_case() {
+        assert_eq!(resolve_rel("/home", "Notes.TXT"), "/home/notes.txt");
+        assert_eq!(resolve_rel("/Home/Sub", "../X"), "/home/x");
+        // The base is folded too, even where it is all the answer is.
+        assert_eq!(resolve_rel("/Home", ""), "/home");
+        assert_eq!(resolve_rel_trimmed("/Home", "Sub/"), "/home/sub");
     }
 
     #[test]

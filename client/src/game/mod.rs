@@ -1192,7 +1192,13 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
 
     pub(crate) fn mission_file(&self, mission_id: &str) -> String {
         let safe = mission_id.replace(['/', '\\'], "_");
-        format!("/system/missions/{}_{safe}.ini", self.env.borrow().script_owner)
+        // Folded, like any other path: a mission id and an owner name are
+        // both spelled however they were typed, and `GetMissionFile` hands
+        // this back to the script as a path.
+        path::fold_case(&format!(
+            "/system/missions/{}_{safe}.ini",
+            self.env.borrow().script_owner
+        ))
     }
 
     pub(crate) fn read_ini(&self, file: &str, section: &str, key: &str) -> String {

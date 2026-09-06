@@ -45,9 +45,18 @@ function is_public_operation_allowed($fileheader, $opname) {
     return false;
 }
 
+// A domain's files are case-insensitive, like the client's own filesystem,
+// and are stored under the folded name so a listing shows one spelling of
+// each. The column's collation already matches without regard to case, so an
+// existing row is found whatever case the script asked for.
+function fold_filename($filename) {
+    return strtolower(trim($filename));
+}
+
 function verify_keycode($filename, $opname, $require_owner = false) {
     global $db, $d, $dInfo, $user;
     $is_owner = $user['id'] === $dInfo['owner'];
+    $filename = fold_filename($filename);
 
     if (!$is_owner && $require_owner) {
         die_error("Error - ($filename) Not owner: " . strtoupper($d));
@@ -139,7 +148,7 @@ $write = $_REQUEST['write'];
 if (!empty($write)) {
     $file = verify_keycode($write, 'write');
     $filedata = line_endings_to_dos($_REQUEST['filedata']);
-    write_file($file['id'], $write, $filedata);
+    write_file($file['id'], $file['filename'], $filedata);
     exit;
 }
 
@@ -147,7 +156,7 @@ $append = $_REQUEST['append'];
 if (!empty($append)) {
     $file = verify_keycode($append, 'append');
     $filedata = $file['contents'] . line_endings_to_dos($_REQUEST['filedata']);
-    write_file($file['id'], $append, $filedata);
+    write_file($file['id'], $file['filename'], $filedata);
     exit;
 }
 
@@ -171,7 +180,7 @@ if (!empty($safeappend)) {
     }
 
     $contents = $contents . $user['username'] . ':' . $filedata . "\r\n";
-    write_file($file['id'], $safeappend, $contents);
+    write_file($file['id'], $file['filename'], $contents);
     exit;
 }
 
@@ -179,7 +188,7 @@ if (!empty($safeappend)) {
 $delete = $_REQUEST['delete'];
 if (!empty($delete)) {
     $file = verify_keycode($delete, 'delete', true);
-    write_file($file['id'], $delete, '');
+    write_file($file['id'], $file['filename'], '');
     exit;
 }
 

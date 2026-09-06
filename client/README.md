@@ -114,6 +114,12 @@ desktop client, a headless run and the tests can each supply their own:
 before joining it, so a script cannot reach outside even if it builds the
 path itself.
 
+The tree is case-insensitive, as the Windows one the VB6 client used was:
+`Cat "/Home/A.TXT"` and `cat /home/a.txt` are the same file. `FileSystem`
+folds every path to lower case before it reaches a backend, and a backend
+stores only that folded form, so a name has one spelling in a listing
+whatever case it was written in.
+
 ### Libraries
 
 `DLOpen "name"` loads `/system/libs/name.ds`; a name containing a path

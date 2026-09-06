@@ -587,6 +587,16 @@ pub fn textspace_channels() -> f64 {
     library::CHANNELS as f64
 }
 
+/// Fold a path the way the filesystem does.
+///
+/// The page needs it for the saved tree: a file written before the
+/// filesystem was case-insensitive is still stored under whatever case it
+/// was typed in, and the store has to be able to move it to the folded name.
+#[wasm_bindgen(js_name = foldPath)]
+pub fn fold_path(path: &str) -> String {
+    vbscript::game::path::fold_case(path)
+}
+
 /// A convenience for the page: parse markup without running anything, so a
 /// prompt or a status line can be styled the same way script output is.
 #[wasm_bindgen(js_name = parseMarkup)]

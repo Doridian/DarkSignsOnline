@@ -3,10 +3,14 @@
 //! Scripts see a `/`-rooted tree that is really the player's directory. The
 //! [`FileSystem`] trait is the seam: the desktop client backs it with real
 //! files, tests back it with [`MemoryFs`].
+//!
+//! The tree is case-insensitive, as the Windows one the VB6 client used was.
+//! [`FileSystem`] folds every path on the way in, so a backend stores and
+//! lists one spelling of each name whatever case it was written in.
 
 use std::collections::BTreeMap;
 
-use super::path::split_parent;
+use super::path::{fold_case, split_parent};
 
 /// What went wrong with a filesystem operation. These map onto the errors
 /// the VB6 client raised, so scripts see familiar numbers.
@@ -54,17 +58,66 @@ impl DirEntry {
     }
 }
 
+/// The filesystem scripts see, which is case-insensitive.
+///
+/// The `raw_*` methods are the backing store and are what an implementation
+/// writes. They are only ever handed a path already folded by
+/// [`fold_case`], so the store holds one spelling of every name and finds it
+/// by plain comparison; the methods below them are what callers use, and
+/// they do that folding. An implementation that needs to fold a path itself
+/// -- to seed the tree, say -- calls the folding method rather than the
+/// `raw_*` one.
 pub trait FileSystem {
-    fn exists(&self, path: &str) -> bool;
-    fn is_dir(&self, path: &str) -> bool;
-    fn read(&self, path: &str) -> FsResult<String>;
-    fn write(&mut self, path: &str, contents: &str) -> FsResult<()>;
-    fn append(&mut self, path: &str, contents: &str) -> FsResult<()>;
-    fn len(&self, path: &str) -> FsResult<i64>;
-    fn delete(&mut self, path: &str) -> FsResult<()>;
-    fn read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>>;
-    fn make_dir(&mut self, path: &str) -> FsResult<()>;
-    fn remove_dir(&mut self, path: &str) -> FsResult<()>;
+    fn raw_exists(&self, path: &str) -> bool;
+    fn raw_is_dir(&self, path: &str) -> bool;
+    fn raw_read(&self, path: &str) -> FsResult<String>;
+    fn raw_write(&mut self, path: &str, contents: &str) -> FsResult<()>;
+    fn raw_append(&mut self, path: &str, contents: &str) -> FsResult<()>;
+    fn raw_len(&self, path: &str) -> FsResult<i64>;
+    fn raw_delete(&mut self, path: &str) -> FsResult<()>;
+    fn raw_read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>>;
+    fn raw_make_dir(&mut self, path: &str) -> FsResult<()>;
+    fn raw_remove_dir(&mut self, path: &str) -> FsResult<()>;
+
+    fn exists(&self, path: &str) -> bool {
+        self.raw_exists(&fold_case(path))
+    }
+
+    fn is_dir(&self, path: &str) -> bool {
+        self.raw_is_dir(&fold_case(path))
+    }
+
+    fn read(&self, path: &str) -> FsResult<String> {
+        self.raw_read(&fold_case(path))
+    }
+
+    fn write(&mut self, path: &str, contents: &str) -> FsResult<()> {
+        self.raw_write(&fold_case(path), contents)
+    }
+
+    fn append(&mut self, path: &str, contents: &str) -> FsResult<()> {
+        self.raw_append(&fold_case(path), contents)
+    }
+
+    fn len(&self, path: &str) -> FsResult<i64> {
+        self.raw_len(&fold_case(path))
+    }
+
+    fn delete(&mut self, path: &str) -> FsResult<()> {
+        self.raw_delete(&fold_case(path))
+    }
+
+    fn read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>> {
+        self.raw_read_dir(&fold_case(path))
+    }
+
+    fn make_dir(&mut self, path: &str) -> FsResult<()> {
+        self.raw_make_dir(&fold_case(path))
+    }
+
+    fn remove_dir(&mut self, path: &str) -> FsResult<()> {
+        self.raw_remove_dir(&fold_case(path))
+    }
 
     /// Copy a file. The default implementation reads and writes, which suits
     /// any backing store.
@@ -96,15 +149,18 @@ impl MemoryFs {
     }
 
     /// Create a file and every directory leading to it, for test setup.
+    ///
+    /// Panics if a directory of that name is in the way, which is a mistake
+    /// in the setup rather than something to carry on from.
     pub fn with_file(mut self, path: &str, contents: &str) -> MemoryFs {
-        self.create_parents(path);
-        self.files.insert(path.to_string(), contents.to_string());
+        self.write(path, contents).expect("no directory in the way");
         self
     }
 
     pub fn with_dir(mut self, path: &str) -> MemoryFs {
-        self.create_parents(path);
-        self.dirs.insert(path.to_string());
+        let path = fold_case(path);
+        self.create_parents(&path);
+        self.dirs.insert(path);
         self
     }
 
@@ -126,15 +182,15 @@ impl MemoryFs {
 }
 
 impl FileSystem for MemoryFs {
-    fn exists(&self, path: &str) -> bool {
+    fn raw_exists(&self, path: &str) -> bool {
         self.files.contains_key(path) || self.dirs.contains(path)
     }
 
-    fn is_dir(&self, path: &str) -> bool {
+    fn raw_is_dir(&self, path: &str) -> bool {
         self.dirs.contains(path)
     }
 
-    fn read(&self, path: &str) -> FsResult<String> {
+    fn raw_read(&self, path: &str) -> FsResult<String> {
         if self.dirs.contains(path) {
             return Err(FsError::IsADirectory(path.into()));
         }
@@ -144,7 +200,7 @@ impl FileSystem for MemoryFs {
             .ok_or_else(|| FsError::NotFound(path.into()))
     }
 
-    fn write(&mut self, path: &str, contents: &str) -> FsResult<()> {
+    fn raw_write(&mut self, path: &str, contents: &str) -> FsResult<()> {
         if self.dirs.contains(path) {
             return Err(FsError::IsADirectory(path.into()));
         }
@@ -153,7 +209,7 @@ impl FileSystem for MemoryFs {
         Ok(())
     }
 
-    fn append(&mut self, path: &str, contents: &str) -> FsResult<()> {
+    fn raw_append(&mut self, path: &str, contents: &str) -> FsResult<()> {
         if self.dirs.contains(path) {
             return Err(FsError::IsADirectory(path.into()));
         }
@@ -162,18 +218,18 @@ impl FileSystem for MemoryFs {
         Ok(())
     }
 
-    fn len(&self, path: &str) -> FsResult<i64> {
-        self.read(path).map(|c| c.len() as i64)
+    fn raw_len(&self, path: &str) -> FsResult<i64> {
+        self.raw_read(path).map(|c| c.len() as i64)
     }
 
-    fn delete(&mut self, path: &str) -> FsResult<()> {
+    fn raw_delete(&mut self, path: &str) -> FsResult<()> {
         self.files
             .remove(path)
             .map(|_| ())
             .ok_or_else(|| FsError::NotFound(path.into()))
     }
 
-    fn read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>> {
+    fn raw_read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>> {
         if !self.dirs.contains(path) {
             return Err(FsError::NotADirectory(path.into()));
         }
@@ -193,8 +249,8 @@ impl FileSystem for MemoryFs {
         Ok(out)
     }
 
-    fn make_dir(&mut self, path: &str) -> FsResult<()> {
-        if self.exists(path) {
+    fn raw_make_dir(&mut self, path: &str) -> FsResult<()> {
+        if self.raw_exists(path) {
             return Err(FsError::AlreadyExists(path.into()));
         }
         self.create_parents(path);
@@ -202,11 +258,11 @@ impl FileSystem for MemoryFs {
         Ok(())
     }
 
-    fn remove_dir(&mut self, path: &str) -> FsResult<()> {
+    fn raw_remove_dir(&mut self, path: &str) -> FsResult<()> {
         if !self.dirs.contains(path) {
             return Err(FsError::NotADirectory(path.into()));
         }
-        if !self.read_dir(path)?.is_empty() {
+        if !self.raw_read_dir(path)?.is_empty() {
             return Err(FsError::NotEmpty(path.into()));
         }
         self.dirs.remove(path);
@@ -222,6 +278,10 @@ impl FileSystem for MemoryFs {
 /// Every game path is resolved and stripped of `..` before it is joined to
 /// the root, so a script cannot reach outside the player's directory even if
 /// it constructs the path itself.
+///
+/// The root holds folded names, since that is all this ever writes; a file
+/// put there by hand under a mixed-case name is invisible on a
+/// case-sensitive host filesystem.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct DiskFs {
     root: std::path::PathBuf,
@@ -260,15 +320,15 @@ impl DiskFs {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FileSystem for DiskFs {
-    fn exists(&self, path: &str) -> bool {
+    fn raw_exists(&self, path: &str) -> bool {
         self.real(path).exists()
     }
 
-    fn is_dir(&self, path: &str) -> bool {
+    fn raw_is_dir(&self, path: &str) -> bool {
         self.real(path).is_dir()
     }
 
-    fn read(&self, path: &str) -> FsResult<String> {
+    fn raw_read(&self, path: &str) -> FsResult<String> {
         let real = self.real(path);
         if real.is_dir() {
             return Err(FsError::IsADirectory(path.into()));
@@ -276,7 +336,7 @@ impl FileSystem for DiskFs {
         std::fs::read_to_string(&real).map_err(|e| DiskFs::io(e, path))
     }
 
-    fn write(&mut self, path: &str, contents: &str) -> FsResult<()> {
+    fn raw_write(&mut self, path: &str, contents: &str) -> FsResult<()> {
         let real = self.real(path);
         if let Some(parent) = real.parent() {
             std::fs::create_dir_all(parent).map_err(|e| DiskFs::io(e, path))?;
@@ -284,7 +344,7 @@ impl FileSystem for DiskFs {
         std::fs::write(&real, contents).map_err(|e| DiskFs::io(e, path))
     }
 
-    fn append(&mut self, path: &str, contents: &str) -> FsResult<()> {
+    fn raw_append(&mut self, path: &str, contents: &str) -> FsResult<()> {
         use std::io::Write;
         let real = self.real(path);
         if let Some(parent) = real.parent() {
@@ -298,16 +358,16 @@ impl FileSystem for DiskFs {
         f.write_all(contents.as_bytes()).map_err(|e| DiskFs::io(e, path))
     }
 
-    fn len(&self, path: &str) -> FsResult<i64> {
+    fn raw_len(&self, path: &str) -> FsResult<i64> {
         let meta = std::fs::metadata(self.real(path)).map_err(|e| DiskFs::io(e, path))?;
         Ok(meta.len() as i64)
     }
 
-    fn delete(&mut self, path: &str) -> FsResult<()> {
+    fn raw_delete(&mut self, path: &str) -> FsResult<()> {
         std::fs::remove_file(self.real(path)).map_err(|e| DiskFs::io(e, path))
     }
 
-    fn read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>> {
+    fn raw_read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>> {
         let real = self.real(path);
         if !real.is_dir() {
             return Err(FsError::NotADirectory(path.into()));
@@ -324,7 +384,7 @@ impl FileSystem for DiskFs {
         Ok(out)
     }
 
-    fn make_dir(&mut self, path: &str) -> FsResult<()> {
+    fn raw_make_dir(&mut self, path: &str) -> FsResult<()> {
         let real = self.real(path);
         if real.exists() {
             return Err(FsError::AlreadyExists(path.into()));
@@ -332,7 +392,7 @@ impl FileSystem for DiskFs {
         std::fs::create_dir_all(&real).map_err(|e| DiskFs::io(e, path))
     }
 
-    fn remove_dir(&mut self, path: &str) -> FsResult<()> {
+    fn raw_remove_dir(&mut self, path: &str) -> FsResult<()> {
         let real = self.real(path);
         if !real.is_dir() {
             return Err(FsError::NotADirectory(path.into()));
@@ -486,6 +546,31 @@ mod tests {
     }
 
     #[test]
+    fn names_are_matched_and_stored_folded() {
+        let mut f = fs();
+        assert_eq!(f.read("/HOME/A.TXT").unwrap(), "alpha");
+        assert!(f.exists("/Home/Sub"));
+        assert!(f.is_dir("/Home/Sub"));
+
+        // Writing under another spelling rewrites the same file rather than
+        // adding a second one.
+        f.write("/Home/A.Txt", "changed").unwrap();
+        assert_eq!(f.read("/home/a.txt").unwrap(), "changed");
+        assert_eq!(f.paths(), vec!["/home/a.txt", "/home/b.txt", "/home/sub/c.txt"]);
+    }
+
+    #[test]
+    fn a_new_file_is_stored_under_its_folded_name() {
+        let mut f = MemoryFs::new();
+        f.write("/Home/Notes/TODO.TXT", "x").unwrap();
+        assert_eq!(f.paths(), vec!["/home/notes/todo.txt"]);
+        let names: Vec<String> =
+            f.read_dir("/home/notes").unwrap().iter().map(|e| e.display_name()).collect();
+        assert_eq!(names, vec!["todo.txt"]);
+        assert!(f.is_dir("/home/notes"), "the parents are folded too");
+    }
+
+    #[test]
     fn copy_and_rename_move_content() {
         let mut f = fs();
         f.copy("/home/a.txt", "/home/copy.txt").unwrap();
@@ -534,6 +619,21 @@ mod tests {
         fs.write("/../escaped.txt", "still inside").unwrap();
         assert!(root.join("escaped.txt").exists(), "must not escape the root");
         assert!(!root.parent().unwrap().join("escaped.txt").exists());
+
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn the_disk_filesystem_folds_names_too() {
+        let root = std::env::temp_dir().join(format!("dso-fs3-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).unwrap();
+        let mut fs = DiskFs::new(&root);
+
+        fs.write("/Dir/One.TXT", "1").unwrap();
+        assert!(root.join("dir/one.txt").exists(), "stored folded");
+        assert_eq!(fs.read("/DIR/ONE.txt").unwrap(), "1");
 
         let _ = std::fs::remove_dir_all(&root);
     }

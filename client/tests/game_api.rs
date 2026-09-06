@@ -262,6 +262,32 @@ fn overwrite_and_append_change_the_file() {
 }
 
 #[test]
+fn scripts_reach_a_file_whatever_case_they_name_it_in() {
+    let (host, r) = run(
+        fs_host(),
+        r#"
+        Say FileExists("NOTES.TXT")
+        Say DirExists("Sub")
+        Say Cat("Notes.TXT", 1, 1)
+        Overwrite "Sub/Made.TXT", "x"
+        Say ReadDir("SUB")(0)
+        Say ResolvePath("Deeper/File.TXT")
+        "#,
+    );
+    r.unwrap();
+    assert_eq!(
+        host.console.borrow().output(),
+        // `Cat` keeps the line's terminator, so it says a blank line after it.
+        vec!["True", "True", "line one", "", "made.txt", "/home/deeper/file.txt"]
+    );
+    // And the tree holds one spelling of the name that was written.
+    assert_eq!(
+        host.fs.borrow().paths(),
+        vec!["/home/notes.txt", "/home/sub/made.txt"]
+    );
+}
+
+#[test]
 fn paths_resolve_against_the_working_directory() {
     let (host, r) = run(
         fs_host(),

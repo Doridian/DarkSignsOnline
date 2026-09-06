@@ -31,6 +31,9 @@ impl PersistentFs {
     ///
     /// Used for both the shipped scripts and the saved ones; whichever is
     /// applied last wins, which is how a player's edit survives an update.
+    /// The path is folded on the way in like any other, so a file saved
+    /// under a mixed-case name before the tree was case-insensitive comes
+    /// back under its folded one.
     pub fn seed(&mut self, path: &str, contents: &str) -> FsResult<()> {
         self.loading = true;
         let result = self.memory.write(path, contents);
@@ -62,53 +65,55 @@ impl PersistentFs {
     }
 }
 
+/// The paths here are already folded, so what is persisted is the folded
+/// name and the other consoles are told about that one.
 impl FileSystem for PersistentFs {
-    fn exists(&self, path: &str) -> bool {
-        self.memory.exists(path)
+    fn raw_exists(&self, path: &str) -> bool {
+        self.memory.raw_exists(path)
     }
 
-    fn is_dir(&self, path: &str) -> bool {
-        self.memory.is_dir(path)
+    fn raw_is_dir(&self, path: &str) -> bool {
+        self.memory.raw_is_dir(path)
     }
 
-    fn read(&self, path: &str) -> FsResult<String> {
-        self.memory.read(path)
+    fn raw_read(&self, path: &str) -> FsResult<String> {
+        self.memory.raw_read(path)
     }
 
-    fn write(&mut self, path: &str, contents: &str) -> FsResult<()> {
-        self.memory.write(path, contents)?;
+    fn raw_write(&mut self, path: &str, contents: &str) -> FsResult<()> {
+        self.memory.raw_write(path, contents)?;
         self.changed(path, Some(contents));
         Ok(())
     }
 
-    fn append(&mut self, path: &str, contents: &str) -> FsResult<()> {
-        self.memory.append(path, contents)?;
+    fn raw_append(&mut self, path: &str, contents: &str) -> FsResult<()> {
+        self.memory.raw_append(path, contents)?;
         // The whole file is persisted, since a partial append is harder to
         // replay than a rewrite.
-        let full = self.memory.read(path)?;
+        let full = self.memory.raw_read(path)?;
         self.changed(path, Some(&full));
         Ok(())
     }
 
-    fn len(&self, path: &str) -> FsResult<i64> {
-        self.memory.len(path)
+    fn raw_len(&self, path: &str) -> FsResult<i64> {
+        self.memory.raw_len(path)
     }
 
-    fn delete(&mut self, path: &str) -> FsResult<()> {
-        self.memory.delete(path)?;
+    fn raw_delete(&mut self, path: &str) -> FsResult<()> {
+        self.memory.raw_delete(path)?;
         self.changed(path, None);
         Ok(())
     }
 
-    fn read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>> {
-        self.memory.read_dir(path)
+    fn raw_read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>> {
+        self.memory.raw_read_dir(path)
     }
 
-    fn make_dir(&mut self, path: &str) -> FsResult<()> {
-        self.memory.make_dir(path)
+    fn raw_make_dir(&mut self, path: &str) -> FsResult<()> {
+        self.memory.raw_make_dir(path)
     }
 
-    fn remove_dir(&mut self, path: &str) -> FsResult<()> {
-        self.memory.remove_dir(path)
+    fn raw_remove_dir(&mut self, path: &str) -> FsResult<()> {
+        self.memory.raw_remove_dir(path)
     }
 }

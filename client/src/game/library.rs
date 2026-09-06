@@ -183,8 +183,11 @@ pub fn short_name(path: &str) -> &str {
 }
 
 /// Where a downloaded file is written.
+///
+/// Folded, because that is the name the filesystem will keep it under and
+/// this is also what the page tells the player it saved.
 pub fn download_target(filename: &str) -> String {
-    format!("{DOWNLOAD_DIR}/{}", short_name(filename))
+    format!("{DOWNLOAD_DIR}/{}", super::path::fold_case(short_name(filename)))
 }
 
 /// Parse a category listing.
@@ -364,6 +367,11 @@ mod tests {
         assert_eq!(name, "notes.ds");
         assert_eq!(data, "Say \"a:b\"");
         assert_eq!(download_target(&name), "/downloads/notes.ds");
+        assert_eq!(
+            download_target("Port Scanner.DS"),
+            "/downloads/port scanner.ds",
+            "the name is folded, since that is where the file lands"
+        );
     }
 
     #[test]

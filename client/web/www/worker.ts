@@ -7,7 +7,12 @@
 
 import { CLOSED, WAITING } from "./control.js";
 import { FONT_STACK } from "./fonts.js";
-import init, { Session, libraryCategories, textspaceChannels } from "./pkg/dso_web.js";
+import init, {
+  Session,
+  foldPath,
+  libraryCategories,
+  textspaceChannels,
+} from "./pkg/dso_web.js";
 import { FileStore } from "./storage.js";
 import type { Asked, ToWorker } from "./types.js";
 
@@ -107,6 +112,15 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
   const saved = await store.loadAll();
   for (const [path, contents] of Object.entries(saved)) {
     session.seedFile(path, contents);
+    // The filesystem folds names, and so does seeding. A file saved before
+    // it did is still keyed by the case it was typed in, so move it across:
+    // left where it is, a later delete would write the folded name and the
+    // old key would seed the file straight back on the next load.
+    const folded = foldPath(path);
+    if (folded !== path) {
+      store.record(path, null);
+      store.record(folded, contents);
+    }
   }
 
   postMessage({

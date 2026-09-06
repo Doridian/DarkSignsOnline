@@ -63,6 +63,10 @@ if (!empty($shortfilename)){
         die_error('Invalid filename.', 400);
     }
 
+    // The name a download is saved under, and the client's filesystem folds
+    // it, so store the name the file will actually have there.
+    $shortfilename = strtolower($shortfilename);
+
     $timestamp = time();
     $aip = $_SERVER['REMOTE_ADDR'];
     $stmt = $db->prepare('INSERT INTO file_database (filename, filedata, version, title, description, category, createtime, ip, deleted, owner, ver) VALUES (?,?,?,?,?,?,?,?,0,?,?)');
