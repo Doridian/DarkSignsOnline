@@ -10,7 +10,7 @@
 //! belong to the front end.
 
 use super::crypto;
-use super::protocol::{strip_code, strip_tags, summary};
+use super::protocol::{strip_code, summary};
 use super::values;
 
 /// Where the client keeps its copy of the inbox.
@@ -39,8 +39,8 @@ pub struct Message {
 
 /// Parse an `action=inbox` answer.
 ///
-/// Anything that is not a record is skipped, which is what keeps PHP's own
-/// diagnostics out of the inbox when a server has warnings turned on.
+/// The endpoint writes one record per line and ends with a blank one, so a
+/// line that is not a record is the blank one.
 pub fn parse_inbox(body: &str) -> Vec<Message> {
     strip_code(body)
         .lines()
@@ -131,14 +131,10 @@ pub fn send_body(to: &str, subject: &str, body: &str) -> String {
 /// What `action=send` said. `Ok(())` only for the word the server uses to
 /// mean it worked.
 ///
-/// The word is looked for line by line rather than taken as the whole body,
-/// because PHP's own diagnostics share the response with it: a notice comes
-/// before whatever the script echoes and a fatal after. Requiring the body to
-/// be exactly `success` turned every send on a server with warnings on into a
-/// failure whose message was the warning.
+/// Anything else is the endpoint's own complaint, and is shown as it came.
 pub fn send_result(body: &str) -> Result<(), String> {
     let text = strip_code(body);
-    if text.lines().any(|line| strip_tags(line).trim() == "success") {
+    if text.trim() == "success" {
         return Ok(());
     }
     match summary(text) {
@@ -205,13 +201,13 @@ mod tests {
     }
 
     #[test]
-    fn a_php_notice_does_not_become_a_message() {
+    fn the_blank_line_at_the_end_is_not_a_message() {
         let body = format!(
-            "7000<br />\n<b>Warning</b>: something<br />\nX_7:--:a@users:--:{}:--:{}:--:x\r\n",
+            "7000X_7:--:a@users:--:{}:--:{}:--:x\r\n\r\n",
             encoded("s"),
             encoded("b"),
         );
-        assert_eq!(parse_inbox(&body).len(), 1, "only the record is a record");
+        assert_eq!(parse_inbox(&body).len(), 1);
     }
 
     #[test]
@@ -308,38 +304,13 @@ mod tests {
     }
 
     #[test]
-    fn a_php_notice_in_front_of_the_answer_does_not_hide_it() {
-        // What the live endpoint returned while it hashed a variable it had
-        // never set: the warning is printed before the answer.
-        let body = concat!(
-            "7000<br />\n<b>Warning</b>:  Undefined variable $message in ",
-            "<b>/var/www/darksignsonline/api/dsmail.php</b> on line <b>58</b><br />\nsuccess",
-        );
-        assert_eq!(send_result(body), Ok(()));
-    }
-
-    #[test]
     fn a_complaint_keeps_its_own_words() {
         assert_eq!(
-            send_result("7000<br />\n<b>Warning</b>: something<br />\nUnknown name: nobody"),
-            Err("Warning: something Unknown name: nobody".into())
+            send_result("7000Unknown name: nobody"),
+            Err("Unknown name: nobody".into())
         );
-    }
-
-    #[test]
-    fn a_fatal_is_reported_from_its_beginning_not_its_end() {
-        // A PHP fatal is several lines of HTML whose last one names the file
-        // and line it was thrown at, which says nothing on its own.
-        let body = concat!(
-            "7000<br />\n<b>Fatal error</b>:  Uncaught mysqli_sql_exception: ",
-            "Duplicate entry for key 'message_hash' in <b>/var/www/api/dsmail.php</b>:64\n",
-            "Stack trace:\n#0 {main}\n  thrown in <b>/var/www/api/dsmail.php</b> on line <b>64</b>",
-        );
-        let complaint = send_result(body).unwrap_err();
-        assert!(
-            complaint.starts_with("Fatal error: Uncaught mysqli_sql_exception: Duplicate entry"),
-            "the useful part is the front of it, got {complaint:?}"
-        );
-        assert!(complaint.chars().count() <= 240, "and it is trimmed");
+        // A long one is cut short rather than filling the status line.
+        let complaint = send_result(&format!("7000{}", "word ".repeat(100))).unwrap_err();
+        assert!(complaint.ends_with('…'), "got {complaint:?}");
     }
 }

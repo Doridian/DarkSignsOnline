@@ -109,8 +109,7 @@ pub fn requires_login(path: &str) -> bool {
     !path.starts_with("auth.php")
 }
 
-/// How long a complaint may get before it stops being worth reading. A PHP
-/// fatal carries a stack trace, and only its first sentence says anything.
+/// How long a complaint may get before it stops being worth reading.
 const SUMMARY_LIMIT: usize = 200;
 
 /// Drop the four-digit status code an endpoint puts in front of its answer.
@@ -127,14 +126,14 @@ pub fn strip_code(body: &str) -> &str {
     }
 }
 
-/// A body reduced to one readable line, for showing a player.
+/// A body reduced to one line, for showing a player.
 ///
-/// The tags come off and the whitespace collapses, so a fatal's several lines
-/// of HTML read as the sentence they start with — which is the half that says
-/// what went wrong, the rest being a stack trace and a file name.
+/// The whitespace collapses and a long one is cut short, since an endpoint
+/// that refuses says so in its first few words and a player is reading this
+/// in a status line.
 pub fn summary(body: &str) -> String {
     let mut out = String::new();
-    for word in strip_tags(body).split_whitespace() {
+    for word in body.split_whitespace() {
         if !out.is_empty() {
             out.push(' ');
         }
@@ -142,21 +141,6 @@ pub fn summary(body: &str) -> String {
         if out.len() >= SUMMARY_LIMIT {
             out.push('…');
             break;
-        }
-    }
-    out
-}
-
-/// Drop HTML tags, which only ever come from PHP's own diagnostics.
-pub fn strip_tags(text: &str) -> String {
-    let mut out = String::with_capacity(text.len());
-    let mut inside = false;
-    for c in text.chars() {
-        match c {
-            '<' => inside = true,
-            '>' => inside = false,
-            _ if !inside => out.push(c),
-            _ => {}
         }
     }
     out
@@ -253,13 +237,10 @@ mod tests {
     }
 
     #[test]
-    fn a_complaint_is_reduced_to_its_first_readable_sentence() {
-        assert_eq!(
-            summary("<br />\n<b>Warning</b>: something<br />\nUnknown name: nobody"),
-            "Warning: something Unknown name: nobody"
-        );
+    fn a_complaint_is_reduced_to_one_line() {
+        assert_eq!(summary("  Unknown name:\n  nobody  "), "Unknown name: nobody");
         let long = summary(&"word ".repeat(100));
-        assert!(long.ends_with('…'), "a stack trace is trimmed, got {long:?}");
+        assert!(long.ends_with('…'), "a long one is cut short, got {long:?}");
     }
 
     #[test]
