@@ -1108,6 +1108,11 @@ button:hover {
   min-height: 0;
   background: var(--bg);
 }
+/* `display` above would otherwise outrank the attribute, and the pane would
+   sit over the console for good with no way to put it away. */
+#chat[hidden] {
+  display: none;
+}
 
 .chat-bar {
   display: flex;
