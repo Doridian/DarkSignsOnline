@@ -1,6 +1,6 @@
 <?php
 
-require_once('function.php');
+require_once('function_public.php');
 
 // The legacy client's update check. There are no tagged releases to compare
 // against any more -- the browser client is served from this site and a
