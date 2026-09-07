@@ -322,6 +322,11 @@ does not — anything that is not valid UTF-8 cannot be text whatever it is
 called. The same rule runs when a file is dropped in and when the tree is read
 back off disk, so a dropped file and a reloaded one are always classed alike.
 
+That decision could be removed altogether, and probably should be: it is
+derived state that has drifted once already, and the way out costs less than
+it looks — see
+[`docs/dropping-file-classification.md`](../docs/dropping-file-classification.md).
+
 The shipped scripts are not written out. They come with the client and are
 refetched every load, so editing one saves the edit over it and deleting one
 lasts until the next load — it was never the player's file to delete.
