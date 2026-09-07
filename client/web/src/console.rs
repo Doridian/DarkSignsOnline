@@ -63,7 +63,9 @@ pub enum Event {
     Music { command: String },
     Mail,
     #[serde(rename_all = "camelCase")]
-    ChatVisible { visible: bool },
+    ChatView { enabled: bool },
+    #[serde(rename_all = "camelCase")]
+    ChatSent { id: f64, text: String },
     #[serde(rename_all = "camelCase")]
     YDiv { value: i64 },
 }
@@ -279,7 +281,14 @@ impl Console for WorkerConsole {
         self.send(&Event::Mail);
     }
 
-    fn set_chat_visible(&mut self, visible: bool) {
-        self.send(&Event::ChatVisible { visible });
+    fn set_chat_view(&mut self, enabled: bool) {
+        self.send(&Event::ChatView { enabled });
+    }
+
+    fn chat_sent(&mut self, id: i64, text: &str) {
+        // The id travels as a double, since that is the only number a
+        // JavaScript page has. Row ids are nowhere near where that stops
+        // being exact.
+        self.send(&Event::ChatSent { id: id as f64, text: text.into() });
     }
 }

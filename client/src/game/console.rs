@@ -111,9 +111,24 @@ pub trait Console {
     /// Open the mail window.
     fn mail(&mut self) {}
 
-    /// Show or hide chat.
-    fn set_chat_visible(&mut self, visible: bool) {
-        let _ = visible;
+    /// Turn the chat mirror on or off.
+    ///
+    /// `ChatView` in the original does not show or hide the chat pane --
+    /// F5 does that. It decides whether incoming chat is *also* written to
+    /// the communications channel, so a player watching a script run still
+    /// sees the room.
+    fn set_chat_view(&mut self, enabled: bool) {
+        let _ = enabled;
+    }
+
+    /// Report a chat line the player's own script just sent.
+    ///
+    /// `id` is the row the server gave it. A front end that is also polling
+    /// for new lines needs it to recognise this one when it comes back, and
+    /// so show it once rather than twice.
+    fn chat_sent(&mut self, id: i64, text: &str) {
+        let _ = id;
+        self.say(Channel::Chat, text);
     }
 }
 
@@ -130,7 +145,8 @@ pub enum ConsoleEvent {
     Edit(String),
     Music(String),
     Mail,
-    ChatVisible(bool),
+    ChatView(bool),
+    ChatSent { id: i64, text: String },
     YDiv(i64),
 }
 
@@ -264,8 +280,11 @@ impl Console for RecordingConsole {
     fn mail(&mut self) {
         self.events.push(ConsoleEvent::Mail);
     }
-    fn set_chat_visible(&mut self, visible: bool) {
-        self.events.push(ConsoleEvent::ChatVisible(visible));
+    fn set_chat_view(&mut self, enabled: bool) {
+        self.events.push(ConsoleEvent::ChatView(enabled));
+    }
+    fn chat_sent(&mut self, id: i64, text: &str) {
+        self.events.push(ConsoleEvent::ChatSent { id, text: text.into() });
     }
 }
 

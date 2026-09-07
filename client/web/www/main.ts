@@ -10,6 +10,7 @@
 // share -- the player's files -- is kept in step by passing every change
 // through this page.
 
+import { ChatPanel } from "./chat.js";
 import { CommView, ConsoleView } from "./console.js";
 import { CLOSED, INPUT_CAPACITY, READY } from "./control.js";
 import { EditorWindow } from "./editor.js";
@@ -54,6 +55,17 @@ const editor = new EditorWindow(dialog("editor"), (request) => ask(request), (id
 
 /** The windows that cover the console, so a key can tell whether one is up. */
 const windows = [mail, library, editor];
+
+// Chat. It polls and sends through `ask`, the same way mail does, because
+// that is where the credentials are. Both callbacks end at the comm log:
+// `ChatView` mirrors the room into it, and the panel's own complaints are
+// client messages, which is what that log is for.
+const chat = new ChatPanel(
+  element("chat"),
+  (request) => ask(request),
+  (text) => comm.add(text),
+  (text) => comm.add(text),
+);
 
 if (!crossOriginIsolated) {
   comm.add(
@@ -322,7 +334,7 @@ window.addEventListener("keydown", (e) => {
     accountToggle.focus();
     return;
   }
-  const match = /^F([1-4])$/.exec(e.key);
+  const match = /^F([1-5])$/.exec(e.key);
   if (
     !match ||
     e.ctrlKey ||
@@ -336,6 +348,13 @@ window.addEventListener("keydown", (e) => {
   }
   // F1 and F3 are the browser's otherwise; in a console they are the client's.
   e.preventDefault();
+  // F5 raises chat, as `ShowChat` does. F1-F4 put it away again on their way
+  // to a console, which is what the original's handlers do before switching.
+  if (match[1] === "5") {
+    chat.toggle();
+    return;
+  }
+  chat.hide();
   const chosen = consoles[Number(match[1]) - 1];
   if (chosen) {
     setActive(chosen);
@@ -347,6 +366,10 @@ setActive(consoles[0]);
 // The file library, which the original opens from a label on the console
 // rather than from a command. The status bar is where that label is here.
 element("open-library").addEventListener("click", () => void library.show());
+
+// The original raises chat with F5 alone. The button is here for the same
+// reason the console tabs are: a phone has no function keys.
+element("open-chat").addEventListener("click", () => chat.toggle());
 
 // ---- asking a worker ----------------------------------------------------
 //
@@ -428,6 +451,9 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
         showAccount(pendingUser);
         comm.add(`You have been authorized as ${pendingUser}.`);
         comm.add("Welcome to the Dark Signs Network!");
+        // The room needs an account to be read at all, so this is where
+        // chat starts -- as in the original, which connects on login.
+        chat.setSignedIn(true);
       }
       break;
 
@@ -536,6 +562,16 @@ function renderEvent(target: GameConsole, event: ConsoleEvent): void {
       // the one still running the script, and blocking it would leave
       // nothing able to answer the window's own requests.
       mail.show();
+      break;
+    case "chatView":
+      // `ChatView` decides whether the room is mirrored into the comm log.
+      // It does not raise the pane; F5 does that.
+      chat.setView(event.enabled);
+      break;
+    case "chatSent":
+      // `ChatSend` from a script. The worker has already sent it, so this
+      // only places the line and remembers the id it was given.
+      chat.sent(event.id, event.text);
       break;
     // The remaining events belong to parts of the client that do not exist
     // yet; showing them beats swallowing them.
@@ -736,6 +772,11 @@ function signOut(): void {
   field("remember").checked = false;
   setStatus("Not signed in.", "offline");
   showAccount(null);
+  // The original quits IRC on logout. Here it stops the polling and throws
+  // the room away, so the next account to sign in gets its own backlog
+  // rather than reading the last one's.
+  chat.setSignedIn(false);
+  chat.hide();
   comm.add("You have been signed out.");
   active.focus();
 }

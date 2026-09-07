@@ -63,7 +63,27 @@
       its own log, prompt and input, because each has a worker of its own and
       one blocked on `ReadLine` must not stop the others.
     -->
-    <main id="consoles"></main>
+    <main id="consoles">
+      <!--
+        Chat, which covers the console rather than sitting beside it -- the
+        original raises its ChatBox over the same area and F5 is what raises
+        it. It shares the grid cell the four consoles stack in, so it lies
+        over whichever one is showing without anything moving.
+      -->
+      <section id="chat" hidden aria-label="Chat">
+        <header class="chat-bar">
+          <span class="chat-title">Chat</span>
+          <button class="chat-close" type="button" title="Close (F5)">Close</button>
+        </header>
+        <div class="chat-log" role="log" aria-live="polite"></div>
+        <form class="chat-entry" autocomplete="off">
+          <input class="chat-input" type="text" aria-label="Message"
+                 placeholder="Say something, or /me does something"
+                 autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <button type="submit">Chat</button>
+        </form>
+      </section>
+    </main>
 
     <!--
       Script output, with the prompt as its last line. The entry lives inside
@@ -94,6 +114,7 @@
 
     <footer id="statusbar">
       <span id="hint">Type <b>HELP</b> for a list of commands.</span>
+      <button id="open-chat" type="button" title="Chat (F5)">Chat</button>
       <button id="open-library" type="button">File Library</button>
       <!-- Filled in by the page, one per console, with F1-F4 as shortcuts. -->
       <nav id="tabs" role="tablist" aria-label="Consoles"></nav>

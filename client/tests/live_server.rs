@@ -7,6 +7,10 @@
 //! ```sh
 //! DSO_USER=... DSO_PASS=... cargo test --test live_server -- --ignored --nocapture
 //! ```
+//!
+//! `DSO_API_ROOT` points them at another instance -- a local `php -S` over a
+//! scratch database, say -- which is how anything that writes can be tried
+//! without putting it in the live room.
 
 #![cfg(feature = "native-http")]
 
@@ -16,6 +20,8 @@ use vbscript::game::console::RecordingConsole;
 use vbscript::game::fs::MemoryFs;
 use vbscript::game::http::HttpServer;
 use vbscript::game::protocol::Credentials;
+use vbscript::game::server::{ApiRequest, GameServer};
+use vbscript::game::chat;
 use vbscript::game::{run_script, Env, GameHost};
 use vbscript::interp::Interp;
 use vbscript::value::Value;
@@ -28,13 +34,18 @@ fn credentials() -> Credentials {
 
 type Host = GameHost<RecordingConsole, MemoryFs, HttpServer>;
 
+/// The server under test: the live one unless `DSO_API_ROOT` names another.
+fn server() -> HttpServer {
+    let http = HttpServer::new(credentials());
+    match std::env::var("DSO_API_ROOT") {
+        Ok(root) => http.with_api_root(root),
+        Err(_) => http,
+    }
+}
+
 fn host_with(args: Vec<Value>) -> Host {
-    GameHost::new(
-        RecordingConsole::new(),
-        MemoryFs::new(),
-        HttpServer::new(credentials()),
-    )
-    .with_env(Env { args, ..Default::default() })
+    GameHost::new(RecordingConsole::new(), MemoryFs::new(), server())
+        .with_env(Env { args, ..Default::default() })
 }
 
 fn run_on(host: Host, source: &str) -> (Rc<Host>, Result<(), String>) {
@@ -119,4 +130,64 @@ fn a_bad_password_is_reported_rather_than_silently_succeeding() {
     let err = r.expect_err("a wrong password must fail");
     println!("rejected: {err}");
     assert!(err.contains("HTTP error"), "unexpected: {err}");
+}
+
+// ---- chat ---------------------------------------------------------------
+//
+// These write, so they are meant for a scratch instance: point `DSO_API_ROOT`
+// at one rather than saying "hello" in the live room every time the suite
+// runs.
+
+/// The whole chain for a script that talks: the interpreter's `ChatSend`,
+/// the request `chat.php` accepts, the row it writes, and the line that
+/// comes back out of a read.
+#[test]
+#[ignore = "needs the network and an account"]
+fn chatsend_reaches_the_room_and_reads_back() {
+    let marker = format!("live test {}", std::process::id());
+
+    let (host, r) = run_on(host_with(vec![]), &format!(r#"ChatSend "{marker}""#));
+    r.expect("the script ran");
+
+    // The console event carries the id the server gave the row, which is
+    // what tells a front end it has already seen the line.
+    let events = host.console.borrow().events.clone();
+    let sent = events
+        .iter()
+        .find_map(|e| match e {
+            vbscript::game::console::ConsoleEvent::ChatSent { id, text } => Some((*id, text.clone())),
+            _ => None,
+        })
+        .unwrap_or_else(|| panic!("nothing was sent; events: {events:?}"));
+    println!("sent as X_{}: {}", sent.0, sent.1);
+    assert!(sent.0 > 0, "the row was given an id");
+    assert!(sent.1.ends_with(&marker), "shown as said: {}", sent.1);
+
+    // And it is in the room. The read goes straight to the server rather
+    // than through a script, since no script function reads chat -- the
+    // page's poll is what does, through `Session::chatFetch`.
+    let mut http = server();
+    let id = http.send(ApiRequest::get(chat::read_path(sent.0 - 1)));
+    let response = http.wait(id);
+    assert!(response.is_success(), "read failed: {response:?}");
+
+    let lines = chat::parse_log(&response.body);
+    println!("read back {} line(s)", lines.len());
+    let found = lines
+        .iter()
+        .find(|l| l.id == sent.0)
+        .unwrap_or_else(|| panic!("the line just said is not in the room: {:?}", response.body));
+    assert_eq!(found.text, marker, "and it came back as it was said");
+    assert!(!found.action, "it was not a /me");
+    assert_eq!(found.render(), sent.1, "the same line the console was shown");
+}
+
+/// `ChatView` is local state and says so on the communications channel; it
+/// makes no request at all, which is worth pinning against a real server.
+#[test]
+#[ignore = "needs the network and an account"]
+fn chatview_talks_to_nobody() {
+    let (host, r) = run_on(host_with(vec![]), "ChatView True");
+    r.expect("the script ran");
+    assert_eq!(host.console.borrow().comm_output(), vec!["Chatview is now enabled."]);
 }

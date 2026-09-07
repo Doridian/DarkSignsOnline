@@ -244,6 +244,14 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
         answer(message, null);
         break;
 
+      case "chatFetch":
+        answer(message, JSON.parse(session.chatFetch(message.last)));
+        break;
+
+      case "chatSay":
+        answer(message, JSON.parse(session.chatSay(message.typed)));
+        break;
+
       case "libraryTables":
         answer(message, {
           categories: JSON.parse(libraryCategories()),

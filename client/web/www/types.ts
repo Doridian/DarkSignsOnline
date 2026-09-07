@@ -76,9 +76,24 @@ export interface MailEvent {
   kind: "mail";
 }
 
-export interface ChatVisibleEvent {
-  kind: "chatVisible";
-  visible: boolean;
+/**
+ * `ChatView` from a script.
+ *
+ * Not the pane's visibility -- F5 does that, as in the original. This is
+ * whether incoming chat is also written to the communications log.
+ */
+export interface ChatViewEvent {
+  kind: "chatView";
+  enabled: boolean;
+}
+
+/** A line a script sent with `ChatSend`, already accepted by the server. */
+export interface ChatSentEvent {
+  kind: "chatSent";
+  /** The row it was given, so the poller does not show it a second time. */
+  id: number;
+  /** Already rendered as `<who>  text` or `* who text`. */
+  text: string;
 }
 
 export interface YDivEvent {
@@ -96,7 +111,8 @@ export type ConsoleEvent =
   | EditEvent
   | MusicEvent
   | MailEvent
-  | ChatVisibleEvent
+  | ChatViewEvent
+  | ChatSentEvent
   | YDivEvent;
 
 /** Enough of a line for the renderer to draw one it made up itself. */
@@ -118,6 +134,24 @@ export interface MailView {
   added: number;
   messages: MailMessage[];
 }
+
+/** One thing somebody said, as `chat.php` recorded it. */
+export interface ChatLine {
+  id: number;
+  /** The account that said it; identity is the game account, not a nick. */
+  from: string;
+  text: string;
+  /** A `/me`. */
+  action: boolean;
+  /** `dd.mm.yyyy HH:MM:SS`, or empty for a line echoed before a poll. */
+  date: string;
+}
+
+/** What became of a line typed at the chat box. */
+export type Said =
+  | { kind: "sent"; line: ChatLine }
+  | { kind: "nothing" }
+  | { kind: "unknown"; command: string };
 
 /** One request to a worker, and the answer it resolves with. */
 export type Ask = (message: { type: string } & Record<string, unknown>) => Promise<any>;
@@ -190,6 +224,8 @@ export type Asked = { token: number } & (
       description: string;
       path: string;
     }
+  | { type: "chatFetch"; last: number }
+  | { type: "chatSay"; typed: string }
   | { type: "textspaceLoad"; channel: number }
   | { type: "textspaceSave"; channel: number; text: string }
   | { type: "listFiles" }

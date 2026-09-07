@@ -11,6 +11,7 @@
 //! host functions, so names like `SaySlow` are defined in VBScript and are
 //! deliberately absent here.
 
+pub mod chat;
 pub mod cli;
 pub mod console;
 pub mod crypto;
@@ -573,14 +574,52 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 self.console.borrow_mut().say_at(&text, y);
                 Value::Empty
             }
+            // Chat, which the original spoke to IRC and this client asks
+            // the game server for. Both are local-only: a script fetched
+            // from someone else's domain does not get to talk in the room
+            // as the player.
             "chatsend" => {
-                let text = arg_str(args, 0)?;
-                self.console.borrow_mut().say(Channel::Chat, &text);
+                self.assert_local()?;
+                let Some(text) = chat::clean(&arg_str(args, 0)?) else {
+                    // The original exits its handler on an empty message
+                    // rather than sending a blank line.
+                    return Ok(Some(Value::Empty));
+                };
+                let id = self
+                    .server
+                    .borrow_mut()
+                    .send(ApiRequest::post("chat.php", chat::send_body(&text, false)));
+                let response = self.server.borrow_mut().wait(id);
+                match chat::send_result(&response) {
+                    Ok(id) => {
+                        let line = chat::Line {
+                            id,
+                            from: self.server.borrow().username(),
+                            text,
+                            action: false,
+                            date: String::new(),
+                        };
+                        self.console.borrow_mut().chat_sent(id, &line.render());
+                    }
+                    // A refusal is the server's own words -- being talked
+                    // down for talking too fast, most likely -- and the
+                    // communications channel is where the client's own
+                    // complaints go.
+                    Err(complaint) => self.emit(Channel::Comm, &complaint),
+                }
                 Value::Empty
             }
             "chatview" => {
                 let on = arg_bool(args, 0, true)?;
-                self.console.borrow_mut().set_chat_visible(on);
+                self.assert_local()?;
+                self.console.borrow_mut().set_chat_view(on);
+                self.emit(
+                    Channel::Comm,
+                    match on {
+                        true => "Chatview is now enabled.",
+                        false => "Chatview is now disabled.",
+                    },
+                );
                 Value::Empty
             }
             "cls" | "clear" => {

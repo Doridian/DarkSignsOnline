@@ -16,6 +16,9 @@
   --error: #ff5f56;
   /* The prompt is the client's `lblue`, which its RGB packing puts at cyan. */
   --prompt: #00ffff;
+  /* The original's `iBlue`, which is what it prints an emote in. Its
+     constants are packed BGR, so `&HE99A9C` is this. */
+  --chat-emote: #9c9ae9;
 
   --gutter: 4px;
   --prespace: 40px;
@@ -1091,4 +1094,82 @@ button:hover {
 .tab.active {
   color: var(--gold);
   border-color: var(--rule);
+}
+
+/* ---- chat ------------------------------------------------------------ */
+
+/* Over the console, in the cell the four of them stack in -- the original's
+   `ChatBox.ZOrder 0`. It is opaque, so what it covers is covered. */
+#chat {
+  grid-area: 1 / 1;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 0;
+  background: var(--bg);
+}
+
+.chat-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  background: var(--titlebar);
+  border-bottom: 1px solid var(--rule);
+}
+
+.chat-title {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.chat-close {
+  margin-left: auto;
+  font-size: 11px;
+}
+
+.chat-log {
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0.4rem 0.6rem;
+  /* A message keeps its own spacing, and a long one wraps rather than
+     widening the pane. */
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+/* The original prints an ordinary line white and an emote in `iBlue`. Your
+   own lines are the one addition: it had no way to pick them out, and in a
+   room where everyone is named by their account it is worth having. */
+.chat-line {
+  color: #ffffff;
+}
+.chat-line.emote {
+  color: var(--chat-emote);
+}
+.chat-line.own {
+  color: var(--accent);
+}
+
+.chat-entry {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border-top: 1px solid var(--rule);
+  background: var(--panel);
+}
+
+.chat-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.2rem 0.35rem;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  color: var(--fg);
+  font: inherit;
+}
+.chat-input:focus {
+  outline: none;
+  border-color: var(--accent);
 }

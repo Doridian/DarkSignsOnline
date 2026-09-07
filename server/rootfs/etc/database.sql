@@ -24,6 +24,20 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `chat`
+--
+
+CREATE TABLE `chat` (
+  `id` int(11) NOT NULL,
+  `user` int(11) NOT NULL,
+  `action` tinyint(1) NOT NULL,
+  `message` varchar(4096) NOT NULL,
+  `time` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `domains`
 --
 
@@ -189,6 +203,14 @@ CREATE TABLE `users` (
 --
 
 --
+-- Indexes for table `chat`
+--
+ALTER TABLE `chat`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user` (`user`),
+  ADD KEY `time` (`time`);
+
+--
 -- Indexes for table `domains`
 --
 ALTER TABLE `domains`
@@ -280,6 +302,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `chat`
+--
+ALTER TABLE `chat`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `domains`
 --
 ALTER TABLE `domains`
@@ -342,6 +370,12 @@ ALTER TABLE `users`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `chat`
+--
+ALTER TABLE `chat`
+  ADD CONSTRAINT `chat_ibfk_1` FOREIGN KEY (`user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `domains`

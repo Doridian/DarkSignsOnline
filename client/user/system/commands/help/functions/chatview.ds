@@ -1,3 +1,6 @@
 Option Explicit
 Say "{{green 12}}Function: ChatView(Enabled[Boolean]) -> Nothing"
+Say "{{lgrey}}Also writes incoming chat to the COMM channel, so you can"
+Say "{{lgrey}}follow the room without the chat window over your console."
+Say "{{lgrey}}It does not open that window; F5 does."
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"

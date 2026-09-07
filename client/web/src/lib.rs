@@ -20,7 +20,7 @@ use wasm_bindgen::prelude::*;
 
 use vbscript::game::cli::CommandState;
 use vbscript::game::fs::FileSystem;
-use vbscript::game::{library, mail};
+use vbscript::game::{chat, library, mail};
 use vbscript::game::protocol::{self, Credentials, DEFAULT_API_ROOT};
 use vbscript::game::server::{ApiRequest, GameServer};
 use vbscript::game::{run_script, Env, GameHost};
@@ -266,6 +266,65 @@ impl Session {
             self.write_store(&store)?;
         }
         json(&MailView::new(0, &store))
+    }
+
+    // ---- chat ---------------------------------------------------------
+    //
+    // The room lives on the game server, and the client asks for whatever
+    // is newer than the last line it holds. The page keeps that log rather
+    // than any one worker: it polls through whichever console is free, so
+    // no single session sees the whole of it.
+
+    /// Everything said after `last`. `0` asks for the opening backlog.
+    #[wasm_bindgen(js_name = chatFetch)]
+    pub fn chat_fetch(&self, last: f64) -> Result<String, JsValue> {
+        let response = self.request(ApiRequest::get(chat::read_path(last as i64)));
+        if !response.is_success() {
+            return Err(JsValue::from_str(&server_error(&response)));
+        }
+        json(&chat::parse_log(&response.body)
+            .iter()
+            .map(ChatLine::from)
+            .collect::<Vec<_>>())
+    }
+
+    /// Say what the player typed at the chat box.
+    ///
+    /// The line is read here rather than on the page so that `/me` and the
+    /// `//` escape mean one thing in one place — [`chat::parse_entry`], the
+    /// original's `cmdChat_Click` rules — whether they were typed at the box
+    /// or reached the room some other way.
+    ///
+    /// A sent line comes back with the id the server gave it, so the page
+    /// can show it at once and still recognise it when the next poll brings
+    /// it round again.
+    #[wasm_bindgen(js_name = chatSay)]
+    pub fn chat_say(&self, typed: &str) -> Result<String, JsValue> {
+        let (text, emote) = match chat::parse_entry(typed) {
+            chat::Entry::Say(text) => (text, false),
+            chat::Entry::Emote(text) => (text, true),
+            chat::Entry::Nothing => return json(&SaidView::Nothing),
+            chat::Entry::Unknown(command) => return json(&SaidView::Unknown { command }),
+        };
+        let Some(text) = chat::clean(&text) else {
+            return json(&SaidView::Nothing);
+        };
+        let response = self.request(ApiRequest::post("chat.php", chat::send_body(&text, emote)));
+        // `send_result` reads the refusals too -- the endpoint's own words,
+        // and the 401 that `function.php` answers with a bare code.
+        let id = chat::send_result(&response).map_err(|e| JsValue::from_str(&e))?;
+        json(&SaidView::Sent {
+            line: ChatLine::from(&chat::Line {
+                id,
+                from: self.host.inner.server.borrow().username(),
+                text,
+                action: emote,
+                // The server stamps the time. A line echoed before the next
+                // poll has none yet, and the page shows the moment it was
+                // said instead.
+                date: String::new(),
+            }),
+        })
     }
 
     // ---- the file library ---------------------------------------------
@@ -541,6 +600,44 @@ impl From<&library::Upload> for LibraryUpload {
 struct Download {
     path: String,
     bytes: usize,
+}
+
+/// One chat line, ready for the page.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ChatLine {
+    id: f64,
+    from: String,
+    text: String,
+    action: bool,
+    date: String,
+}
+
+impl From<&chat::Line> for ChatLine {
+    fn from(l: &chat::Line) -> ChatLine {
+        ChatLine {
+            id: l.id as f64,
+            from: l.from.clone(),
+            text: l.text.clone(),
+            action: l.action,
+            date: l.date.clone(),
+        }
+    }
+}
+
+/// What became of a line typed at the chat box.
+#[derive(serde::Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum SaidView {
+    /// It reached the room.
+    Sent { line: ChatLine },
+    /// Nothing was typed, so nothing was said -- which is where the
+    /// original's handler exits too.
+    Nothing,
+    /// A `/word` that is not one of ours. The original answers "Command not
+    /// found."; naming the word says more.
+    #[serde(rename_all = "camelCase")]
+    Unknown { command: String },
 }
 
 /// The inbox and how much of it just arrived.

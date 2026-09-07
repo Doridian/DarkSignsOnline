@@ -43,6 +43,7 @@ shown at.
 | [`www/main.ts`](www/main.ts) | The page: the four consoles, keyboard, and waking a worker |
 | [`www/console.ts`](www/console.ts) | Turns styled runs into elements |
 | [`www/mail.ts`](www/mail.ts) | The DSMail reader |
+| [`www/chat.ts`](www/chat.ts) | The chat pane: the poll, the history, and `/me` |
 | [`www/editor.ts`](www/editor.ts) | The editor, with the highlighter and the indenting |
 | [`www/vbs.ts`](www/vbs.ts) | What a line of VBScript is made of, and how far it is indented |
 | [`www/library.ts`](www/library.ts) | The file library and the text space |
@@ -294,13 +295,64 @@ Unlike the original, `MAIL` does not hold the script up while the window is
 open. It cannot: the worker that raised it is the one still running the
 script, and blocking it would leave nothing able to answer the window.
 
+## Chat
+
+`F5` raises it, as `ShowChat` does in the original, and it covers the console
+rather than sitting beside it — it shares the grid cell the four consoles
+stack in, which is that client's `ChatBox.ZOrder 0`. `F1`–`F4` put it away on
+their way to a console, as the original's handlers do.
+
+The room is not the one the original used. That client opened a TLS socket to
+`irc.libera.chat:6697` and sat in `#darksignsonline`, which a browser cannot
+do at all — it has no raw sockets. Libera does run a WebSocket gateway for
+its own webchat, at `wss://web.libera.chat/webirc/websocket/`, but it answers
+only to a page served from `web.libera.chat` and is behind Cloudflare besides,
+so it is not something another client can use. Running our own gateway would
+mean every player reaching Libera from the game server's single IP, which is
+what their staff ask to be told about in advance because it trips the
+network's anti-abuse limits.
+
+So the room is the game server's own: [`api/chat.php`](../../server/www/api/chat.php),
+one table, and a client that asks for whatever is newer than the last line it
+holds — the same incremental shape `dsmail.php` has, for the same reason. The
+page polls every two seconds through `ask`, because the credentials are in the
+workers, and backs off to fifteen after a failure so a signed-out session is
+not complaining constantly. `chatlog.php`, which has said "not yet
+implemented" since the site went up, is the same rows without an account.
+
+Above the transport it is the original's. A line reads `<who>  text`, `/me`
+is an emote, `//` escapes a leading slash so a message can start with one,
+and Up and Down walk back through the last fifty things typed — with the
+trailing space the original adds, which is what lets a recalled line be
+finished rather than edited. `/nick` and `/msg` are gone with IRC: a name
+here is the account's and cannot be changed, and there is nobody to open a
+query with, so both answer "Command not found" rather than pretending.
+
+The two script functions are the original's two, and
+[`game::chat`](../src/game/chat.rs) is where the rules they share live:
+
+| Function | What it does |
+|---|---|
+| `ChatSend(msg)` | Trims and truncates as the original did, posts it, and shows it |
+| `ChatView(on)` | Mirrors the room into the communications log |
+
+`ChatView` is worth spelling out because the name suggests otherwise: it is
+not the pane's visibility. The original keeps it in `chatToStatus`, and all
+it decides is whether `displaychat` also calls `SayCOMM` — so a player
+watching a script run still sees the room. F5 shows the pane regardless.
+
+Both are local-only, as they are in `clsScriptFunctions`: a script fetched
+from someone else's domain does not get to talk in the room as the player.
+
+A line sent from here is drawn before the next poll can bring it round, so
+both paths carry the id the server gave the row — `ChatSend` reports it on
+its console event — and the panel draws an id once.
+
+What the original had and this does not is the user list, which came from
+IRC's `353` and has no equivalent: the server tracks no presence.
+
 ## What is not here yet
 
-- **Chat.** The original opens a TLS socket to `irc.libera.chat:6697` and
-  speaks IRC. A browser has no raw sockets, so this cannot be a client-side
-  port at all — it needs something server-side to sit on the IRC connection
-  and offer a WebSocket, and that does not exist yet. `ChatVisible` and
-  `YDiv` are its two console events, and the page still ignores both.
 - **Music.** `Music` reaches the page and stops there. The original plays
   mp3s out of the player's own `/home/music`, and there are none in a
   browser to play.

@@ -1333,3 +1333,120 @@ fn connect_rejects_an_impossible_port() {
     let (_, result) = run(connect_host(""), r#"Connect "darksigns.com", 0"#);
     assert!(result.unwrap_err().contains("Invalid Port Number: 0"));
 }
+
+// ---- chat ---------------------------------------------------------------
+//
+// The original spoke IRC and this client asks the game server, but the two
+// script functions are the same two: `ChatSend` says something and
+// `ChatView` mirrors the room into the communications channel.
+
+#[test]
+fn chatsend_posts_the_message_and_shows_it() {
+    let server = ScriptedServer::new()
+        .answer("chat.php", "X_12")
+        .logged_in_as("alice");
+    let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server);
+    let (host, result) = run(host, r#"ChatSend "hello there""#);
+    result.expect("script ran");
+
+    let server = host.server.borrow();
+    let sent = server.requests.first().expect("the request was made");
+    assert_eq!(sent.path, "chat.php");
+    assert_eq!(sent.body.as_deref(), Some("action=send&emote=0&message=hello+there"));
+    assert_eq!(
+        server.pending_count(),
+        0,
+        "the send is waited on; a handle nobody waits on is never sent"
+    );
+
+    assert_eq!(
+        host.console.borrow().events,
+        vec![ConsoleEvent::ChatSent { id: 12, text: "<alice>  hello there".into() }],
+        "the id comes back so a front end polling for new lines shows it once",
+    );
+}
+
+/// The original truncates and trims before it sends, and exits its handler
+/// rather than putting a blank line in the room.
+#[test]
+fn chatsend_says_nothing_when_there_is_nothing_to_say() {
+    let server = ScriptedServer::new().answer("chat.php", "X_1").logged_in_as("alice");
+    let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server);
+    let (host, result) = run(host, "ChatSend \"   \"");
+    result.expect("script ran");
+
+    assert!(host.server.borrow().requests.is_empty(), "nothing was sent");
+    assert!(host.console.borrow().events.is_empty(), "and nothing was shown");
+}
+
+/// A refusal is the server's own words -- being told off for talking too
+/// fast, most likely -- and the client's complaints go to the comm channel.
+#[test]
+fn chatsend_reports_a_refusal_rather_than_showing_the_line() {
+    let server = ScriptedServer::new()
+        .answer("chat.php", "You are talking too fast.")
+        .logged_in_as("alice");
+    let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server);
+    let (host, result) = run(host, r#"ChatSend "hi""#);
+    result.expect("script ran");
+
+    assert_eq!(host.console.borrow().comm_output(), vec!["You are talking too fast."]);
+    assert!(
+        !host
+            .console
+            .borrow()
+            .events
+            .iter()
+            .any(|e| matches!(e, ConsoleEvent::ChatSent { .. })),
+        "a line the server refused was never said",
+    );
+}
+
+/// Both are local-only in the original, and a script fetched from someone
+/// else's domain does not get to talk in the room as the player.
+#[test]
+fn chat_is_refused_to_a_remote_script() {
+    let server = ScriptedServer::new().answer("chat.php", "X_1").logged_in_as("alice");
+    let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server).with_env(Env {
+        is_local: false,
+        ..Default::default()
+    });
+    let (host, result) = run(host, r#"ChatSend "hello""#);
+    assert!(result.is_err(), "a remote script cannot chat");
+    assert!(host.server.borrow().requests.is_empty(), "and nothing was sent");
+}
+
+/// `ChatView` is not the pane's visibility -- F5 is that. It decides whether
+/// the room is also written to the communications channel, and the original
+/// says so when it changes.
+#[test]
+fn chatview_toggles_the_mirror_and_says_so() {
+    let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), ScriptedServer::new());
+    let (host, result) = run(host, "ChatView True\r\nChatView False");
+    result.expect("script ran");
+
+    let console = host.console.borrow();
+    assert_eq!(
+        console.events.iter().filter(|e| matches!(e, ConsoleEvent::ChatView(_))).count(),
+        2,
+    );
+    assert_eq!(console.events[0], ConsoleEvent::ChatView(true));
+    assert_eq!(
+        console.comm_output(),
+        vec!["Chatview is now enabled.", "Chatview is now disabled."],
+    );
+}
+
+/// Signing out is the one refusal the endpoint does not word itself: it
+/// never runs, and `function.php` answers 401 with the bare code `1002`.
+#[test]
+fn chatsend_says_you_are_signed_out_rather_than_showing_a_code() {
+    let server = ScriptedServer::new().answer_with(
+        "chat.php",
+        vbscript::game::server::ServerResponse { code: 401, body: "1002".into() },
+    );
+    let host = GameHost::new(RecordingConsole::new(), MemoryFs::new(), server);
+    let (host, result) = run(host, r#"ChatSend "hi""#);
+    result.expect("script ran");
+    assert_eq!(host.console.borrow().comm_output(), vec!["You are not signed in."]);
+}
