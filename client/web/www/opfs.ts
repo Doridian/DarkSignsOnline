@@ -79,23 +79,33 @@ const encoder = new TextEncoder();
 const byteLength = (text: string) => encoder.encode(text).length;
 
 /**
- * Whether these bytes are text.
+ * Decide what a file is.
+ *
+ * The only place that decides, which matters more than it looks: a file
+ * dropped in and the same file read back off disk at the next load go
+ * through here alike, so the two can never disagree about what it is. They
+ * did once, and the answer changed across a reload.
  *
  * A file is media when its name says so, which is what the desktop client
  * decides by and what keeps `Cat` on a song refusing in both clients. When
- * the name says nothing, the bytes decide: anything that is not valid UTF-8
- * cannot be text whatever it is called, and calling it text would leave a
- * file the player could neither read nor play.
+ * the name says nothing the bytes decide, since what is not valid UTF-8
+ * cannot be text whatever it is called -- but only up to a point, because
+ * deciding means holding it, and nothing worth calling a script is half a
+ * megabyte.
  */
-function classify(name: string, bytes: Uint8Array): Node {
-  const named = mediaTypeFor(name);
+async function classify(path: string, file: File): Promise<Node> {
+  const named = mediaTypeFor(path);
   if (named !== "") {
-    return { kind: "blob", size: bytes.length, mediaType: named };
+    return { kind: "blob", size: file.size, mediaType: named };
+  }
+  if (file.size > SNIFF_LIMIT) {
+    return { kind: "blob", size: file.size, mediaType: UNKNOWN_MEDIA };
   }
   try {
-    return { kind: "text", text: new TextDecoder("utf-8", { fatal: true }).decode(bytes) };
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer());
+    return { kind: "text", text };
   } catch {
-    return { kind: "blob", size: bytes.length, mediaType: UNKNOWN_MEDIA };
+    return { kind: "blob", size: file.size, mediaType: UNKNOWN_MEDIA };
   }
 }
 
@@ -248,16 +258,10 @@ export class GameFs {
           await walk(handle as FileSystemDirectoryHandle, path);
           continue;
         }
-        const file = await (handle as FileSystemFileHandle).getFile();
         // Media is measured, not read: the point of keeping it out of the
         // tree is that a boot does not pull an album into memory.
-        const named = mediaTypeFor(name);
-        this.nodes.set(
-          path,
-          named !== ""
-            ? { kind: "blob", size: file.size, mediaType: named }
-            : classify(name, new Uint8Array(await file.arrayBuffer())),
-        );
+        const file = await (handle as FileSystemFileHandle).getFile();
+        this.nodes.set(path, await classify(path, file));
         this.makeParents(path);
         restored += 1;
       }
@@ -585,17 +589,7 @@ export class GameFs {
    */
   async putFile(path: string, file: File): Promise<void> {
     if (this.dirs.has(path)) throw isADirectory(path);
-    const named = mediaTypeFor(path);
-    let node: Node;
-    if (named !== "") {
-      node = { kind: "blob", size: file.size, mediaType: named };
-    } else if (file.size > SNIFF_LIMIT) {
-      // Too big to be a script whatever it is called, and too big to read
-      // into memory on the chance that it is one.
-      node = { kind: "blob", size: file.size, mediaType: UNKNOWN_MEDIA };
-    } else {
-      node = classify(path, new Uint8Array(await file.arrayBuffer()));
-    }
+    const node = await classify(path, file);
     this.makeParents(path);
     if (node.kind === "text") {
       // A script, which lives in the tree like any other text.
