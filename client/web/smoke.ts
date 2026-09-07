@@ -31,19 +31,26 @@ const queuedInput = ["typed answer"];
 /** Files the worker would hand to IndexedDB, and the directories beside them. */
 const saved = new Map();
 const savedDirs = new Set();
+/** The blobs, which the tree names and the page stores the bytes for. */
+const savedBlobs = new Map<string, { id: string; size: number; mediaType: string }>();
+const blobBytes = new Map<string, Uint8Array>();
 const session = new Session(
   (json: string) => events.push(JSON.parse(json)),
   () => (queuedInput.length ? queuedInput.shift() : null),
   () => 121, // 'y'
   // The worker's `fileChanged`: every change to the tree, files and
   // directories alike, so it can persist it and pass it to the other three.
-  (kind: string, path: string, contents: string | null) => {
+  (kind: string, path: string, detail: unknown) => {
     switch (kind) {
       case "write":
-        saved.set(path, contents);
+        saved.set(path, detail);
+        break;
+      case "blob":
+        savedBlobs.set(path, detail as { id: string; size: number; mediaType: string });
         break;
       case "delete":
         saved.delete(path);
+        savedBlobs.delete(path);
         break;
       case "mkdir":
         savedDirs.add(path);
@@ -55,6 +62,9 @@ const session = new Session(
         throw new Error(`unknown change ${kind}`);
     }
   },
+  // The worker's `readBlobSync`: in a browser this parks on `Atomics.wait`
+  // while the page reads OPFS, which here is just a lookup.
+  (id: string) => blobBytes.get(id) ?? null,
   2, // the console this session is, which scripts read as ConsoleID
   FONT_STACK,
 );
@@ -211,6 +221,59 @@ assert.equal(
   false,
   "nothing is both a file and a directory",
 );
+
+// ---- media files ---------------------------------------------------------
+//
+// The page puts the bytes in OPFS and names them in the tree; everything
+// after that is the tree's business, and the bytes only move when something
+// actually asks to see them.
+blobBytes.set("song-1", new Uint8Array([0x49, 0x44, 0x33, 0x00, 0x01, 0x7f, 0xc3]));
+session.writeBlob("/home/music/theme.mp3", "song-1", 7, "audio/mpeg");
+
+assert.deepEqual(
+  savedBlobs.get("/home/music/theme.mp3"),
+  { id: "song-1", size: 7, mediaType: "audio/mpeg" },
+  "the tree reports the blob so the page can persist it",
+);
+assert.equal(saved.has("/home/music/theme.mp3"), false, "no bytes went to the tree store");
+
+// A song is a file like any other, right up to the point of reading it.
+session.runScript('Say "len=" & FileLen("/home/music/theme.mp3")', []);
+assert.equal(lines().at(-1), "len=7", "the size comes from the tree, not the bytes");
+session.runScript('Say "there=" & FileExists("/home/music/theme.mp3")', []);
+assert.equal(lines().at(-1), "there=True");
+
+const withMedia = JSON.parse(session.listTree());
+assert.equal(
+  withMedia.files.find((f: { path: string }) => f.path === "/home/music/theme.mp3")?.mediaType,
+  "audio/mpeg",
+  "the panel is told what kind of file it is",
+);
+assert.equal(
+  JSON.parse(session.blobAt("/home/music/theme.mp3"))?.id,
+  "song-1",
+  "a path resolves to the bytes behind it",
+);
+assert.equal(JSON.parse(session.blobAt("/home/tree.txt")), null, "text is not a blob");
+
+// Copying is a second name for one set of bytes, so it costs nothing.
+session.runScript('Copy "/home/music/theme.mp3", "/home/music/copy.mp3"', []);
+assert.equal(
+  savedBlobs.get("/home/music/copy.mp3")?.id,
+  "song-1",
+  "the copy points at the same bytes",
+);
+
+// And reading one at the console gets what a terminal has always given.
+session.runScript('Say Cat("/home/music/theme.mp3")', []);
+// The trailing empty line is `Cat` ending the last one, as it does for text.
+assert.equal(lines().at(-2), "ID3...\u00c3", "the bytes come back as noise, controls tamed");
+
+// `Music` resolves its path and reaches the page as a command to act on.
+session.runScript('Music "play /home/music/theme.mp3"', []);
+const played = events.at(-1);
+assert.equal(played?.kind, "music");
+assert.equal(played.command, "play /home/music/theme.mp3");
 
 // Markup parsing is available without running a script.
 const runs = JSON.parse(parseMarkup("{{red bold 20}}x"));

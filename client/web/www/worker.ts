@@ -5,7 +5,7 @@
 // main thread. Here both are fine — a synchronous XMLHttpRequest works, and
 // `Atomics.wait` lets us park until the page sends input.
 
-import { CLOSED, WAITING } from "./control.js";
+import { ABSENT, ANSWER_CAPACITY, CLOSED, WAITING } from "./control.js";
 import { FONT_STACK } from "./fonts.js";
 import init, {
   Session,
@@ -14,12 +14,12 @@ import init, {
   textspaceChannels,
 } from "./pkg/dso_web.js";
 import { FileStore } from "./storage.js";
-import type { Asked, FileChange, ToWorker } from "./types.js";
+import type { Asked, BlobRef, FileChange, ToWorker } from "./types.js";
 
 /** Shared with the page so input can be delivered to a blocked worker. */
 let control: Int32Array | null = null; // [state, length]
 /** The encoded answer. */
-let inputBytes: Uint8Array | null = null;
+let answerBytes: Uint8Array | null = null;
 
 let session: Session | null = null;
 let store: FileStore | null = null;
@@ -49,7 +49,7 @@ function answer(asked: Asked, value: unknown): void {
  * the way closing the console does in the original client.
  */
 function readLineSync(prompt: string, _rgb: number): string | null {
-  if (!control || !inputBytes) {
+  if (!control || !answerBytes) {
     return null;
   }
   // The prompt travels with the request so the page can set it beside the
@@ -67,7 +67,43 @@ function readLineSync(prompt: string, _rgb: number): string | null {
   // one threw, the error unwound through the script, and every ReadLine ended
   // the script instead of returning a line. `slice` copies into a buffer of
   // its own, which decode accepts.
-  return new TextDecoder().decode(inputBytes.slice(0, length));
+  return new TextDecoder().decode(answerBytes.slice(0, length));
+}
+
+/**
+ * Block until the page supplies a file's bytes.
+ *
+ * A script that asks to see a song is asking synchronously, and the bytes
+ * are in OPFS, which is not. The way out is the one `ReadLine` already
+ * takes: ask the page, park on `Atomics.wait`, and let the page -- whose
+ * event loop is not the one that is stopped -- do the reading.
+ *
+ * It has to be the page. This worker could open a synchronous access handle
+ * of its own, but that takes an exclusive lock on the file and there are
+ * four consoles; and it could not await the opening anyway, being by then
+ * already parked.
+ *
+ * Returns null when the bytes have gone, which the tree survives: it knows
+ * the file is there, and only the contents are missing.
+ */
+function readBlobSync(id: string): Uint8Array | null {
+  if (!control || !answerBytes) {
+    return null;
+  }
+  postMessage({ type: "wantBlob", id, max: ANSWER_CAPACITY });
+  Atomics.store(control, 0, WAITING);
+  Atomics.wait(control, 0, WAITING);
+
+  if (Atomics.load(control, 0) === CLOSED) {
+    return null;
+  }
+  const length = Atomics.load(control, 1);
+  if (length === ABSENT) {
+    return null;
+  }
+  // A copy, not a view: the wasm is handed this, and what it is handed must
+  // not be a window onto shared memory that the page can still write to.
+  return answerBytes.slice(0, length);
 }
 
 /** Block until the page supplies a single key, returning its char code. */
@@ -83,7 +119,7 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
   await init();
 
   control = new Int32Array(message.control);
-  inputBytes = new Uint8Array(message.input);
+  answerBytes = new Uint8Array(message.answer);
   store = await FileStore.open();
 
   // The page listens to each worker separately, so this only has to reach
@@ -93,6 +129,7 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
     readLineSync,
     readKeySync,
     fileChanged,
+    readBlobSync,
     message.consoleId ?? 0,
     FONT_STACK,
   );
@@ -122,6 +159,16 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
       store.record({ op: "write", path: folded, contents });
     }
   }
+  // The blobs next. Only the description is restored; the bytes are already
+  // in OPFS, which every session reads from and none of them copies.
+  for (const [path, blob] of Object.entries(saved.blobs)) {
+    session.seedBlob(path, blob.id, blob.size, blob.mediaType);
+    const folded = foldPath(path);
+    if (folded !== path) {
+      store.record({ op: "delete", path });
+      store.record({ op: "blob", path: folded, blob });
+    }
+  }
   // The directories after the files, since a file has already made the ones
   // above it and these are what is left: the empty ones.
   for (const path of saved.dirs) {
@@ -137,7 +184,7 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
     type: "ready",
     cwd: session.currentDirectory(),
     persistent: store.available,
-    restored: Object.keys(saved.files).length,
+    restored: Object.keys(saved.files).length + Object.keys(saved.blobs).length,
   });
 }
 
@@ -150,13 +197,20 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
  * the other three so their copies agree, and to the file panel so it draws
  * what is really there.
  *
- * `kind` is `write`, `delete`, `mkdir` or `rmdir`; `contents` is the file's
- * text for a write and null for the other three.
+ * `kind` is `write`, `blob`, `delete`, `mkdir` or `rmdir`. `detail` is the
+ * file's text for a write, a `BlobRef` for a blob, and null for the rest --
+ * a blob's bytes are never in here, which is the whole reason they are a
+ * blob: what travels between the consoles is the description of them.
  */
-function fileChanged(kind: string, path: string, contents: string | null): void {
-  const change = (
-    kind === "write" ? { op: "write", path, contents: contents ?? "" } : { op: kind, path }
-  ) as FileChange;
+function fileChanged(kind: string, path: string, detail: string | BlobRef | null): void {
+  let change: FileChange;
+  if (kind === "write") {
+    change = { op: "write", path, contents: typeof detail === "string" ? detail : "" };
+  } else if (kind === "blob") {
+    change = { op: "blob", path, blob: detail as BlobRef };
+  } else {
+    change = { op: kind, path } as FileChange;
+  }
   store?.record(change);
   postMessage({ type: "fileChanged", change });
 }
@@ -235,6 +289,14 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
           case "write":
             session.seedFile(change.path, change.contents);
             break;
+          case "blob":
+            session.seedBlob(
+              change.path,
+              change.blob.id,
+              change.blob.size,
+              change.blob.mediaType,
+            );
+            break;
           case "delete":
             session.forgetFile(change.path);
             break;
@@ -254,6 +316,17 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
       // and the files live here, so each of them asks through whichever
       // console is free. `token` comes back untouched, so the page can match
       // an answer to the window that wanted it.
+      // The page has already put the bytes in OPFS; this is what gives them
+      // a name in the tree, and persists that name like any other write.
+      case "writeBlob":
+        session.writeBlob(message.path, message.id, message.size, message.mediaType);
+        answer(message, null);
+        break;
+
+      case "blobAt":
+        answer(message, JSON.parse(session.blobAt(message.path)));
+        break;
+
       case "mailList":
         answer(message, JSON.parse(session.mailList()));
         break;

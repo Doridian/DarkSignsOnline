@@ -165,9 +165,26 @@ export type Said =
  */
 export type FileChange =
   | { op: "write"; path: string; contents: string }
+  | { op: "blob"; path: string; blob: BlobRef }
   | { op: "delete"; path: string }
   | { op: "mkdir"; path: string }
   | { op: "rmdir"; path: string };
+
+/**
+ * Where a file's bytes are, for a file the tree only describes.
+ *
+ * The tree is held in memory by all four sessions, so a song cannot live in
+ * it and does not: what the tree keeps is this, which is enough to answer
+ * `Dir` and `FileLen` without the bytes ever being fetched. `id` names the
+ * bytes rather than the path, so copying a song is another name for one set
+ * of them.
+ */
+export interface BlobRef {
+  id: string;
+  size: number;
+  /** `audio/mpeg` and the like; empty when nothing worked it out. */
+  mediaType: string;
+}
 
 /**
  * The whole tree, as `listTree` reports it.
@@ -177,7 +194,8 @@ export type FileChange =
  */
 export interface Tree {
   dirs: string[];
-  files: Array<{ path: string; size: number }>;
+  /** `mediaType` is empty for a text file and names the kind for a blob. */
+  files: Array<{ path: string; size: number; mediaType: string }>;
 }
 
 /** One request to a worker, and the answer it resolves with. */
@@ -206,6 +224,7 @@ export type FromWorker =
   | { type: "fileChanged"; change: FileChange }
   | { type: "missingFile"; path: string }
   | { type: "wantInput"; mode: string; prompt: string }
+  | { type: "wantBlob"; id: string; max: number }
   | { type: "done"; cwd: string }
   | { type: "error"; message: string; cwd: string }
   | WorkerAnswer
@@ -217,7 +236,7 @@ export type ToWorker =
       type: "boot";
       consoleId: number;
       control: SharedArrayBuffer;
-      input: SharedArrayBuffer;
+      answer: SharedArrayBuffer;
       width: number;
       preSpace: number;
       files: Record<string, string>;
@@ -234,6 +253,14 @@ export type ToWorker =
 
 /** A window's question, which carries the token its answer comes back with. */
 export type Asked = { token: number } & (
+  | { type: "blobAt"; path: string }
+  | {
+      type: "writeBlob";
+      path: string;
+      id: string;
+      size: number;
+      mediaType: string;
+    }
   | { type: "mailList" }
   | { type: "mailFetch" }
   | { type: "mailMarkRead"; id: number }

@@ -357,6 +357,122 @@ fn cat_without_a_window_reads_everything() {
     assert_eq!(out, vec!["line one", "line two", "line three", ""]);
 }
 
+// ---- media files ---------------------------------------------------------
+//
+// A player's music sits in the same tree as their scripts, because the
+// client is one filesystem and not two. What separates the two kinds is
+// where the bytes are, which every call below either does not care about or
+// says plainly.
+
+/// The same tree with a song in it, of the size and type a real one carries.
+fn media_host() -> Host {
+    let fs = MemoryFs::new()
+        .with_file("/home/notes.txt", "line one\r\nline two\r\nline three\r\n")
+        .with_dir("/home/music")
+        .with_blob("/home/music/theme.mp3", "b1", b"ID3\x03\x00\x00\x00rest");
+    GameHost::new(RecordingConsole::new(), fs, ScriptedServer::new()).with_env(Env {
+        cwd: "/home".into(),
+        ..Default::default()
+    })
+}
+
+#[test]
+fn a_song_is_listed_and_measured_like_any_other_file() {
+    let out = output_of(
+        media_host(),
+        r#"
+        Say FileExists("music/theme.mp3")
+        Say FileLen("music/theme.mp3")
+        Dim e
+        For Each e In ReadDir("music")
+            Say e
+        Next
+        "#,
+    );
+    assert_eq!(out, vec!["True", "11", "theme.mp3"]);
+}
+
+#[test]
+fn a_song_can_be_copied_moved_and_deleted_like_any_other_file() {
+    let (host, r) = run(
+        media_host(),
+        r#"
+        Copy "music/theme.mp3", "music/second.mp3"
+        Move "music/second.mp3", "music/third.mp3"
+        Say FileLen("music/third.mp3")
+        Del "music/third.mp3"
+        Say FileExists("music/third.mp3")
+        Say FileExists("music/theme.mp3")
+        "#,
+    );
+    assert_eq!(r, Ok(()));
+    assert_eq!(host.console.borrow().output(), vec!["11", "False", "True"]);
+}
+
+/// What a terminal has always done with a file that is not text.
+#[test]
+fn reading_a_song_pours_its_bytes_at_the_console() {
+    let out = output_of(media_host(), r#"Say Cat("music/theme.mp3")"#);
+    // The control bytes show as dots rather than steering the console, and
+    // the printable ones show as themselves.
+    assert_eq!(out, vec!["ID3....rest", ""]);
+}
+
+/// Writing text into a song would leave a file that is neither, so the
+/// calls that would do it refuse instead.
+#[test]
+fn text_cannot_be_appended_to_a_song() {
+    let (_, r) = run(media_host(), r#"Append "music/theme.mp3", "words""#);
+    assert!(r.unwrap_err().contains("Not a text file"), "should refuse plainly");
+}
+
+/// A script that traps the refusal sees VBScript's "bad file mode", which is
+/// the number it would already handle for reading a file the wrong way.
+#[test]
+fn refusing_a_song_raises_the_bad_file_mode_error() {
+    let out = output_of(
+        media_host(),
+        r#"
+        On Error Resume Next
+        Append "music/theme.mp3", "words"
+        Say Err.Number
+        "#,
+    );
+    assert_eq!(out, vec!["54"]);
+}
+
+#[test]
+fn music_resolves_its_path_against_the_working_directory() {
+    let (host, r) = run(
+        media_host(),
+        r#"
+        Music "play music/theme.mp3"
+        Music "loop /home/music/theme.mp3"
+        Music "stop"
+        "#,
+    );
+    assert_eq!(r, Ok(()));
+    let commands: Vec<String> = host
+        .console
+        .borrow()
+        .events
+        .iter()
+        .filter_map(|e| match e {
+            ConsoleEvent::Music(c) => Some(c.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        commands,
+        vec![
+            "play /home/music/theme.mp3",
+            "loop /home/music/theme.mp3",
+            // Nothing to resolve, so nothing is touched.
+            "stop",
+        ]
+    );
+}
+
 #[test]
 fn directories_can_be_made_and_removed() {
     let (host, r) = run(

@@ -17,6 +17,7 @@
 //   - downloaded, from the button that appears on a file,
 //   - dropped onto, which writes what was dropped into that folder.
 
+import { BlobStore, newBlobId } from "./storage.js";
 import type { Ask, FileChange, Tree } from "./types.js";
 
 /**
@@ -29,14 +30,24 @@ import type { Ask, FileChange, Tree } from "./types.js";
 export const PATH_DRAG = "application/x-dso-path";
 
 /**
- * The largest file that may be dropped in, in bytes.
+ * The largest text file that may be dropped in, in bytes.
  *
- * The whole tree is held in memory by every one of the four sessions and
- * mirrored into IndexedDB, and the game's files are scripts and text. A cap
- * keeps a stray drop of something large from wedging all of that; it is not
- * a security measure, since the player is only ever hurting themselves.
+ * Text is held in memory by every one of the four sessions and mirrored into
+ * IndexedDB, and the game's own files are scripts. A cap keeps a stray drop
+ * of something large from wedging all of that; it is not a security measure,
+ * since the player is only ever hurting themselves.
  */
-const MAX_UPLOAD = 512 * 1024;
+const MAX_TEXT_UPLOAD = 512 * 1024;
+
+/**
+ * The largest media file, which can afford to be far larger.
+ *
+ * None of the reasons above apply to it: what the sessions hold is the name
+ * and the size, and the bytes sit in OPFS until something plays them. What
+ * is left is the browser's own storage quota, which this stays well under so
+ * that a single careless drop cannot fill it.
+ */
+const MAX_MEDIA_UPLOAD = 64 * 1024 * 1024;
 
 /** Where the panel's open/closed state is remembered between visits. */
 const OPEN_KEY = "darksigns.filetree";
@@ -57,7 +68,7 @@ export class FileTree {
   /** Every directory, the root included. */
   dirs = new Set<string>(["/"]);
   /** Every file, by path, against its size in bytes. */
-  files = new Map<string, number>();
+  files = new Map<string, FileInfo>();
   /** Which directories are unfolded. */
   expanded = new Set<string>(["/", "/home"]);
   /** The row picked out, if any. */
@@ -90,6 +101,7 @@ export class FileTree {
     readonly ask: Ask,
     readonly open: (path: string) => void,
     readonly notify: (text: string) => void,
+    readonly blobs: BlobStore,
   ) {
     this.body = root.querySelector(".tree-body") as HTMLElement;
     this.status = root.querySelector(".tree-status") as HTMLElement;
@@ -192,7 +204,9 @@ export class FileTree {
     this.loaded = true;
     this.dirs = new Set(tree.dirs);
     this.dirs.add("/");
-    this.files = new Map(tree.files.map((file) => [file.path, file.size]));
+    this.files = new Map(
+      tree.files.map((file) => [file.path, { size: file.size, mediaType: file.mediaType }]),
+    );
 
     const missed = this.pending;
     this.pending = null;
@@ -223,9 +237,16 @@ export class FileTree {
   take(change: FileChange): void {
     switch (change.op) {
       case "write":
-        this.files.set(change.path, byteLength(change.contents));
+        this.files.set(change.path, { size: byteLength(change.contents), mediaType: "" });
         // Writing a file makes the directories above it, so the panel makes
         // them too rather than waiting to be told about them.
+        this.addParents(change.path);
+        break;
+      case "blob":
+        this.files.set(change.path, {
+          size: change.blob.size,
+          mediaType: change.blob.mediaType,
+        });
         this.addParents(change.path);
         break;
       case "delete":
@@ -304,8 +325,8 @@ export class FileTree {
         put({ path, name: baseName(path), isDir: true, size: 0 });
       }
     }
-    for (const [path, size] of this.files) {
-      put({ path, name: baseName(path), isDir: false, size });
+    for (const [path, info] of this.files) {
+      put({ path, name: baseName(path), isDir: false, size: info.size });
     }
     // Directories first and then by name, which is how `DIR` orders a
     // listing and how a file tree is expected to read.
@@ -634,24 +655,26 @@ export class FileTree {
     }
   }
 
-  /** Write what was dropped, one file at a time, and report what did not fit. */
+  /**
+   * Write what was dropped, one file at a time, and report what did not fit.
+   *
+   * What decides whether a file goes in as text or as bytes is the file
+   * itself: anything that decodes as UTF-8 is text, since that is what a
+   * script can read, and anything else is kept whole in OPFS under a name
+   * the tree carries. A player dropping a song does not have to say it is
+   * one, and dropping a script never turns it into something `Cat` refuses.
+   */
   async upload(dir: string, files: Array<{ path: string; file: File }>): Promise<void> {
     let written = 0;
     for (const { path, file } of files) {
       const target = join(dir, path);
-      if (file.size > MAX_UPLOAD) {
-        this.notify(`${file.name} is too big for the game filesystem; it was not added.`);
-        continue;
-      }
-      const contents = await asText(file);
-      if (contents === null) {
-        // The filesystem holds text, because that is what scripts read and
-        // write. Saying so beats writing mojibake and calling it a file.
-        this.notify(`${file.name} is not a text file; it was not added.`);
-        continue;
-      }
+      const contents = file.size > MAX_TEXT_UPLOAD ? null : await asText(file);
       try {
-        await this.ask({ type: "writeFile", path: target, contents });
+        if (contents !== null) {
+          await this.ask({ type: "writeFile", path: target, contents });
+        } else if (!(await this.uploadBlob(target, file))) {
+          continue;
+        }
         written += 1;
       } catch (err) {
         this.notify(`Could not write ${target}: ${err instanceof Error ? err.message : err}`);
@@ -664,10 +687,57 @@ export class FileTree {
     }
   }
 
+  /**
+   * Put a file's bytes in the store and point `target` at them.
+   *
+   * The bytes go in first and the name second, so a failure part-way leaves
+   * bytes nothing reaches rather than a name reaching nothing: the tree
+   * never lists a file that cannot be played.
+   */
+  async uploadBlob(target: string, file: File): Promise<boolean> {
+    if (!this.blobs.writable) {
+      this.notify(`${file.name} needs media storage, which this browser does not offer.`);
+      return false;
+    }
+    if (file.size > MAX_MEDIA_UPLOAD) {
+      this.notify(`${file.name} is too big for the game filesystem; it was not added.`);
+      return false;
+    }
+    const id = newBlobId();
+    try {
+      await this.blobs.put(id, file);
+    } catch (err) {
+      this.notify(`Could not store ${file.name}: ${err instanceof Error ? err.message : err}`);
+      return false;
+    }
+    await this.ask({
+      type: "writeBlob",
+      path: target,
+      id,
+      size: file.size,
+      mediaType: file.type || "application/octet-stream",
+    });
+    return true;
+  }
+
   // ---- taking a file out --------------------------------------------------
 
   /** Hand a file to the browser to save. */
   async download(path: string): Promise<void> {
+    // A media file is already a file; it does not have to come back through
+    // a console to be one, and pulling a whole album through one would be a
+    // poor way of asking for it.
+    const info = this.files.get(path);
+    if (info?.mediaType) {
+      const file = await this.blobs.file(await this.blobIdFor(path));
+      if (!file) {
+        this.notify(`The contents of ${path} are missing.`);
+        return;
+      }
+      this.save(file, baseName(path));
+      return;
+    }
+
     let answer: { contents: string; exists: boolean };
     try {
       answer = await this.ask({ type: "readFile", path });
@@ -679,16 +749,37 @@ export class FileTree {
       this.notify(`${path} is no longer there.`);
       return;
     }
-    // A blob and a link that is clicked and thrown away: the contents come
-    // from a worker, so there is no URL to point at until now.
-    const url = URL.createObjectURL(new Blob([answer.contents], { type: "text/plain" }));
+    this.save(new Blob([answer.contents], { type: "text/plain" }), baseName(path));
+  }
+
+  /** Which bytes a path names, asked of a console since the tree holds it. */
+  async blobIdFor(path: string): Promise<string> {
+    const found: { id: string } | null = await this.ask({ type: "blobAt", path });
+    return found?.id ?? "";
+  }
+
+  /**
+   * A link that is clicked and thrown away.
+   *
+   * There is no URL to point at until now: the contents came from a worker,
+   * or out of a store the page cannot serve from directly.
+   */
+  save(data: Blob, name: string): void {
+    const url = URL.createObjectURL(data);
     const link = document.createElement("a");
     link.href = url;
-    link.download = baseName(path);
+    link.download = name;
     link.click();
     // Not revoked immediately: the click has only started the save.
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
+}
+
+/** What the panel remembers about one file. */
+interface FileInfo {
+  size: number;
+  /** Empty for text; names the kind for a file whose contents are bytes. */
+  mediaType: string;
 }
 
 // ---- paths ---------------------------------------------------------------

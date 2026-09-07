@@ -21,6 +21,8 @@ pub enum FsError {
     IsADirectory(String),
     AlreadyExists(String),
     NotEmpty(String),
+    /// A text operation on a file that holds bytes rather than text.
+    NotText(String),
     Io(String),
 }
 
@@ -32,6 +34,7 @@ impl std::fmt::Display for FsError {
             FsError::IsADirectory(p) => write!(f, "Path is a directory: {p}"),
             FsError::AlreadyExists(p) => write!(f, "File already exists: {p}"),
             FsError::NotEmpty(p) => write!(f, "Directory is not empty: {p}"),
+            FsError::NotText(p) => write!(f, "Not a text file: {p}"),
             FsError::Io(m) => write!(f, "{m}"),
         }
     }
@@ -58,6 +61,60 @@ impl DirEntry {
     }
 }
 
+/// What a path holds.
+///
+/// Text is what scripts read and write, and is nearly every path in the tree:
+/// scripts, notes, INI files. A blob is bytes the tree only ever *describes*
+/// -- how many of them there are and what kind they are -- because nothing in
+/// the engine wants them as a string. A player's music and pictures live
+/// there, and the page plays or shows them when a script names the path.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum NodeKind {
+    Text,
+    Blob(BlobRef),
+}
+
+/// Where a blob's bytes are, and what they are.
+///
+/// `id` names the bytes rather than the path that reaches them, which is what
+/// makes copying a blob cheap: a second name for one set of bytes, however
+/// many megabytes those are. What an id *means* is the backend's business --
+/// [`MemoryFs`] treats it as an opaque handle, [`DiskFs`] as the path the
+/// bytes already sit at -- so long as `raw_read_blob` can follow it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlobRef {
+    pub id: String,
+    pub size: i64,
+    /// The MIME type the page needs in order to play or show this,
+    /// `audio/mpeg` and the like. Empty when nothing worked it out.
+    pub media_type: String,
+}
+
+/// The MIME type a name implies, or `None` when nothing about it says the
+/// file is anything but text.
+///
+/// The tree is overwhelmingly scripts, so this lists what a player would
+/// plausibly want to hear or see rather than trying to be a full table.
+pub fn media_type_for(path: &str) -> Option<&'static str> {
+    let name = path.rsplit('/').next().unwrap_or(path);
+    let ext = name.rsplit_once('.')?.1.to_ascii_lowercase();
+    Some(match ext.as_str() {
+        "mp3" => "audio/mpeg",
+        "ogg" | "oga" => "audio/ogg",
+        "wav" => "audio/wav",
+        "flac" => "audio/flac",
+        "m4a" | "aac" => "audio/mp4",
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "gif" => "image/gif",
+        "webp" => "image/webp",
+        "bmp" => "image/bmp",
+        "mp4" | "m4v" => "video/mp4",
+        "webm" => "video/webm",
+        _ => return None,
+    })
+}
+
 /// The filesystem scripts see, which is case-insensitive.
 ///
 /// The `raw_*` methods are the backing store and are what an implementation
@@ -78,6 +135,14 @@ pub trait FileSystem {
     fn raw_read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>>;
     fn raw_make_dir(&mut self, path: &str) -> FsResult<()>;
     fn raw_remove_dir(&mut self, path: &str) -> FsResult<()>;
+    /// What `path` holds: text, or bytes the tree only describes.
+    fn raw_kind(&self, path: &str) -> FsResult<NodeKind>;
+    /// The bytes behind `path`. Text reads back as its own UTF-8, so that
+    /// handing any file to something outside the engine works the same way
+    /// whichever kind it is.
+    fn raw_read_blob(&self, path: &str) -> FsResult<Vec<u8>>;
+    /// Point `path` at the bytes `blob` names, replacing whatever was there.
+    fn raw_write_blob(&mut self, path: &str, blob: BlobRef) -> FsResult<()>;
 
     fn exists(&self, path: &str) -> bool {
         self.raw_exists(&fold_case(path))
@@ -119,11 +184,31 @@ pub trait FileSystem {
         self.raw_remove_dir(&fold_case(path))
     }
 
-    /// Copy a file. The default implementation reads and writes, which suits
-    /// any backing store.
+    fn kind(&self, path: &str) -> FsResult<NodeKind> {
+        self.raw_kind(&fold_case(path))
+    }
+
+    fn read_blob(&self, path: &str) -> FsResult<Vec<u8>> {
+        self.raw_read_blob(&fold_case(path))
+    }
+
+    fn write_blob(&mut self, path: &str, blob: BlobRef) -> FsResult<()> {
+        self.raw_write_blob(&fold_case(path), blob)
+    }
+
+    /// Copy a file.
+    ///
+    /// Text is read and written back, which suits any backing store. A blob
+    /// is copied by naming its bytes a second time, so copying a song costs
+    /// what copying an empty file costs.
     fn copy(&mut self, from: &str, to: &str) -> FsResult<()> {
-        let data = self.read(from)?;
-        self.write(to, &data)
+        match self.kind(from)? {
+            NodeKind::Text => {
+                let data = self.read(from)?;
+                self.write(to, &data)
+            }
+            NodeKind::Blob(blob) => self.write_blob(to, blob),
+        }
     }
 
     /// Move a file, which is a copy followed by a delete.
@@ -133,12 +218,27 @@ pub trait FileSystem {
     }
 }
 
+/// One entry in the tree: a file's text, or a reference to bytes held apart
+/// from it.
+enum Node {
+    Text(String),
+    Blob(BlobRef),
+}
+
 /// A filesystem held entirely in memory. It is the test double, and also
 /// what a sandboxed or headless client can run on.
+///
+/// `nodes` is the tree itself: every name, and for a blob the size and type
+/// of what it points at. Blob bytes sit apart from it in `blobs`, keyed by
+/// id, so that a copy is another name rather than another few megabytes --
+/// and so that a backend keeping its bytes somewhere else entirely can wrap
+/// this for the tree alone and leave `blobs` empty, which is what the
+/// browser client does.
 #[derive(Default)]
 pub struct MemoryFs {
-    files: BTreeMap<String, String>,
+    nodes: BTreeMap<String, Node>,
     dirs: std::collections::BTreeSet<String>,
+    blobs: BTreeMap<String, Vec<u8>>,
 }
 
 impl MemoryFs {
@@ -157,11 +257,29 @@ impl MemoryFs {
         self
     }
 
+    /// Create a blob and the bytes behind it, for test setup.
+    pub fn with_blob(mut self, path: &str, id: &str, bytes: &[u8]) -> MemoryFs {
+        self.put_blob(id, bytes.to_vec());
+        let blob = BlobRef {
+            id: id.into(),
+            size: bytes.len() as i64,
+            media_type: media_type_for(path).unwrap_or_default().into(),
+        };
+        self.write_blob(path, blob).expect("no directory in the way");
+        self
+    }
+
     pub fn with_dir(mut self, path: &str) -> MemoryFs {
         let path = fold_case(path);
         self.create_parents(&path);
         self.dirs.insert(path);
         self
+    }
+
+    /// Hold the bytes an id names. A backend that keeps them elsewhere never
+    /// calls this, and answers `raw_read_blob` its own way instead.
+    pub fn put_blob(&mut self, id: &str, bytes: Vec<u8>) {
+        self.blobs.insert(id.into(), bytes);
     }
 
     fn create_parents(&mut self, path: &str) {
@@ -175,15 +293,32 @@ impl MemoryFs {
         }
     }
 
+    /// Remove whatever `path` held, forgetting orphaned bytes with it.
+    ///
+    /// A blob's bytes outlive the name that was just dropped whenever some
+    /// other name still reaches them, which is what a copy leaves behind.
+    /// The scan is over the tree, which is names and sizes however large the
+    /// bytes it guards are.
+    fn clear_node(&mut self, path: &str) {
+        let Some(Node::Blob(blob)) = self.nodes.remove(path) else {
+            return;
+        };
+        let still_named =
+            self.nodes.values().any(|n| matches!(n, Node::Blob(b) if b.id == blob.id));
+        if !still_named {
+            self.blobs.remove(&blob.id);
+        }
+    }
+
     /// Every path this filesystem holds, for assertions.
     pub fn paths(&self) -> Vec<&str> {
-        self.files.keys().map(|s| s.as_str()).collect()
+        self.nodes.keys().map(|s| s.as_str()).collect()
     }
 }
 
 impl FileSystem for MemoryFs {
     fn raw_exists(&self, path: &str) -> bool {
-        self.files.contains_key(path) || self.dirs.contains(path)
+        self.nodes.contains_key(path) || self.dirs.contains(path)
     }
 
     fn raw_is_dir(&self, path: &str) -> bool {
@@ -194,10 +329,11 @@ impl FileSystem for MemoryFs {
         if self.dirs.contains(path) {
             return Err(FsError::IsADirectory(path.into()));
         }
-        self.files
-            .get(path)
-            .cloned()
-            .ok_or_else(|| FsError::NotFound(path.into()))
+        match self.nodes.get(path) {
+            Some(Node::Text(text)) => Ok(text.clone()),
+            Some(Node::Blob(_)) => Err(FsError::NotText(path.into())),
+            None => Err(FsError::NotFound(path.into())),
+        }
     }
 
     fn raw_write(&mut self, path: &str, contents: &str) -> FsResult<()> {
@@ -205,7 +341,10 @@ impl FileSystem for MemoryFs {
             return Err(FsError::IsADirectory(path.into()));
         }
         self.create_parents(path);
-        self.files.insert(path.into(), contents.into());
+        // Writing text over a blob is allowed and drops the bytes: the file
+        // is simply a different kind of file afterwards.
+        self.clear_node(path);
+        self.nodes.insert(path.into(), Node::Text(contents.into()));
         Ok(())
     }
 
@@ -214,19 +353,35 @@ impl FileSystem for MemoryFs {
             return Err(FsError::IsADirectory(path.into()));
         }
         self.create_parents(path);
-        self.files.entry(path.into()).or_default().push_str(contents);
-        Ok(())
+        match self.nodes.entry(path.into()).or_insert_with(|| Node::Text(String::new())) {
+            Node::Text(text) => {
+                text.push_str(contents);
+                Ok(())
+            }
+            // Unlike a write, this would leave a file that is half text and
+            // half whatever it was, so it is refused rather than obeyed.
+            Node::Blob(_) => Err(FsError::NotText(path.into())),
+        }
     }
 
     fn raw_len(&self, path: &str) -> FsResult<i64> {
-        self.raw_read(path).map(|c| c.len() as i64)
+        if self.dirs.contains(path) {
+            return Err(FsError::IsADirectory(path.into()));
+        }
+        match self.nodes.get(path) {
+            Some(Node::Text(text)) => Ok(text.len() as i64),
+            // From the tree, without the bytes ever being fetched.
+            Some(Node::Blob(blob)) => Ok(blob.size),
+            None => Err(FsError::NotFound(path.into())),
+        }
     }
 
     fn raw_delete(&mut self, path: &str) -> FsResult<()> {
-        self.files
-            .remove(path)
-            .map(|_| ())
-            .ok_or_else(|| FsError::NotFound(path.into()))
+        if !self.nodes.contains_key(path) {
+            return Err(FsError::NotFound(path.into()));
+        }
+        self.clear_node(path);
+        Ok(())
     }
 
     fn raw_read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>> {
@@ -240,7 +395,7 @@ impl FileSystem for MemoryFs {
                 out.push(DirEntry { name: split_parent(d).1.into(), is_dir: true });
             }
         }
-        for f in self.files.keys() {
+        for f in self.nodes.keys() {
             if split_parent(f).0 == path {
                 out.push(DirEntry { name: split_parent(f).1.into(), is_dir: false });
             }
@@ -266,6 +421,40 @@ impl FileSystem for MemoryFs {
             return Err(FsError::NotEmpty(path.into()));
         }
         self.dirs.remove(path);
+        Ok(())
+    }
+
+    fn raw_kind(&self, path: &str) -> FsResult<NodeKind> {
+        if self.dirs.contains(path) {
+            return Err(FsError::IsADirectory(path.into()));
+        }
+        match self.nodes.get(path) {
+            Some(Node::Text(_)) => Ok(NodeKind::Text),
+            Some(Node::Blob(blob)) => Ok(NodeKind::Blob(blob.clone())),
+            None => Err(FsError::NotFound(path.into())),
+        }
+    }
+
+    fn raw_read_blob(&self, path: &str) -> FsResult<Vec<u8>> {
+        match self.raw_kind(path)? {
+            NodeKind::Text => self.raw_read(path).map(String::into_bytes),
+            NodeKind::Blob(blob) => self
+                .blobs
+                .get(&blob.id)
+                .cloned()
+                // The tree knows the file is there; whoever holds the bytes
+                // has lost them, which is worth saying differently.
+                .ok_or_else(|| FsError::Io(format!("Missing blob {} for {path}", blob.id))),
+        }
+    }
+
+    fn raw_write_blob(&mut self, path: &str, blob: BlobRef) -> FsResult<()> {
+        if self.dirs.contains(path) {
+            return Err(FsError::IsADirectory(path.into()));
+        }
+        self.create_parents(path);
+        self.clear_node(path);
+        self.nodes.insert(path.into(), Node::Blob(blob));
         Ok(())
     }
 }
@@ -332,6 +521,12 @@ impl FileSystem for DiskFs {
         let real = self.real(path);
         if real.is_dir() {
             return Err(FsError::IsADirectory(path.into()));
+        }
+        // Refused by name rather than by content, so that a script gets the
+        // same answer here as it does in the browser, where the tree was
+        // told what the file was when it arrived.
+        if real.is_file() && media_type_for(path).is_some() {
+            return Err(FsError::NotText(path.into()));
         }
         std::fs::read_to_string(&real).map_err(|e| DiskFs::io(e, path))
     }
@@ -404,6 +599,46 @@ impl FileSystem for DiskFs {
             }
             _ => DiskFs::io(e, path),
         })
+    }
+
+    /// On a real disk every file is bytes, so the name is the only thing
+    /// saying which of them a script would rather not be handed as a string.
+    fn raw_kind(&self, path: &str) -> FsResult<NodeKind> {
+        let real = self.real(path);
+        if real.is_dir() {
+            return Err(FsError::IsADirectory(path.into()));
+        }
+        let meta = std::fs::metadata(&real).map_err(|e| DiskFs::io(e, path))?;
+        match media_type_for(path) {
+            Some(media_type) => Ok(NodeKind::Blob(BlobRef {
+                id: path.into(),
+                size: meta.len() as i64,
+                media_type: media_type.into(),
+            })),
+            None => Ok(NodeKind::Text),
+        }
+    }
+
+    fn raw_read_blob(&self, path: &str) -> FsResult<Vec<u8>> {
+        let real = self.real(path);
+        if real.is_dir() {
+            return Err(FsError::IsADirectory(path.into()));
+        }
+        std::fs::read(&real).map_err(|e| DiskFs::io(e, path))
+    }
+
+    /// Here an id is the path the bytes already sit at, so pointing a second
+    /// name at them means copying the file: a directory has no way to hold
+    /// one file under two names that a later write would not confuse.
+    fn raw_write_blob(&mut self, path: &str, blob: BlobRef) -> FsResult<()> {
+        let (from, to) = (self.real(&blob.id), self.real(path));
+        if from == to {
+            return Ok(());
+        }
+        if let Some(parent) = to.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| DiskFs::io(e, path))?;
+        }
+        std::fs::copy(&from, &to).map(|_| ()).map_err(|e| DiskFs::io(e, path))
     }
 }
 
@@ -657,6 +892,157 @@ mod tests {
         fs.remove_dir("/dir/sub").unwrap();
         fs.remove_dir("/dir").unwrap();
         assert!(!fs.exists("/dir"));
+
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    // ---- blobs -----------------------------------------------------------
+
+    fn with_song() -> MemoryFs {
+        fs().with_blob("/home/theme.mp3", "blob1", b"ID3\x04\x00nonsense")
+    }
+
+    #[test]
+    fn a_blob_is_a_file_in_the_same_tree() {
+        let f = with_song();
+        assert!(f.exists("/home/theme.mp3"));
+        assert!(!f.is_dir("/home/theme.mp3"));
+        let names: Vec<String> =
+            f.read_dir("/home").unwrap().iter().map(|e| e.display_name()).collect();
+        assert_eq!(names, vec!["a.txt", "b.txt", "sub/", "theme.mp3"]);
+    }
+
+    #[test]
+    fn a_blob_reports_its_size_without_its_bytes() {
+        assert_eq!(with_song().len("/home/theme.mp3").unwrap(), 13);
+    }
+
+    #[test]
+    fn a_blob_carries_the_type_its_name_implies() {
+        let NodeKind::Blob(blob) = with_song().kind("/home/theme.mp3").unwrap() else {
+            panic!("expected a blob");
+        };
+        assert_eq!(blob.media_type, "audio/mpeg");
+        assert_eq!(blob.size, 13);
+    }
+
+    #[test]
+    fn reading_a_blob_as_text_is_refused() {
+        assert_eq!(
+            with_song().read("/home/theme.mp3").unwrap_err(),
+            FsError::NotText("/home/theme.mp3".into())
+        );
+    }
+
+    #[test]
+    fn appending_to_a_blob_is_refused() {
+        assert_eq!(
+            with_song().append("/home/theme.mp3", "more").unwrap_err(),
+            FsError::NotText("/home/theme.mp3".into())
+        );
+    }
+
+    #[test]
+    fn a_text_file_reads_back_as_its_own_bytes() {
+        assert_eq!(fs().read_blob("/home/a.txt").unwrap(), b"alpha");
+    }
+
+    #[test]
+    fn copying_a_blob_gives_the_bytes_a_second_name() {
+        let mut f = with_song();
+        f.copy("/home/theme.mp3", "/home/sub/copy.mp3").unwrap();
+
+        let NodeKind::Blob(original) = f.kind("/home/theme.mp3").unwrap() else {
+            panic!("expected a blob");
+        };
+        let NodeKind::Blob(copy) = f.kind("/home/sub/copy.mp3").unwrap() else {
+            panic!("expected a blob");
+        };
+        assert_eq!(original.id, copy.id, "one set of bytes under two names");
+        assert_eq!(f.read_blob("/home/sub/copy.mp3").unwrap(), b"ID3\x04\x00nonsense");
+    }
+
+    #[test]
+    fn deleting_one_name_leaves_the_bytes_for_the_other() {
+        let mut f = with_song();
+        f.copy("/home/theme.mp3", "/home/copy.mp3").unwrap();
+        f.delete("/home/theme.mp3").unwrap();
+        assert_eq!(f.read_blob("/home/copy.mp3").unwrap(), b"ID3\x04\x00nonsense");
+    }
+
+    #[test]
+    fn deleting_the_last_name_forgets_the_bytes() {
+        let mut f = with_song();
+        let NodeKind::Blob(blob) = f.kind("/home/theme.mp3").unwrap() else {
+            panic!("expected a blob");
+        };
+        f.delete("/home/theme.mp3").unwrap();
+
+        // Naming those bytes again finds nothing behind them, which is how
+        // the tree says it dropped them rather than kept them for ever.
+        f.write_blob("/home/back.mp3", blob).unwrap();
+        assert!(matches!(f.read_blob("/home/back.mp3"), Err(FsError::Io(_))));
+    }
+
+    #[test]
+    fn renaming_a_blob_moves_the_name_only() {
+        let mut f = with_song();
+        f.rename("/home/theme.mp3", "/home/other.mp3").unwrap();
+        assert!(!f.exists("/home/theme.mp3"));
+        assert_eq!(f.read_blob("/home/other.mp3").unwrap(), b"ID3\x04\x00nonsense");
+    }
+
+    #[test]
+    fn writing_text_over_a_blob_makes_it_a_text_file() {
+        let mut f = with_song();
+        f.write("/home/theme.mp3", "not a song any more").unwrap();
+        assert_eq!(f.kind("/home/theme.mp3").unwrap(), NodeKind::Text);
+        assert_eq!(f.read("/home/theme.mp3").unwrap(), "not a song any more");
+    }
+
+    #[test]
+    fn blob_names_are_folded_like_any_other() {
+        let f = fs().with_blob("/Home/Theme.MP3", "blob1", b"bytes");
+        assert_eq!(f.paths(), vec!["/home/a.txt", "/home/b.txt", "/home/sub/c.txt", "/home/theme.mp3"]);
+        assert_eq!(f.read_blob("/HOME/THEME.MP3").unwrap(), b"bytes");
+    }
+
+    #[test]
+    fn media_types_come_from_the_name() {
+        assert_eq!(media_type_for("/a/song.mp3"), Some("audio/mpeg"));
+        assert_eq!(media_type_for("/a/SONG.MP3"), Some("audio/mpeg"));
+        assert_eq!(media_type_for("/a/shot.png"), Some("image/png"));
+        assert_eq!(media_type_for("/a/clip.webm"), Some("video/webm"));
+        assert_eq!(media_type_for("/a/script.vbs"), None);
+        assert_eq!(media_type_for("/a/readme"), None);
+        assert_eq!(media_type_for("/my.files/readme"), None, "the dot is in the directory");
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn the_disk_filesystem_treats_media_names_as_blobs() {
+        let root = std::env::temp_dir().join(format!("dso-fs4-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).unwrap();
+        let mut fs = DiskFs::new(&root);
+
+        std::fs::create_dir_all(root.join("media")).unwrap();
+        std::fs::write(root.join("media/theme.mp3"), b"\x00\x01\x02bytes").unwrap();
+
+        let NodeKind::Blob(blob) = fs.kind("/media/theme.mp3").unwrap() else {
+            panic!("expected a blob");
+        };
+        assert_eq!(blob.media_type, "audio/mpeg");
+        assert_eq!(blob.size, 8);
+        assert_eq!(fs.kind("/media").unwrap_err(), FsError::IsADirectory("/media".into()));
+
+        assert!(matches!(fs.read("/media/theme.mp3"), Err(FsError::NotText(_))));
+        assert_eq!(fs.read_blob("/media/theme.mp3").unwrap(), b"\x00\x01\x02bytes");
+
+        // On a real disk a second name has to be a second file.
+        fs.copy("/media/theme.mp3", "/media/copy.mp3").unwrap();
+        assert_eq!(fs.read_blob("/media/copy.mp3").unwrap(), b"\x00\x01\x02bytes");
+        assert!(root.join("media/theme.mp3").exists(), "copy leaves the source");
 
         let _ = std::fs::remove_dir_all(&root);
     }

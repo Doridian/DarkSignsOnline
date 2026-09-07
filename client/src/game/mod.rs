@@ -35,7 +35,7 @@ use crate::interp::{ArgVal, Host, Interp};
 use crate::value::{VbArray, Value};
 
 use console::{Channel, Console, DrawMode};
-use fs::{FileSystem, FsError};
+use fs::{FileSystem, FsError, NodeKind};
 use server::{ApiRequest, GameServer};
 
 /// Where a bare command name is looked for, in order. The working
@@ -59,7 +59,9 @@ fn fs_error(e: FsError) -> VbError {
     // Map onto the VBScript file errors scripts already know how to handle.
     let number = match e {
         FsError::NotFound(_) => 53,
-        FsError::NotADirectory(_) | FsError::IsADirectory(_) => 54,
+        // 54 is "Bad file mode", which is what asking for a directory or
+        // for a song as though it were text both amount to.
+        FsError::NotADirectory(_) | FsError::IsADirectory(_) | FsError::NotText(_) => 54,
         FsError::AlreadyExists(_) => 58,
         FsError::NotEmpty(_) => 75,
         FsError::Io(_) => 57,
@@ -528,7 +530,17 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             "cat" | "display" => {
                 self.assert_local()?;
                 let p = self.resolve(&arg_str(args, 0)?);
-                let text = self.fs.borrow_mut().read(&p).map_err(fs_error)?;
+                let kind = self.fs.borrow().kind(&p).map_err(fs_error)?;
+                let text = match kind {
+                    NodeKind::Text => self.fs.borrow().read(&p).map_err(fs_error)?,
+                    // Reading a song at a terminal gets you what it has
+                    // always got you, which is noise.
+                    NodeKind::Blob(_) => {
+                        let mut bytes = self.fs.borrow().read_blob(&p).map_err(fs_error)?;
+                        bytes.truncate(CAT_BLOB_LIMIT);
+                        values::console_escape(&bytes_as_noise(&bytes))
+                    }
+                };
                 Value::str(select_lines(
                     &text,
                     arg_int(args, 1, 0)?,
@@ -686,7 +698,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             "music" => {
                 self.assert_local()?;
                 let c = arg_str(args, 0)?;
-                self.console.borrow_mut().music(&c);
+                self.console.borrow_mut().music(&resolve_music(&c, |p| self.resolve(p)));
                 Value::Empty
             }
             "mail" => {
@@ -1564,6 +1576,53 @@ fn console_rows(text: &str) -> Vec<&str> {
 }
 
 /// `Display`'s line window: `start` is 1-based, and `max` of 0 means all.
+/// Resolve the path inside a `Music` command, leaving the rest of it alone.
+///
+/// `Music "play theme.mp3"` names a file the way every other file call does,
+/// so the name is resolved against the working directory here -- the console
+/// that plays it has no working directory to resolve it against, and by the
+/// time it hears about the command the script that knew may have moved on.
+///
+/// A command that names no file, `stop` being the one that matters, passes
+/// through as it was written.
+fn resolve_music(command: &str, resolve: impl Fn(&str) -> String) -> String {
+    let trimmed = command.trim();
+    let Some((verb, rest)) = trimmed.split_once(char::is_whitespace) else {
+        return trimmed.to_string();
+    };
+    if !matches!(verb.to_ascii_lowercase().as_str(), "play" | "loop") {
+        return trimmed.to_string();
+    }
+    format!("{verb} {}", resolve(rest.trim()))
+}
+
+/// The most of a blob `Cat` will pour into the console.
+///
+/// Reading a song as though it were text is a real thing to do at a real
+/// terminal, and the answer there is a screenful of noise, so it is the
+/// answer here too. A whole album of it would wedge the console rather than
+/// amuse anyone, so the noise stops.
+const CAT_BLOB_LIMIT: usize = 64 * 1024;
+
+/// Render bytes the way a terminal shows a file that is not text: printable
+/// ones as themselves, the rest as the Latin-1 characters their values name.
+///
+/// Control bytes become dots instead. They are what a real terminal would
+/// act on rather than print -- and acting on them here would mean a file
+/// deciding how the console draws, which is not a trick worth allowing.
+fn bytes_as_noise(bytes: &[u8]) -> String {
+    bytes
+        .iter()
+        .map(|b| match b {
+            b'\r' | b'\n' | b'\t' => *b as char,
+            0x00..=0x1f | 0x7f => '.',
+            // Anything else is its own code point, which for the high bytes
+            // an mp3 is mostly made of means accented letters and symbols.
+            _ => *b as char,
+        })
+        .collect()
+}
+
 fn select_lines(text: &str, start: i64, max: i64) -> String {
     let start = start.max(1);
     let mut out = String::new();

@@ -1,3 +1,12 @@
 Option Explicit
 Say "{{green 12}}Function: MUSIC(Command[String]) -> Nothing"
 Say "{{lred}}Restriction: Can only be used locally (local script or CLI)"
+Say ""
+Say "{{green}}Commands:"
+Say "  play <file>    play a sound file once"
+Say "  loop <file>    play it over and over"
+Say "  stop           stop whatever is playing"
+Say "  volume <0-100> set how loud it is"
+Say ""
+Say "File names work as they do anywhere else, so a relative one is taken"
+Say "from the current directory. Put your own files in /home/music."

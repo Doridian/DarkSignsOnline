@@ -12,11 +12,13 @@
 
 import { ChatPanel } from "./chat.js";
 import { CommView, ConsoleView } from "./console.js";
-import { CLOSED, INPUT_CAPACITY, READY } from "./control.js";
+import { ABSENT, CLOSED, ANSWER_CAPACITY, READY } from "./control.js";
 import { EditorWindow } from "./editor.js";
 import { FileTree, PATH_DRAG, quotePath, TOGGLED } from "./filetree.js";
 import { LibraryWindow } from "./library.js";
 import { MailWindow } from "./mail.js";
+import { MusicPlayer } from "./music.js";
+import { BlobStore } from "./storage.js";
 import type { Asked, ConsoleEvent, FromWorker, ToWorker } from "./types.js";
 
 /** As many as the original client has, and the same F-keys select them. */
@@ -57,6 +59,22 @@ const editor = new EditorWindow(dialog("editor"), (request) => ask(request), (id
 /** The windows that cover the console, so a key can tell whether one is up. */
 const windows = [mail, library, editor];
 
+/**
+ * The bytes behind the tree's media files.
+ *
+ * The page needs its own handle on them for two reasons: it is what plays a
+ * song or shows a picture, and it is what answers a console that has parked
+ * itself waiting to read one -- a worker in that state cannot read anything
+ * for itself.
+ */
+const blobs = await BlobStore.open();
+
+// Without this the browser may evict the origin's storage under disk
+// pressure, which for a player who has added a few albums is a real loss
+// rather than a re-download of some scripts. It is asked for once, quietly:
+// a refusal leaves everything working exactly as it did.
+void navigator.storage?.persist?.().catch(() => false);
+
 // The file tree, which sits beside the consoles rather than over them. It
 // reads the filesystem through `ask` like the windows do, and keeps up
 // afterwards from the change reports the page already relays between the
@@ -68,7 +86,12 @@ const fileTree = new FileTree(
   // screen -- so running it from the editor runs it somewhere visible.
   (path) => void editor.openFile(path, active.id),
   (text) => comm.add(text),
+  blobs,
 );
+
+// `Music`. It reads the bytes out of the same store the panel writes them
+// to, and asks a console what a path holds, since the tree is the worker's.
+const music = new MusicPlayer(blobs, (request) => ask(request), (text) => comm.add(text));
 
 // Chat. It polls and sends through `ask`, the same way mail does, because
 // that is where the credentials are. Both callbacks end at the comm log:
@@ -130,7 +153,7 @@ class GameConsole {
   readonly view: ConsoleView;
   /** The control block and the line buffer, both shared with the worker. */
   readonly control: Int32Array<SharedArrayBuffer>;
-  readonly inputBytes: Uint8Array<SharedArrayBuffer>;
+  readonly answerBytes: Uint8Array<SharedArrayBuffer>;
   readonly worker: Worker;
   /** Set while the worker is blocked waiting for a line. */
   awaitingInput = false;
@@ -156,7 +179,7 @@ class GameConsole {
     this.control = new Int32Array(
       new SharedArrayBuffer(2 * Int32Array.BYTES_PER_ELEMENT),
     );
-    this.inputBytes = new Uint8Array(new SharedArrayBuffer(INPUT_CAPACITY));
+    this.answerBytes = new Uint8Array(new SharedArrayBuffer(ANSWER_CAPACITY));
 
     this.worker = new Worker("./worker.js", { type: "module" });
     this.worker.onmessage = (e: MessageEvent<FromWorker>) => handleMessage(this, e.data);
@@ -299,12 +322,31 @@ class GameConsole {
    */
   deliverInput(text: string): void {
     const encoded = new TextEncoder().encode(text);
-    const length = Math.min(encoded.length, INPUT_CAPACITY);
-    this.inputBytes.set(encoded.subarray(0, length));
+    const length = Math.min(encoded.length, ANSWER_CAPACITY);
+    this.answerBytes.set(encoded.subarray(0, length));
     Atomics.store(this.control, 1, length);
     Atomics.store(this.control, 0, READY);
     Atomics.notify(this.control, 0);
     this.awaitingInput = false;
+  }
+
+  /**
+   * Hand a file's bytes to the worker that is blocked waiting for them.
+   *
+   * `null` says the bytes are gone, which is not the same as a file of no
+   * bytes and has to be tellable from it -- the tree still lists the file,
+   * so the console says so rather than printing nothing.
+   */
+  deliverBlob(bytes: Uint8Array | null): void {
+    if (bytes === null) {
+      Atomics.store(this.control, 1, ABSENT);
+    } else {
+      const length = Math.min(bytes.length, ANSWER_CAPACITY);
+      this.answerBytes.set(bytes.subarray(0, length));
+      Atomics.store(this.control, 1, length);
+    }
+    Atomics.store(this.control, 0, READY);
+    Atomics.notify(this.control, 0);
   }
 
   /** Tell a blocked worker that no more input is coming. */
@@ -588,6 +630,16 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
       comm.add(`${message.path} is missing; the client bundle may be incomplete.`);
       break;
 
+    case "wantBlob":
+      // The worker is parked and cannot read OPFS itself, so this side does
+      // it and wakes it up. Nothing is awaited by the player: the console
+      // that asked is the only thing waiting, and it asked to wait.
+      void blobs
+        .bytes(message.id, message.max)
+        .catch(() => null)
+        .then((bytes) => target.deliverBlob(bytes));
+      break;
+
     case "wantInput":
       // The worker is parked; the next line typed goes to it rather than
       // being treated as a new command. Its prompt, if it asked with one,
@@ -666,6 +718,12 @@ function renderEvent(target: GameConsole, event: ConsoleEvent): void {
       // the one still running the script, and blocking it would leave
       // nothing able to answer the window's own requests.
       mail.show();
+      break;
+    case "music":
+      // `Music` plays what the player has put in the filesystem. It does not
+      // hold the script up: a track runs for minutes and the script that
+      // started it has other things to be doing.
+      void music.run(event.command);
       break;
     case "chatView":
       // `ChatView` decides whether the room is mirrored into the comm log.
@@ -783,7 +841,7 @@ async function boot(): Promise<void> {
       type: "boot",
       consoleId: item.id,
       control: item.control.buffer,
-      input: item.inputBytes.buffer,
+      answer: item.answerBytes.buffer,
       ...layout,
       files,
     });

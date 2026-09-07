@@ -19,7 +19,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 use vbscript::game::cli::CommandState;
-use vbscript::game::fs::FileSystem;
+use vbscript::game::fs::{BlobRef, FileSystem, NodeKind};
 use vbscript::game::{chat, library, mail};
 use vbscript::game::protocol::{self, Credentials, DEFAULT_API_ROOT};
 use vbscript::game::server::{ApiRequest, GameServer};
@@ -62,6 +62,10 @@ impl Session {
     /// that means `Atomics.wait`, which needs the page to be cross-origin
     /// isolated.
     ///
+    /// `read_blob` is handed a blob id and answers with a `Uint8Array`. It
+    /// is synchronous for the same reason `read_line` is, and can be: in a
+    /// worker OPFS opens synchronous access handles.
+    ///
     /// `console_id` is which of the four this is, which scripts read as
     /// `ConsoleID`. `fonts` is the page's family-to-CSS-stack table, so that
     /// `TextWidth` measures the face that will actually be drawn.
@@ -71,11 +75,12 @@ impl Session {
         read_line: js_sys::Function,
         read_key: js_sys::Function,
         on_file_change: js_sys::Function,
+        read_blob: js_sys::Function,
         console_id: i32,
         fonts: JsValue,
     ) -> Session {
         let console = WorkerConsole::new(emit, read_line, read_key, TextMetrics::new(&fonts));
-        let inner = GameHost::new(console, PersistentFs::new(on_file_change), XhrServer::new(
+        let inner = GameHost::new(console, PersistentFs::new(on_file_change, read_blob), XhrServer::new(
             DEFAULT_API_ROOT.to_string(),
             Credentials::default(),
         ))
@@ -134,6 +139,18 @@ impl Session {
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
+    /// Take up a blob from the saved tree or from another console, without
+    /// reporting it back.
+    ///
+    /// Only the description travels. Every session reads the bytes out of
+    /// the same OPFS store, so a song that reaches one console is already
+    /// within reach of the other three.
+    #[wasm_bindgen(js_name = seedBlob)]
+    pub fn seed_blob(&self, path: &str, id: &str, size: f64, media_type: &str) {
+        let blob = BlobRef { id: id.into(), size: size as i64, media_type: media_type.into() };
+        let _ = self.host.inner.fs.borrow_mut().seed_blob(path, blob);
+    }
+
     /// Forget a file another console deleted, without persisting the
     /// deletion a second time.
     #[wasm_bindgen(js_name = forgetFile)]
@@ -182,6 +199,42 @@ impl Session {
             .borrow_mut()
             .write(path, contents)
             .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// Point a path at bytes the page has already put in OPFS, the way a
+    /// script's own write is persisted.
+    #[wasm_bindgen(js_name = writeBlob)]
+    pub fn write_blob(
+        &self,
+        path: &str,
+        id: &str,
+        size: f64,
+        media_type: &str,
+    ) -> Result<(), JsValue> {
+        let blob = BlobRef { id: id.into(), size: size as i64, media_type: media_type.into() };
+        self.host
+            .inner
+            .fs
+            .borrow_mut()
+            .write_blob(path, blob)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// The blob a path holds, or `null` when it holds text or nothing.
+    ///
+    /// This is how the page turns a path a script named -- in `Music`, or in
+    /// the file panel -- into the bytes it has to play or show.
+    #[wasm_bindgen(js_name = blobAt)]
+    pub fn blob_at(&self, path: &str) -> Result<String, JsValue> {
+        let found = match self.host.inner.fs.borrow().kind(path) {
+            Ok(NodeKind::Blob(blob)) => Some(BlobInfo {
+                id: blob.id,
+                size: blob.size as f64,
+                media_type: blob.media_type,
+            }),
+            _ => None,
+        };
+        json(&found)
     }
 
     #[wasm_bindgen(js_name = readFile)]
@@ -512,7 +565,12 @@ impl Session {
                     pending.push(path);
                 } else {
                     let size = fs.len(&path).unwrap_or(0);
-                    files.push(TreeFile { path, size: size as f64 });
+                    // Empty for text, which is what nearly every file is.
+                    let media_type = match fs.kind(&path) {
+                        Ok(NodeKind::Blob(blob)) => blob.media_type,
+                        _ => String::new(),
+                    };
+                    files.push(TreeFile { path, size: size as f64, media_type });
                 }
             }
         }
@@ -663,11 +721,24 @@ struct Tree {
 }
 
 /// One file in that tree, with the size the panel labels it by.
+///
+/// `media_type` is empty for a text file and names the kind for a blob, so
+/// the panel can offer to play a song without asking about it separately.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TreeFile {
     path: String,
     size: f64,
+    media_type: String,
+}
+
+/// A blob the page is about to play, show, or hand to the browser to save.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct BlobInfo {
+    id: String,
+    size: f64,
+    media_type: String,
 }
 
 /// Where a downloaded file landed.
