@@ -5,6 +5,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Dark Signs Online<?php if (!empty($htmltitle)) echo ' - ' . htmlentities($htmltitle); ?></title>
   <link href="/main.css" rel="stylesheet" type="text/css" />
+  <link rel="icon" href="/favicon.png" />
 </head>
 
 <body>
