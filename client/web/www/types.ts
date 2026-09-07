@@ -153,31 +153,26 @@ export type Said =
   | { kind: "nothing" }
   | { kind: "unknown"; command: string };
 
-// ---- the filesystem the four consoles share ------------------------------
+// ---- the one filesystem --------------------------------------------------
 
 /**
  * What became of one path.
  *
- * Every change any console makes is reported as one of these, which is what
- * keeps the other three sessions, the saved tree and the file panel in step
- * with it. Directories are in here as well as files: an empty one is implied
- * by nothing else, and `MKDIR` at one console has to reach the rest.
+ * There is one tree, in the fs worker, so this is no longer how four copies
+ * of it are kept in step. It is only how the file panel learns what a script
+ * did without having to ask again.
  */
 export type FileChange =
-  | { op: "write"; path: string; contents: string }
-  | { op: "blob"; path: string; blob: BlobRef }
-  | { op: "delete"; path: string }
-  | { op: "mkdir"; path: string }
-  | { op: "rmdir"; path: string };
+  | { op: "file"; path: string; size: number; mediaType: string }
+  | { op: "dir"; path: string }
+  | { op: "gone"; path: string };
 
 /**
- * Where a file's bytes are, for a file the tree only describes.
+ * A file whose contents are bytes rather than text.
  *
- * The tree is held in memory by all four sessions, so a song cannot live in
- * it and does not: what the tree keeps is this, which is enough to answer
- * `Dir` and `FileLen` without the bytes ever being fetched. `id` names the
- * bytes rather than the path, so copying a song is another name for one set
- * of them.
+ * `id` is the path the bytes are at. They have no other name: the tree is a
+ * real directory tree in OPFS, so a file's name is where its bytes are, the
+ * way it is in any filesystem.
  */
 export interface BlobRef {
   id: string;
@@ -186,8 +181,14 @@ export interface BlobRef {
   mediaType: string;
 }
 
+/** One entry in a directory listing. */
+export interface Entry {
+  name: string;
+  isDir: boolean;
+}
+
 /**
- * The whole tree, as `listTree` reports it.
+ * The whole tree, as the panel draws it.
  *
  * `dirs` holds every directory including `/`; `files` holds the rest. The
  * panel applies `FileChange`s to this rather than asking for it again.
@@ -219,12 +220,9 @@ export interface WorkerFailure {
 export type FromWorker =
   | { type: "ready"; cwd: string; persistent: boolean; restored: number }
   | { type: "credentialsSet" }
-  | { type: "wasReset" }
   | { type: "console"; event: ConsoleEvent }
-  | { type: "fileChanged"; change: FileChange }
   | { type: "missingFile"; path: string }
   | { type: "wantInput"; mode: string; prompt: string }
-  | { type: "wantBlob"; id: string; max: number }
   | { type: "done"; cwd: string }
   | { type: "error"; message: string; cwd: string }
   | WorkerAnswer
@@ -237,30 +235,23 @@ export type ToWorker =
       consoleId: number;
       control: SharedArrayBuffer;
       answer: SharedArrayBuffer;
+      /** The channel to the fs worker, and the buffers it answers into. */
+      fsPort: MessagePort;
+      fsControl: SharedArrayBuffer;
+      fsAnswer: SharedArrayBuffer;
       width: number;
       preSpace: number;
-      files: Record<string, string>;
       apiRoot?: string;
     }
   | { type: "credentials"; username: string; password: string }
   | { type: "command"; line: string }
   | { type: "script"; source: string; args?: string[] }
   | { type: "runFile"; path: string }
-  | { type: "syncFile"; change: FileChange }
   | { type: "layout"; width: number; preSpace: number }
-  | { type: "reset" }
   | Asked;
 
 /** A window's question, which carries the token its answer comes back with. */
 export type Asked = { token: number } & (
-  | { type: "blobAt"; path: string }
-  | {
-      type: "writeBlob";
-      path: string;
-      id: string;
-      size: number;
-      mediaType: string;
-    }
   | { type: "mailList" }
   | { type: "mailFetch" }
   | { type: "mailMarkRead"; id: number }
@@ -282,8 +273,36 @@ export type Asked = { token: number } & (
   | { type: "chatSay"; typed: string }
   | { type: "textspaceLoad"; channel: number }
   | { type: "textspaceSave"; channel: number; text: string }
-  | { type: "listFiles" }
-  | { type: "listTree" }
-  | { type: "readFile"; path: string }
-  | { type: "writeFile"; path: string; contents: string }
 );
+
+// ---- the messages between the page and the fs worker ---------------------
+
+/** What the page sends the filesystem. */
+export type ToFs =
+  | { type: "start"; files: Record<string, string> }
+  | {
+      type: "attach";
+      consoleId: number;
+      port: MessagePort;
+      control: SharedArrayBuffer;
+      answer: SharedArrayBuffer;
+    }
+  | ({ type: "ask"; token: number } & FsAsk);
+
+/** One question the page has about the tree. */
+export type FsAsk =
+  | { ask: "listTree" }
+  | { ask: "listFiles" }
+  | { ask: "readFile"; path: string }
+  | { ask: "writeFile"; path: string; contents: string }
+  | { ask: "blobAt"; path: string }
+  | { ask: "fileAt"; path: string }
+  | { ask: "putFile"; path: string; file: File }
+  | { ask: "reset" };
+
+/** What the filesystem sends the page. */
+export type FromFs =
+  | { type: "fsReady"; persistent: boolean; restored: number }
+  | { type: "changed"; changes: FileChange[] }
+  | WorkerAnswer
+  | WorkerFailure;

@@ -19,7 +19,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 use vbscript::game::cli::CommandState;
-use vbscript::game::fs::{BlobRef, FileSystem, NodeKind};
+use vbscript::game::fs::FileSystem;
 use vbscript::game::{chat, library, mail};
 use vbscript::game::protocol::{self, Credentials, DEFAULT_API_ROOT};
 use vbscript::game::server::{ApiRequest, GameServer};
@@ -28,7 +28,7 @@ use vbscript::interp::Interp;
 use vbscript::value::Value;
 
 use console::WorkerConsole;
-use fs::PersistentFs;
+use fs::RemoteFs;
 use host::BrowserHost;
 use metrics::TextMetrics;
 use server::XhrServer;
@@ -46,7 +46,7 @@ const STEP_BUDGET: u64 = 50_000_000;
 /// other three.
 #[wasm_bindgen]
 pub struct Session {
-    host: Rc<BrowserHost<WorkerConsole, PersistentFs, XhrServer>>,
+    host: Rc<BrowserHost<WorkerConsole, RemoteFs, XhrServer>>,
     command_state: CommandState,
     /// Kept so either setting can change without discarding the other.
     api_root: RefCell<String>,
@@ -62,9 +62,11 @@ impl Session {
     /// that means `Atomics.wait`, which needs the page to be cross-origin
     /// isolated.
     ///
-    /// `read_blob` is handed a blob id and answers with a `Uint8Array`. It
-    /// is synchronous for the same reason `read_line` is, and can be: in a
-    /// worker OPFS opens synchronous access handles.
+    /// `fs_call` is the filesystem: it takes one JSON request, blocks until
+    /// the fs worker has answered, and hands back one JSON reply. There is
+    /// one tree and four consoles, so no console holds it. `read_blob` is
+    /// the same channel for a path's bytes, kept separate so that a song on
+    /// its way to a `Cat` does not have to be encoded into JSON.
     ///
     /// `console_id` is which of the four this is, which scripts read as
     /// `ConsoleID`. `fonts` is the page's family-to-CSS-stack table, so that
@@ -74,13 +76,13 @@ impl Session {
         emit: js_sys::Function,
         read_line: js_sys::Function,
         read_key: js_sys::Function,
-        on_file_change: js_sys::Function,
+        fs_call: js_sys::Function,
         read_blob: js_sys::Function,
         console_id: i32,
         fonts: JsValue,
     ) -> Session {
         let console = WorkerConsole::new(emit, read_line, read_key, TextMetrics::new(&fonts));
-        let inner = GameHost::new(console, PersistentFs::new(on_file_change, read_blob), XhrServer::new(
+        let inner = GameHost::new(console, RemoteFs::new(fs_call, read_blob), XhrServer::new(
             DEFAULT_API_ROOT.to_string(),
             Credentials::default(),
         ))
@@ -124,62 +126,6 @@ impl Session {
         self.reconnect();
     }
 
-    /// Put a file into the session's filesystem without persisting it.
-    ///
-    /// This is how both the shipped scripts and the saved ones are loaded;
-    /// applying the saved copies last is what lets a player's edit survive
-    /// a client update.
-    #[wasm_bindgen(js_name = seedFile)]
-    pub fn seed_file(&self, path: &str, contents: &str) -> Result<(), JsValue> {
-        self.host
-            .inner
-            .fs
-            .borrow_mut()
-            .seed(path, contents)
-            .map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    /// Take up a blob from the saved tree or from another console, without
-    /// reporting it back.
-    ///
-    /// Only the description travels. Every session reads the bytes out of
-    /// the same OPFS store, so a song that reaches one console is already
-    /// within reach of the other three.
-    #[wasm_bindgen(js_name = seedBlob)]
-    pub fn seed_blob(&self, path: &str, id: &str, size: f64, media_type: &str) {
-        let blob = BlobRef { id: id.into(), size: size as i64, media_type: media_type.into() };
-        let _ = self.host.inner.fs.borrow_mut().seed_blob(path, blob);
-    }
-
-    /// Forget a file another console deleted, without persisting the
-    /// deletion a second time.
-    #[wasm_bindgen(js_name = forgetFile)]
-    pub fn forget_file(&self, path: &str) {
-        // A path this console never had is not an error: the four sessions
-        // are told about every change, including ones that predate a file
-        // they only learned of later.
-        let _ = self.host.inner.fs.borrow_mut().seed_delete(path);
-    }
-
-    /// Take up a directory another console made, or one restored from the
-    /// saved tree, without reporting it back.
-    ///
-    /// Writing a file makes the directories above it, so this is only ever
-    /// needed for the empty ones -- which is exactly why it is needed at
-    /// all: nothing else would carry them.
-    #[wasm_bindgen(js_name = seedDir)]
-    pub fn seed_dir(&self, path: &str) {
-        // Already there is the ordinary case, since a directory holding a
-        // seeded file has been made on that file's way in.
-        let _ = self.host.inner.fs.borrow_mut().seed_make_dir(path);
-    }
-
-    /// Drop a directory another console removed.
-    #[wasm_bindgen(js_name = forgetDir)]
-    pub fn forget_dir(&self, path: &str) {
-        let _ = self.host.inner.fs.borrow_mut().seed_remove_dir(path);
-    }
-
     /// Report the console's measurements, in CSS pixels.
     ///
     /// `width` is the room a line has for text and `pre_space` the indent an
@@ -199,42 +145,6 @@ impl Session {
             .borrow_mut()
             .write(path, contents)
             .map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    /// Point a path at bytes the page has already put in OPFS, the way a
-    /// script's own write is persisted.
-    #[wasm_bindgen(js_name = writeBlob)]
-    pub fn write_blob(
-        &self,
-        path: &str,
-        id: &str,
-        size: f64,
-        media_type: &str,
-    ) -> Result<(), JsValue> {
-        let blob = BlobRef { id: id.into(), size: size as i64, media_type: media_type.into() };
-        self.host
-            .inner
-            .fs
-            .borrow_mut()
-            .write_blob(path, blob)
-            .map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    /// The blob a path holds, or `null` when it holds text or nothing.
-    ///
-    /// This is how the page turns a path a script named -- in `Music`, or in
-    /// the file panel -- into the bytes it has to play or show.
-    #[wasm_bindgen(js_name = blobAt)]
-    pub fn blob_at(&self, path: &str) -> Result<String, JsValue> {
-        let found = match self.host.inner.fs.borrow().kind(path) {
-            Ok(NodeKind::Blob(blob)) => Some(BlobInfo {
-                id: blob.id,
-                size: blob.size as f64,
-                media_type: blob.media_type,
-            }),
-            _ => None,
-        };
-        json(&found)
     }
 
     #[wasm_bindgen(js_name = readFile)]
@@ -415,9 +325,8 @@ impl Session {
     /// Download one file into `/downloads`, and say where it landed.
     ///
     /// It is written through the filesystem like any other file, so it is
-    /// persisted and the other three consoles are told about it -- which is
-    /// what lets the player run it straight away in whichever console they
-    /// are in.
+    /// persisted and every console can see it -- there is one tree, so the
+    /// player can run it straight away in whichever console they are in.
     #[wasm_bindgen(js_name = libraryDownload)]
     pub fn library_download(&self, id: f64) -> Result<String, JsValue> {
         let body = self.get(&library::download_path(id as i64))?;
@@ -509,74 +418,6 @@ impl Session {
     #[wasm_bindgen(js_name = fileExists)]
     pub fn file_exists(&self, path: &str) -> bool {
         self.host.inner.fs.borrow().exists(path)
-    }
-
-    /// Every file in the tree, for a picker to offer.
-    #[wasm_bindgen(js_name = listFiles)]
-    pub fn list_files(&self) -> Result<String, JsValue> {
-        let fs = self.host.inner.fs.borrow();
-        let mut paths = Vec::new();
-        let mut pending = vec!["/".to_string()];
-        while let Some(dir) = pending.pop() {
-            let Ok(entries) = fs.read_dir(&dir) else {
-                continue;
-            };
-            for entry in entries {
-                let path = match dir.as_str() {
-                    "/" => format!("/{}", entry.name),
-                    parent => format!("{parent}/{}", entry.name),
-                };
-                if entry.is_dir {
-                    pending.push(path);
-                } else {
-                    paths.push(path);
-                }
-            }
-        }
-        paths.sort();
-        json(&paths)
-    }
-
-    /// The whole tree, directories and all, for the file panel to draw.
-    ///
-    /// Both halves are needed and neither implies the other: a directory
-    /// with nothing in it appears in no file's path, and the panel wants a
-    /// file's size without having to read the file. What comes back mirrors
-    /// what the filesystem holds, so the panel can apply the change reports
-    /// to it afterwards rather than asking again.
-    #[wasm_bindgen(js_name = listTree)]
-    pub fn list_tree(&self) -> Result<String, JsValue> {
-        let fs = self.host.inner.fs.borrow();
-        let mut dirs = Vec::new();
-        let mut files = Vec::new();
-        // Breadth or depth does not matter; the panel sorts what it draws.
-        let mut pending = vec!["/".to_string()];
-        while let Some(dir) = pending.pop() {
-            dirs.push(dir.clone());
-            let Ok(entries) = fs.read_dir(&dir) else {
-                continue;
-            };
-            for entry in entries {
-                let path = match dir.as_str() {
-                    "/" => format!("/{}", entry.name),
-                    parent => format!("{parent}/{}", entry.name),
-                };
-                if entry.is_dir {
-                    pending.push(path);
-                } else {
-                    let size = fs.len(&path).unwrap_or(0);
-                    // Empty for text, which is what nearly every file is.
-                    let media_type = match fs.kind(&path) {
-                        Ok(NodeKind::Blob(blob)) => blob.media_type,
-                        _ => String::new(),
-                    };
-                    files.push(TreeFile { path, size: size as f64, media_type });
-                }
-            }
-        }
-        dirs.sort();
-        files.sort_by(|a, b| a.path.cmp(&b.path));
-        json(&Tree { dirs, files })
     }
 
     /// Resolve a path against the console's working directory, the way a
@@ -708,39 +549,6 @@ impl From<&library::Upload> for LibraryUpload {
     }
 }
 
-/// The filesystem as the file panel draws it.
-///
-/// `dirs` carries every directory, the root included, so the panel can show
-/// an empty one; `files` carries the rest. A directory is not repeated in
-/// `files` and a file never appears in `dirs`.
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Tree {
-    dirs: Vec<String>,
-    files: Vec<TreeFile>,
-}
-
-/// One file in that tree, with the size the panel labels it by.
-///
-/// `media_type` is empty for a text file and names the kind for a blob, so
-/// the panel can offer to play a song without asking about it separately.
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct TreeFile {
-    path: String,
-    size: f64,
-    media_type: String,
-}
-
-/// A blob the page is about to play, show, or hand to the browser to save.
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct BlobInfo {
-    id: String,
-    size: f64,
-    media_type: String,
-}
-
 /// Where a downloaded file landed.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -839,6 +647,17 @@ pub fn textspace_channels() -> f64 {
 #[wasm_bindgen(js_name = foldPath)]
 pub fn fold_path(path: &str) -> String {
     vbscript::game::path::fold_case(path)
+}
+
+/// The MIME type a name implies, or an empty string when it implies text.
+///
+/// Exported so the fs worker classifies a file exactly as the engine does.
+/// It is the one thing both sides have to agree on -- a path the worker
+/// stores as bytes and the engine reads as text would be a file nobody can
+/// open -- and agreement is cheaper than a second table in TypeScript.
+#[wasm_bindgen(js_name = mediaTypeFor)]
+pub fn media_type_for_js(path: &str) -> String {
+    vbscript::game::fs::media_type_for(path).unwrap_or_default().to_string()
 }
 
 /// A convenience for the page: parse markup without running anything, so a

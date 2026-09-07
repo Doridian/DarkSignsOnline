@@ -7,19 +7,19 @@
 // There are four consoles, as in the original client, and each has a worker
 // of its own. They cannot share one: a console blocked in `ReadLine` blocks
 // its whole worker, and the other three have to stay usable. What they do
-// share -- the player's files -- is kept in step by passing every change
-// through this page.
+// share -- the player's files -- is not shared at all any more: there is one
+// filesystem, in a worker of its own, and all four ask it. Nothing on this
+// page keeps copies of a tree in step, because there are no copies.
 
 import { ChatPanel } from "./chat.js";
 import { CommView, ConsoleView } from "./console.js";
-import { ABSENT, CLOSED, ANSWER_CAPACITY, READY } from "./control.js";
+import { CLOSED, ANSWER_CAPACITY, FS_ANSWER_CAPACITY, READY } from "./control.js";
 import { EditorWindow } from "./editor.js";
 import { FileTree, PATH_DRAG, quotePath, TOGGLED } from "./filetree.js";
 import { LibraryWindow } from "./library.js";
 import { MailWindow } from "./mail.js";
 import { MusicPlayer } from "./music.js";
-import { BlobStore } from "./storage.js";
-import type { Asked, ConsoleEvent, FromWorker, ToWorker } from "./types.js";
+import type { Asked, ConsoleEvent, FromFs, FromWorker, FsAsk, ToWorker } from "./types.js";
 
 /** As many as the original client has, and the same F-keys select them. */
 const CONSOLE_COUNT = 4;
@@ -60,25 +60,83 @@ const editor = new EditorWindow(dialog("editor"), (request) => ask(request), (id
 const windows = [mail, library, editor];
 
 /**
- * The bytes behind the tree's media files.
+ * The filesystem, which is a worker of its own.
  *
- * The page needs its own handle on them for two reasons: it is what plays a
- * song or shows a picture, and it is what answers a console that has parked
- * itself waiting to read one -- a worker in that state cannot read anything
- * for itself.
+ * It owns the tree and it is the only thing that touches storage. The four
+ * consoles ask it over ports of their own; this page asks it here, for the
+ * panel, the editor and whatever is about to play a song.
  */
-const blobs = await BlobStore.open();
+const fsWorker = new Worker("./fsworker.js", { type: "module" });
 
-// Without this the browser may evict the origin's storage under disk
-// pressure, which for a player who has added a few albums is a real loss
-// rather than a re-download of some scripts. It is asked for once, quietly:
-// a refusal leaves everything working exactly as it did.
-void navigator.storage?.persist?.().catch(() => false);
+/** Settles when the tree has been read and the consoles can be started. */
+let fsReadyResolve: (report: { persistent: boolean; restored: number }) => void = () => {};
+const fsStarted = new Promise<{ persistent: boolean; restored: number }>((resolve) => {
+  fsReadyResolve = resolve;
+});
+
+/** Questions put to the filesystem, by the token each answer comes back with. */
+const askedFs = new Map<number, { resolve: (v: any) => void; reject: (e: Error) => void }>();
+
+/**
+ * Ask the filesystem something.
+ *
+ * Unlike a console, it is never busy: it holds the tree in memory and
+ * answers straight away, so these are not queued behind anything.
+ */
+function askFs(request: FsAsk, transfer: Transferable[] = []): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const token = nextToken;
+    nextToken += 1;
+    askedFs.set(token, { resolve, reject });
+    fsWorker.postMessage({ type: "ask", token, ...request }, transfer);
+  });
+}
+
+fsWorker.onmessage = (e: MessageEvent<FromFs>) => {
+  const message = e.data;
+  switch (message.type) {
+    case "fsReady":
+      fsReadyResolve(message);
+      break;
+
+    // Whatever any console did to the tree. This is the only reason the
+    // panel does not have to poll: the worker that made the change says so.
+    case "changed":
+      for (const change of message.changes) {
+        fileTree.apply(change);
+      }
+      break;
+
+    case "answer": {
+      const promise = askedFs.get(message.token);
+      askedFs.delete(message.token);
+      promise?.resolve(message.value);
+      break;
+    }
+
+    case "failed": {
+      const promise = askedFs.get(message.token);
+      askedFs.delete(message.token);
+      promise?.reject(new Error(message.message));
+      break;
+    }
+  }
+};
+
+/** The questions the filesystem answers rather than a console. */
+const FS_ASKS = new Set([
+  "listTree",
+  "listFiles",
+  "readFile",
+  "writeFile",
+  "blobAt",
+  "fileAt",
+  "putFile",
+]);
 
 // The file tree, which sits beside the consoles rather than over them. It
 // reads the filesystem through `ask` like the windows do, and keeps up
-// afterwards from the change reports the page already relays between the
-// four consoles.
+// afterwards from what the fs worker reports as it changes.
 const fileTree = new FileTree(
   element("filetree"),
   (request) => ask(request),
@@ -86,12 +144,11 @@ const fileTree = new FileTree(
   // screen -- so running it from the editor runs it somewhere visible.
   (path) => void editor.openFile(path, active.id),
   (text) => comm.add(text),
-  blobs,
 );
 
-// `Music`. It reads the bytes out of the same store the panel writes them
-// to, and asks a console what a path holds, since the tree is the worker's.
-const music = new MusicPlayer(blobs, (request) => ask(request), (text) => comm.add(text));
+// `Music`. It asks the filesystem for the file at a path and plays it; the
+// bytes never come through here, only a handle on them.
+const music = new MusicPlayer((request) => ask(request), (text) => comm.add(text));
 
 // Chat. It polls and sends through `ask`, the same way mail does, because
 // that is where the credentials are. Both callbacks end at the comm log:
@@ -154,6 +211,16 @@ class GameConsole {
   /** The control block and the line buffer, both shared with the worker. */
   readonly control: Int32Array<SharedArrayBuffer>;
   readonly answerBytes: Uint8Array<SharedArrayBuffer>;
+  /**
+   * The same again for the filesystem, which is a different worker.
+   *
+   * Two channels rather than one because two different workers answer on
+   * them, and a console waiting for a typed line must not be woken by a
+   * directory listing.
+   */
+  readonly fsControl: Int32Array<SharedArrayBuffer>;
+  readonly fsAnswer: Uint8Array<SharedArrayBuffer>;
+  readonly fsChannel = new MessageChannel();
   readonly worker: Worker;
   /** Set while the worker is blocked waiting for a line. */
   awaitingInput = false;
@@ -180,6 +247,22 @@ class GameConsole {
       new SharedArrayBuffer(2 * Int32Array.BYTES_PER_ELEMENT),
     );
     this.answerBytes = new Uint8Array(new SharedArrayBuffer(ANSWER_CAPACITY));
+    this.fsControl = new Int32Array(
+      new SharedArrayBuffer(2 * Int32Array.BYTES_PER_ELEMENT),
+    );
+    this.fsAnswer = new Uint8Array(new SharedArrayBuffer(FS_ANSWER_CAPACITY));
+    // The filesystem answers into this console's buffer, so it needs both
+    // ends: the port to be asked on and the memory to reply through.
+    fsWorker.postMessage(
+      {
+        type: "attach",
+        consoleId: id,
+        port: this.fsChannel.port2,
+        control: this.fsControl.buffer,
+        answer: this.fsAnswer.buffer,
+      },
+      [this.fsChannel.port2],
+    );
 
     this.worker = new Worker("./worker.js", { type: "module" });
     this.worker.onmessage = (e: MessageEvent<FromWorker>) => handleMessage(this, e.data);
@@ -248,8 +331,8 @@ class GameConsole {
     this.input.setSelectionRange(caret, caret);
   }
 
-  post(message: ToWorker): void {
-    this.worker.postMessage(message);
+  post(message: ToWorker, transfer: Transferable[] = []): void {
+    this.worker.postMessage(message, transfer);
   }
 
   /**
@@ -328,25 +411,6 @@ class GameConsole {
     Atomics.store(this.control, 0, READY);
     Atomics.notify(this.control, 0);
     this.awaitingInput = false;
-  }
-
-  /**
-   * Hand a file's bytes to the worker that is blocked waiting for them.
-   *
-   * `null` says the bytes are gone, which is not the same as a file of no
-   * bytes and has to be tellable from it -- the tree still lists the file,
-   * so the console says so rather than printing nothing.
-   */
-  deliverBlob(bytes: Uint8Array | null): void {
-    if (bytes === null) {
-      Atomics.store(this.control, 1, ABSENT);
-    } else {
-      const length = Math.min(bytes.length, ANSWER_CAPACITY);
-      this.answerBytes.set(bytes.subarray(0, length));
-      Atomics.store(this.control, 1, length);
-    }
-    Atomics.store(this.control, 0, READY);
-    Atomics.notify(this.control, 0);
   }
 
   /** Tell a blocked worker that no more input is coming. */
@@ -537,6 +601,14 @@ let nextToken = 1;
 
 /** Ask whichever console is free, and resolve with its answer. */
 function ask(request: { type: string } & Record<string, unknown>): Promise<any> {
+  if (FS_ASKS.has(request.type)) {
+    // A file, so it goes where the files are. The windows do not have to
+    // know which worker holds what; this is the one place that does.
+    // A `File` in here is not transferred: it is a handle on bytes already
+    // on disk, and structured clone copies the handle rather than the song.
+    const { type, ...rest } = request;
+    return askFs({ ask: type, ...rest } as FsAsk);
+  }
   return new Promise((resolve, reject) => {
     const token = nextToken;
     nextToken += 1;
@@ -579,10 +651,6 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
   switch (message.type) {
     case "ready":
       target.setPrompt(message.cwd);
-      // All four load the same saved tree, so one of them reports on it.
-      if (target.id === 1) {
-        storageReport = message;
-      }
       readyCount += 1;
       if (readyCount === consoles.length) {
         allReady();
@@ -604,40 +672,12 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
       }
       break;
 
-    case "wasReset":
-      if (target.id === 1) {
-        comm.add("Saved files cleared. Reload to start fresh.");
-      }
-      break;
-
     case "console":
       renderEvent(target, message.event);
       break;
 
-    case "fileChanged":
-      // The other three hold their own copy of the tree; keep it in step.
-      for (const other of consoles) {
-        if (other !== target) {
-          other.post({ type: "syncFile", change: message.change });
-        }
-      }
-      // And so does the panel, which is why it never has to poll: whatever
-      // any console does to the filesystem comes past here first.
-      fileTree.apply(message.change);
-      break;
-
     case "missingFile":
       comm.add(`${message.path} is missing; the client bundle may be incomplete.`);
-      break;
-
-    case "wantBlob":
-      // The worker is parked and cannot read OPFS itself, so this side does
-      // it and wakes it up. Nothing is awaited by the player: the console
-      // that asked is the only thing waiting, and it asked to wait.
-      void blobs
-        .bytes(message.id, message.max)
-        .catch(() => null)
-        .then((bytes) => target.deliverBlob(bytes));
       break;
 
     case "wantInput":
@@ -793,7 +833,7 @@ new ResizeObserver(reportLayoutSoon).observe(container);
 
 let readyCount = 0;
 /**
- * What the first console said about the saved files, kept until all four are
+ * What the filesystem said about what it found, kept until the consoles are
  * up and there is somewhere to report it.
  */
 let storageReport: { persistent: boolean; restored: number } | null = null;
@@ -832,9 +872,15 @@ function allReady(): void {
   void fileTree.load();
 }
 
-// Start the workers with the shared buffers and the commands the shell needs.
+// Start the filesystem, then the consoles that will be asking it things.
+//
+// In that order, and waited for: a console that started first would run its
+// opening script against a tree that had not been read off disk yet, and
+// would find none of the player's files.
 async function boot(): Promise<void> {
-  const files = await loadStartupFiles();
+  fsWorker.postMessage({ type: "start", files: await loadStartupFiles() });
+  storageReport = await fsStarted;
+
   const layout = measureLayout();
   for (const item of consoles) {
     item.post({
@@ -842,17 +888,20 @@ async function boot(): Promise<void> {
       consoleId: item.id,
       control: item.control.buffer,
       answer: item.answerBytes.buffer,
+      fsPort: item.fsChannel.port1,
+      fsControl: item.fsControl.buffer,
+      fsAnswer: item.fsAnswer.buffer,
       ...layout,
-      files,
-    });
+    }, [item.fsChannel.port1]);
   }
 }
 
 /**
  * Fetch the scripts that ship with the client.
  *
- * Fetched once and handed to all four workers, since they seed the same tree
- * into four sessions.
+ * Handed to the filesystem, which is the only thing that holds a tree. They
+ * are not saved: they come with the client and are refetched every load, so
+ * an edit is saved over one and a delete lasts until the next load.
  */
 async function loadStartupFiles(): Promise<Record<string, string>> {
   const files: Record<string, string> = {};
@@ -881,8 +930,9 @@ let pendingUser = "";
 
 // Saved sign-in, when the player asked for it.
 //
-// This is localStorage rather than the IndexedDB the files use, because the
-// form lives on this thread and a worker cannot reach localStorage at all.
+// This is localStorage rather than the filesystem the game's own files live
+// in, because the form lives on this thread and a worker cannot reach
+// localStorage at all -- and because a password is not a file.
 // The password is stored as typed: there is nowhere to hide it from anyone
 // with the browser, so the checkbox is the honest control and it defaults to
 // off. Every access is guarded, since a private window throws on the way in.

@@ -20,15 +20,18 @@ and a `Session` of its own. They cannot share one: a console blocked in
 `ReadLine` blocks its whole worker, and the point of having four is that the
 other three keep working. Scripts read which one they are in as `ConsoleID`.
 
-What they do share is the player's files. Each session holds its own copy of
-the tree, so a change is reported to the page and passed on to the other three
-as a seed — a change that is neither persisted twice nor echoed back. Only
-the console that made it writes it to IndexedDB.
+What they do share is the player's files, and they share them by not each
+having a copy. There is a fifth worker — `fsworker.ts` — which owns the tree
+and is the only thing that touches storage. A console asks it over a
+`MessagePort` and parks on `Atomics.wait` until the answer arrives in a shared
+buffer, which is how a synchronous `Cat` works in a language whose filesystem
+is asynchronous. Nothing is kept in step with anything, because there is only
+one of it.
 
-Directories are reported along with files. Writing `/a/b.ds` makes `/a` on the
-way, so the files alone would rebuild all but the empty ones — and `MD` at one
-console has to reach the other three whether or not anything is put in the
-directory afterwards. The same stream is what the file tree draws from.
+The fs worker reports every change it makes to the page, which is what the
+file panel draws from — that is all the reporting is for now. Directories are
+in that stream along with files: writing `/a/b.ds` makes `/a` on the way, and
+`MD` on an empty directory is implied by nothing else.
 
 `F1`–`F4` select a console, as in the original, and so do the tabs in the
 status bar. An inactive console is hidden but still laid out, so it keeps its
@@ -237,8 +240,9 @@ the row that would, and the account is what sat on the far side of it.
 ## Remembering a sign-in
 
 The "Remember me" box keeps the username and password in `localStorage` — not
-the IndexedDB the files use, because the form is on the main thread and a
-worker cannot reach `localStorage` at all. They are stored as typed. There is
+the filesystem the game's own files live in, because the form is on the main
+thread, a worker cannot reach `localStorage` at all, and a password is not a
+file. They are stored as typed. There is
 nowhere on a page to hide a password from anyone holding the browser, so the
 box is the honest control, and it is off unless ticked. A remembered sign-in
 reaches all four workers before any startup script runs, so every console is
@@ -263,11 +267,11 @@ grows into the room rather than the panel being squeezed into nothing — and
 which state it was left in is remembered.
 
 It never polls. `listTree` gives it one picture of the filesystem, and after
-that it applies the same change reports that keep the other three sessions in
-step, so a file written at console 3 appears here as it is written. Its model
-mirrors `MemoryFs` rather than what looks tidy: a directory stays after the
-last file in it is deleted, because that is what the filesystem does and what
-`DIR` will say.
+that it applies the changes the fs worker reports as it makes them, so a file
+written at console 3 appears here as it is written. Its model mirrors the
+filesystem rather than what looks tidy: a directory stays after the last file
+in it is deleted, because that is what the filesystem does and what `DIR` will
+say.
 
 Three gestures hang off it, each a plain HTML5 drag:
 
@@ -292,6 +296,38 @@ the game's filesystem holds strings, and a binary file has no honest
 representation in it. A file dropped anywhere else on the page is refused
 outright, because the browser would otherwise navigate to it and throw four
 consoles' worth of session away.
+
+## The filesystem
+
+The player's files are the origin private filesystem, and nothing else. The
+game tree is mirrored into it directly — `/home/music/theme.mp3` is
+`fs/home/music/theme.mp3` — so what the game calls a filesystem and what the
+browser stores are the same shape. An empty directory persists because it is a
+directory; a song is a file because it is a file.
+
+There is no second store and no id table. A blob's bytes are at the path that
+names them, which is what makes copying a song a copy and renaming one a
+rename, and which is why nothing has to reference-count anything or sweep for
+bytes no name reaches.
+
+Text is held in memory as well as on disk, because scripts read it
+synchronously; that is one copy of some small script files, in the fs worker.
+Media is never held — the tree keeps a size and a type, which is all `Dir` and
+`FileLen` need — and the bytes are fetched only when something plays or reads
+them.
+
+What a file *is* is decided the same way at every entry point: by its name
+where `media_type_for` recognises the extension, and by its bytes where it
+does not — anything that is not valid UTF-8 cannot be text whatever it is
+called. The same rule runs when a file is dropped in and when the tree is read
+back off disk, so a dropped file and a reloaded one are always classed alike.
+
+The shipped scripts are not written out. They come with the client and are
+refetched every load, so editing one saves the edit over it and deleting one
+lasts until the next load — it was never the player's file to delete.
+
+Where a browser has no OPFS the game still runs: the tree lives in memory for
+as long as the tab does, media included, and the page says so once at startup.
 
 ## The sub-windows
 

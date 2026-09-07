@@ -30,3 +30,21 @@ export const ABSENT = -1;
  * an answer never has to be sent in pieces.
  */
 export const ANSWER_CAPACITY = 65536;
+
+/**
+ * A filesystem answer is full and more of it is waiting.
+ *
+ * The console asks again rather than the buffer being made big enough for
+ * the worst case: a `Dir` of a large tree or a read of a long script has no
+ * fixed size, and sizing the buffer for one would waste the space four times
+ * over for the sake of a case that hardly happens.
+ */
+export const MORE = 3;
+
+/**
+ * Room for one filesystem answer, in bytes.
+ *
+ * Bigger than an input line because it holds a file: most scripts fit in one
+ * go, and anything that does not is sent in pieces.
+ */
+export const FS_ANSWER_CAPACITY = 1 << 20;

@@ -1,13 +1,12 @@
 // The file tree, beside the consoles.
 //
-// The four consoles share one filesystem but each session holds a copy of it,
-// so there is no single place to read the tree from. What there is instead is
-// the stream of changes the page already relays between the consoles: this
-// panel asks one worker for the tree once, then applies every `FileChange`
-// that goes past. An `MD` typed at console 3 therefore shows up here without
-// anyone polling anything.
+// There is one filesystem, in the fs worker, so there is one place to read
+// the tree from. The panel asks for it once and then applies every change
+// the worker reports as it makes it, which is why nothing here polls: an
+// `MD` typed at console 3 goes through that worker and comes straight back
+// out as a change.
 //
-// The model mirrors what `MemoryFs` holds rather than what looks tidy. In
+// The model mirrors what the filesystem holds rather than what looks tidy. In
 // particular a directory stays after the last file in it is deleted, because
 // that is what the filesystem does -- writing `/a/b.ds` makes `/a`, and
 // deleting the file does not take it away again.
@@ -17,7 +16,6 @@
 //   - downloaded, from the button that appears on a file,
 //   - dropped onto, which writes what was dropped into that folder.
 
-import { BlobStore, newBlobId } from "./storage.js";
 import type { Ask, FileChange, Tree } from "./types.js";
 
 /**
@@ -30,24 +28,15 @@ import type { Ask, FileChange, Tree } from "./types.js";
 export const PATH_DRAG = "application/x-dso-path";
 
 /**
- * The largest text file that may be dropped in, in bytes.
+ * The largest file that may be dropped in, in bytes.
  *
- * Text is held in memory by every one of the four sessions and mirrored into
- * IndexedDB, and the game's own files are scripts. A cap keeps a stray drop
- * of something large from wedging all of that; it is not a security measure,
- * since the player is only ever hurting themselves.
+ * One cap for everything now: a dropped file goes to disk whatever it is,
+ * and only a text one is also held in memory -- and a text one big enough
+ * to matter is not a script. What is left to guard is the browser's own
+ * storage quota, which this stays well under so that a single careless drop
+ * cannot fill it.
  */
-const MAX_TEXT_UPLOAD = 512 * 1024;
-
-/**
- * The largest media file, which can afford to be far larger.
- *
- * None of the reasons above apply to it: what the sessions hold is the name
- * and the size, and the bytes sit in OPFS until something plays them. What
- * is left is the browser's own storage quota, which this stays well under so
- * that a single careless drop cannot fill it.
- */
-const MAX_MEDIA_UPLOAD = 64 * 1024 * 1024;
+const MAX_UPLOAD = 64 * 1024 * 1024;
 
 /** Where the panel's open/closed state is remembered between visits. */
 const OPEN_KEY = "darksigns.filetree";
@@ -79,7 +68,7 @@ export class FileTree {
    * Changes that arrived while `listTree` was in flight.
    *
    * The answer describes the filesystem as it was when the worker looked at
-   * it, and another console may have written something in the meantime.
+   * it, and a console may have written something in the meantime.
    * Holding those and replaying them over the answer costs nothing -- every
    * change is idempotent, so replaying one the answer already has is
    * harmless -- and it also serves as the flag that a load is in progress.
@@ -101,7 +90,6 @@ export class FileTree {
     readonly ask: Ask,
     readonly open: (path: string) => void,
     readonly notify: (text: string) => void,
-    readonly blobs: BlobStore,
   ) {
     this.body = root.querySelector(".tree-body") as HTMLElement;
     this.status = root.querySelector(".tree-status") as HTMLElement;
@@ -187,7 +175,7 @@ export class FileTree {
 
   // ---- the model ---------------------------------------------------------
 
-  /** Ask a worker for the whole tree and draw it. */
+  /** Ask the filesystem for the whole tree and draw it. */
   async load(): Promise<void> {
     if (this.pending) {
       return;
@@ -217,10 +205,10 @@ export class FileTree {
   }
 
   /**
-   * Take up one change from any of the four consoles.
+   * Take up one change the filesystem reported.
    *
-   * This is the same report that keeps the other three sessions in step, so
-   * applying it here keeps the panel in step with all of them.
+   * Whatever any console did went through that one worker, so this is every
+   * change there is.
    */
   apply(change: FileChange): void {
     if (this.pending) {
@@ -236,29 +224,21 @@ export class FileTree {
   /** Fold one change into the model, without redrawing. */
   take(change: FileChange): void {
     switch (change.op) {
-      case "write":
-        this.files.set(change.path, { size: byteLength(change.contents), mediaType: "" });
+      case "file":
+        this.files.set(change.path, { size: change.size, mediaType: change.mediaType });
         // Writing a file makes the directories above it, so the panel makes
         // them too rather than waiting to be told about them.
         this.addParents(change.path);
         break;
-      case "blob":
-        this.files.set(change.path, {
-          size: change.blob.size,
-          mediaType: change.blob.mediaType,
-        });
-        this.addParents(change.path);
-        break;
-      case "delete":
-        // The directories above it stay: the filesystem keeps them, and a
-        // panel that dropped them would disagree with `DIR`.
-        this.files.delete(change.path);
-        break;
-      case "mkdir":
+      case "dir":
         this.dirs.add(change.path);
         this.addParents(change.path);
         break;
-      case "rmdir":
+      case "gone":
+        // Whichever it was. The directories above a deleted file stay: the
+        // filesystem keeps them, and a panel that dropped them would
+        // disagree with `DIR`.
+        this.files.delete(change.path);
         this.dirs.delete(change.path);
         break;
     }
@@ -658,111 +638,62 @@ export class FileTree {
   /**
    * Write what was dropped, one file at a time, and report what did not fit.
    *
-   * What decides whether a file goes in as text or as bytes is the file
-   * itself: anything that decodes as UTF-8 is text, since that is what a
-   * script can read, and anything else is kept whole in OPFS under a name
-   * the tree carries. A player dropping a song does not have to say it is
-   * one, and dropping a script never turns it into something `Cat` refuses.
+   * The panel does not decide what kind of file anything is. It hands the
+   * filesystem a name and a file, and the filesystem decides -- by the name
+   * where the name says something, by the bytes where it does not. That is
+   * the same decision it makes when it reads the tree back off disk at
+   * startup, which is why a dropped file and a reloaded one are always
+   * classed the same way.
    */
   async upload(dir: string, files: Array<{ path: string; file: File }>): Promise<void> {
     let written = 0;
     for (const { path, file } of files) {
       const target = join(dir, path);
-      const contents = file.size > MAX_TEXT_UPLOAD ? null : await asText(file);
+      if (file.size > MAX_UPLOAD) {
+        this.notify(`${file.name} is too big for the game filesystem; it was not added.`);
+        continue;
+      }
       try {
-        if (contents !== null) {
-          await this.ask({ type: "writeFile", path: target, contents });
-        } else if (!(await this.uploadBlob(target, file))) {
-          continue;
-        }
+        await this.ask({ type: "putFile", path: target, file });
         written += 1;
       } catch (err) {
         this.notify(`Could not write ${target}: ${err instanceof Error ? err.message : err}`);
       }
-      // The write reports itself back through the page, which is what puts
-      // the row in the tree -- nothing is added here.
+      // The write reports itself back as a change, which is what puts the
+      // row in the tree -- nothing is added here.
     }
     if (written > 0) {
       this.notify(`Added ${written} file(s) to ${dir}.`);
     }
   }
 
-  /**
-   * Put a file's bytes in the store and point `target` at them.
-   *
-   * The bytes go in first and the name second, so a failure part-way leaves
-   * bytes nothing reaches rather than a name reaching nothing: the tree
-   * never lists a file that cannot be played.
-   */
-  async uploadBlob(target: string, file: File): Promise<boolean> {
-    if (!this.blobs.writable) {
-      this.notify(`${file.name} needs media storage, which this browser does not offer.`);
-      return false;
-    }
-    if (file.size > MAX_MEDIA_UPLOAD) {
-      this.notify(`${file.name} is too big for the game filesystem; it was not added.`);
-      return false;
-    }
-    const id = newBlobId();
-    try {
-      await this.blobs.put(id, file);
-    } catch (err) {
-      this.notify(`Could not store ${file.name}: ${err instanceof Error ? err.message : err}`);
-      return false;
-    }
-    await this.ask({
-      type: "writeBlob",
-      path: target,
-      id,
-      size: file.size,
-      mediaType: file.type || "application/octet-stream",
-    });
-    return true;
-  }
-
   // ---- taking a file out --------------------------------------------------
 
   /** Hand a file to the browser to save. */
   async download(path: string): Promise<void> {
-    // A media file is already a file; it does not have to come back through
-    // a console to be one, and pulling a whole album through one would be a
-    // poor way of asking for it.
-    const info = this.files.get(path);
-    if (info?.mediaType) {
-      const file = await this.blobs.file(await this.blobIdFor(path));
-      if (!file) {
-        this.notify(`The contents of ${path} are missing.`);
-        return;
-      }
-      this.save(file, baseName(path));
-      return;
-    }
-
-    let answer: { contents: string; exists: boolean };
+    // One question whatever the file is: the filesystem hands back a `File`
+    // for a song and for a script alike, and for a song that is a handle on
+    // the bytes rather than the bytes, so saving an album does not pull one
+    // through the page.
+    let file: File | null;
     try {
-      answer = await this.ask({ type: "readFile", path });
+      file = await this.ask({ type: "fileAt", path });
     } catch (err) {
       this.notify(`Could not read ${path}: ${err instanceof Error ? err.message : err}`);
       return;
     }
-    if (!answer.exists) {
+    if (!file) {
       this.notify(`${path} is no longer there.`);
       return;
     }
-    this.save(new Blob([answer.contents], { type: "text/plain" }), baseName(path));
-  }
-
-  /** Which bytes a path names, asked of a console since the tree holds it. */
-  async blobIdFor(path: string): Promise<string> {
-    const found: { id: string } | null = await this.ask({ type: "blobAt", path });
-    return found?.id ?? "";
+    this.save(file, baseName(path));
   }
 
   /**
    * A link that is clicked and thrown away.
    *
-   * There is no URL to point at until now: the contents came from a worker,
-   * or out of a store the page cannot serve from directly.
+   * There is no URL to point at until now: the contents came out of a
+   * filesystem the page cannot serve from directly.
    */
   save(data: Blob, name: string): void {
     const url = URL.createObjectURL(data);
@@ -815,11 +746,6 @@ function cssEscape(value: string): string {
 }
 
 // ---- sizes ---------------------------------------------------------------
-
-/** What a string costs in the filesystem, which counts bytes and not chars. */
-function byteLength(text: string): number {
-  return new TextEncoder().encode(text).length;
-}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) {
@@ -906,19 +832,3 @@ async function readDir(dir: FileSystemDirectoryEntry): Promise<FileSystemEntry[]
   }
 }
 
-/**
- * A dropped file as text, or null if it is not text.
- *
- * The game's filesystem holds strings, so anything that is not valid UTF-8 --
- * or that carries a NUL, which no script does and every binary does -- has
- * no honest representation in it and is refused rather than mangled.
- */
-async function asText(file: File): Promise<string | null> {
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  try {
-    const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-    return text.includes("\0") ? null : text;
-  } catch {
-    return null;
-  }
-}

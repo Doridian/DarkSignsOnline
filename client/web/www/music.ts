@@ -11,8 +11,7 @@
 // element reads a file off disk as it goes and can seek within it, which is
 // what makes a forty-megabyte track cost nothing to start.
 
-import type { BlobStore } from "./storage.js";
-import type { Ask, BlobRef } from "./types.js";
+import type { Ask } from "./types.js";
 
 export class MusicPlayer {
   readonly audio = new Audio();
@@ -20,7 +19,6 @@ export class MusicPlayer {
   url: string | null = null;
 
   constructor(
-    readonly blobs: BlobStore,
     readonly ask: Ask,
     readonly notify: (text: string) => void,
   ) {}
@@ -58,33 +56,32 @@ export class MusicPlayer {
       this.notify("Music: play what?");
       return;
     }
-    // The tree is the worker's, so the path is resolved to a set of bytes by
-    // asking it. Text answers null here, which is the honest reply: a script
-    // is not something to play.
-    let found: BlobRef | null;
+    // The filesystem is asked what is at the path, and answers with the file
+    // rather than its contents: a handle the browser can stream from.
+    let file: File | null;
     try {
-      found = await this.ask({ type: "blobAt", path });
+      const blob = await this.ask({ type: "blobAt", path });
+      if (!blob) {
+        // Text, or nothing. Either way not something to play, and saying so
+        // beats handing `<audio>` a script and letting it fail its own way.
+        this.notify(`Music: ${path} is not a sound file.`);
+        return;
+      }
+      file = await this.ask({ type: "fileAt", path });
     } catch (err) {
       this.notify(`Music: ${err instanceof Error ? err.message : err}`);
       return;
     }
-    if (!found) {
-      this.notify(`Music: ${path} is not a sound file.`);
-      return;
-    }
-    const file = await this.blobs.file(found.id);
     if (!file) {
       this.notify(`Music: the contents of ${path} are missing.`);
       return;
     }
 
     this.stop();
-    // OPFS does not remember what a file was, so `getFile` hands back a type
-    // of "". `slice` puts the tree's answer back on without copying a byte,
-    // which is what lets the element pick a decoder rather than sniff for
-    // one -- and the tree is where the type belongs anyway, since that is
-    // what `Dir` and the file panel read.
-    this.url = URL.createObjectURL(file.slice(0, file.size, found.mediaType));
+    // The type comes from the tree, put back on by the fs worker: OPFS does
+    // not remember what a file was and hands one back with a type of "",
+    // which leaves the element sniffing for a decoder instead of picking one.
+    this.url = URL.createObjectURL(file);
     this.audio.src = this.url;
     this.audio.loop = loop;
     try {

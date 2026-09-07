@@ -1,207 +1,241 @@
-//! A filesystem that survives a reload.
+//! The filesystem, which lives in another worker.
 //!
-//! Scripts call the filesystem synchronously and IndexedDB is asynchronous,
-//! so the two are bridged by keeping the whole tree in memory and writing
-//! changes out behind the script's back. The files are small text scripts,
-//! so holding all of them costs little.
+//! There is one filesystem and four consoles, so somebody has to own it.
+//! In the browser that is the fs worker: it holds the tree and it is the
+//! only thing that touches OPFS. Everything here is a shim that asks it.
 //!
-//! Loading happens once at startup, before any script runs: the worker reads
-//! IndexedDB and seeds the session, so a read never has to wait.
+//! Scripts call the filesystem synchronously, and a question asked across
+//! workers is not synchronous, so the answer comes back the way `ReadLine`'s
+//! does: post the request, park on `Atomics.wait`, and let the worker that
+//! is not blocked do the work. That costs a few microseconds a call, which
+//! is the price of there being one tree rather than four copies that have to
+//! be kept in step.
 //!
-//! A player's music and pictures are the exception, and are why the tree
-//! separates a file's name from its contents. Holding a few albums in memory
-//! in each of the four sessions is not on, so the tree keeps only what it
-//! can answer `Dir` and `FileLen` from -- a name, a size, a type -- and the
-//! bytes stay in the origin private filesystem. Nothing has to become
-//! asynchronous for that: OPFS hands out synchronous access handles inside a
-//! worker, which is where this runs.
+//! Nothing is cached here on purpose. A cache would be a second copy of the
+//! tree, and second copies of the tree are what this replaced.
 
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
-use vbscript::game::fs::{BlobRef, DirEntry, FileSystem, FsError, FsResult, MemoryFs, NodeKind};
+use vbscript::game::fs::{BlobRef, DirEntry, FileSystem, FsError, FsResult, NodeKind};
+use vbscript::game::path::fold_case;
 
-/// A [`MemoryFs`] that reports every change so the worker can persist it.
-pub struct PersistentFs {
-    memory: MemoryFs,
-    /// Called as `(kind, path, detail)`. `kind` is one of `write`, `blob`,
-    /// `delete`, `mkdir` or `rmdir`. `detail` is the file's text for a
-    /// write, an `{ id, size, mediaType }` object for a blob, and null for
-    /// the rest.
-    ///
-    /// Directories are reported as well as files because the four consoles
-    /// share one tree: an `MD` typed at one of them has to reach the other
-    /// three and the file tree beside them, and an empty directory is not
-    /// implied by any file that would otherwise carry it.
-    on_change: js_sys::Function,
-    /// Called as `(id)` and answering with a `Uint8Array`, or null when the
-    /// bytes are gone. This is the one place the engine reaches outside its
-    /// own tree, and it is synchronous because a script asking to `Cat` a
-    /// song is not in a position to wait.
-    read_blob: js_sys::Function,
-    /// Set while the saved tree is being loaded, so replaying it does not
-    /// write every file straight back out again.
-    loading: bool,
+/// One question for the fs worker. The paths in it are already folded.
+#[derive(Serialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+enum Request<'a> {
+    Exists { path: &'a str },
+    IsDir { path: &'a str },
+    Read { path: &'a str },
+    Write { path: &'a str, contents: &'a str },
+    Append { path: &'a str, contents: &'a str },
+    Len { path: &'a str },
+    Delete { path: &'a str },
+    ReadDir { path: &'a str },
+    MakeDir { path: &'a str },
+    RemoveDir { path: &'a str },
+    Kind { path: &'a str },
+    /// `blob.id` is the path the bytes are at now, so this is both "point
+    /// this name at those bytes" and "copy that file to here".
+    WriteBlob { path: &'a str, blob: WireBlob },
+    Rename { path: &'a str, to: &'a str },
 }
 
-impl PersistentFs {
-    pub fn new(on_change: js_sys::Function, read_blob: js_sys::Function) -> PersistentFs {
-        PersistentFs { memory: MemoryFs::new(), on_change, read_blob, loading: false }
-    }
+/// A blob on the wire. `id` is a path: in a real filesystem the bytes have
+/// no name of their own, and giving them one is what the id store used to
+/// be for.
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WireBlob {
+    id: String,
+    size: f64,
+    media_type: String,
+}
 
-    /// Seed the tree without reporting the writes back.
-    ///
-    /// Used for both the shipped scripts and the saved ones; whichever is
-    /// applied last wins, which is how a player's edit survives an update.
-    /// The path is folded on the way in like any other, so a file saved
-    /// under a mixed-case name before the tree was case-insensitive comes
-    /// back under its folded one.
-    pub fn seed(&mut self, path: &str, contents: &str) -> FsResult<()> {
-        self.loading = true;
-        let result = self.memory.write(path, contents);
-        self.loading = false;
-        result
+impl From<BlobRef> for WireBlob {
+    fn from(blob: BlobRef) -> WireBlob {
+        WireBlob { id: blob.id, size: blob.size as f64, media_type: blob.media_type }
     }
+}
 
-    /// Drop a file another console deleted, without reporting it back.
-    pub fn seed_delete(&mut self, path: &str) -> FsResult<()> {
-        self.loading = true;
-        let result = self.memory.delete(path);
-        self.loading = false;
-        result
+impl From<WireBlob> for BlobRef {
+    fn from(wire: WireBlob) -> BlobRef {
+        BlobRef { id: wire.id, size: wire.size as i64, media_type: wire.media_type }
     }
+}
 
-    /// Take up a blob the saved tree or another console has, without
-    /// reporting it back. Only the name and the description of the bytes
-    /// travel; the bytes themselves are already in OPFS, which every session
-    /// shares.
-    pub fn seed_blob(&mut self, path: &str, blob: BlobRef) -> FsResult<()> {
-        self.loading = true;
-        let result = self.memory.write_blob(path, blob);
-        self.loading = false;
-        result
-    }
+/// What a path holds, on the wire. Null means text.
+#[derive(Deserialize)]
+struct WireKind {
+    blob: Option<WireBlob>,
+}
 
-    /// Take up a directory another console made, without reporting it back.
-    pub fn seed_make_dir(&mut self, path: &str) -> FsResult<()> {
-        self.loading = true;
-        let result = self.memory.make_dir(path);
-        self.loading = false;
-        result
-    }
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WireEntry {
+    name: String,
+    is_dir: bool,
+}
 
-    /// Drop a directory another console removed, without reporting it back.
-    pub fn seed_remove_dir(&mut self, path: &str) -> FsResult<()> {
-        self.loading = true;
-        let result = self.memory.remove_dir(path);
-        self.loading = false;
-        result
-    }
+/// The failure, named the way [`FsError`] names it so the error a script
+/// sees does not depend on which side of the channel noticed.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WireError {
+    kind: String,
+    arg: String,
+}
 
-    fn changed(&self, kind: &str, path: &str, detail: JsValue) {
-        if self.loading {
-            return;
+/// An answer: whichever of the two is there.
+#[derive(Deserialize)]
+struct Answer<T> {
+    ok: Option<T>,
+    err: Option<WireError>,
+}
+
+impl From<WireError> for FsError {
+    fn from(wire: WireError) -> FsError {
+        let arg = wire.arg;
+        match wire.kind.as_str() {
+            "notFound" => FsError::NotFound(arg),
+            "notADirectory" => FsError::NotADirectory(arg),
+            "isADirectory" => FsError::IsADirectory(arg),
+            "alreadyExists" => FsError::AlreadyExists(arg),
+            "notEmpty" => FsError::NotEmpty(arg),
+            "notText" => FsError::NotText(arg),
+            _ => FsError::Io(arg),
         }
-        // A failed notification means the page has gone; the in-memory copy
-        // is still correct for as long as this session lasts.
-        let _ = self.on_change.call3(
-            &JsValue::NULL,
-            &JsValue::from_str(kind),
-            &JsValue::from_str(path),
-            &detail,
-        );
     }
 }
 
-/// A blob as the page sees it: enough to find the bytes and to know what to
-/// do with them, and nothing of the bytes themselves.
-fn blob_detail(blob: &BlobRef) -> JsValue {
-    let out = js_sys::Object::new();
-    let _ = js_sys::Reflect::set(&out, &"id".into(), &blob.id.as_str().into());
-    let _ = js_sys::Reflect::set(&out, &"size".into(), &(blob.size as f64).into());
-    let _ = js_sys::Reflect::set(&out, &"mediaType".into(), &blob.media_type.as_str().into());
-    out.into()
+/// The filesystem as a console sees it: a channel to the worker that has one.
+pub struct RemoteFs {
+    /// Called with one JSON request and answering with one JSON reply. It
+    /// blocks; that is the whole point of it.
+    call: js_sys::Function,
+    /// Called with a path and answering with a `Uint8Array`, or null when
+    /// the bytes have gone. Bytes get a function of their own rather than
+    /// riding in the JSON, since a song does not want base64 wrapped round
+    /// it on the way to a `Cat`.
+    read_blob: js_sys::Function,
 }
 
-/// The paths here are already folded, so what is persisted is the folded
-/// name and the other consoles are told about that one.
-impl FileSystem for PersistentFs {
+impl RemoteFs {
+    pub fn new(call: js_sys::Function, read_blob: js_sys::Function) -> RemoteFs {
+        RemoteFs { call, read_blob }
+    }
+
+    /// Ask, and unwrap the answer into the result the trait wants.
+    fn ask<T: for<'de> Deserialize<'de>>(&self, request: &Request<'_>) -> FsResult<T> {
+        let json = serde_json::to_string(request)
+            .map_err(|e| FsError::Io(format!("Could not ask the filesystem: {e}")))?;
+        let reply = self
+            .call
+            .call1(&JsValue::NULL, &JsValue::from_str(&json))
+            // The fs worker has gone, which nothing this side can put right.
+            .map_err(|_| FsError::Io("The filesystem is not answering".into()))?;
+        let text = reply.as_string().ok_or_else(|| {
+            FsError::Io("The filesystem answered with something unreadable".into())
+        })?;
+        let answer: Answer<T> = serde_json::from_str(&text)
+            .map_err(|e| FsError::Io(format!("The filesystem answered badly: {e}")))?;
+        match (answer.ok, answer.err) {
+            (Some(value), _) => Ok(value),
+            (None, Some(err)) => Err(err.into()),
+            // `ok` may legitimately be absent for a unit answer.
+            (None, None) => serde_json::from_str::<T>("null")
+                .map_err(|_| FsError::Io("The filesystem answered with nothing".into())),
+        }
+    }
+
+    /// Ask, where nothing useful comes back and only the failure matters.
+    fn tell(&self, request: &Request<'_>) -> FsResult<()> {
+        self.ask::<serde_json::Value>(request).map(|_| ())
+    }
+
+    /// Ask, where a failure is indistinguishable from a no.
+    fn ask_bool(&self, request: &Request<'_>) -> bool {
+        self.ask::<bool>(request).unwrap_or(false)
+    }
+}
+
+/// Every path is folded before it goes down the channel, so the worker on
+/// the other end stores and lists one spelling of each name.
+impl FileSystem for RemoteFs {
     fn raw_exists(&self, path: &str) -> bool {
-        self.memory.raw_exists(path)
+        self.ask_bool(&Request::Exists { path })
     }
 
     fn raw_is_dir(&self, path: &str) -> bool {
-        self.memory.raw_is_dir(path)
+        self.ask_bool(&Request::IsDir { path })
     }
 
     fn raw_read(&self, path: &str) -> FsResult<String> {
-        self.memory.raw_read(path)
+        self.ask(&Request::Read { path })
     }
 
     fn raw_write(&mut self, path: &str, contents: &str) -> FsResult<()> {
-        self.memory.raw_write(path, contents)?;
-        self.changed("write", path, JsValue::from_str(contents));
-        Ok(())
+        self.tell(&Request::Write { path, contents })
     }
 
     fn raw_append(&mut self, path: &str, contents: &str) -> FsResult<()> {
-        self.memory.raw_append(path, contents)?;
-        // The whole file is persisted, since a partial append is harder to
-        // replay than a rewrite.
-        let full = self.memory.raw_read(path)?;
-        self.changed("write", path, JsValue::from_str(&full));
-        Ok(())
+        self.tell(&Request::Append { path, contents })
     }
 
     fn raw_len(&self, path: &str) -> FsResult<i64> {
-        self.memory.raw_len(path)
+        self.ask::<f64>(&Request::Len { path }).map(|n| n as i64)
     }
 
     fn raw_delete(&mut self, path: &str) -> FsResult<()> {
-        self.memory.raw_delete(path)?;
-        self.changed("delete", path, JsValue::NULL);
-        Ok(())
+        self.tell(&Request::Delete { path })
     }
 
     fn raw_read_dir(&self, path: &str) -> FsResult<Vec<DirEntry>> {
-        self.memory.raw_read_dir(path)
+        let entries: Vec<WireEntry> = self.ask(&Request::ReadDir { path })?;
+        Ok(entries
+            .into_iter()
+            .map(|e| DirEntry { name: e.name, is_dir: e.is_dir })
+            .collect())
     }
 
     fn raw_make_dir(&mut self, path: &str) -> FsResult<()> {
-        self.memory.raw_make_dir(path)?;
-        self.changed("mkdir", path, JsValue::NULL);
-        Ok(())
+        self.tell(&Request::MakeDir { path })
     }
 
     fn raw_remove_dir(&mut self, path: &str) -> FsResult<()> {
-        self.memory.raw_remove_dir(path)?;
-        self.changed("rmdir", path, JsValue::NULL);
-        Ok(())
+        self.tell(&Request::RemoveDir { path })
     }
 
     fn raw_kind(&self, path: &str) -> FsResult<NodeKind> {
-        self.memory.raw_kind(path)
+        let kind: WireKind = self.ask(&Request::Kind { path })?;
+        Ok(match kind.blob {
+            Some(blob) => NodeKind::Blob(blob.into()),
+            None => NodeKind::Text,
+        })
     }
 
     fn raw_read_blob(&self, path: &str) -> FsResult<Vec<u8>> {
-        let NodeKind::Blob(blob) = self.memory.raw_kind(path)? else {
-            // Text is held in the tree like it always was; only blobs have
-            // their bytes somewhere this has to go and ask for them.
-            return self.memory.raw_read_blob(path);
-        };
         let answer = self
             .read_blob
-            .call1(&JsValue::NULL, &JsValue::from_str(&blob.id))
+            .call1(&JsValue::NULL, &JsValue::from_str(path))
             .map_err(|_| FsError::Io(format!("Could not read {path}")))?;
         if answer.is_null() || answer.is_undefined() {
-            return Err(FsError::Io(format!("Missing blob {} for {path}", blob.id)));
+            return Err(FsError::NotFound(path.to_string()));
         }
         Ok(js_sys::Uint8Array::new(&answer).to_vec())
     }
 
     fn raw_write_blob(&mut self, path: &str, blob: BlobRef) -> FsResult<()> {
-        let detail = blob_detail(&blob);
-        self.memory.raw_write_blob(path, blob)?;
-        self.changed("blob", path, detail);
-        Ok(())
+        self.tell(&Request::WriteBlob { path, blob: blob.into() })
+    }
+
+    /// One call rather than the copy-then-delete the trait would do.
+    ///
+    /// Worth overriding because the worker can rename in OPFS without
+    /// touching the bytes, and the bytes here are songs: the default would
+    /// rewrite several megabytes to change a name. The folding the trait's
+    /// wrappers do has to happen here instead, since this skips them.
+    fn rename(&mut self, from: &str, to: &str) -> FsResult<()> {
+        self.tell(&Request::Rename { path: &fold_case(from), to: &fold_case(to) })
     }
 }
