@@ -14,7 +14,7 @@ import init, {
   textspaceChannels,
 } from "./pkg/dso_web.js";
 import { FileStore } from "./storage.js";
-import type { Asked, ToWorker } from "./types.js";
+import type { Asked, FileChange, ToWorker } from "./types.js";
 
 /** Shared with the page so input can be delivered to a blocked worker. */
 let control: Int32Array | null = null; // [state, length]
@@ -110,7 +110,7 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
     session.seedFile(path, contents);
   }
   const saved = await store.loadAll();
-  for (const [path, contents] of Object.entries(saved)) {
+  for (const [path, contents] of Object.entries(saved.files)) {
     session.seedFile(path, contents);
     // The filesystem folds names, and so does seeding. A file saved before
     // it did is still keyed by the case it was typed in, so move it across:
@@ -118,8 +118,18 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
     // old key would seed the file straight back on the next load.
     const folded = foldPath(path);
     if (folded !== path) {
-      store.record(path, null);
-      store.record(folded, contents);
+      store.record({ op: "delete", path });
+      store.record({ op: "write", path: folded, contents });
+    }
+  }
+  // The directories after the files, since a file has already made the ones
+  // above it and these are what is left: the empty ones.
+  for (const path of saved.dirs) {
+    session.seedDir(path);
+    const folded = foldPath(path);
+    if (folded !== path) {
+      store.record({ op: "rmdir", path });
+      store.record({ op: "mkdir", path: folded });
     }
   }
 
@@ -127,22 +137,28 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
     type: "ready",
     cwd: session.currentDirectory(),
     persistent: store.available,
-    restored: Object.keys(saved).length,
+    restored: Object.keys(saved.files).length,
   });
 }
 
 /**
- * A script wrote or deleted a file.
+ * A script changed something in the filesystem.
  *
  * The four consoles share one filesystem in the original client, but here
  * each has a session of its own with its own copy of the tree. Only the
  * console that made the change persists it; the page passes the change to
- * the other three so their copies agree.
+ * the other three so their copies agree, and to the file panel so it draws
+ * what is really there.
+ *
+ * `kind` is `write`, `delete`, `mkdir` or `rmdir`; `contents` is the file's
+ * text for a write and null for the other three.
  */
-/** `contents` is null for a deletion. */
-function fileChanged(path: string, contents: string | null): void {
-  store?.record(path, contents);
-  postMessage({ type: "fileChanged", path, contents });
+function fileChanged(kind: string, path: string, contents: string | null): void {
+  const change = (
+    kind === "write" ? { op: "write", path, contents: contents ?? "" } : { op: kind, path }
+  ) as FileChange;
+  store?.record(change);
+  postMessage({ type: "fileChanged", change });
 }
 
 onmessage = async (e: MessageEvent<ToWorker>) => {
@@ -210,16 +226,27 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
         break;
       }
 
-      case "syncFile":
+      case "syncFile": {
         // Another console's change, replayed so this session's copy of the
         // tree matches. Seeding rather than writing, so it is not persisted
         // a second time or echoed back.
-        if (message.contents === null) {
-          session.forgetFile(message.path);
-        } else {
-          session.seedFile(message.path, message.contents);
+        const change = message.change;
+        switch (change.op) {
+          case "write":
+            session.seedFile(change.path, change.contents);
+            break;
+          case "delete":
+            session.forgetFile(change.path);
+            break;
+          case "mkdir":
+            session.seedDir(change.path);
+            break;
+          case "rmdir":
+            session.forgetDir(change.path);
+            break;
         }
         break;
+      }
 
       // ---- what the windows ask -----------------------------------------
       //
@@ -298,6 +325,12 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
 
       case "listFiles":
         answer(message, JSON.parse(session.listFiles()));
+        break;
+
+      // The file panel's opening picture. It keeps up with the change
+      // reports afterwards, so this is asked for once rather than polled.
+      case "listTree":
+        answer(message, JSON.parse(session.listTree()));
         break;
 
       // The editor opens a file that need not exist yet, so a missing one

@@ -14,6 +14,7 @@ import { ChatPanel } from "./chat.js";
 import { CommView, ConsoleView } from "./console.js";
 import { CLOSED, INPUT_CAPACITY, READY } from "./control.js";
 import { EditorWindow } from "./editor.js";
+import { FileTree, PATH_DRAG, quotePath, TOGGLED } from "./filetree.js";
 import { LibraryWindow } from "./library.js";
 import { MailWindow } from "./mail.js";
 import type { Asked, ConsoleEvent, FromWorker, ToWorker } from "./types.js";
@@ -55,6 +56,19 @@ const editor = new EditorWindow(dialog("editor"), (request) => ask(request), (id
 
 /** The windows that cover the console, so a key can tell whether one is up. */
 const windows = [mail, library, editor];
+
+// The file tree, which sits beside the consoles rather than over them. It
+// reads the filesystem through `ask` like the windows do, and keeps up
+// afterwards from the change reports the page already relays between the
+// four consoles.
+const fileTree = new FileTree(
+  element("filetree"),
+  (request) => ask(request),
+  // Double-clicking a file opens it where `EDIT` would, in the console on
+  // screen -- so running it from the editor runs it somewhere visible.
+  (path) => void editor.openFile(path, active.id),
+  (text) => comm.add(text),
+);
 
 // Chat. It polls and sends through `ask`, the same way mail does, because
 // that is where the credentials are. Both callbacks end at the comm log:
@@ -149,6 +163,66 @@ class GameConsole {
 
     this.input.addEventListener("keydown", (e) => this.onKeyDown(e));
     this.root.addEventListener("click", (e) => this.onClick(e));
+
+    // A name dragged out of the file tree types its path here. The whole
+    // console takes the drop, not just the input: the input is one line at
+    // the end of a tall log, and aiming at it is not what the gesture means.
+    this.root.addEventListener("dragover", (e) => this.onDragOver(e));
+    this.root.addEventListener("dragleave", () => this.root.classList.remove("drop-target"));
+    this.root.addEventListener("drop", (e) => this.onDrop(e));
+  }
+
+  /** Whether a drag is carrying a path from the file tree. */
+  static carriesPath(transfer: DataTransfer | null): boolean {
+    return transfer !== null && Array.from(transfer.types).includes(PATH_DRAG);
+  }
+
+  onDragOver(event: DragEvent): void {
+    // Only the tree's own drags, and only while there is a prompt to type
+    // at: a running script is not listening, and a file dragged in from the
+    // desktop belongs on a folder in the tree rather than here.
+    if (!GameConsole.carriesPath(event.dataTransfer) || this.input.disabled) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "copy";
+    }
+    this.root.classList.add("drop-target");
+  }
+
+  onDrop(event: DragEvent): void {
+    this.root.classList.remove("drop-target");
+    if (!GameConsole.carriesPath(event.dataTransfer) || this.input.disabled) {
+      return;
+    }
+    // Without this the browser drops the text into the input itself as
+    // well, and the path is typed twice.
+    event.preventDefault();
+    const path = event.dataTransfer?.getData(PATH_DRAG) ?? "";
+    if (path !== "") {
+      this.pastePath(path);
+    }
+  }
+
+  /**
+   * Type a path at the prompt, where the caret is.
+   *
+   * A space goes in front of it when the line does not already end in one,
+   * since the gesture is nearly always dropping an argument after a command
+   * that has just been typed.
+   */
+  pastePath(path: string): void {
+    const text = quotePath(path);
+    const start = this.input.selectionStart ?? this.input.value.length;
+    const end = this.input.selectionEnd ?? start;
+    const before = this.input.value.slice(0, start);
+    const after = this.input.value.slice(end);
+    const lead = before === "" || /\s$/.test(before) ? "" : " ";
+    this.input.value = before + lead + text + after;
+    const caret = (before + lead + text).length;
+    this.focus();
+    this.input.setSelectionRange(caret, caret);
   }
 
   post(message: ToWorker): void {
@@ -371,6 +445,37 @@ element("open-library").addEventListener("click", () => void library.show());
 // reason the console tabs are: a phone has no function keys.
 element("open-chat").addEventListener("click", () => chat.toggle());
 
+// The file tree, which is the client's own rather than anything the original
+// had. The switch says whether the panel is out, since the panel can also be
+// put away from its own bar.
+const filesButton = element("open-files");
+filesButton.addEventListener("click", () => fileTree.toggle());
+element("filetree").addEventListener(TOGGLED, (e) => {
+  filesButton.setAttribute("aria-expanded", String((e as CustomEvent<boolean>).detail));
+});
+// Last, so the state it restores is reflected in the switch as well. This is
+// before the page has been painted, so a panel left closed starts closed
+// instead of sliding shut in front of whoever opened the client.
+fileTree.restore();
+
+// A file dragged in from the desktop and dropped anywhere but a folder in
+// the tree would otherwise be opened by the browser, which navigates away
+// from the client and throws four consoles' worth of session away with it.
+// Refusing the drop outright is what says so, with the cursor, before it
+// happens.
+for (const kind of ["dragover", "drop"] as const) {
+  window.addEventListener(kind, (event: DragEvent) => {
+    const transfer = event.dataTransfer;
+    const inTree = (event.target as Element | null)?.closest?.("#filetree");
+    if (!inTree && transfer && Array.from(transfer.types).includes("Files")) {
+      event.preventDefault();
+      if (event.type === "dragover") {
+        transfer.dropEffect = "none";
+      }
+    }
+  });
+}
+
 // ---- asking a worker ----------------------------------------------------
 //
 // The page has questions of its own now -- the mail window's, and whatever
@@ -471,13 +576,12 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
       // The other three hold their own copy of the tree; keep it in step.
       for (const other of consoles) {
         if (other !== target) {
-          other.post({
-            type: "syncFile",
-            path: message.path,
-            contents: message.contents,
-          });
+          other.post({ type: "syncFile", change: message.change });
         }
       }
+      // And so does the panel, which is why it never has to poll: whatever
+      // any console does to the filesystem comes past here first.
+      fileTree.apply(message.change);
       break;
 
     case "missingFile":
@@ -611,9 +715,23 @@ function reportLayout(): void {
   }
 }
 
+/**
+ * Report the layout once things have stopped moving.
+ *
+ * A dragged window edge and the file tree's slide both change the console's
+ * width every frame, and each frame would otherwise be four messages
+ * carrying a measurement nothing will lay anything out against. What a
+ * script wants is the width it ends at, so only that one is sent.
+ */
+let layoutTimer = 0;
+function reportLayoutSoon(): void {
+  clearTimeout(layoutTimer);
+  layoutTimer = setTimeout(reportLayout, 120);
+}
+
 // A resized window changes what fits on a line, which is what scripts lay
 // their columns out against.
-new ResizeObserver(reportLayout).observe(container);
+new ResizeObserver(reportLayoutSoon).observe(container);
 
 let readyCount = 0;
 /**
@@ -648,6 +766,12 @@ function allReady(): void {
   for (const item of consoles) {
     item.runFile(item.id === 1 ? STARTUP_SCRIPT : NEW_CONSOLE_SCRIPT);
   }
+
+  // The panel's first picture of the tree. Asked for after the startup
+  // scripts are away, so it waits for a free console rather than making
+  // four of them wait for it; anything they write in the meantime is
+  // reported and folded in.
+  void fileTree.load();
 }
 
 // Start the workers with the shared buffers and the commands the shell needs.

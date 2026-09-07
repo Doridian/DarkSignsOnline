@@ -153,6 +153,33 @@ export type Said =
   | { kind: "nothing" }
   | { kind: "unknown"; command: string };
 
+// ---- the filesystem the four consoles share ------------------------------
+
+/**
+ * What became of one path.
+ *
+ * Every change any console makes is reported as one of these, which is what
+ * keeps the other three sessions, the saved tree and the file panel in step
+ * with it. Directories are in here as well as files: an empty one is implied
+ * by nothing else, and `MKDIR` at one console has to reach the rest.
+ */
+export type FileChange =
+  | { op: "write"; path: string; contents: string }
+  | { op: "delete"; path: string }
+  | { op: "mkdir"; path: string }
+  | { op: "rmdir"; path: string };
+
+/**
+ * The whole tree, as `listTree` reports it.
+ *
+ * `dirs` holds every directory including `/`; `files` holds the rest. The
+ * panel applies `FileChange`s to this rather than asking for it again.
+ */
+export interface Tree {
+  dirs: string[];
+  files: Array<{ path: string; size: number }>;
+}
+
 /** One request to a worker, and the answer it resolves with. */
 export type Ask = (message: { type: string } & Record<string, unknown>) => Promise<any>;
 
@@ -176,7 +203,7 @@ export type FromWorker =
   | { type: "credentialsSet" }
   | { type: "wasReset" }
   | { type: "console"; event: ConsoleEvent }
-  | { type: "fileChanged"; path: string; contents: string | null }
+  | { type: "fileChanged"; change: FileChange }
   | { type: "missingFile"; path: string }
   | { type: "wantInput"; mode: string; prompt: string }
   | { type: "done"; cwd: string }
@@ -200,7 +227,7 @@ export type ToWorker =
   | { type: "command"; line: string }
   | { type: "script"; source: string; args?: string[] }
   | { type: "runFile"; path: string }
-  | { type: "syncFile"; path: string; contents: string | null }
+  | { type: "syncFile"; change: FileChange }
   | { type: "layout"; width: number; preSpace: number }
   | { type: "reset" }
   | Asked;
@@ -229,6 +256,7 @@ export type Asked = { token: number } & (
   | { type: "textspaceLoad"; channel: number }
   | { type: "textspaceSave"; channel: number; text: string }
   | { type: "listFiles" }
+  | { type: "listTree" }
   | { type: "readFile"; path: string }
   | { type: "writeFile"; path: string; contents: string }
 );

@@ -28,14 +28,33 @@ const lines = () =>
     .map((e) => e.runs.map((run) => run.text).join(""));
 
 const queuedInput = ["typed answer"];
-/** Changes the worker would hand to IndexedDB. */
+/** Files the worker would hand to IndexedDB, and the directories beside them. */
 const saved = new Map();
+const savedDirs = new Set();
 const session = new Session(
   (json: string) => events.push(JSON.parse(json)),
   () => (queuedInput.length ? queuedInput.shift() : null),
   () => 121, // 'y'
-  (path: string, contents: string | null) =>
-    contents === null ? saved.delete(path) : saved.set(path, contents),
+  // The worker's `fileChanged`: every change to the tree, files and
+  // directories alike, so it can persist it and pass it to the other three.
+  (kind: string, path: string, contents: string | null) => {
+    switch (kind) {
+      case "write":
+        saved.set(path, contents);
+        break;
+      case "delete":
+        saved.delete(path);
+        break;
+      case "mkdir":
+        savedDirs.add(path);
+        break;
+      case "rmdir":
+        savedDirs.delete(path);
+        break;
+      default:
+        throw new Error(`unknown change ${kind}`);
+    }
+  },
   2, // the console this session is, which scripts read as ConsoleID
   FONT_STACK,
 );
@@ -154,6 +173,44 @@ assert.equal(session.readFile("/home/shared.txt"), "from another console");
 session.forgetFile("/home/shared.txt");
 assert.throws(() => session.readFile("/home/shared.txt"));
 assert.equal(saved.has("/home/shared.txt"), false, "a synced change is not re-saved");
+
+// Directories are reported as well as files, which is what carries an empty
+// one to the other three consoles, to storage, and to the file tree. Nothing
+// else would: a directory with no files in it is in no file's path.
+assert.equal(savedDirs.size, 0, "nothing has made a directory yet");
+session.runScript('MD "/home/empty"', []);
+assert.ok(savedDirs.has("/home/empty"), "a new directory is reported");
+session.runScript('RD "/home/empty"', []);
+assert.equal(savedDirs.has("/home/empty"), false, "and so is a removed one");
+
+// A directory another console made, taken up without being reported back.
+session.seedDir("/home/elsewhere");
+assert.equal(savedDirs.size, 0, "a synced directory is not re-saved");
+session.forgetDir("/home/elsewhere");
+assert.equal(savedDirs.size, 0);
+
+// `listTree` is what the file tree draws: every directory, the root
+// included, and every file with the size to label it by.
+session.runScript('Overwrite "/home/tree.txt", "12345"', []);
+session.runScript('MD "/home/hollow"', []);
+const tree = JSON.parse(session.listTree());
+assert.ok(tree.dirs.includes("/"), "the root is a directory");
+assert.ok(tree.dirs.includes("/home/hollow"), "an empty directory is still in the tree");
+assert.equal(
+  tree.files.find((f: { path: string }) => f.path === "/home/tree.txt")?.size,
+  5,
+  "a file carries its size",
+);
+assert.equal(
+  tree.dirs.filter((d: string) => d === "/home").length,
+  1,
+  "no directory is listed twice",
+);
+assert.equal(
+  tree.files.some((f: { path: string }) => tree.dirs.includes(f.path)),
+  false,
+  "nothing is both a file and a directory",
+);
 
 // Markup parsing is available without running a script.
 const runs = JSON.parse(parseMarkup("{{red bold 20}}x"));

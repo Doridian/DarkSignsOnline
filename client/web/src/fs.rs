@@ -15,7 +15,14 @@ use vbscript::game::fs::{DirEntry, FileSystem, FsResult, MemoryFs};
 /// A [`MemoryFs`] that reports every change so the worker can persist it.
 pub struct PersistentFs {
     memory: MemoryFs,
-    /// Called as `(path, contents)`, with `contents` null for a deletion.
+    /// Called as `(kind, path, contents)`. `kind` is one of `write`,
+    /// `delete`, `mkdir` or `rmdir`, and `contents` is the file's text for a
+    /// write and null for the other three.
+    ///
+    /// Directories are reported as well as files because the four consoles
+    /// share one tree: an `MD` typed at one of them has to reach the other
+    /// three and the file tree beside them, and an empty directory is not
+    /// implied by any file that would otherwise carry it.
     on_change: js_sys::Function,
     /// Set while the saved tree is being loaded, so replaying it does not
     /// write every file straight back out again.
@@ -49,7 +56,23 @@ impl PersistentFs {
         result
     }
 
-    fn changed(&self, path: &str, contents: Option<&str>) {
+    /// Take up a directory another console made, without reporting it back.
+    pub fn seed_make_dir(&mut self, path: &str) -> FsResult<()> {
+        self.loading = true;
+        let result = self.memory.make_dir(path);
+        self.loading = false;
+        result
+    }
+
+    /// Drop a directory another console removed, without reporting it back.
+    pub fn seed_remove_dir(&mut self, path: &str) -> FsResult<()> {
+        self.loading = true;
+        let result = self.memory.remove_dir(path);
+        self.loading = false;
+        result
+    }
+
+    fn changed(&self, kind: &str, path: &str, contents: Option<&str>) {
         if self.loading {
             return;
         }
@@ -59,9 +82,12 @@ impl PersistentFs {
         };
         // A failed notification means the page has gone; the in-memory copy
         // is still correct for as long as this session lasts.
-        let _ = self
-            .on_change
-            .call2(&JsValue::NULL, &JsValue::from_str(path), &value);
+        let _ = self.on_change.call3(
+            &JsValue::NULL,
+            &JsValue::from_str(kind),
+            &JsValue::from_str(path),
+            &value,
+        );
     }
 }
 
@@ -82,7 +108,7 @@ impl FileSystem for PersistentFs {
 
     fn raw_write(&mut self, path: &str, contents: &str) -> FsResult<()> {
         self.memory.raw_write(path, contents)?;
-        self.changed(path, Some(contents));
+        self.changed("write", path, Some(contents));
         Ok(())
     }
 
@@ -91,7 +117,7 @@ impl FileSystem for PersistentFs {
         // The whole file is persisted, since a partial append is harder to
         // replay than a rewrite.
         let full = self.memory.raw_read(path)?;
-        self.changed(path, Some(&full));
+        self.changed("write", path, Some(&full));
         Ok(())
     }
 
@@ -101,7 +127,7 @@ impl FileSystem for PersistentFs {
 
     fn raw_delete(&mut self, path: &str) -> FsResult<()> {
         self.memory.raw_delete(path)?;
-        self.changed(path, None);
+        self.changed("delete", path, None);
         Ok(())
     }
 
@@ -110,10 +136,14 @@ impl FileSystem for PersistentFs {
     }
 
     fn raw_make_dir(&mut self, path: &str) -> FsResult<()> {
-        self.memory.raw_make_dir(path)
+        self.memory.raw_make_dir(path)?;
+        self.changed("mkdir", path, None);
+        Ok(())
     }
 
     fn raw_remove_dir(&mut self, path: &str) -> FsResult<()> {
-        self.memory.raw_remove_dir(path)
+        self.memory.raw_remove_dir(path)?;
+        self.changed("rmdir", path, None);
+        Ok(())
     }
 }

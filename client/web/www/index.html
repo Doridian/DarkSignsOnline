@@ -59,31 +59,52 @@
     <section id="comm" role="log" aria-label="Communications" aria-live="polite"></section>
 
     <!--
-      The four consoles, stacked with only the active one shown. Each keeps
-      its own log, prompt and input, because each has a worker of its own and
-      one blocked on `ReadLine` must not stop the others.
+      The file tree and the consoles, side by side. The tree slides out past
+      the left edge rather than covering anything, so the console has the
+      whole of the width whenever it is put away.
     -->
-    <main id="consoles">
-      <!--
-        Chat, which covers the console rather than sitting beside it -- the
-        original raises its ChatBox over the same area and F5 is what raises
-        it. It shares the grid cell the four consoles stack in, so it lies
-        over whichever one is showing without anything moving.
-      -->
-      <section id="chat" hidden aria-label="Chat">
-        <header class="chat-bar">
-          <span class="chat-title">Chat</span>
-          <button class="chat-close" type="button" title="Close (F5)">Close</button>
+    <div id="workspace">
+      <aside id="filetree" aria-label="Files">
+        <header class="tree-bar">
+          <span class="tree-title">Files</span>
+          <button class="tree-hide" type="button" title="Hide the file tree"
+                  aria-label="Hide the file tree">&#x00AB;</button>
         </header>
-        <div class="chat-log" role="log" aria-live="polite"></div>
-        <form class="chat-entry" autocomplete="off">
-          <input class="chat-input" type="text" aria-label="Message"
-                 placeholder="Say something, or /me does something"
-                 autocomplete="off" autocapitalize="off" spellcheck="false" />
-          <button class="chat-send" type="submit">Chat</button>
-        </form>
-      </section>
-    </main>
+        <!--
+          Filled in by `filetree.ts`, and redrawn whenever any of the four
+          consoles writes, deletes, makes or removes anything.
+        -->
+        <div class="tree-body" role="tree" aria-label="Player files"></div>
+        <p class="tree-status" role="status"></p>
+      </aside>
+
+      <!--
+        The four consoles, stacked with only the active one shown. Each keeps
+        its own log, prompt and input, because each has a worker of its own
+        and one blocked on `ReadLine` must not stop the others.
+      -->
+      <main id="consoles">
+        <!--
+          Chat, which covers the console rather than sitting beside it -- the
+          original raises its ChatBox over the same area and F5 is what
+          raises it. It shares the grid cell the four consoles stack in, so
+          it lies over whichever one is showing without anything moving.
+        -->
+        <section id="chat" hidden aria-label="Chat">
+          <header class="chat-bar">
+            <span class="chat-title">Chat</span>
+            <button class="chat-close" type="button" title="Close (F5)">Close</button>
+          </header>
+          <div class="chat-log" role="log" aria-live="polite"></div>
+          <form class="chat-entry" autocomplete="off">
+            <input class="chat-input" type="text" aria-label="Message"
+                   placeholder="Say something, or /me does something"
+                   autocomplete="off" autocapitalize="off" spellcheck="false" />
+            <button class="chat-send" type="submit">Chat</button>
+          </form>
+        </section>
+      </main>
+    </div>
 
     <!--
       Script output, with the prompt as its last line. The entry lives inside
@@ -114,6 +135,8 @@
 
     <footer id="statusbar">
       <span id="hint">Type <b>HELP</b> for a list of commands.</span>
+      <button id="open-files" type="button" title="Show or hide the file tree"
+              aria-controls="filetree">Files</button>
       <button id="open-chat" type="button" title="Chat (F5)">Chat</button>
       <button id="open-library" type="button">File Library</button>
       <!-- Filled in by the page, one per console, with F1-F4 as shortcuts. -->

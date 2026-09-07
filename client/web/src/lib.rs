@@ -144,6 +144,25 @@ impl Session {
         let _ = self.host.inner.fs.borrow_mut().seed_delete(path);
     }
 
+    /// Take up a directory another console made, or one restored from the
+    /// saved tree, without reporting it back.
+    ///
+    /// Writing a file makes the directories above it, so this is only ever
+    /// needed for the empty ones -- which is exactly why it is needed at
+    /// all: nothing else would carry them.
+    #[wasm_bindgen(js_name = seedDir)]
+    pub fn seed_dir(&self, path: &str) {
+        // Already there is the ordinary case, since a directory holding a
+        // seeded file has been made on that file's way in.
+        let _ = self.host.inner.fs.borrow_mut().seed_make_dir(path);
+    }
+
+    /// Drop a directory another console removed.
+    #[wasm_bindgen(js_name = forgetDir)]
+    pub fn forget_dir(&self, path: &str) {
+        let _ = self.host.inner.fs.borrow_mut().seed_remove_dir(path);
+    }
+
     /// Report the console's measurements, in CSS pixels.
     ///
     /// `width` is the room a line has for text and `pre_space` the indent an
@@ -465,6 +484,43 @@ impl Session {
         json(&paths)
     }
 
+    /// The whole tree, directories and all, for the file panel to draw.
+    ///
+    /// Both halves are needed and neither implies the other: a directory
+    /// with nothing in it appears in no file's path, and the panel wants a
+    /// file's size without having to read the file. What comes back mirrors
+    /// what the filesystem holds, so the panel can apply the change reports
+    /// to it afterwards rather than asking again.
+    #[wasm_bindgen(js_name = listTree)]
+    pub fn list_tree(&self) -> Result<String, JsValue> {
+        let fs = self.host.inner.fs.borrow();
+        let mut dirs = Vec::new();
+        let mut files = Vec::new();
+        // Breadth or depth does not matter; the panel sorts what it draws.
+        let mut pending = vec!["/".to_string()];
+        while let Some(dir) = pending.pop() {
+            dirs.push(dir.clone());
+            let Ok(entries) = fs.read_dir(&dir) else {
+                continue;
+            };
+            for entry in entries {
+                let path = match dir.as_str() {
+                    "/" => format!("/{}", entry.name),
+                    parent => format!("{parent}/{}", entry.name),
+                };
+                if entry.is_dir {
+                    pending.push(path);
+                } else {
+                    let size = fs.len(&path).unwrap_or(0);
+                    files.push(TreeFile { path, size: size as f64 });
+                }
+            }
+        }
+        dirs.sort();
+        files.sort_by(|a, b| a.path.cmp(&b.path));
+        json(&Tree { dirs, files })
+    }
+
     /// Resolve a path against the console's working directory, the way a
     /// script's own file calls do.
     #[wasm_bindgen(js_name = resolvePath)]
@@ -592,6 +648,26 @@ impl From<&library::Upload> for LibraryUpload {
     fn from(u: &library::Upload) -> LibraryUpload {
         LibraryUpload { id: u.id, label: u.label.clone() }
     }
+}
+
+/// The filesystem as the file panel draws it.
+///
+/// `dirs` carries every directory, the root included, so the panel can show
+/// an empty one; `files` carries the rest. A directory is not repeated in
+/// `files` and a file never appears in `dirs`.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Tree {
+    dirs: Vec<String>,
+    files: Vec<TreeFile>,
+}
+
+/// One file in that tree, with the size the panel labels it by.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TreeFile {
+    path: String,
+    size: f64,
 }
 
 /// Where a downloaded file landed.

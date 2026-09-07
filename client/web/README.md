@@ -21,9 +21,14 @@ and a `Session` of its own. They cannot share one: a console blocked in
 other three keep working. Scripts read which one they are in as `ConsoleID`.
 
 What they do share is the player's files. Each session holds its own copy of
-the tree, so a write is reported to the page and passed on to the other three
+the tree, so a change is reported to the page and passed on to the other three
 as a seed — a change that is neither persisted twice nor echoed back. Only
 the console that made it writes it to IndexedDB.
+
+Directories are reported along with files. Writing `/a/b.ds` makes `/a` on the
+way, so the files alone would rebuild all but the empty ones — and `MD` at one
+console has to reach the other three whether or not anything is put in the
+directory afterwards. The same stream is what the file tree draws from.
 
 `F1`–`F4` select a console, as in the original, and so do the tabs in the
 status bar. An inactive console is hidden but still laid out, so it keeps its
@@ -42,6 +47,7 @@ shown at.
 | [`www/worker.ts`](www/worker.ts) | Runs the interpreter; blocks on `Atomics.wait` for input |
 | [`www/main.ts`](www/main.ts) | The page: the four consoles, keyboard, and waking a worker |
 | [`www/console.ts`](www/console.ts) | Turns styled runs into elements |
+| [`www/filetree.ts`](www/filetree.ts) | The file tree beside the consoles, and its three drags |
 | [`www/mail.ts`](www/mail.ts) | The DSMail reader |
 | [`www/chat.ts`](www/chat.ts) | The chat pane: the poll, the history, and `/me` |
 | [`www/editor.ts`](www/editor.ts) | The editor, with the highlighter and the indenting |
@@ -248,6 +254,44 @@ filesystem, so an edited copy takes effect. A remembered sign-in is handed to
 all four workers first, which is what lets the `LOGIN` and the `Include
 "/system/newconsole.ds"` at the end of `startup.ds` do their job and greet the
 player by name.
+
+## The file tree
+
+The panel to the left of the consoles, which the original had no equivalent
+of. `Files` in the status bar slides it in and out — a margin, so the console
+grows into the room rather than the panel being squeezed into nothing — and
+which state it was left in is remembered.
+
+It never polls. `listTree` gives it one picture of the filesystem, and after
+that it applies the same change reports that keep the other three sessions in
+step, so a file written at console 3 appears here as it is written. Its model
+mirrors `MemoryFs` rather than what looks tidy: a directory stays after the
+last file in it is deleted, because that is what the filesystem does and what
+`DIR` will say.
+
+Three gestures hang off it, each a plain HTML5 drag:
+
+*A name dragged onto a console types its path.* The whole console takes the
+drop, not the one-line input at the end of a tall log, and the path lands at
+the caret with a space in front of it when the line does not already end in
+one — the gesture is nearly always an argument for a command just typed. A
+path with a space in it is quoted the way [`game::cli`](../src/game/cli.rs)
+reads one back. The drag carries a private type as well as `text/plain`, so a
+console can tell it from a file being dragged in from the desktop.
+
+*A file is downloaded* from the button on its row. The contents live in a
+worker, so there is nothing to point an `href` at until it has been asked
+for: the answer becomes a blob and a link that is clicked and thrown away.
+
+*Files dropped onto a folder are written into it.* A dropped folder is walked
+through `webkitGetAsEntry`, and writing a file makes the directories above it,
+so the shape comes across. Two kinds are refused rather than mangled:
+anything over 512 KiB, since every one of the four sessions holds the whole
+tree in memory, and anything that is not valid UTF-8 or that carries a NUL —
+the game's filesystem holds strings, and a binary file has no honest
+representation in it. A file dropped anywhere else on the page is refused
+outright, because the browser would otherwise navigate to it and throw four
+consoles' worth of session away.
 
 ## The sub-windows
 

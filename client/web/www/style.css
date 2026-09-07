@@ -22,6 +22,11 @@
 
   --gutter: 4px;
   --prespace: 40px;
+
+  /* How wide the file tree is when it is out. */
+  --tree-width: 15rem;
+  /* How long it takes to slide, shared by the panel and its button. */
+  --tree-slide: 0.22s;
 }
 
 * {
@@ -289,13 +294,223 @@ button:hover {
   font-weight: 700;
 }
 
+/* ---- the workspace: the file tree, and the consoles beside it -------- */
+
+/* A flex row rather than a grid, because the panel is put away by sliding
+   it out past the left edge -- a negative margin -- and flexbox takes that
+   off the row's length in the way this needs. `overflow: hidden` is what
+   the panel disappears behind. */
+#workspace {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ---- the file tree ---------------------------------------------------- */
+
+#filetree {
+  flex: 0 0 var(--tree-width);
+  display: grid;
+  /* Bar, the tree itself, and the strip that says what it is doing. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--rule);
+  transition: margin-left var(--tree-slide) ease;
+}
+
+/* Put away: slid out past the left edge, so the console grows into the room
+   it leaves rather than the panel being squashed into nothing. */
+#filetree.closed {
+  margin-left: calc(-1 * var(--tree-width));
+}
+
+/* Somebody who has asked not to be moved about gets the same panel without
+   the travel. */
+@media (prefers-reduced-motion: reduce) {
+  #filetree {
+    transition: none;
+  }
+}
+
+/* A phone has not the width for both, so there the panel covers the console
+   instead of shrinking it -- the same slide, over the top. It starts closed
+   there; see `restore` in `filetree.ts`. */
+@media (max-width: 34rem) {
+  #workspace {
+    position: relative;
+  }
+
+  #filetree {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+    width: min(var(--tree-width), 80vw);
+    box-shadow: 0 0 1.5rem #000a;
+  }
+
+  #filetree.closed {
+    margin-left: calc(-1 * min(var(--tree-width), 80vw));
+  }
+}
+
+.tree-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.3rem 0.25rem 0.6rem;
+  background: var(--titlebar);
+  border-bottom: 1px solid var(--rule);
+}
+
+.tree-title {
+  flex: 1 1 auto;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.tree-hide {
+  padding: 0 0.35rem;
+  font-size: 13px;
+  line-height: 1.2;
+  background: transparent;
+  border-color: transparent;
+  color: var(--dim);
+}
+.tree-hide:hover {
+  color: var(--gold);
+  border-color: var(--rule);
+}
+
+.tree-body {
+  overflow: auto;
+  padding: 0.25rem 0;
+  font-size: 11px;
+}
+
+.tree-status {
+  margin: 0;
+  padding: 0.25rem 0.6rem;
+  border-top: 1px solid var(--rule);
+  color: var(--dim);
+  font-size: 10px;
+  /* One line: the strip is furniture, and a long complaint belongs in the
+     communications log, which is where the panel puts one. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One row. The indent is the depth rather than nested padding, so a name is
+   never squeezed to nothing by how deep it sits. */
+.node {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.4rem 0.1rem calc(0.3rem + var(--depth, 0) * 0.85rem);
+  cursor: default;
+  white-space: nowrap;
+  /* A row is dragged onto a console, so it must not be selected by the
+     press that starts the drag. */
+  user-select: none;
+}
+.node:hover {
+  background: #1e2530;
+}
+.node.selected {
+  background: #24303c;
+}
+.node:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* The folding arrow, which keeps its room even on a file so that names line
+   up down the column. */
+.twist {
+  flex: 0 0 0.8rem;
+  color: var(--dim);
+  font-size: 9px;
+  text-align: center;
+}
+
+.node .name {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.node.dir .name {
+  color: var(--gold);
+  font-weight: 700;
+}
+.node.file .name {
+  color: var(--fg);
+}
+
+.node .size {
+  flex: 0 0 auto;
+  color: var(--dim);
+  font-size: 10px;
+}
+
+/* The download button, which is furniture until the row is pointed at. */
+.node .get {
+  flex: 0 0 auto;
+  padding: 0 0.25rem;
+  font-size: 11px;
+  line-height: 1.3;
+  background: transparent;
+  border-color: transparent;
+  color: var(--dim);
+  visibility: hidden;
+}
+.node:hover .get,
+.node:focus-within .get {
+  visibility: visible;
+}
+.node .get:hover {
+  color: var(--accent);
+  border-color: var(--rule);
+}
+
+/* The folder a drop would land in, and the console a path would be typed
+   into. Both are the same promise, so both are drawn the same way. */
+.node.drop-target {
+  background: #1d3324;
+  outline: 1px dashed var(--accent);
+  outline-offset: -1px;
+}
+
 /* ---- console --------------------------------------------------------- */
 
 /* The four consoles occupy one cell and are stacked in it, so switching
    shows a different one without anything moving. */
 #consoles {
   display: grid;
+  /* The console is the flex item that takes whatever the panel is not using,
+     so it has to be told to grow: left at `auto` it is only as wide as the
+     longest line it happens to be holding, and the row's spare width goes
+     nowhere. `min-width: 0` as well as the height, so that a long line gives
+     way instead of holding the row open and pushing the panel off. */
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
+}
+
+/* A path from the tree is about to be typed here. */
+.console.drop-target {
+  outline: 1px dashed var(--accent);
+  outline-offset: -2px;
 }
 
 .console {
@@ -1063,8 +1278,18 @@ button:hover {
   color: var(--accent);
 }
 
+/* On a phone the switches are what the bar is for, and there is not room for
+   both them and the hint. The startup banner says the same thing anyway. */
+@media (max-width: 34rem) {
+  #hint {
+    display: none;
+  }
+}
+
 /* The library has no command in the original either: it is opened from the
-   console's own furniture, which here is the status bar. */
+   console's own furniture, which here is the status bar. The file tree's
+   own switch keeps them company. */
+#open-files,
 #open-library {
   padding: 0.05rem 0.4rem;
   font-size: 11px;
@@ -1072,7 +1297,15 @@ button:hover {
   border-color: transparent;
   color: var(--dim);
 }
+#open-files:hover,
 #open-library:hover {
+  color: var(--gold);
+  border-color: var(--rule);
+}
+
+/* The switch stays lit while the panel is out, the way the active console
+   tab does -- it is the same kind of statement about what is on screen. */
+#open-files[aria-expanded="true"] {
   color: var(--gold);
   border-color: var(--rule);
 }
