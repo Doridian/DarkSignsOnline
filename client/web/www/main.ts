@@ -30,6 +30,12 @@ const tabs = element("tabs");
 const template = element("console-template") as HTMLTemplateElement;
 const statusDot = element("status-dot");
 const statusText = element("status-text");
+const account = element("account");
+const accountLabel = element("account-label");
+const accountUser = element("account-user");
+const accountMenu = element("account-menu");
+const accountToggle = element("account-toggle") as HTMLButtonElement;
+const logoutButton = element("logout") as HTMLButtonElement;
 
 const mail = new MailWindow(dialog("mail"), (request) => ask(request));
 const library = new LibraryWindow(dialog("library"), (request) => ask(request));
@@ -308,8 +314,24 @@ for (const item of consoles) {
 }
 
 window.addEventListener("keydown", (e) => {
+  // Escape closes the account menu, as it does any menu, and gives the
+  // keyboard back to the button that opened it.
+  if (e.key === "Escape" && accountMenuOpen()) {
+    e.preventDefault();
+    showAccountMenu(false);
+    accountToggle.focus();
+    return;
+  }
   const match = /^F([1-4])$/.exec(e.key);
-  if (!match || e.ctrlKey || e.altKey || e.metaKey || windows.some((w) => w.open)) {
+  if (
+    !match ||
+    e.ctrlKey ||
+    e.altKey ||
+    e.metaKey ||
+    // A console switch would take the caret out of the sign-in fields.
+    accountMenuOpen() ||
+    windows.some((w) => w.open)
+  ) {
     return;
   }
   // F1 and F3 are the browser's otherwise; in a console they are the client's.
@@ -398,9 +420,12 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
       break;
 
     case "credentialsSet":
-      // All four are told; only one need say so.
-      if (target.id === 1) {
-        setStatus(`You are online as ${pendingUser}.`, "online");
+      // All four are told; only one need say so -- and only when there is
+      // someone to greet, since signing out clears the credentials by
+      // handing over an empty pair the same way.
+      if (target.id === 1 && pendingUser !== "") {
+        setStatus("Online.", "online");
+        showAccount(pendingUser);
         comm.add(`You have been authorized as ${pendingUser}.`);
         comm.add("Welcome to the Dark Signs Network!");
       }
@@ -686,8 +711,78 @@ function signIn(username: string, password: string): void {
   for (const item of consoles) {
     item.post({ type: "credentials", username, password });
   }
-  setStatus(`Signing in as ${username}...`, "connecting");
+  // Not `as ${username}`: the bar is narrow on a phone, and the name is
+  // about to appear on the other side of it anyway.
+  setStatus("Signing in...", "connecting");
 }
+
+/**
+ * Drop the credentials, here and in all four workers.
+ *
+ * A sign-out is an empty pair sent the way a sign-in is: `Credentials` counts
+ * as set only with both halves, so the sessions stop authorizing anything
+ * they send. The player's files stay where they are -- signing out is not
+ * the same as clearing them, which `reset` is.
+ */
+function signOut(): void {
+  pendingUser = "";
+  forgetCredentials();
+  for (const item of consoles) {
+    item.post({ type: "credentials", username: "", password: "" });
+  }
+  // The username is left in the form to sign back in with; the password is
+  // not, and neither is the standing offer to remember it.
+  field("password").value = "";
+  field("remember").checked = false;
+  setStatus("Not signed in.", "offline");
+  showAccount(null);
+  comm.add("You have been signed out.");
+  active.focus();
+}
+
+/**
+ * Show the title bar as it stands for `username`, or for nobody.
+ *
+ * Signed in there is nothing to type, so the form and the button holding it
+ * give way to the name and the way out.
+ */
+function showAccount(username: string | null): void {
+  accountUser.textContent = username ?? "";
+  accountLabel.hidden = username === null;
+  logoutButton.hidden = username === null;
+  accountToggle.hidden = username !== null;
+  if (username !== null) {
+    showAccountMenu(false);
+  }
+}
+
+/** Whether the menu is up, which is also what closes it on the next click. */
+function accountMenuOpen(): boolean {
+  return !accountMenu.hidden;
+}
+
+/** Open or close the menu the sign-in form lives in. */
+function showAccountMenu(open: boolean): void {
+  accountMenu.hidden = !open;
+  accountToggle.setAttribute("aria-expanded", String(open));
+  if (open) {
+    // A remembered username outlives the sign-out that forgot its password,
+    // so the caret goes to whichever field is still empty.
+    const username = field("username");
+    (username.value ? field("password") : username).focus();
+  }
+}
+
+accountToggle.addEventListener("click", () => showAccountMenu(!accountMenuOpen()));
+logoutButton.addEventListener("click", signOut);
+
+// A click anywhere else closes the menu, the way a menu behaves. `pointerdown`
+// rather than `click` so it closes before whatever was aimed at underneath.
+document.addEventListener("pointerdown", (e) => {
+  if (accountMenuOpen() && !account.contains(e.target as Node)) {
+    showAccountMenu(false);
+  }
+});
 
 element("login").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -704,6 +799,7 @@ element("login").addEventListener("submit", (e) => {
   signIn(username, password);
   // The password is handed to the workers and forgotten here.
   field("password").value = "";
+  showAccountMenu(false);
   active.focus();
 });
 

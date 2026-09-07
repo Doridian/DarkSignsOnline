@@ -183,6 +183,30 @@ browser calling the new `pkg/dso_web.js` into the old wasm module.
 `serve.ts` mounts the page at `/game/` too, so a path that works in
 development is a path that works deployed.
 
+## The title bar
+
+The connection on the left, the account on the right, and nothing in the
+middle that a game does not need. Signed out, the account is one button: the
+sign-in form and the site's own "create an account" and "forgot your
+password" pages hang from it in a menu, rather than sitting across the bar
+for the whole of a session. Signed in there is nothing left to type, so the
+button gives way to the name and a way out.
+
+The two account pages are `/create_account.php` and `/forgot_password.php`,
+linked root-relative because the client is served from `/game/` on that same
+site, and opened in a new tab because leaving this one throws four consoles
+away.
+
+Signing out is an empty pair of credentials sent the way a sign-in is:
+`Credentials` counts as set only with both halves, so all four sessions stop
+authorizing anything they send, and the saved sign-in is forgotten. The
+player's files stay — signing out is not clearing them.
+
+The page never grows wider than the window: `body` is a grid of one
+`minmax(0, 1fr)` column, so a row too wide for the viewport is made to fit
+rather than pushing the rest past an `overflow: hidden` edge. The title bar is
+the row that would, and the account is what sat on the far side of it.
+
 ## Remembering a sign-in
 
 The "Remember me" box keeps the username and password in `localStorage` — not
@@ -191,7 +215,9 @@ worker cannot reach `localStorage` at all. They are stored as typed. There is
 nowhere on a page to hide a password from anyone holding the browser, so the
 box is the honest control, and it is off unless ticked. A remembered sign-in
 reaches all four workers before any startup script runs, so every console is
-already authorized by the time anything asks the server.
+already authorized by the time anything asks the server. Signing out forgets
+it: the next load comes back signed out, with the username still in the form
+and the password not.
 
 ## Starting up
 

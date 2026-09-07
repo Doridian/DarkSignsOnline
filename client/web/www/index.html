@@ -8,21 +8,51 @@
   </head>
   <body>
     <header id="titlebar">
+      <span id="brand">Dark Signs Online</span>
       <span id="status-dot" class="offline" aria-hidden="true"></span>
       <span id="status-text">Not signed in.</span>
 
-      <form id="login" autocomplete="on">
-        <input id="username" type="text" placeholder="username" autocomplete="username"
-               aria-label="Username" />
-        <input id="password" type="password" placeholder="password"
-               autocomplete="current-password" aria-label="Password" />
-        <label id="remember-label"
-               title="Keeps your username and password in this browser, unencrypted, so the next visit signs in by itself.">
-          <input id="remember" type="checkbox" />
-          Remember me
-        </label>
-        <button type="submit">Sign in</button>
-      </form>
+      <!--
+        The account. Signed in it is a name and a way out; signed out it is a
+        button holding the form, so the sign-in fields do not sit across the
+        bar for the whole of a session that is already authorized.
+      -->
+      <div id="account">
+        <span id="account-label" hidden>Logged in as <b id="account-user"></b></span>
+        <button id="logout" type="button" hidden>Log out</button>
+
+        <button id="account-toggle" type="button" aria-haspopup="true"
+                aria-expanded="false" aria-controls="account-menu">
+          <span class="hamburger" aria-hidden="true"></span>
+          Sign in
+        </button>
+
+        <div id="account-menu" hidden>
+          <form id="login" autocomplete="on">
+            <input id="username" type="text" placeholder="username" autocomplete="username"
+                   aria-label="Username" />
+            <input id="password" type="password" placeholder="password"
+                   autocomplete="current-password" aria-label="Password" />
+            <label id="remember-label"
+                   title="Keeps your username and password in this browser, unencrypted, so the next visit signs in by itself.">
+              <input id="remember" type="checkbox" />
+              Remember me
+            </label>
+            <button type="submit">Sign in</button>
+          </form>
+
+          <!--
+            The site's own pages, which are where an account is made and a
+            password recovered. Root-relative because the client is served
+            from `/game/` on that same site; a new tab because leaving this
+            one throws four consoles away.
+          -->
+          <nav id="account-links" aria-label="Account">
+            <a href="/create_account.php" target="_blank" rel="noopener">Create an account</a>
+            <a href="/forgot_password.php" target="_blank" rel="noopener">Forgot your password?</a>
+          </nav>
+        </div>
+      </div>
     </header>
 
     <!-- The communications log: server and client notices, newest last. -->
