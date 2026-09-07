@@ -181,6 +181,26 @@ the epoch, so `Last-Modified` is a date in 1970 and a browser left to guess
 gives the response five years of freshness. That is how one deploy left a
 browser calling the new `pkg/dso_web.js` into the old wasm module.
 
+`no-cache` alone does not finish the job, though, and the way it fails is
+worth knowing because content hashing is what hides it. `no-cache` means
+revalidate, not refetch, and the browser revalidates with whatever validator
+it was given — so those validators have to be able to say *no*. Neither of
+nginx's can here. It builds an `ETag` from the file's mtime and size, every
+file has mtime 1, and `index.html` does not change size when a deploy changes
+what it points at: `stamp.ts` writes a digest of fixed width, so
+`style.<12 hex>.css` becomes `style.<12 hex>.css` and the page stays the same
+number of bytes it was. Same size, same mtime, same ETag.
+
+So the browser asks politely, nginx answers `304 Not Modified`, and the page
+it keeps naming the previous build's assets — which are `immutable`, and
+answered from cache for a year. The deploy is invisible to everyone who had
+ever loaded the page, and the only cure is a hard reload nobody thinks to do.
+`etag off` and `if_modified_since off` on that one location are what make
+`no-cache` mean what it is there for.
+
+`serve.ts` sends `no-store` for everything and no validators at all, which is
+why development never showed this either.
+
 `serve.ts` mounts the page at `/game/` too, so a path that works in
 development is a path that works deployed.
 
