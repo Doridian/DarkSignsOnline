@@ -103,10 +103,18 @@ pub fn build_request(
     }
 }
 
-/// Every call except the login itself needs credentials, and the client
-/// refuses to send one without them rather than getting a 401 back.
+/// The calls that can be made without an account.
+///
+/// `auth.php` is the login itself. Reading chat is the room the site has
+/// always shown to anyone at `chatlog.php`, and answering it without an
+/// account is what keeps a client watching it from making the server verify
+/// a password once a second. Saying something is not on the list.
+const ANONYMOUS: [&str; 2] = ["auth.php", "chat.php?action=read"];
+
+/// Whether a call needs credentials. The client refuses to send one without
+/// them rather than getting a 401 back.
 pub fn requires_login(path: &str) -> bool {
-    !path.starts_with("auth.php")
+    !ANONYMOUS.iter().any(|prefix| path.starts_with(prefix))
 }
 
 /// How long a complaint may get before it stops being worth reading.
@@ -203,6 +211,15 @@ mod tests {
     fn only_the_login_call_may_go_out_unauthenticated() {
         assert!(!requires_login("auth.php"));
         assert!(requires_login("lookup.php?d=x"));
+    }
+
+    /// Reading chat is public, so a signed-out client can still watch the
+    /// room. Saying something in it is not.
+    #[test]
+    fn reading_chat_needs_no_account_but_saying_something_does() {
+        assert!(!requires_login("chat.php?action=read&last=0"));
+        assert!(requires_login("chat.php"), "a send is a POST to the bare path");
+        assert!(requires_login("chat.php?action=send"));
     }
 
     #[test]

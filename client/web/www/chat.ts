@@ -16,8 +16,24 @@
 
 import type { Ask, ChatLine, Said } from "./types.js";
 
-/** How often to ask for new lines. */
-const POLL_MS = 2000;
+// How often to ask for new lines, which depends on who is looking.
+//
+// The read is answered before `chat.php` includes `function.php`, so it
+// costs a query and not a password check -- which is the difference between
+// a second's latency being affordable and not. `function.php` authenticates
+// at include time with bcrypt, around 130ms of CPU at the cost factor in
+// use, and `pm.max_children` is 5 for the whole site; a poll paying that
+// could not be run at this rate by more than a handful of players.
+//
+// Cheap is not free, so it still only asks when somebody is reading the
+// answer: the pane is up, or `ChatView` is mirroring the room into the comm
+// log. A tab in the background is nobody.
+
+/** The pane is up and the tab is in front. */
+const POLL_WATCHING = 1000;
+
+/** The pane is away but `ChatView` is mirroring into the comm log. */
+const POLL_MIRRORING = 5000;
 
 /** After a failure, back off to this until one succeeds again. */
 const POLL_MS_AFTER_FAILURE = 15000;
@@ -51,11 +67,18 @@ export class ChatPanel {
   /** Where Up and Down are in that list; -1 is the line being typed. */
   private historyAt = -1;
 
-  /** Set once signed in, since the room needs an account to be read at all. */
-  private polling = false;
   private timer: number | undefined;
   /** Set while a fetch is out, so a slow one does not stack up behind it. */
   private fetching = false;
+  /**
+   * Set once the opening backlog is in.
+   *
+   * Until then nothing is mirrored: the backlog is a hundred lines, and
+   * `ChatView` turned on before the first fetch would otherwise empty all of
+   * them into the comm log at once. The original had no backlog to mirror --
+   * it saw the room only from the moment it joined.
+   */
+  private caughtUp = false;
 
   /**
    * Whether incoming chat is mirrored to the communications log.
@@ -67,6 +90,7 @@ export class ChatPanel {
 
   readonly log: HTMLElement;
   readonly input: HTMLInputElement;
+  readonly submit: HTMLButtonElement;
 
   constructor(
     readonly root: HTMLElement,
@@ -78,6 +102,7 @@ export class ChatPanel {
   ) {
     this.log = root.querySelector(".chat-log") as HTMLElement;
     this.input = root.querySelector(".chat-input") as HTMLInputElement;
+    this.submit = root.querySelector(".chat-send") as HTMLButtonElement;
 
     const form = root.querySelector(".chat-entry") as HTMLFormElement;
     form.addEventListener("submit", (e) => {
@@ -90,10 +115,51 @@ export class ChatPanel {
       "click",
       () => this.hide(),
     );
+
+    // A backgrounded tab is not being read, so it stops asking. Coming back
+    // asks at once, and the fetch is incremental, so the wait costs nothing
+    // but the lines arriving together.
+    document.addEventListener("visibilitychange", () => this.restart());
+
+    // Signed out until told otherwise, which is what the page starts as.
+    this.setSignedIn(false);
   }
 
   get visible(): boolean {
     return !this.root.hidden;
+  }
+
+  /**
+   * How long until the next ask, or `null` when there is nobody to ask for.
+   *
+   * A hidden tab is nobody: the fetch is incremental, so whatever is said
+   * meanwhile arrives in one piece when the player comes back.
+   */
+  private interval(): number | null {
+    if (document.hidden) {
+      return null;
+    }
+    if (this.visible) {
+      return POLL_WATCHING;
+    }
+    return this.view ? POLL_MIRRORING : null;
+  }
+
+  /**
+   * Reconsider the cadence, and ask straight away if it just became worth
+   * asking.
+   *
+   * Called whenever the answer to `interval` can have changed -- the pane
+   * opening or closing, `ChatView`, the tab coming forward -- so opening the
+   * pane shows what was said while it was away rather than waiting a beat
+   * for the next tick.
+   */
+  private restart(): void {
+    clearTimeout(this.timer);
+    this.timer = undefined;
+    if (this.interval() !== null) {
+      void this.poll();
+    }
   }
 
   /** F5, and the status bar's button. */
@@ -110,31 +176,29 @@ export class ChatPanel {
     this.input.focus();
     // Whatever arrived while it was down is at the bottom.
     this.log.scrollTop = this.log.scrollHeight;
+    this.restart();
   }
 
   hide(): void {
     this.root.hidden = true;
+    this.restart();
   }
 
   /**
-   * Start polling, or stop.
+   * Say whether there is an account.
    *
-   * Signing out stops it and forgets the room: the next account to sign in
-   * gets its own backlog rather than the last one's.
+   * Reading does not need one -- `chat.php?action=read` is public, as
+   * `chatlog.php` has always been -- so this gates the box and nothing
+   * else. Signing out neither empties the room nor stops the reading:
+   * there is nothing here that `chatlog.php` would not show to anyone.
    */
   setSignedIn(signedIn: boolean): void {
-    if (signedIn === this.polling) {
-      return;
-    }
-    this.polling = signedIn;
-    clearTimeout(this.timer);
-    if (!signedIn) {
-      this.shown.clear();
-      this.fetchedTo = 0;
-      this.log.replaceChildren();
-      return;
-    }
-    void this.poll();
+    this.input.disabled = !signedIn;
+    this.submit.disabled = !signedIn;
+    this.input.placeholder = signedIn
+      ? "Say something, or /me does something"
+      : "Sign in to join the conversation";
+    this.restart();
   }
 
   /**
@@ -159,6 +223,9 @@ export class ChatPanel {
   /** `ChatView` from a script. */
   setView(enabled: boolean): void {
     this.view = enabled;
+    // Turning it on is a reason to poll with the pane away, and turning it
+    // off may be the last reason to poll at all.
+    this.restart();
   }
 
   /** Send whatever is in the box. */
@@ -189,11 +256,11 @@ export class ChatPanel {
 
   /** Ask for everything newer than what is held, then queue the next ask. */
   private async poll(): Promise<void> {
-    if (!this.polling || this.fetching) {
+    if (this.fetching || this.interval() === null) {
       return;
     }
     this.fetching = true;
-    let delay = POLL_MS;
+    let failed = false;
     try {
       const fetched = (await this.ask({
         type: "chatFetch",
@@ -203,15 +270,22 @@ export class ChatPanel {
       for (const line of fetched) {
         this.fetchedTo = Math.max(this.fetchedTo, line.id);
       }
+      this.caughtUp = true;
     } catch {
       // Signed out, or the server is unreachable. Either way, saying so
-      // every two seconds would be worse than the silence.
-      delay = POLL_MS_AFTER_FAILURE;
+      // every second would be worse than the silence.
+      failed = true;
     } finally {
       this.fetching = false;
     }
-    if (this.polling) {
-      this.timer = setTimeout(() => void this.poll(), delay);
+    // Asked again from the top: the pane may have been put away, or the tab
+    // sent to the back, while the fetch was out.
+    const next = this.interval();
+    if (next !== null) {
+      this.timer = setTimeout(
+        () => void this.poll(),
+        failed ? POLL_MS_AFTER_FAILURE : next,
+      );
     }
   }
 
@@ -231,7 +305,9 @@ export class ChatPanel {
       const text = render(line);
       // An emote keeps its own colour whoever sent it, as in the original.
       this.append(text, line.action ? "emote" : own ? "own" : "said");
-      if (this.view) {
+      // The opening backlog is not news, so it is not mirrored; what the
+      // player just said is, however early it happens.
+      if (this.view && (this.caughtUp || own)) {
         this.mirror(text);
       }
     }

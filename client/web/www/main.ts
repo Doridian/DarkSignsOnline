@@ -451,8 +451,8 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
         showAccount(pendingUser);
         comm.add(`You have been authorized as ${pendingUser}.`);
         comm.add("Welcome to the Dark Signs Network!");
-        // The room needs an account to be read at all, so this is where
-        // chat starts -- as in the original, which connects on login.
+        // The room can be read without an account; this is what opens the
+        // box, as the original's connect-on-login did.
         chat.setSignedIn(true);
       }
       break;
@@ -772,11 +772,10 @@ function signOut(): void {
   field("remember").checked = false;
   setStatus("Not signed in.", "offline");
   showAccount(null);
-  // The original quits IRC on logout. Here it stops the polling and throws
-  // the room away, so the next account to sign in gets its own backlog
-  // rather than reading the last one's.
+  // The original quits IRC on logout. Here the room stays readable -- it is
+  // public, and `chatlog.php` shows it to anyone -- so all this closes is
+  // the box you would say something in.
   chat.setSignedIn(false);
-  chat.hide();
   comm.add("You have been signed out.");
   active.focus();
 }

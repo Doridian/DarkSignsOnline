@@ -1,6 +1,6 @@
 <?php
 
-require_once('function.php');
+require_once('function_public.php');
 
 // Chat, which the original client got from IRC. A browser has no raw
 // sockets, so the room lives here instead: one table, one endpoint, and a
@@ -10,6 +10,16 @@ require_once('function.php');
 //
 // Unlike `dsmail.php` this speaks protocol 2 throughout: no four-character
 // status code in front of the body, so nothing has to be stripped off.
+//
+// Reading is public and saying something is not, which is why this includes
+// `function_public.php` and not `function.php`. The difference matters more
+// than it looks: `function.php` authenticates at include time, and that
+// check is a bcrypt -- around 130ms of CPU at the cost factor in use. A
+// client watching the room asks again every second or so, and making each
+// of those verify a password would cost more than everything else the
+// server does put together, for an answer that `chatlog.php` has always
+// given to anyone who asked. So the read is answered and returned below,
+// before `function.php` is ever pulled in.
 
 /** How many lines a client with nothing yet is given as backlog. */
 define('CHAT_BACKLOG', 100);
@@ -57,6 +67,8 @@ function chat_record($row) {
 
 $action = $_REQUEST['action'] ?? '';
 
+// ---- public: reading the room -------------------------------------------
+
 if ($action === 'read') {
     $last = (int)($_REQUEST['last'] ?? 0);
 
@@ -99,6 +111,14 @@ if ($action === 'read') {
     }
     exit;
 }
+
+// ---- everything past here needs an account ------------------------------
+//
+// Including it here rather than at the top is the whole point: the read
+// above never reaches this line, so it never pays for a password check.
+// Anything added below is authenticated by construction.
+
+require_once('function.php');
 
 if ($action === 'send') {
     $msg = chat_clean($_REQUEST['message'] ?? '');

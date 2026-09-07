@@ -1173,3 +1173,16 @@ button:hover {
   outline: none;
   border-color: var(--accent);
 }
+
+/* Signed out the room is still readable -- it is public -- but there is
+   nothing to say it with, so the box says so rather than failing on submit. */
+.chat-input:disabled,
+.chat-send:disabled {
+  color: var(--dim);
+  border-color: var(--rule);
+  cursor: not-allowed;
+}
+.chat-send:disabled:hover {
+  border-color: var(--rule);
+  color: var(--dim);
+}

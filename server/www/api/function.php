@@ -1,26 +1,6 @@
 <?php
 
-require_once('function_base.php');
-
-header('Content-Type: text/plain');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-// These have to be named rather than wildcarded. The `*` value does not
-// cover Authorization -- the Fetch standard excludes it -- so a browser
-// client sending Basic auth fails the preflight and never makes the call.
-// DSO-Protocol-Version is a custom header, so it is not safelisted either.
-header('Access-Control-Allow-Headers: Authorization, Content-Type, DSO-Protocol-Version');
-header('Access-Control-Expose-Headers: *');
-// Basic auth makes a preflight unavoidable for a cross-origin browser
-// client, so let it cache the answer rather than asking before every call.
-header('Access-Control-Max-Age: 86400');
-// Deliberately no Access-Control-Allow-Credentials: a browser rejects it
-// outright alongside a wildcard origin, and the clients send Authorization
-// as an ordinary header rather than using credentials mode.
-if (strtoupper($_SERVER['REQUEST_METHOD']) === 'OPTIONS') {
-    // Preflight CORS request, just smile and 200
-    exit;
-}
+require_once('function_public.php');
 
 define('DSO_SCRIPT_CRYPTO_HEADER', "Option DSciptCompiled\r\n");
 
@@ -205,26 +185,6 @@ function userToId($username) {
         return -1;
     }
     return $row['id'];
-}
-
-$BASE64_DSO_ENCODE = array(
-    '+' => '-',
-    '/' => '_',
-    '=' => '',
-);
-$BASE64_DSO_DECODE = array(
-    '-' => '+',
-    '_' => '/',
-);
-
-function dso_b64_decode($str) {
-    global $BASE64_DSO_DECODE;
-    return base64_decode(strtr($str, $BASE64_DSO_DECODE));
-}
-
-function dso_b64_encode($str) {
-    global $BASE64_DSO_ENCODE;
-    return strtr(base64_encode($str), $BASE64_DSO_ENCODE);
 }
 
 function line_endings_to_dos($str) {

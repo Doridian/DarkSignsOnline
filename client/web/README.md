@@ -314,11 +314,45 @@ network's anti-abuse limits.
 
 So the room is the game server's own: [`api/chat.php`](../../server/www/api/chat.php),
 one table, and a client that asks for whatever is newer than the last line it
-holds — the same incremental shape `dsmail.php` has, for the same reason. The
-page polls every two seconds through `ask`, because the credentials are in the
-workers, and backs off to fifteen after a failure so a signed-out session is
-not complaining constantly. `chatlog.php`, which has said "not yet
-implemented" since the site went up, is the same rows without an account.
+holds — the same incremental shape `dsmail.php` has, for the same reason.
+`chatlog.php`, which has said "not yet implemented" since the site went up, is
+the same rows without an account.
+
+### Why it polls, and why that is affordable
+
+A held connection is not available here. `pm.max_children` is 5 for the whole
+site, and long-polling pins one of those five per waiting client, so a handful
+of players sitting in chat would be the whole server — the game API and the
+website with it. Server-sent events have the same shape and the same problem.
+
+What makes polling cheap enough to do properly is that **reading the room
+needs no account**. `function.php` authenticates at include time, and that
+check is a bcrypt: ~130ms of CPU at the deployed cost factor, paid by every
+request that includes it. A one-second poll paying that would be 13% of a core
+per player, watching or not. So `chat.php` includes `function_public.php` —
+the database, the headers and the base64, without the password — answers the
+read, and returns *before* `function.php` is ever pulled in. Anything after
+that include is authenticated by construction, which is what makes the split
+safe to extend: a new action added below it cannot forget to require an
+account. Measured locally, the read went from 132ms to 3ms.
+
+Reading being public is not a concession, either. It is what `chatlog.php`
+has always done, so the client does the same: signed out, the pane still shows
+the room and only the box is closed.
+
+Cheap is not free, so the page still asks only when somebody is reading the
+answer:
+
+| State | Interval |
+|---|---|
+| Pane up, tab in front | 1s |
+| Pane away, `ChatView` mirroring into the comm log | 5s |
+| Tab in the background, or nobody reading either way | never |
+
+Opening the pane, turning `ChatView` on and coming back to the tab each ask
+straight away, so none of those wait for a tick. A failure backs off to
+fifteen seconds. The fetch is incremental, so a tab left in the background
+costs nothing and catches up in one request.
 
 Above the transport it is the original's. A line reads `<who>  text`, `/me`
 is an emote, `//` escapes a leading slash so a message can start with one,
@@ -347,6 +381,11 @@ from someone else's domain does not get to talk in the room as the player.
 A line sent from here is drawn before the next poll can bring it round, so
 both paths carry the id the server gave the row — `ChatSend` reports it on
 its console event — and the panel draws an id once.
+
+The opening backlog is a hundred lines and is not mirrored to the comm log,
+whatever `ChatView` says: the original had no backlog to mirror, having seen
+the room only from the moment it joined, and emptying a hundred lines into the
+comm log at once is not what turning it on asks for.
 
 What the original had and this does not is the user list, which came from
 IRC's `353` and has no equivalent: the server tracks no presence.

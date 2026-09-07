@@ -182,6 +182,33 @@ fn chatsend_reaches_the_room_and_reads_back() {
     assert_eq!(found.render(), sent.1, "the same line the console was shown");
 }
 
+/// Reading the room takes no account at all: `chat.php` answers the read
+/// before it includes `function.php`, and the client knows not to insist on
+/// credentials for it. This is the whole reason a client can ask once a
+/// second -- an authenticated read would be a bcrypt every second.
+#[test]
+#[ignore = "needs the network"]
+fn the_room_can_be_read_without_an_account() {
+    let anonymous = match std::env::var("DSO_API_ROOT") {
+        Ok(root) => HttpServer::new(Credentials::default()).with_api_root(root),
+        Err(_) => HttpServer::new(Credentials::default()),
+    };
+    let mut http = anonymous;
+    let id = http.send(ApiRequest::get(chat::read_path(0)));
+    let response = http.wait(id);
+    println!("anonymous read: {} ({} bytes)", response.code, response.body.len());
+    assert!(
+        response.is_success(),
+        "a signed-out client must still be able to watch the room: {response:?}"
+    );
+
+    // And saying something still needs one, refused by the client before it
+    // even leaves -- `requires_login` covers the send.
+    let id = http.send(ApiRequest::post("chat.php", chat::send_body("nope", false)));
+    let refused = http.wait(id);
+    assert_eq!(refused.code, 401, "an anonymous send must not go out: {refused:?}");
+}
+
 /// `ChatView` is local state and says so on the communications channel; it
 /// makes no request at all, which is worth pinning against a real server.
 #[test]
