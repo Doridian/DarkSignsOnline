@@ -186,6 +186,22 @@ fn the_stop_is_reported_rather_than_what_failed_alongside_it() {
     assert_eq!(host.count("note"), 0);
 }
 
+/// A loop with an empty body runs no statements, so nothing inside one is
+/// where a stop could be noticed. The loop itself has to be, or `Do` and
+/// `Loop` on their own are a runaway neither the stop nor the step budget
+/// can reach.
+#[test]
+fn a_loop_with_an_empty_body_is_stopped_too() {
+    for source in ["Do\nLoop\n", "While True\nWend\n", "For i = 1 To 1000000000\nNext\n"] {
+        let host = StopHost::stopping_after(0);
+        // Nothing calls `Tick`, so the stop is wanted from the first turn.
+        host.stop.set(true);
+        let (it, result) = run(&host, source);
+        assert!(it.aborted(), "{source:?} was not stopped");
+        assert_eq!(result.expect_err("stopped").number, ABORT_ERROR, "{source:?}");
+    }
+}
+
 /// Nothing is stopped unless it is asked for.
 #[test]
 fn a_script_nobody_stops_runs_to_its_end() {

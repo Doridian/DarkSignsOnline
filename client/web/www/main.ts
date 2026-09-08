@@ -33,6 +33,14 @@ import type { Asked, ConsoleEvent, FromFs, FromWorker, FsAsk, ToWorker } from ".
 /** As many as the original client has, and the same F-keys select them. */
 const CONSOLE_COUNT = 4;
 
+/**
+ * Console events one console will hold before drawing them regardless.
+ *
+ * Only reached when frames are not coming -- a backgrounded tab -- since a
+ * frame's worth of output is nowhere near this many.
+ */
+const MAX_QUEUED_EVENTS = 4096;
+
 /** The script each console opens with, following `Start_Console`. */
 const STARTUP_SCRIPT = "/system/startup.ds";
 const NEW_CONSOLE_SCRIPT = "/system/newconsole.ds";
@@ -234,6 +242,34 @@ class GameConsole {
   awaitingInput = false;
   /** Set while a command is running, so a second is not started. */
   busy = false;
+  /**
+   * Set between Ctrl+B and the `done` that answers it.
+   *
+   * A script can outrun the page by a long way -- a loop that writes a line
+   * a turn posts them far faster than they can be drawn -- so by the time the
+   * stop reaches the worker there may be a great deal of already-sent output
+   * still queued. Rendering it all would show the script carrying on for
+   * seconds after it had actually stopped, which is what it looks like from
+   * the outside: the same counter, still counting. So output for a console
+   * that has been stopped is dropped rather than drawn.
+   */
+  stopping = false;
+  /**
+   * Console events waiting to be drawn, and the frame that will draw them.
+   *
+   * A script can post lines far faster than a browser can lay them out -- a
+   * loop that writes a counter manages tens of thousands a second -- and
+   * drawing each as it lands puts the page permanently behind the worker.
+   * Behind is what made Ctrl+B feel dead: the stop had already happened, but
+   * the console went on counting through a backlog seconds deep.
+   *
+   * So they are collected and drawn a frame at a time. Nothing is drawn more
+   * often than the screen changes, a run of them scrolls once rather than
+   * once each, and a line that the next event overwrites anyway is not built
+   * at all -- which is the whole of a progress counter.
+   */
+  private queued: ConsoleEvent[] = [];
+  private frame = 0;
   cwd = "/";
 
   /** `id` is which of the four this is. */
@@ -444,22 +480,108 @@ class GameConsole {
    * typed the line the script is no longer going to use.
    */
   stop(): void {
-    // Already asked, and the script has not got to a statement yet: saying
-    // so twice would put the notice on the console twice.
-    if ((!this.busy && !this.awaitingInput) || Atomics.load(this.control, ABORT) !== 0) {
+    // Already asked and not yet answered: saying so twice would put the
+    // notice on the console twice.
+    if ((!this.busy && !this.awaitingInput) || this.stopping) {
       return;
     }
+    this.stopping = true;
     Atomics.store(this.control, ABORT, 1);
-    this.view.system("Script Stopped by User (CTRL + B)", "stopped");
+    // What is waiting to be drawn was written before the stop reached the
+    // worker. Drawing it would show the script running on after it ended.
+    this.dropQueued();
     this.input.value = "";
-    if (this.awaitingInput) {
-      this.showEntry(false);
-      this.closeInput();
+    this.showEntry(false);
+    // Unconditionally, not only when this console is known to be waiting:
+    // the worker may have parked on a `ReadLine` whose `wantInput` is still
+    // in the queue, in which case nothing here knows it is waiting yet and
+    // it would park until someone typed a line the script no longer wants.
+    // Waking a worker that was not parked costs nothing -- the next read
+    // stores over the state before it waits on it.
+    this.closeInput();
+    this.view.system("Script Stopped by User (CTRL + B)", "stopped");
+  }
+
+  /** Take one console event, to be drawn on the next frame. */
+  queueEvent(event: ConsoleEvent): void {
+    this.queued.push(event);
+    // Frames stop while the tab is in the background, and a script does not:
+    // left to the frame alone, a loop writing lines into a hidden tab would
+    // pile them up until the browser ran out of room. Past this many, draw
+    // now -- which for a run of replacing lines is one line's work anyway.
+    if (this.queued.length >= MAX_QUEUED_EVENTS) {
+      this.drawQueued();
+      return;
+    }
+    if (this.frame === 0) {
+      this.frame = requestAnimationFrame(() => {
+        this.frame = 0;
+        this.drawQueued();
+      });
     }
   }
 
-  /** Clear the stop flag, so a new run is not stopped by the last one's. */
+  /**
+   * Draw everything waiting, now.
+   *
+   * Called on a frame, and by hand whenever something has to be in place
+   * before the next thing happens: a prompt, a stop notice, the end of a
+   * command. Output belongs above all three.
+   */
+  drawQueued(): void {
+    if (this.frame !== 0) {
+      cancelAnimationFrame(this.frame);
+      this.frame = 0;
+    }
+    if (this.queued.length === 0) {
+      return;
+    }
+    const events = this.queued;
+    this.queued = [];
+    this.view.holdScroll = true;
+    try {
+      this.draw(events);
+    } finally {
+      this.view.holdScroll = false;
+    }
+    this.view.scrollToBottom();
+  }
+
+  /** Draw a batch, leaving out what nothing would have shown. */
+  private draw(events: ConsoleEvent[]): void {
+    for (let i = 0; i < events.length; i += 1) {
+      const event = events[i] as ConsoleEvent;
+      // A line that only ever replaced the row the next one replaces again
+      // was never on screen. Skipping it is the difference between building
+      // a thousand counters a second and building one a frame. Only when
+      // both replace: an appended line carries a background the one over it
+      // inherits, so dropping that one would change what is drawn.
+      const next = events[i + 1];
+      if (
+        event.kind === "line" &&
+        event.replace &&
+        next?.kind === "line" &&
+        next.replace &&
+        event.channel === next.channel
+      ) {
+        continue;
+      }
+      renderEvent(this, event);
+    }
+  }
+
+  /** Throw away what has not been drawn, which a stop does. */
+  dropQueued(): void {
+    if (this.frame !== 0) {
+      cancelAnimationFrame(this.frame);
+      this.frame = 0;
+    }
+    this.queued = [];
+  }
+
+  /** Ready this console to run something, forgetting the last stop. */
   clearStop(): void {
+    this.stopping = false;
     Atomics.store(this.control, ABORT, 0);
   }
 
@@ -723,14 +845,30 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
       break;
 
     case "console":
-      renderEvent(target, message.event);
+      // Not for a console that has been stopped: this was sent before the
+      // stop reached the worker, and drawing it now would show a script
+      // that has already ended still running. See `GameConsole.stopping`.
+      if (!target.stopping) {
+        target.queueEvent(message.event);
+      }
       break;
 
     case "missingFile":
+      target.drawQueued();
       comm.add(`${message.path} is missing; the client bundle may be incomplete.`);
       break;
 
     case "wantInput":
+      // A request from before the stop, whose worker has already been told
+      // no more input is coming. Showing the prompt would ask for a line
+      // the script is not going to read.
+      if (target.stopping) {
+        break;
+      }
+      // Whatever the script said on its way to asking belongs above the
+      // question, so it is drawn before the prompt goes up rather than on
+      // the next frame.
+      target.drawQueued();
       // The worker is parked; the next line typed goes to it rather than
       // being treated as a new command. Its prompt, if it asked with one,
       // belongs on the input line rather than on a line of its own.
@@ -741,17 +879,26 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
       break;
 
     case "done":
+      target.drawQueued();
       target.busy = false;
       target.awaitingInput = false;
+      target.stopping = false;
       target.setPrompt(message.cwd);
       target.showEntry(true);
       dispatchAsked();
       break;
 
     case "error":
-      target.view.system(message.message, "error");
+      target.drawQueued();
+      // A script that was stopped reports nothing: the notice is already on
+      // the console, and what the worker is complaining about is whatever
+      // the stop interrupted.
+      if (!target.stopping) {
+        target.view.system(message.message, "error");
+      }
       target.busy = false;
       target.awaitingInput = false;
+      target.stopping = false;
       target.setPrompt(message.cwd);
       target.showEntry(true);
       dispatchAsked();

@@ -493,11 +493,19 @@ impl Interp {
         };
     }
 
-    fn exec_stmt(&mut self, s: &Stmt) -> ExecResult {
-        // Ahead of the statement, so a stop lands between two of them and
-        // never inside one. Once latched it is raised again at every
-        // statement the unwinding reaches, which is what carries it out of a
-        // nested `Run` or a procedure call rather than letting either resume.
+    /// Charge one step, and stop the script if it is time to.
+    ///
+    /// Called before every statement, and once per turn round every loop as
+    /// well. The loops need it because a body can be empty -- `Do` and
+    /// `Loop` on their own run no statements at all -- and a runaway that
+    /// executes nothing would otherwise be reachable by neither the budget
+    /// nor the stop.
+    fn tick(&mut self) -> ExecResult {
+        // The stop is checked ahead of the statement, so it lands between
+        // two of them and never inside one. Once latched it is raised again
+        // at every statement the unwinding reaches, which is what carries it
+        // out of a nested `Run` or a procedure call rather than letting
+        // either resume.
         if self.abort_requested {
             return Err(Flow::Error(err::aborted()));
         }
@@ -518,6 +526,11 @@ impl Interp {
             }
             *budget -= 1;
         }
+        Ok(())
+    }
+
+    fn exec_stmt(&mut self, s: &Stmt) -> ExecResult {
+        self.tick()?;
         self.cur_line = s.line;
         match &s.kind {
             StmtKind::Empty | StmtKind::Option(_) => Ok(()),
@@ -610,6 +623,7 @@ impl Interp {
             }
 
             StmtKind::While { cond, body } => loop {
+                self.tick()?;
                 match self.eval_cond(cond)? {
                     Ctrl::Ok(false) => return Ok(()),
                     Ctrl::Ok(true) | Ctrl::Skipped => {}
@@ -877,6 +891,7 @@ impl Interp {
 
     fn exec_do(&mut self, cond: &DoCond, body: &[Stmt]) -> ExecResult {
         loop {
+            self.tick()?;
             // A pre-test that fails is skipped, so the body runs.
             match cond {
                 DoCond::PreWhile(e) => {
@@ -960,6 +975,7 @@ impl Interp {
         }
 
         loop {
+            self.tick()?;
             // The counter is written before the test, so it keeps the first
             // value past the limit once the loop finishes.
             self.assign_to(var, cur.clone(), false)?;
@@ -999,6 +1015,7 @@ impl Interp {
             }
         };
         for item in items {
+            self.tick()?;
             let is_obj = item.is_object();
             self.assign_to(var, item, is_obj)?;
             match self.exec_block(body) {

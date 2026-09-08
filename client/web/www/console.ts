@@ -24,6 +24,15 @@ const FLASH_CLASS: Record<string, string | null> = {
 export class ConsoleView {
   /** The most recent line, so `SayLine` can replace it and `Draw` reach it. */
   lastLine: HTMLElement | null = null;
+  /**
+   * Set while a batch of lines is being added, to scroll once at the end.
+   *
+   * Reading `scrollHeight` forces the browser to lay the log out, so doing
+   * it per line makes adding a hundred a hundred times the work of adding
+   * them together. The page draws a frame's worth at a time; see
+   * `GameConsole.drawQueued`.
+   */
+  holdScroll = false;
 
   /**
    * `root` is where lines are appended, and `anchor` an element kept last,
@@ -172,6 +181,9 @@ export class ConsoleView {
   }
 
   scrollToBottom(): void {
+    if (this.holdScroll) {
+      return;
+    }
     this.root.scrollTop = this.root.scrollHeight;
   }
 }

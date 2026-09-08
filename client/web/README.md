@@ -64,6 +64,17 @@ script that spends its time waiting rather than running. `On Error Resume
 Next` cannot swallow the stop; the script ends, `done` comes back as it would
 from any other ending, and the prompt returns.
 
+The other half of making that visible is the backlog. A script outruns the
+page by a wide margin — a loop writing a counter posts tens of thousands of
+lines a second — so a page that drew each line as it landed fell steadily
+further behind, and a stop showed up seconds late with the counter still
+climbing in the meantime. The page therefore collects console events and
+draws them a frame at a time: one scroll for the batch instead of one per
+line, and a line the next event overwrites anyway is not built at all, which
+is the whole of a progress counter. A stopped console throws away what it has
+not drawn. Stopping is then immediate however long the script had been
+running, which is what `Ctrl+B` has to be to be worth having.
+
 ## Layout
 
 | File | Role |
