@@ -264,7 +264,7 @@ export type Asked = { token: number } & (
 
 /** What the page sends the filesystem. */
 export type ToFs =
-  | { type: "start"; files: Record<string, string> }
+  | { type: "start"; files: Record<string, Uint8Array> }
   | {
       type: "attach";
       consoleId: number;

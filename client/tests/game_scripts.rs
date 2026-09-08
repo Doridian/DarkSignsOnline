@@ -9,7 +9,7 @@ use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use vbscript::game::fs::FileSystem;
+use vbscript::game::fs::{bytes_to_text, FileSystem};
 use std::rc::Rc;
 
 use vbscript::game::console::RecordingConsole;
@@ -81,6 +81,36 @@ fn excluded(p: &Path) -> bool {
     NOT_VBSCRIPT.contains(&name)
 }
 
+/// A script's source as the engine reads it: bytes, through the code page.
+///
+/// Not `read_to_string`. A script is a file, the client has one encoding for
+/// files, and reading the corpus as UTF-8 is what put the replacement
+/// characters into two of these scripts in the first place -- see
+/// `no_script_carries_the_mark_of_a_lossy_decode`.
+fn source(f: &Path) -> String {
+    bytes_to_text(&std::fs::read(f).expect("script is readable"))
+}
+
+/// The fingerprint of a lossy decode, left behind wherever a byte the reader
+/// could not make sense of was thrown away.
+///
+/// Two scripts arrived carrying these and one of them lost the punctuation
+/// out of a mission's text. Nothing in the client produces U+FFFD any more,
+/// so finding one means a tool outside it read the corpus as UTF-8 and wrote
+/// back what it understood.
+#[test]
+fn no_script_carries_the_mark_of_a_lossy_decode() {
+    let mut damaged = Vec::new();
+    for f in scripts() {
+        let bytes = std::fs::read(&f).expect("script is readable");
+        let hits = bytes.windows(3).filter(|w| *w == b"\xef\xbf\xbd").count();
+        if hits > 0 {
+            damaged.push(format!("{}: {hits}", f.display()));
+        }
+    }
+    assert!(damaged.is_empty(), "replacement characters in:\n{}", damaged.join("\n"));
+}
+
 #[test]
 fn all_scripts_parse() {
     let files = scripts();
@@ -91,7 +121,7 @@ fn all_scripts_parse() {
         if excluded(f) {
             continue;
         }
-        let src = std::fs::read_to_string(f).expect("script is readable");
+        let src = source(f);
         if let Err(e) = vbscript::check(&src) {
             failures.push(format!("{}: {e}", f.display()));
         }
@@ -162,8 +192,10 @@ fn corpus_fs() -> MemoryFs {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("user");
     let mut fs = MemoryFs::new();
     for f in scripts() {
-        if let (Ok(text), Ok(rel)) = (std::fs::read_to_string(&f), f.strip_prefix(&root)) {
-            let _ = FileSystem::write_text(&mut fs, &format!("/{}", rel.display()), &text);
+        // Read as bytes, like the browser seeds them: a script is whatever
+        // bytes are on disk, and the code page decides what they spell.
+        if let (Ok(bytes), Ok(rel)) = (std::fs::read(&f), f.strip_prefix(&root)) {
+            let _ = FileSystem::write(&mut fs, &format!("/{}", rel.display()), &bytes);
         }
     }
     fs
@@ -174,7 +206,7 @@ fn corpus_fs() -> MemoryFs {
 #[test]
 fn legacy_scripts_are_rejected() {
     for f in scripts().into_iter().filter(|f| excluded(f)) {
-        let src = std::fs::read_to_string(&f).expect("script is readable");
+        let src = source(&f);
         assert!(
             vbscript::check(&src).is_err(),
             "{} parses, but is listed as not-VBScript",

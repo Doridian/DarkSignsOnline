@@ -19,6 +19,7 @@ const pkg = join(here, "www/pkg");
 const { default: init, Session, parseMarkup } = await import(join(pkg, "dso_web.js"));
 const { FONT_STACK } = await import(join(here, "www/fonts.js"));
 const { GameFs, handle, handleRaw } = await import(join(here, "www/opfs.js"));
+const { decode: fromBytes, encode: toBytes } = await import(join(here, "www/codepage.js"));
 await init({ module_or_path: await readFile(join(pkg, "dso_web_bg.wasm")) });
 
 /** Collect console events the way the worker forwards them to the page. */
@@ -30,8 +31,6 @@ const lines = () =>
 
 const queuedInput = ["typed answer"];
 
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
 
 /**
  * The real filesystem, with no OPFS under it.
@@ -79,7 +78,7 @@ session.runScript('Say "you said: " & ReadLine("Name?")', []);
 assert.ok(lines().includes("you said: typed answer"));
 
 // The command line is rewritten and the command runs from the filesystem.
-files.write("/system/commands/greet.ds", encoder.encode('Say "hi, " & ArgV(1)'));
+files.write("/system/commands/greet.ds", toBytes('Say "hi, " & ArgV(1)'));
 session.runCommand("option dscript");
 session.runCommand("greet world");
 assert.ok(lines().includes("hi, world"), "command dispatch works");
@@ -103,7 +102,7 @@ assert.equal(lines().at(-1), "still alive");
 // A script's writes go straight into the filesystem. There is no mirror to
 // keep in step and nothing queued behind them: the session and the panel are
 // reading the same tree.
-const text = (path: string) => decoder.decode(files.read(path) as Uint8Array);
+const text = (path: string) => fromBytes(files.read(path) as Uint8Array);
 
 session.runScript('Overwrite "/home/notes.txt", "remember this"', []);
 assert.equal(text("/home/notes.txt"), "remember this");
@@ -172,7 +171,7 @@ assert.equal(
 // There is one filesystem, so a file put into it is simply there: nothing is
 // seeded into a session and nothing is synced between them. This is the whole
 // point of the arrangement, so it is worth asserting outright.
-files.write("/home/shared.txt", encoder.encode("written outside the session"));
+files.write("/home/shared.txt", toBytes("written outside the session"));
 assert.equal(
   session.readFile("/home/shared.txt"),
   "written outside the session",
@@ -274,6 +273,33 @@ assert.equal(lines().at(-1), "len=256/256", "256 bytes out, 256 characters back"
 assert.deepEqual(
   files.read("/home/all.bin"),
   new Uint8Array(Array.from({ length: 256 }, (_, i) => i)),
+);
+
+// Which character each byte is, is the code page's business, and the page
+// and the engine have to agree on it or the editor shows one thing and `Cat`
+// another. Byte 0x93 is the left curly quote a word processor makes -- the
+// character the game's own mission text was written with.
+session.runScript('Say "q=" & Chr(147) & " n=" & Asc(Chr(147))', []);
+assert.equal(lines().at(-1), "q=\u201c n=147", "Chr is the code page's");
+assert.equal(
+  fromBytes(new Uint8Array([0x93])),
+  "\u201c",
+  "and the page reads the byte the same way",
+);
+assert.deepEqual(toBytes("\u201c"), new Uint8Array([0x93]), "and writes it back");
+
+// What the editor opens and saves is what a script sees, which is the whole
+// point: the two used to disagree, and a file with an accent in it came back
+// as the mojibake its UTF-8 spelled.
+session.runScript(
+  'Overwrite "/home/accents.txt", "caf" & Chr(233) & Chr(151) & "th" & Chr(233)',
+  [],
+);
+assert.equal(text("/home/accents.txt"), "caf\u00e9\u2014th\u00e9", "no mojibake either way");
+assert.deepEqual(
+  toBytes(text("/home/accents.txt")),
+  files.read("/home/accents.txt"),
+  "and the editor would save exactly what it opened",
 );
 
 // `Music` resolves its path and reaches the page as a command to act on.

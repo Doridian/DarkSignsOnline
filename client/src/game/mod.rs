@@ -726,7 +726,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             "include" => {
                 self.assert_local()?;
                 let p = self.resolve(&arg_str(args, 0)?);
-                let src = self.fs.borrow_mut().read_text(&p).map_err(fs_error)?;
+                let src = bytes_to_text(&self.fs.borrow_mut().read(&p).map_err(fs_error)?);
                 let key = self.env.borrow().file_key.clone();
                 let src = crypto::decrypt_script(&src, &key)
                     .map_err(|e| misc_error(e.to_string()))?;
@@ -744,7 +744,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 let p = self
                     .resolve_command(&name)
                     .ok_or_else(|| fs_error(FsError::NotFound(name)))?;
-                let src = self.fs.borrow_mut().read_text(&p).map_err(fs_error)?;
+                let src = bytes_to_text(&self.fs.borrow_mut().read(&p).map_err(fs_error)?);
                 let key = self.env.borrow().file_key.clone();
                 let src = crypto::decrypt_script(&src, &key)
                     .map_err(|e| misc_error(e.to_string()))?;
@@ -760,7 +760,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 let p = self
                     .resolve_command(&name)
                     .ok_or_else(|| fs_error(FsError::NotFound(name)))?;
-                let src = self.fs.borrow_mut().read_text(&p).map_err(fs_error)?;
+                let src = bytes_to_text(&self.fs.borrow_mut().read(&p).map_err(fs_error)?);
                 let key = self.env.borrow().file_key.clone();
                 let src = crypto::decrypt_script(&src, &key)
                     .map_err(|e| misc_error(e.to_string()))?;
@@ -1186,7 +1186,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
         }
 
         let path = format!("/system/libs/{name}.ds");
-        let source = self.fs.borrow_mut().read_text(&path).map_err(fs_error)?;
+        let source = bytes_to_text(&self.fs.borrow_mut().read(&path).map_err(fs_error)?);
         let source = self.decrypt_library(&source)?;
         it.execute(&source, false)
     }
@@ -1203,7 +1203,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
         let hash = hash.to_lowercase();
         let path = format!("/system/libs/hash_{hash}.ds");
 
-        let cached = self.fs.borrow_mut().read_text(&path).unwrap_or_default();
+        let cached = bytes_to_text(&self.fs.borrow_mut().read(&path).unwrap_or_default());
         let source = if crypto::sha256_hex(cached.as_bytes()) == hash {
             cached
         } else {
@@ -1220,7 +1220,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
             if crypto::sha256_hex(body.as_bytes()) != hash {
                 return Err(misc_error("Could not download hash library correctly :("));
             }
-            self.fs.borrow_mut().write_text(&path, &body).map_err(fs_error)?;
+            self.fs.borrow_mut().write(&path, &text_to_bytes(&body)).map_err(fs_error)?;
             body
         };
 
@@ -1250,17 +1250,17 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
     }
 
     pub(crate) fn read_ini(&self, file: &str, section: &str, key: &str) -> String {
-        match self.fs.borrow_mut().read_text(file) {
-            Ok(text) => fs::ini_get(&text, section, key),
+        match self.fs.borrow_mut().read(file) {
+            Ok(bytes) => fs::ini_get(&bytes_to_text(&bytes), section, key),
             // A missing file reads as a missing key.
             Err(_) => String::new(),
         }
     }
 
     pub(crate) fn write_ini(&self, file: &str, section: &str, key: &str, value: &str) -> VbResult<()> {
-        let text = self.fs.borrow_mut().read_text(file).unwrap_or_default();
+        let text = bytes_to_text(&self.fs.borrow_mut().read(file).unwrap_or_default());
         let updated = fs::ini_set(&text, section, key, value);
-        self.fs.borrow_mut().write_text(file, &updated).map_err(fs_error)
+        self.fs.borrow_mut().write(file, &text_to_bytes(&updated)).map_err(fs_error)
     }
 
     /// Run a nested script. `capture` redirects its output into a string

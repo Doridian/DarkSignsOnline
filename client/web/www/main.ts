@@ -902,8 +902,8 @@ async function boot(): Promise<void> {
  * are not saved: they come with the client and are refetched every load, so
  * an edit is saved over one and a delete lasts until the next load.
  */
-async function loadStartupFiles(): Promise<Record<string, string>> {
-  const files: Record<string, string> = {};
+async function loadStartupFiles(): Promise<Record<string, Uint8Array>> {
+  const files: Record<string, Uint8Array> = {};
   try {
     // Each file's place in the game's filesystem, which is the name it is
     // seeded under, against the URL it is served at. The two differ because a
@@ -915,7 +915,10 @@ async function loadStartupFiles(): Promise<Record<string, string>> {
       Object.entries(manifest).map(async ([path, url]) => {
         const response = await fetch(url);
         if (response.ok) {
-          files[path] = await response.text();
+          // Bytes, not text. A shipped script is a file like any other, and
+          // decoding it here would put the page's encoding in front of the
+          // code page every other read goes through.
+          files[path] = new Uint8Array(await response.arrayBuffer());
         }
       }),
     );

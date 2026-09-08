@@ -7,6 +7,10 @@ declaring their encoding — `read_text`/`write_text` in
 [`fs.rs`](../src/game/fs.rs), used at 15 sites. This is what it would take to
 fix the display and delete that pair.
 
+**Done.** Option 1 below is what the client now does: one code page,
+windows-1252, for every file it reads or writes. The last section says what
+was built and where it went further than the plan.
+
 ## The shape of the problem
 
 Three properties are wanted and only two can be had:
@@ -212,3 +216,63 @@ payloads are base64 of UTF-8 on the wire, where the original client sent
 base64 of ANSI. Both are protocol-compatibility questions with the server and
 the original client, not display questions, and neither is touched by any
 option here.
+
+## What was built
+
+`src/codepage.rs` is the table, and it is the only place the mapping is
+spelled out in Rust. `bytes_to_text` and `text_to_bytes` call it, and so do
+`Chr` and `Asc` — checklist item 6, taken, because the alternative was two
+code pages in one client and the conformance suite only pins `Chr(220)` and
+`Chr(255)`, which windows-1252 and Latin-1 agree on. `api.vbs` and its three
+`KNOWN_FAILURES` are unchanged.
+
+`read_text`/`write_text` are gone. All 15 call sites — `Include`, `Run`,
+`Capture`, `DLOpen`, `DLOpenHash`'s cache, the INI pair, and the six in the
+wasm bridge — read and write bytes and go through the code page like
+everything else.
+
+`web/www/codepage.ts` is the page's copy, for the editor. Decoding is
+`TextDecoder("windows-1252")`, which is exactly the mapping the engine has,
+five undefined positions and all; only the encoder is written out, because
+`TextEncoder` speaks UTF-8 and nothing else.
+
+### Three things the plan did not mention
+
+**The shipped scripts were loaded as text.** `loadStartupFiles` fetched every
+script with `response.text()` and `GameFs.load` re-encoded it with
+`TextEncoder` — a UTF-8 round trip in front of the code page, which would
+have destroyed a windows-1252 byte on its way from the repo to OPFS. It is
+`arrayBuffer()` now, and `start`'s `files` carries `Uint8Array`. This is the
+same mechanism that damaged two scripts in the first place; it was still in
+the loading path.
+
+**The corpus tests read scripts with `read_to_string`.** So did
+`legacy_scripts_are_rejected`. Both now read bytes through `bytes_to_text`,
+which is the only reading of a script the client has.
+`no_script_carries_the_mark_of_a_lossy_decode` guards the tree against the
+next tool that assumes UTF-8.
+
+**Running a song reports a syntax error, not a bad file mode.** With no
+reading that refuses to hand the bytes over, `Include` on an MP3 fails in the
+parser rather than at the read. That is where VB6's refusal came from too.
+
+### The corpus
+
+Two files, in both the shipped tree and the test tree, held the sixteen
+replacement characters a lossy decode left behind. They are listed in the
+commit; `q.ds` had one, reconstructed as the windows-1252 byte it must have
+been, and `website.ds` had fifteen inside decorative literals nothing
+decodes, which are unrecoverable and took the code page's own substitute.
+
+### What it was checked against
+
+The Rust suite (179 lib, 110 `game_api`, 3 `game_scripts`), `api.vbs` under
+Wine with its three known failures unchanged, `npm run check`, `node
+smoke.ts`, and the real client in Chromium over real OPFS: all 256 bytes
+written from a script and read back as 256 characters, first 0 and last 255,
+still 256 after a reload with byte 147 intact at its offset; `Asc(Chr(147))`
+= 147 and `AscW(Chr(147))` = 8220, rendered on the console as `“`; the
+repaired `q.ds` arriving from the server with its byte intact, found by
+`InStr(q, Chr(147))` at 16947 of 18277; and `café—quote“` written by a
+script, read back by `Cat`, and shown by the editor as itself — which is the
+whole point, and did not work before.

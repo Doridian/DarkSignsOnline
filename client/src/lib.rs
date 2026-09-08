@@ -6,6 +6,7 @@
 
 pub mod ast;
 pub mod builtins;
+pub mod codepage;
 pub mod error;
 pub mod interp;
 pub mod lexer;

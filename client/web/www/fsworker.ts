@@ -11,6 +11,7 @@
 // console handed over when it attached. This worker never blocks: its event
 // loop is the one doing the work.
 
+import { decode, encode } from "./codepage.js";
 import { CLOSED, FS_MORE, MORE, READY } from "./control.js";
 import { GameFs, foldPath, handle, handleRaw, ready } from "./opfs.js";
 import type { FromFs, ToFs } from "./types.js";
@@ -206,7 +207,7 @@ async function answerPage(
       });
     }
     case "writeFile":
-      fs.write(foldPath(message.path), encoder.encode(message.contents));
+      fs.write(foldPath(message.path), encode(message.contents));
       return plain(null);
     case "fileAt": {
       // The `File` itself, which the page turns into an object URL to play
@@ -224,21 +225,20 @@ async function answerPage(
 }
 
 /**
- * A file as the editor can show it, or nothing.
+ * A file as the editor shows it, or nothing.
  *
- * This is where a file is decided to be text, and it is decided here because
- * this is the operation that needs it to be: an editor shows text. A song
- * opened in one is not text and never was, and showing nothing beats showing
- * an error where a file's contents should be -- or, worse, forty megabytes
- * of mojibake, which is why anything past a size no script reaches is left
- * alone unread.
+ * Through the code page, like everything else that turns a file into
+ * characters, so what the editor shows is what `Cat` shows and what it saves
+ * is byte for byte what it opened. There is no decode to fail here any more;
+ * the only question left is size, because a forty-megabyte song in a
+ * textarea helps nobody and no script writes one.
  */
 const EDITOR_LIMIT = 4 * 1024 * 1024;
 
 async function editorText(fs: GameFs, path: string): Promise<string> {
   try {
     if (fs.len(path) > EDITOR_LIMIT) return "";
-    return new TextDecoder("utf-8", { fatal: true }).decode(await fs.read(path));
+    return decode(await fs.read(path));
   } catch {
     return "";
   }

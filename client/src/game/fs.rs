@@ -17,6 +17,8 @@
 
 use std::collections::BTreeMap;
 
+use crate::codepage;
+
 use super::path::{fold_case, split_parent};
 
 /// What went wrong with a filesystem operation. These map onto the errors
@@ -67,27 +69,28 @@ impl DirEntry {
 
 /// A file's bytes as the characters a script sees, one character per byte.
 ///
-/// This is VB6's `Open ... For Binary` and its codepage: byte 0xE9 is
-/// character U+00E9, so `Len` of what comes back is the file's length in
-/// bytes and `Mid` indexes into it by byte. It is also what
+/// This is VB6's `Open ... For Binary` through the client's
+/// [code page](crate::codepage): byte 0xE9 is character U+00E9 and byte 0x93
+/// is a left curly quote, so `Len` of what comes back is the file's length
+/// in bytes and `Mid` indexes into it by byte. It is also what
 /// `DecodeBase64Str` has always done, so it is not a new convention in this
 /// engine -- only a newly uniform one.
 ///
-/// The cost is that a UTF-8 file of non-ASCII text reads back as the
-/// mojibake its bytes spell. It still round-trips exactly; it only displays
-/// wrong. The engine's own files avoid this by declaring their encoding --
-/// see [`FileSystem::read_text`].
+/// Every file goes through this, the engine's own included. A file cannot
+/// carry a character the code page has no byte for, which is the price of
+/// indexing one by the other; what it can carry, it carries exactly, and
+/// reads back looking like itself.
 pub fn bytes_to_text(bytes: &[u8]) -> String {
-    bytes.iter().map(|&b| b as char).collect()
+    bytes.iter().map(|&b| codepage::decode(b)).collect()
 }
 
 /// Characters as the bytes a file holds, the inverse of [`bytes_to_text`].
 ///
-/// A character above U+00FF has no byte, which VB6 answered by substituting
-/// through the codepage rather than refusing. `?` is what it substituted, so
-/// it is what is substituted here.
+/// A character the code page cannot spell has no byte, which VB6 answered by
+/// substituting rather than refusing. `?` is what it substituted, so it is
+/// what is substituted here.
 pub fn text_to_bytes(text: &str) -> Vec<u8> {
-    text.chars().map(|c| if (c as u32) <= 0xFF { c as u8 } else { b'?' }).collect()
+    text.chars().map(|c| codepage::encode(c).unwrap_or(codepage::SUBSTITUTE)).collect()
 }
 
 /// The MIME type a name implies, or `None` when the name says nothing.
@@ -178,24 +181,6 @@ pub trait FileSystem {
         self.raw_append(&fold_case(path), contents)
     }
 
-    /// A file the engine wrote itself, read back as the UTF-8 it wrote.
-    ///
-    /// The mail store, the INI files and the library cache carry
-    /// server-sourced text, and a script's source is text by definition.
-    /// Those declare their encoding here rather than inheriting the byte
-    /// convention scripts see, so a name or a subject with an accent in it
-    /// survives. Anything that is not UTF-8 is not one of these files, and
-    /// saying so is more use than handing back nonsense.
-    fn read_text(&self, path: &str) -> FsResult<String> {
-        let bytes = self.read(path)?;
-        String::from_utf8(bytes).map_err(|_| FsError::Io(format!("Not text: {path}")))
-    }
-
-    /// Write one of those files, as UTF-8.
-    fn write_text(&mut self, path: &str, contents: &str) -> FsResult<()> {
-        self.write(path, contents.as_bytes())
-    }
-
     fn len(&self, path: &str) -> FsResult<i64> {
         self.raw_len(&fold_case(path))
     }
@@ -256,7 +241,7 @@ impl MemoryFs {
     /// Panics if a directory of that name is in the way, which is a mistake
     /// in the setup rather than something to carry on from.
     pub fn with_file(mut self, path: &str, contents: &str) -> MemoryFs {
-        self.write_text(path, contents).expect("no directory in the way");
+        self.write(path, &text_to_bytes(contents)).expect("no directory in the way");
         self
     }
 
@@ -628,9 +613,9 @@ mod tests {
     #[test]
     fn reads_and_writes_files() {
         let mut f = fs();
-        assert_eq!(f.read_text("/home/a.txt").unwrap(), "alpha");
-        f.write_text("/home/a.txt", "changed").unwrap();
-        assert_eq!(f.read_text("/home/a.txt").unwrap(), "changed");
+        assert_eq!(bytes_to_text(&f.read("/home/a.txt").unwrap()), "alpha");
+        f.write("/home/a.txt", &text_to_bytes("changed")).unwrap();
+        assert_eq!(bytes_to_text(&f.read("/home/a.txt").unwrap()), "changed");
     }
 
     #[test]
@@ -647,7 +632,7 @@ mod tests {
         let mut f = MemoryFs::new();
         f.append("/log.txt", b"one").unwrap();
         f.append("/log.txt", b"two").unwrap();
-        assert_eq!(f.read_text("/log.txt").unwrap(), "onetwo");
+        assert_eq!(bytes_to_text(&f.read("/log.txt").unwrap()), "onetwo");
     }
 
     #[test]
@@ -688,21 +673,21 @@ mod tests {
     #[test]
     fn names_are_matched_and_stored_folded() {
         let mut f = fs();
-        assert_eq!(f.read_text("/HOME/A.TXT").unwrap(), "alpha");
+        assert_eq!(bytes_to_text(&f.read("/HOME/A.TXT").unwrap()), "alpha");
         assert!(f.exists("/Home/Sub"));
         assert!(f.is_dir("/Home/Sub"));
 
         // Writing under another spelling rewrites the same file rather than
         // adding a second one.
-        f.write_text("/Home/A.Txt", "changed").unwrap();
-        assert_eq!(f.read_text("/home/a.txt").unwrap(), "changed");
+        f.write("/Home/A.Txt", &text_to_bytes("changed")).unwrap();
+        assert_eq!(bytes_to_text(&f.read("/home/a.txt").unwrap()), "changed");
         assert_eq!(f.paths(), vec!["/home/a.txt", "/home/b.txt", "/home/sub/c.txt"]);
     }
 
     #[test]
     fn a_new_file_is_stored_under_its_folded_name() {
         let mut f = MemoryFs::new();
-        f.write_text("/Home/Notes/TODO.TXT", "x").unwrap();
+        f.write("/Home/Notes/TODO.TXT", &text_to_bytes("x")).unwrap();
         assert_eq!(f.paths(), vec!["/home/notes/todo.txt"]);
         let names: Vec<String> =
             f.read_dir("/home/notes").unwrap().iter().map(|e| e.display_name()).collect();
@@ -714,11 +699,11 @@ mod tests {
     fn copy_and_rename_move_content() {
         let mut f = fs();
         f.copy("/home/a.txt", "/home/copy.txt").unwrap();
-        assert_eq!(f.read_text("/home/copy.txt").unwrap(), "alpha");
+        assert_eq!(bytes_to_text(&f.read("/home/copy.txt").unwrap()), "alpha");
         assert!(f.exists("/home/a.txt"), "copy leaves the source");
 
         f.rename("/home/copy.txt", "/home/moved.txt").unwrap();
-        assert_eq!(f.read_text("/home/moved.txt").unwrap(), "alpha");
+        assert_eq!(bytes_to_text(&f.read("/home/moved.txt").unwrap()), "alpha");
         assert!(!f.exists("/home/copy.txt"), "rename removes the source");
     }
 
@@ -751,12 +736,12 @@ mod tests {
         std::fs::create_dir_all(&root).unwrap();
         let mut fs = DiskFs::new(&root);
 
-        fs.write_text("/a/b.txt", "inside").unwrap();
-        assert_eq!(fs.read_text("/a/b.txt").unwrap(), "inside");
+        fs.write("/a/b.txt", &text_to_bytes("inside")).unwrap();
+        assert_eq!(bytes_to_text(&fs.read("/a/b.txt").unwrap()), "inside");
         assert!(root.join("a/b.txt").exists());
 
         // A path that tries to climb out lands back at the root.
-        fs.write_text("/../escaped.txt", "still inside").unwrap();
+        fs.write("/../escaped.txt", &text_to_bytes("still inside")).unwrap();
         assert!(root.join("escaped.txt").exists(), "must not escape the root");
         assert!(!root.parent().unwrap().join("escaped.txt").exists());
 
@@ -771,9 +756,9 @@ mod tests {
         std::fs::create_dir_all(&root).unwrap();
         let mut fs = DiskFs::new(&root);
 
-        fs.write_text("/Dir/One.TXT", "1").unwrap();
+        fs.write("/Dir/One.TXT", &text_to_bytes("1")).unwrap();
         assert!(root.join("dir/one.txt").exists(), "stored folded");
-        assert_eq!(fs.read_text("/DIR/ONE.txt").unwrap(), "1");
+        assert_eq!(bytes_to_text(&fs.read("/DIR/ONE.txt").unwrap()), "1");
 
         let _ = std::fs::remove_dir_all(&root);
     }
@@ -786,7 +771,7 @@ mod tests {
         std::fs::create_dir_all(&root).unwrap();
         let mut fs = DiskFs::new(&root);
 
-        fs.write_text("/dir/one.txt", "1").unwrap();
+        fs.write("/dir/one.txt", &text_to_bytes("1")).unwrap();
         fs.make_dir("/dir/sub").unwrap();
         let names: Vec<String> =
             fs.read_dir("/dir").unwrap().iter().map(|e| e.display_name()).collect();
@@ -854,11 +839,12 @@ mod tests {
     }
 
     #[test]
-    fn a_song_read_as_the_engines_own_text_says_it_is_not() {
-        assert!(matches!(
-            with_song().read_text("/home/theme.mp3"),
-            Err(FsError::Io(_))
-        ));
+    fn a_song_reads_as_the_characters_its_bytes_spell() {
+        // There is no longer a reading that refuses it: every file is bytes,
+        // and the code page has a character for each of them.
+        let text = bytes_to_text(&with_song().read("/home/theme.mp3").unwrap());
+        assert_eq!(text.chars().count(), 14, "one character per byte");
+        assert!(text.starts_with("ID3"));
     }
 
     #[test]
@@ -875,10 +861,15 @@ mod tests {
         f.write("/bytes.bin", &all).unwrap();
 
         // What a script sees: one character per byte, so `Len` is the file's
-        // length and indexing into it is indexing into the file.
+        // length and indexing into it is indexing into the file. Which
+        // character each byte is, is the code page's business -- here it is
+        // enough that there are 256 of them and they are all different.
         let text = bytes_to_text(&f.read("/bytes.bin").unwrap());
         assert_eq!(text.chars().count(), 256);
-        assert!(text.chars().enumerate().all(|(i, c)| c as u32 == i as u32));
+        let mut distinct: Vec<char> = text.chars().collect();
+        distinct.sort_unstable();
+        distinct.dedup();
+        assert_eq!(distinct.len(), 256);
 
         // And writing those characters back puts the same bytes on disk.
         f.write("/again.bin", &text_to_bytes(&text)).unwrap();
@@ -925,7 +916,6 @@ mod tests {
         assert_eq!(fs.len("/media/theme.mp3").unwrap(), 8);
         assert_eq!(fs.read("/media/theme.mp3").unwrap(), b"\x00\x01\xffbytes");
         assert_eq!(fs.read_upto("/media/theme.mp3", 3).unwrap(), b"\x00\x01\xff");
-        assert!(matches!(fs.read_text("/media/theme.mp3"), Err(FsError::Io(_))));
         assert_eq!(fs.read("/media").unwrap_err(), FsError::IsADirectory("/media".into()));
 
         fs.copy("/media/theme.mp3", "/media/copy.mp3").unwrap();

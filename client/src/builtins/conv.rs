@@ -2,6 +2,7 @@
 
 use std::rc::Rc;
 
+use crate::codepage;
 use crate::error::{err, VbResult};
 use crate::value::{parse_number, round_half_even, Value, CY_SCALE};
 
@@ -288,15 +289,13 @@ pub fn asc(v: &Value, wide: bool) -> VbResult<Value> {
         let u = if u > 0xFFFF { 0xFFFD } else { u };
         Ok(Value::I2(u as u16 as i16))
     } else {
-        let b = if (c as u32) < 256 { c as u32 } else { encode_ansi(c) };
+        // The narrow form is one byte through the client's code page, which
+        // is what `Asc` reports. A character the page cannot spell has no
+        // byte at all, and VB6 answered that by substituting rather than
+        // refusing -- so this reports the substitute's code.
+        let b = codepage::encode(c).unwrap_or(codepage::SUBSTITUTE);
         Ok(Value::I2(b as i16))
     }
-}
-
-fn encode_ansi(c: char) -> u32 {
-    // Outside Latin-1 there is no single-byte form; report the low byte, as
-    // the ANSI code page would after a lossy conversion.
-    (c as u32) & 0xFF
 }
 
 pub fn chr(v: &Value, wide: bool) -> VbResult<Value> {
@@ -321,5 +320,5 @@ pub fn chr(v: &Value, wide: bool) -> VbResult<Value> {
         return Err(err::invalid_call());
     }
     let b = r as u8;
-    Ok(Value::Str(Rc::from((b as char).to_string().as_str())))
+    Ok(Value::Str(Rc::from(codepage::decode(b).to_string().as_str())))
 }

@@ -185,7 +185,8 @@ round-trips. New coverage wanted: byte-exact `Cat` → `Overwrite`, and a
 
 **Non-ASCII text files become mojibake.** A player's UTF-8 file containing
 `café` reads back as `cafÃ©`. It still round-trips byte-exactly; it displays
-wrong. Exposure is small — of 306 shipped files, 2 contain non-ASCII, one
+wrong. (Since fixed, along with the carve-out below --
+see [`fixing-the-mojibake.md`](fixing-the-mojibake.md).) Exposure is small — of 306 shipped files, 2 contain non-ASCII, one
 being decorative "corrupted data" noise in `website.ds` and the other a
 single dash in a display string in `q.ds`. Neither is ever sliced. The real
 exposure is player-written files and uploads.
@@ -228,9 +229,16 @@ Where the decision went, per operation:
 |---|---|
 | `Cat`/`Display`, `Overwrite`, `Append` | nothing -- bytes, widened and narrowed |
 | `Include`, `Run`, `Capture`, `DLOpen` | UTF-8, and says so when it does not get it |
-| the mail store, INI files, the hash-library cache | UTF-8, through `read_text`/`write_text` |
-| the editor | UTF-8 *and* a size -- a song opened in one still shows nothing |
+| the mail store, INI files, the hash-library cache | nothing -- see below |
+| the editor | a size -- see below |
 | `<audio>` | the name, through `mediaTypeFor`, at the moment of playing |
+
+The last two rows did not last. `read_text`/`write_text` were the price of
+having two encodings in one filesystem, and the mojibake was the other half
+of that bill; both were settled by naming the code page, which
+[`fixing-the-mojibake.md`](fixing-the-mojibake.md) covers. Every file now
+goes through `bytes_to_text`, the engine's own included, and the editor's
+only remaining question is size.
 
 ### Four departures from the plan above
 

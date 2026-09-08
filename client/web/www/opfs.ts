@@ -210,10 +210,9 @@ export class GameFs {
   // ---- loading ------------------------------------------------------------
 
   /** Take up the shipped scripts, then whatever is on disk. */
-  async load(shipped: Record<string, string>): Promise<number> {
-    for (const [path, contents] of Object.entries(shipped)) {
+  async load(shipped: Record<string, Uint8Array>): Promise<number> {
+    for (const [path, bytes] of Object.entries(shipped)) {
       const folded = foldPath(path);
-      const bytes = encoder.encode(contents);
       this.makeParents(folded);
       this.shipped.set(folded, bytes);
       this.nodes.set(folded, bytes.length);

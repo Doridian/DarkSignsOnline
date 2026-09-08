@@ -19,7 +19,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 use vbscript::game::cli::CommandState;
-use vbscript::game::fs::FileSystem;
+use vbscript::game::fs::{bytes_to_text, text_to_bytes, FileSystem};
 use vbscript::game::{chat, library, mail};
 use vbscript::game::protocol::{self, Credentials, DEFAULT_API_ROOT};
 use vbscript::game::server::{ApiRequest, GameServer};
@@ -145,7 +145,7 @@ impl Session {
             .inner
             .fs
             .borrow_mut()
-            .write_text(path, contents)
+            .write(path, &text_to_bytes(contents))
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
@@ -155,7 +155,8 @@ impl Session {
             .inner
             .fs
             .borrow()
-            .read_text(path)
+            .read(path)
+            .map(|bytes| bytes_to_text(&bytes))
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
@@ -335,13 +336,16 @@ impl Session {
         let (name, contents) =
             library::parse_download(&body).map_err(|e| JsValue::from_str(&e))?;
         let path = library::download_target(&name);
+        let bytes = text_to_bytes(&contents);
         self.host
             .inner
             .fs
             .borrow_mut()
-            .write_text(&path, &contents)
+            .write(&path, &bytes)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        json(&Download { path, bytes: contents.len() })
+        // The file's size, which is its bytes -- not the length of the text
+        // they spell, which stopped being the same number.
+        json(&Download { path, bytes: bytes.len() })
     }
 
     /// The player's own uploads, which they may withdraw.
@@ -376,13 +380,16 @@ impl Session {
         let name = library::short_name(&resolved).to_string();
         library::check_upload(category, title, description, &name)
             .map_err(|e| JsValue::from_str(&e))?;
+        // A read can only fail for a real filesystem reason now -- there is
+        // no encoding for it to fail on -- so the reason is worth reporting.
         let contents = self
             .host
             .inner
             .fs
             .borrow()
-            .read_text(&resolved)
-            .map_err(|_| JsValue::from_str(&format!("The file does not exist: {resolved}")))?;
+            .read(&resolved)
+            .map(|bytes| bytes_to_text(&bytes))
+            .map_err(|e| JsValue::from_str(&format!("{resolved}: {e}")))?;
 
         let response = self.request(ApiRequest::post(
             "file_database.php",
@@ -442,9 +449,9 @@ impl Session {
     fn mail_store(&self) -> Vec<mail::Message> {
         // No file yet is an empty inbox, not a failure: it is written the
         // first time anything arrives.
-        let text =
-            self.host.inner.fs.borrow().read_text(mail::STORE_PATH).unwrap_or_default();
-        mail::parse_store(&text)
+        let bytes =
+            self.host.inner.fs.borrow().read(mail::STORE_PATH).unwrap_or_default();
+        mail::parse_store(&bytes_to_text(&bytes))
     }
 
     fn write_store(&self, store: &[mail::Message]) -> Result<(), JsValue> {
@@ -452,7 +459,7 @@ impl Session {
             .inner
             .fs
             .borrow_mut()
-            .write_text(mail::STORE_PATH, &mail::render_store(store))
+            .write(mail::STORE_PATH, &text_to_bytes(&mail::render_store(store)))
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 

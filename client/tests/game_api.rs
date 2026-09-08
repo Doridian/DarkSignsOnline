@@ -7,7 +7,7 @@
 use std::rc::Rc;
 
 use vbscript::game::console::{Channel, ConsoleEvent, DrawMode, RecordingConsole};
-use vbscript::game::fs::{FileSystem, MemoryFs};
+use vbscript::game::fs::{bytes_to_text, FileSystem, MemoryFs};
 use vbscript::game::server::ScriptedServer;
 use vbscript::game::{run_script, Env, GameHost};
 use vbscript::interp::Interp;
@@ -258,7 +258,7 @@ fn overwrite_and_append_change_the_file() {
         "#,
     );
     r.unwrap();
-    assert_eq!(host.fs.borrow().read_text("/home/out.txt").unwrap(), "first-second");
+    assert_eq!(bytes_to_text(&host.fs.borrow().read("/home/out.txt").unwrap()), "first-second");
 }
 
 #[test]
@@ -465,6 +465,34 @@ fn every_byte_survives_a_round_trip_through_a_script() {
     );
 }
 
+/// The punctuation a word processor makes, which is what the game's own
+/// mission text was written with.
+///
+/// Latin-1 spends these bytes on invisible control characters, so a file
+/// holding them used to read back as nothing at all where the quotes and
+/// dashes were. There is one code page now, and it is the one the original
+/// client had.
+#[test]
+fn the_code_pages_punctuation_survives_a_file() {
+    let (host, r) = run(
+        fs_host(),
+        r#"
+        Overwrite "/home/quote.txt", Chr(147) & "To seek" & Chr(148) & Chr(151) & "Quaero"
+        Dim s
+        s = Cat("/home/quote.txt")
+        Say Len(s) & " " & Asc(Mid(s, 1, 1)) & " " & AscW(Mid(s, 1, 1))
+        "#,
+    );
+    assert_eq!(r, Ok(()));
+    // Sixteen characters for sixteen bytes; the first is byte 147, which is
+    // the code page's left curly quote and nothing else's.
+    assert_eq!(host.console.borrow().output(), vec!["16 147 8220"]);
+    assert_eq!(
+        host.fs.borrow().read("/home/quote.txt").unwrap(),
+        b"\x93To seek\x94\x97Quaero"
+    );
+}
+
 /// Appending to a song appends to it. There is no half-text file to guard
 /// against, because there is no text file to be half of.
 #[test]
@@ -477,13 +505,13 @@ fn bytes_can_be_appended_to_a_song() {
     );
 }
 
-/// Running a song is meaningless, and that is what the refusal says. The
-/// decision is the operation's -- `Run` needs source text -- rather than
-/// something the file was labelled with when it arrived.
+/// Running a song still fails, but it fails as a script rather than as a
+/// file: there is no reading that refuses to hand the bytes over, so the
+/// refusal comes from the parser, which is where VB6's came from too.
 #[test]
 fn a_song_cannot_be_run_as_a_script() {
     let (_, r) = run(media_host(), r#"Include "music/theme.mp3""#);
-    assert!(r.unwrap_err().contains("Not text"), "should refuse plainly");
+    assert!(r.unwrap_err().contains("Syntax error"), "should refuse plainly");
 }
 
 #[test]
@@ -924,7 +952,7 @@ fn the_compile_command_round_trips_a_script_through_the_filesystem() {
     let (host, r) = run(host, &command_source("compile"));
     r.unwrap();
 
-    let compiled = host.fs.borrow().read_text("/home/out.ds").unwrap();
+    let compiled = bytes_to_text(&host.fs.borrow().read("/home/out.ds").unwrap());
     assert!(vbscript::game::crypto::is_script_compiled(&compiled));
     // `CompileStr` with no key uses the local one.
     assert_eq!(
@@ -1045,7 +1073,7 @@ fn dlopenhash_downloads_and_caches_when_the_copy_is_wrong() {
     assert_eq!(host.console.borrow().output(), vec!["from server"]);
     // The good copy replaces the bad one.
     assert_eq!(
-        host.fs.borrow().read_text(&format!("/system/libs/hash_{hash}.ds")).unwrap(),
+        bytes_to_text(&host.fs.borrow().read(&format!("/system/libs/hash_{hash}.ds")).unwrap()),
         source
     );
 }
