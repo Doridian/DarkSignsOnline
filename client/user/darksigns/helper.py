@@ -5,7 +5,7 @@ from os.path import exists, join as path_join
 from os import listdir, getenv
 
 # Change this to where you have DarkSigns installed
-DARKSIGNS_INSTALL_PATH = path_join(getenv("USERPROFILE"), "Applications/Dark Signs")
+DARKSIGNS_INSTALL_PATH = path_join(getenv("HOME"), "Applications/Dark Signs")
 
 # Do not change these unless you know what you're doing
 DARKSIGNS_SERVERS = path_join(DARKSIGNS_INSTALL_PATH, "Data/Profiles/darksigns")
