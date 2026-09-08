@@ -11,8 +11,8 @@
 // console handed over when it attached. This worker never blocks: its event
 // loop is the one doing the work.
 
-import { ABSENT, CLOSED, FS_ANSWER_CAPACITY, MORE, READY } from "./control.js";
-import { FsFail, GameFs, foldPath, handle, ready } from "./opfs.js";
+import { CLOSED, FS_MORE, MORE, READY } from "./control.js";
+import { GameFs, foldPath, handle, handleRaw, ready } from "./opfs.js";
 import type { FromFs, ToFs } from "./types.js";
 
 let fs: GameFs | null = null;
@@ -27,6 +27,15 @@ interface Channel {
 
 const channels = new Map<number, Channel>();
 const encoder = new TextEncoder();
+
+/**
+ * What comes down a console's port.
+ *
+ * A bare string is one of the ten questions about the tree. The object form
+ * is one of the three that carry contents: the same JSON, with the bytes
+ * beside it rather than encoded into it.
+ */
+type FsRequest = string | { json: string; payload: Uint8Array | null };
 
 /**
  * Hand one answer to a parked console.
@@ -51,59 +60,50 @@ function refuse(channel: Channel): void {
   Atomics.notify(channel.control, 0);
 }
 
-/** Turn a thrown failure into the reply the Rust side turns back into one. */
-function failed(err: unknown): string {
-  if (err instanceof FsFail) {
-    return JSON.stringify({ err: { kind: err.kind, arg: err.arg } });
-  }
-  return JSON.stringify({ err: { kind: "io", arg: String(err) } });
-}
-
 /**
- * Answer one console's question.
+ * Answer one console's question about the tree, as JSON.
  *
- * Everything but a blob read is answered without awaiting anything, because
- * the tree is in memory. A blob read has to reach the disk, and the console
- * is parked either way, so it waits a little longer.
+ * None of these awaits anything: the tree is in memory, so the answer is
+ * already there and the console is unparked at once.
  */
-async function serve(channel: Channel, request: string): Promise<void> {
+function serve(channel: Channel, request: string): void {
   if (!fs) {
     refuse(channel);
     return;
   }
-  let message: { op: string; [key: string]: unknown };
-  try {
-    message = JSON.parse(request);
-  } catch {
-    deliver(channel, encoder.encode(failed("unreadable request")));
-    return;
-  }
 
   // The tail of a previous answer, which is not a question at all.
-  if (message.op === "more") {
+  if (request === FS_MORE) {
     const rest = channel.pending;
     deliver(channel, rest ?? new Uint8Array(0));
     return;
   }
 
-  const path = String(message.path ?? "");
-  if (message.op === "readBlob") {
-    // Bytes go back raw: a song does not want JSON wrapped round it. A file
-    // the tree knows about whose bytes have gone answers `ABSENT`, which is
-    // not the same as a file with nothing in it.
-    const bytes = await fs.bytesAt(path, Number(message.max ?? FS_ANSWER_CAPACITY));
-    if (!bytes) {
-      channel.pending = null;
-      Atomics.store(channel.control, 1, ABSENT);
-      Atomics.store(channel.control, 0, READY);
-      Atomics.notify(channel.control, 0);
-      return;
-    }
-    deliver(channel, bytes);
+  deliver(channel, encoder.encode(handle(fs, request)));
+  announce();
+}
+
+/**
+ * Answer one console's question that carries contents.
+ *
+ * Contents are bytes, so these go back as bytes rather than through JSON --
+ * a song does not want base64 wrapped round it on the way to a `Cat`. The
+ * first byte says whether the rest is the contents or the complaint, which
+ * is how a read that failed is told from a file with nothing in it.
+ *
+ * Only a read has to reach the disk. The console is parked either way, so it
+ * waits a little longer for that one.
+ */
+async function serveRaw(
+  channel: Channel,
+  request: string,
+  payload: Uint8Array | null,
+): Promise<void> {
+  if (!fs) {
+    refuse(channel);
     return;
   }
-
-  deliver(channel, encoder.encode(handle(fs, request)));
+  deliver(channel, await handleRaw(fs, request, payload));
   announce();
 }
 
@@ -127,8 +127,13 @@ function attach(id: number, port: MessagePort, control: SharedArrayBuffer, answe
     pending: null,
   };
   channels.set(id, channel);
-  port.onmessage = (e: MessageEvent<string>) => {
-    void serve(channel, e.data);
+  port.onmessage = (e: MessageEvent<FsRequest>) => {
+    const message = e.data;
+    if (typeof message === "string") {
+      serve(channel, message);
+      return;
+    }
+    void serveRaw(channel, message.json, message.payload);
   };
 }
 
@@ -196,20 +201,13 @@ async function answerPage(
       return plain({
         path,
         exists: fs.exists(path),
-        contents: fs.exists(path) && !fs.isDir(path) ? safeRead(fs, path) : "",
+        contents:
+          fs.exists(path) && !fs.isDir(path) ? await editorText(fs, path) : "",
       });
     }
     case "writeFile":
-      fs.write(foldPath(message.path), message.contents);
+      fs.write(foldPath(message.path), encoder.encode(message.contents));
       return plain(null);
-    case "blobAt": {
-      const path = foldPath(message.path);
-      try {
-        return plain(fs.kind(path).blob);
-      } catch {
-        return plain(null);
-      }
-    }
     case "fileAt": {
       // The `File` itself, which the page turns into an object URL to play
       // or to save. It is a handle onto the bytes, not the bytes.
@@ -225,13 +223,23 @@ async function answerPage(
   }
 }
 
-/** A read that answers with nothing rather than throwing, for the editor. */
-function safeRead(fs: GameFs, path: string): string {
+/**
+ * A file as the editor can show it, or nothing.
+ *
+ * This is where a file is decided to be text, and it is decided here because
+ * this is the operation that needs it to be: an editor shows text. A song
+ * opened in one is not text and never was, and showing nothing beats showing
+ * an error where a file's contents should be -- or, worse, forty megabytes
+ * of mojibake, which is why anything past a size no script reaches is left
+ * alone unread.
+ */
+const EDITOR_LIMIT = 4 * 1024 * 1024;
+
+async function editorText(fs: GameFs, path: string): Promise<string> {
   try {
-    return fs.read(path);
+    if (fs.len(path) > EDITOR_LIMIT) return "";
+    return new TextDecoder("utf-8", { fatal: true }).decode(await fs.read(path));
   } catch {
-    // A song opened in the editor is not text; showing nothing beats
-    // showing an error where a file's contents should be.
     return "";
   }
 }

@@ -1,17 +1,22 @@
 # Dropping file classification
 
-The browser filesystem decides, for every file, whether it holds text or
-bytes. This is what that decision costs, three ways to stop making it, and
-why the cheapest one turns out not to touch the interpreter at all.
+The browser filesystem used to decide, for every file, whether it held text
+or bytes. This is what that decision cost, three ways to stop making it, and
+why the cheapest one turned out not to touch the interpreter at all.
+
+**Done.** Option 3 below is what the client now does: file I/O is
+byte-oriented, nothing stores a kind, and `Value` was not touched. The last
+two sections say what was built and where it differs from the plan.
 
 Companion to [`string-representation-performance.md`](string-representation-performance.md),
 which priced the string representation change this was expected to need.
 
-## What classifies, and where
+## What classified, and where
 
-The tree stores a kind per path. In Rust that is `NodeKind::{Text, Blob}` and
-`BlobRef` in [`fs.rs`](../src/game/fs.rs); in the browser it is the `Node`
-union and `classify()` in [`opfs.ts`](../web/www/opfs.ts). Off it hang:
+The tree stored a kind per path. In Rust that was `NodeKind::{Text, Blob}`
+and `BlobRef` in [`fs.rs`](../src/game/fs.rs); in the browser it was the
+`Node` union and `classify()` in [`opfs.ts`](../web/www/opfs.ts). Off it
+hung:
 
 - `FsError::NotText` → VB error 54, raised by `read` and `append` on a blob
 - `raw_kind`, `raw_read_blob`, `raw_write_blob` and their folding wrappers
@@ -208,16 +213,67 @@ Worth doing separately either way, and needing no deviation or representation
 change: `Len` collects `encode_utf16()` into a `Vec` for a count, and
 `Left`/`Mid` allocate where they could slice — 82–191 ns of waste apiece.
 
-## Checklist, for when this is picked up
+## What was built
 
-1. Pin the write rule for characters above U+00FF (lossy substitution) and
-   the uniform `Cat` limit, before touching anything.
-2. Trait first: `raw_read`/`raw_write`/`raw_append` to bytes, blob methods
-   and `NotText` deleted, `MemoryFs` and `DiskFs` following. Tests in the
-   same commit.
-3. The six engine consumers, with the three internal formats given explicit
-   UTF-8 handling. This is where to slow down.
-4. The browser: collapse the two read ops, reduce `GameFs`, move
-   `mediaTypeFor` page-side.
-5. Smoke and the browser end-to-end run, including a 0–255 byte round-trip
-   through a real OPFS file and across a reload.
+The trait is 11 methods where it was 13: `raw_kind`, `raw_read_blob` and
+`raw_write_blob` are gone, `raw_read`/`raw_write`/`raw_append` carry bytes,
+and `raw_read_upto` is new. `NodeKind`, `BlobRef` and `FsError::NotText` are
+gone with them, and so are `MemoryFs`'s `blobs` map and its refcount scan.
+`bytes_to_text` and `text_to_bytes` are the whole of the convention: one
+character per byte, `?` for a character that has no byte.
+
+Where the decision went, per operation:
+
+| Operation | Decides |
+|---|---|
+| `Cat`/`Display`, `Overwrite`, `Append` | nothing -- bytes, widened and narrowed |
+| `Include`, `Run`, `Capture`, `DLOpen` | UTF-8, and says so when it does not get it |
+| the mail store, INI files, the hash-library cache | UTF-8, through `read_text`/`write_text` |
+| the editor | UTF-8 *and* a size -- a song opened in one still shows nothing |
+| `<audio>` | the name, through `mediaTypeFor`, at the moment of playing |
+
+### Four departures from the plan above
+
+**`raw_read_upto` was added.** The plan had three content methods and no cap,
+which makes `Cat` on a forty-megabyte song allocate forty megabytes in a
+32-bit heap to show a screenful. `Cat` is the only caller; the default
+implementation reads the lot and truncates, and the two backends that can
+stop early -- `DiskFs` and the fs worker -- override it. `CAT_LIMIT` is 4 MB,
+far above the 20 KB largest file the client ships, because `Cat` is how a
+script reads a file and not merely how it shows one.
+
+**`Cat` of a whole file is now byte-exact.** `select_lines` normalised line
+endings and added a trailing `\r\n`, which for text nobody noticed and for
+bytes would mean a file that does not survive `Cat` then `Overwrite`. Asked
+for the whole file it now returns what was read, untouched; asked for a
+window of lines it does what it always did. Every shipped file already ends
+in `\r\n`, so nothing displays differently.
+
+**The browser grew a shipped layer instead of losing its `Node`.** The tree
+is `path` to size as planned, and contents come off disk on demand -- but the
+client's own four hundred scripts are still never written out, for the two
+reasons they never were: the write burst, and a disk copy that would shadow
+the newer one the next build ships. So `GameFs` holds them in a `shipped` map
+and reads through to it, and the first write to one of those paths hands it
+over to the player and forgets the original. This is provenance, not a kind:
+it says where the bytes are, never what they mean.
+
+**`mediaTypeFor` stayed in the wasm and stayed in the worker.** The plan put
+it page-side. It is only wanted to stamp a type on the `File` handed to
+`<audio>`, and that `File` is made in the fs worker, so moving it would have
+meant the page re-wrapping the handle for nothing. The file panel turned out
+not to use the media type at all, so `Tree` and `FileChange` lost it.
+
+Textspace was on the plan's list of internal formats; it never touched the
+filesystem, so there was nothing to do.
+
+### What it was checked against
+
+The Rust suite, `api.vbs` and its three `KNOWN_FAILURES` unchanged, the wasm
+smoke test, and the real client in Chromium over real OPFS: all 256 byte
+values written from a script, read back through `Cat` as 256 characters with
+0 first and 255 last, appended to, and -- across a reload, where the tree is
+rebuilt from what is on disk -- still 257 bytes with `0x80` intact at
+position 129. The shipped layer was checked the same way: a shipped file
+reads, an append to one materialises it and outlives a reload, a delete
+removes it, and the next load brings the client's copy back.

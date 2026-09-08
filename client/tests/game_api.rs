@@ -258,7 +258,7 @@ fn overwrite_and_append_change_the_file() {
         "#,
     );
     r.unwrap();
-    assert_eq!(host.fs.borrow().read("/home/out.txt").unwrap(), "first-second");
+    assert_eq!(host.fs.borrow().read_text("/home/out.txt").unwrap(), "first-second");
 }
 
 #[test]
@@ -357,19 +357,22 @@ fn cat_without_a_window_reads_everything() {
     assert_eq!(out, vec!["line one", "line two", "line three", ""]);
 }
 
-// ---- media files ---------------------------------------------------------
+// ---- files that are not text ---------------------------------------------
 //
 // A player's music sits in the same tree as their scripts, because the
-// client is one filesystem and not two. What separates the two kinds is
-// where the bytes are, which every call below either does not care about or
-// says plainly.
+// client is one filesystem and not two -- and now because it is one kind of
+// file and not two. Nothing below asks what a file is; the calls that need
+// text say so, and the rest simply work on bytes.
 
-/// The same tree with a song in it, of the size and type a real one carries.
+/// A song, with the high bytes and the control bytes a real one carries.
+const SONG: &[u8] = b"ID3\x03\x00\x00\xffrest";
+
+/// The same tree with that song in it.
 fn media_host() -> Host {
     let fs = MemoryFs::new()
         .with_file("/home/notes.txt", "line one\r\nline two\r\nline three\r\n")
         .with_dir("/home/music")
-        .with_blob("/home/music/theme.mp3", "b1", b"ID3\x03\x00\x00\x00rest");
+        .with_bytes("/home/music/theme.mp3", SONG);
     GameHost::new(RecordingConsole::new(), fs, ScriptedServer::new()).with_env(Env {
         cwd: "/home".into(),
         ..Default::default()
@@ -409,36 +412,78 @@ fn a_song_can_be_copied_moved_and_deleted_like_any_other_file() {
     assert_eq!(host.console.borrow().output(), vec!["11", "False", "True"]);
 }
 
-/// What a terminal has always done with a file that is not text.
+/// `Cat` is how a script reads a file, so it reads every file: one
+/// character per byte, which is what `Open ... For Binary` gave in VB6.
 #[test]
-fn reading_a_song_pours_its_bytes_at_the_console() {
-    let out = output_of(media_host(), r#"Say Cat("music/theme.mp3")"#);
-    // The control bytes show as dots rather than steering the console, and
-    // the printable ones show as themselves.
-    assert_eq!(out, vec!["ID3....rest", ""]);
-}
-
-/// Writing text into a song would leave a file that is neither, so the
-/// calls that would do it refuse instead.
-#[test]
-fn text_cannot_be_appended_to_a_song() {
-    let (_, r) = run(media_host(), r#"Append "music/theme.mp3", "words""#);
-    assert!(r.unwrap_err().contains("Not a text file"), "should refuse plainly");
-}
-
-/// A script that traps the refusal sees VBScript's "bad file mode", which is
-/// the number it would already handle for reading a file the wrong way.
-#[test]
-fn refusing_a_song_raises_the_bad_file_mode_error() {
+fn reading_a_song_gives_one_character_per_byte() {
     let out = output_of(
         media_host(),
         r#"
-        On Error Resume Next
-        Append "music/theme.mp3", "words"
-        Say Err.Number
+        Dim s
+        s = Cat("music/theme.mp3")
+        Say Len(s)
+        Say Asc(Mid(s, 4, 1)) & "," & Asc(Mid(s, 7, 1))
         "#,
     );
-    assert_eq!(out, vec!["54"]);
+    // Exactly the file: eleven bytes, eleven characters, nothing added.
+    assert_eq!(out, vec!["11", "3,255"]);
+}
+
+/// The point of the byte convention: what a script reads it can write back,
+/// exactly, without knowing or caring what the file holds.
+#[test]
+fn a_song_round_trips_through_cat_and_overwrite() {
+    let (host, r) = run(
+        media_host(),
+        r#"Overwrite "music/copy.mp3", Cat("music/theme.mp3")"#,
+    );
+    assert_eq!(r, Ok(()));
+    assert_eq!(host.fs.borrow().read("/home/music/copy.mp3").unwrap(), SONG);
+}
+
+/// And every byte survives it, not merely the ones a song happens to use.
+#[test]
+fn every_byte_survives_a_round_trip_through_a_script() {
+    let (host, r) = run(
+        fs_host(),
+        r#"
+        Dim s, i
+        s = ""
+        For i = 0 To 255
+            s = s & Chr(i)
+        Next
+        Overwrite "/home/all.bin", s
+        Say FileLen("/home/all.bin")
+        Say Len(Cat("/home/all.bin"))
+        "#,
+    );
+    assert_eq!(r, Ok(()));
+    assert_eq!(host.console.borrow().output(), vec!["256", "256"]);
+    assert_eq!(
+        host.fs.borrow().read("/home/all.bin").unwrap(),
+        (0..=255u8).collect::<Vec<u8>>()
+    );
+}
+
+/// Appending to a song appends to it. There is no half-text file to guard
+/// against, because there is no text file to be half of.
+#[test]
+fn bytes_can_be_appended_to_a_song() {
+    let (host, r) = run(media_host(), r#"Append "music/theme.mp3", Chr(0) & Chr(254)"#);
+    assert_eq!(r, Ok(()));
+    assert_eq!(
+        host.fs.borrow().read("/home/music/theme.mp3").unwrap(),
+        b"ID3\x03\x00\x00\xffrest\x00\xfe"
+    );
+}
+
+/// Running a song is meaningless, and that is what the refusal says. The
+/// decision is the operation's -- `Run` needs source text -- rather than
+/// something the file was labelled with when it arrived.
+#[test]
+fn a_song_cannot_be_run_as_a_script() {
+    let (_, r) = run(media_host(), r#"Include "music/theme.mp3""#);
+    assert!(r.unwrap_err().contains("Not text"), "should refuse plainly");
 }
 
 #[test]
@@ -879,7 +924,7 @@ fn the_compile_command_round_trips_a_script_through_the_filesystem() {
     let (host, r) = run(host, &command_source("compile"));
     r.unwrap();
 
-    let compiled = host.fs.borrow().read("/home/out.ds").unwrap();
+    let compiled = host.fs.borrow().read_text("/home/out.ds").unwrap();
     assert!(vbscript::game::crypto::is_script_compiled(&compiled));
     // `CompileStr` with no key uses the local one.
     assert_eq!(
@@ -1000,7 +1045,7 @@ fn dlopenhash_downloads_and_caches_when_the_copy_is_wrong() {
     assert_eq!(host.console.borrow().output(), vec!["from server"]);
     // The good copy replaces the bad one.
     assert_eq!(
-        host.fs.borrow().read(&format!("/system/libs/hash_{hash}.ds")).unwrap(),
+        host.fs.borrow().read_text(&format!("/system/libs/hash_{hash}.ds")).unwrap(),
         source
     );
 }

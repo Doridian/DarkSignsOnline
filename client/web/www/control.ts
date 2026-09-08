@@ -13,21 +13,9 @@ export const READY = 1;
 export const CLOSED = 2;
 
 /**
- * The answer the page owes a blocked worker was never there to give.
+ * Room for one answer from the page, in bytes.
  *
- * A typed line always exists once the player has pressed return, but a file
- * can have gone since the tree last heard about it, and "nothing" has to be
- * tellable from "no bytes".
- */
-export const ABSENT = -1;
-
-/**
- * Room for one answer, in bytes.
- *
- * It holds a typed line, or as much of a file as a script may look at in one
- * go -- `Cat` on a song, which is the only thing that asks. The larger of
- * the two sets the size, and the interpreter caps its own read to match, so
- * an answer never has to be sent in pieces.
+ * It holds a typed line, which is the only thing the page is ever asked for.
  */
 export const ANSWER_CAPACITY = 65536;
 
@@ -44,7 +32,17 @@ export const MORE = 3;
 /**
  * Room for one filesystem answer, in bytes.
  *
- * Bigger than an input line because it holds a file: most scripts fit in one
- * go, and anything that does not is sent in pieces.
+ * Bigger than an input line because it holds a file: most files fit in one
+ * go, and anything that does not -- a long `Dir`, or a song -- is sent in
+ * pieces.
  */
 export const FS_ANSWER_CAPACITY = 1 << 20;
+
+/**
+ * The request that asks for the rest of an answer that did not fit.
+ *
+ * Not a question about the filesystem at all -- the worker recognises it
+ * before it looks at what was asked -- so both sides name it here rather
+ * than spelling the same JSON twice.
+ */
+export const FS_MORE = '{"op":"more"}';

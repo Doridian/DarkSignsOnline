@@ -60,13 +60,6 @@ export class MusicPlayer {
     // rather than its contents: a handle the browser can stream from.
     let file: File | null;
     try {
-      const blob = await this.ask({ type: "blobAt", path });
-      if (!blob) {
-        // Text, or nothing. Either way not something to play, and saying so
-        // beats handing `<audio>` a script and letting it fail its own way.
-        this.notify(`Music: ${path} is not a sound file.`);
-        return;
-      }
       file = await this.ask({ type: "fileAt", path });
     } catch (err) {
       this.notify(`Music: ${err instanceof Error ? err.message : err}`);
@@ -74,6 +67,15 @@ export class MusicPlayer {
     }
     if (!file) {
       this.notify(`Music: the contents of ${path} are missing.`);
+      return;
+    }
+    // Nothing in the filesystem knows a song from a script -- a file is
+    // bytes -- so the name is what says whether this is worth handing to
+    // `<audio>`, and the filesystem has already put that on the file as its
+    // type. Saying so beats handing the element a script and letting it fail
+    // its own way.
+    if (!file.type.startsWith("audio/")) {
+      this.notify(`Music: ${path} is not a sound file.`);
       return;
     }
 

@@ -5,13 +5,7 @@
 // main thread. Here both are fine — a synchronous XMLHttpRequest works, and
 // `Atomics.wait` lets us park until the page sends input.
 
-import {
-  ABSENT,
-  CLOSED,
-  FS_ANSWER_CAPACITY,
-  MORE,
-  WAITING,
-} from "./control.js";
+import { CLOSED, FS_MORE, MORE, WAITING } from "./control.js";
 import { FONT_STACK } from "./fonts.js";
 import init, { Session, libraryCategories, textspaceChannels } from "./pkg/dso_web.js";
 import type { Asked, ToWorker } from "./types.js";
@@ -101,7 +95,7 @@ function fsCall(request: string): string {
   let ask: string | null = request;
   for (;;) {
     Atomics.store(fsControl, 0, WAITING);
-    fsPort.postMessage(ask ?? '{"op":"more"}');
+    fsPort.postMessage(ask ?? FS_MORE);
     Atomics.wait(fsControl, 0, WAITING);
     const state = Atomics.load(fsControl, 0);
     if (state === CLOSED) {
@@ -120,30 +114,68 @@ function fsCall(request: string): string {
 }
 
 /**
- * Ask the filesystem for a path's bytes, and block until it has them.
+ * Ask the filesystem something that carries contents, and block until it has
+ * answered.
  *
- * Bytes rather than JSON, because this is what `Cat` on a song comes to and
- * base64 round a song is a waste of everybody's time. Null when the bytes
- * have gone, which the tree survives: it knows the file is there and only
- * the contents are missing.
+ * The three calls that carry contents carry bytes, so this is the same trick
+ * as `fsCall` with bytes on both sides of it rather than JSON: base64 round
+ * a song on its way to a `Cat` is a waste of everybody's time. The answer's
+ * first byte says whether the rest is the contents or the complaint, and the
+ * Rust side reads that; here it is only carried through.
+ *
+ * A file longer than one bufferful comes back in pieces, the way a long
+ * `Dir` does.
  */
-function readBlobSync(path: string): Uint8Array | null {
+const encoder = new TextEncoder();
+
+function fsRaw(request: string, payload: Uint8Array | null): Uint8Array {
   if (!fsPort || !fsControl || !fsBytes) {
-    return null;
+    // Framed as a failure, the way the worker frames one.
+    return withTag(1, encoder.encode('{"kind":"io","arg":"no filesystem"}'));
   }
-  Atomics.store(fsControl, 0, WAITING);
-  fsPort.postMessage(JSON.stringify({ op: "readBlob", path, max: FS_ANSWER_CAPACITY }));
-  Atomics.wait(fsControl, 0, WAITING);
-  if (Atomics.load(fsControl, 0) === CLOSED) {
-    return null;
+  const pieces: Uint8Array[] = [];
+  let total = 0;
+  let ask: { json: string; payload: Uint8Array | null } | null = { json: request, payload };
+  for (;;) {
+    Atomics.store(fsControl, 0, WAITING);
+    if (ask) {
+      fsPort.postMessage(ask);
+    } else {
+      fsPort.postMessage(FS_MORE);
+    }
+    Atomics.wait(fsControl, 0, WAITING);
+    const state = Atomics.load(fsControl, 0);
+    if (state === CLOSED) {
+      return withTag(1, encoder.encode('{"kind":"io","arg":"the filesystem went away"}'));
+    }
+    const length = Math.max(Atomics.load(fsControl, 1), 0);
+    // A copy, not a view: what the wasm is handed must not be a window onto
+    // memory another thread can still write to.
+    pieces.push(fsBytes.slice(0, length));
+    total += length;
+    if (state !== MORE) {
+      break;
+    }
+    ask = null;
   }
-  const length = Atomics.load(fsControl, 1);
-  if (length === ABSENT) {
-    return null;
+  if (pieces.length === 1) {
+    return pieces[0];
   }
-  // A copy, not a view: what the wasm is handed must not be a window onto
-  // memory another thread can still write to.
-  return fsBytes.slice(0, length);
+  const out = new Uint8Array(total);
+  let at = 0;
+  for (const piece of pieces) {
+    out.set(piece, at);
+    at += piece.length;
+  }
+  return out;
+}
+
+/** One answer, framed the way the fs worker frames one. */
+function withTag(tag: number, body: Uint8Array): Uint8Array {
+  const out = new Uint8Array(body.length + 1);
+  out[0] = tag;
+  out.set(body, 1);
+  return out;
 }
 
 /** Block until the page supplies a single key, returning its char code. */
@@ -175,7 +207,7 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
     readLineSync,
     readKeySync,
     fsCall,
-    readBlobSync,
+    fsRaw,
     message.consoleId ?? 0,
     FONT_STACK,
   );

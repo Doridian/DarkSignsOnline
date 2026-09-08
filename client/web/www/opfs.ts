@@ -7,39 +7,21 @@
 // thing the game calls a filesystem and the thing the browser stores are the
 // same shape, and an empty directory persists because it is a directory.
 //
-// Text is held in memory as well as on disk, because scripts read it
-// synchronously and OPFS is asynchronous however you hold it. That is one
-// copy of some small script files. Media is never held: the tree keeps a
-// size and a type, which is all `Dir` and `FileLen` need, and the bytes are
-// fetched only when something actually plays or reads them.
+// A file is bytes. Nothing here looks at those bytes to decide what a file
+// is, because nothing here needs to know: the tree holds a name and a size,
+// which is all `Dir` and `FileLen` ask for, and the bytes come off disk when
+// something actually reads them. That is why a boot does not pull an album
+// into memory, and why a file cannot be one thing when it is dropped in and
+// another when it is read back.
 //
 // The semantics here are `MemoryFs`'s, in `src/game/fs.rs`, because that is
-// what every test pins and what the desktop client does. Where a comment
-// says a case is refused, that is the reason.
+// what every test pins and what the desktop client does.
 
 import init, { foldPath, mediaTypeFor } from "./pkg/dso_web.js";
-import type { BlobRef, Entry, FileChange, Tree } from "./types.js";
+import type { Entry, FileChange, Tree } from "./types.js";
 
 /** The OPFS directory the game tree lives under. */
 const ROOT = "fs";
-
-/** What nothing else could have been: bytes that are not text. */
-const UNKNOWN_MEDIA = "application/octet-stream";
-
-/**
- * How much of an unnamed file to read before deciding it is not text.
- *
- * A file whose name says what it is never reaches this. One whose name says
- * nothing has to be looked at, and looking at it means holding it, so past
- * this size it is taken for bytes without being read -- no script is half a
- * megabyte.
- */
-const SNIFF_LIMIT = 512 * 1024;
-
-/** One node. Text carries its contents; a blob carries only its description. */
-type Node =
-  | { kind: "text"; text: string }
-  | { kind: "blob"; size: number; mediaType: string };
 
 /**
  * A failure named the way `FsError` names it.
@@ -75,43 +57,17 @@ function parts(path: string): string[] {
 }
 
 const encoder = new TextEncoder();
-/** What `FileLen` reports, which is bytes rather than UTF-16 units. */
-const byteLength = (text: string) => encoder.encode(text).length;
 
-/**
- * Decide what a file is.
- *
- * The only place that decides, which matters more than it looks: a file
- * dropped in and the same file read back off disk at the next load go
- * through here alike, so the two can never disagree about what it is. They
- * did once, and the answer changed across a reload.
- *
- * A file is media when its name says so, which is what the desktop client
- * decides by and what keeps `Cat` on a song refusing in both clients. When
- * the name says nothing the bytes decide, since what is not valid UTF-8
- * cannot be text whatever it is called -- but only up to a point, because
- * deciding means holding it, and nothing worth calling a script is half a
- * megabyte.
- */
-async function classify(path: string, file: File): Promise<Node> {
-  const named = mediaTypeFor(path);
-  if (named !== "") {
-    return { kind: "blob", size: file.size, mediaType: named };
-  }
-  if (file.size > SNIFF_LIMIT) {
-    return { kind: "blob", size: file.size, mediaType: UNKNOWN_MEDIA };
-  }
-  try {
-    const text = new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer());
-    return { kind: "text", text };
-  } catch {
-    return { kind: "blob", size: file.size, mediaType: UNKNOWN_MEDIA };
-  }
+function concat(a: Uint8Array, b: Uint8Array): Uint8Array {
+  const out = new Uint8Array(a.length + b.length);
+  out.set(a);
+  out.set(b, a.length);
+  return out;
 }
 
 export class GameFs {
-  /** Every file, by folded path. Directories are kept separately. */
-  nodes = new Map<string, Node>();
+  /** Every file, by folded path, and how many bytes it holds. */
+  nodes = new Map<string, number>();
   dirs = new Set<string>(["/"]);
 
   /**
@@ -119,7 +75,8 @@ export class GameFs {
    *
    * A chain rather than a batch: OPFS has no transaction to put a burst in,
    * so the next best thing is that the operations land in the order the
-   * scripts made them. Nothing waits on this -- the script that caused a
+   * scripts made them. A read waits for it, which is what makes a write and
+   * the read after it agree; nothing else does -- the script that caused a
    * write carried on the moment the tree was updated.
    */
   private chain: Promise<unknown> = Promise.resolve();
@@ -128,7 +85,20 @@ export class GameFs {
   changes: FileChange[] = [];
 
   /**
-   * A blob's bytes when there is nowhere to put them.
+   * The client's own files, which are not the player's to keep.
+   *
+   * They are refetched every load and never written out: saving four hundred
+   * of them would make every boot a write burst, and a copy on disk would
+   * shadow the newer one the client ships next time. So they sit here and
+   * are read from here, until something writes over one -- at which point
+   * the write is the player's, goes to disk like any other, and this forgets
+   * the original. Delete one and it is gone until the next load brings it
+   * back, because it was never the player's to delete.
+   */
+  private shipped = new Map<string, Uint8Array>();
+
+  /**
+   * File contents where there is nowhere to put them.
    *
    * Only used where the browser has no OPFS. The session still works and
    * still plays what the player drops into it; none of it outlives the tab,
@@ -197,15 +167,21 @@ export class GameFs {
     });
   }
 
-  /** Wait for everything queued so far, for a reset or a test. */
+  /** Wait for everything queued so far, for a read, a reset or a test. */
   async settled(): Promise<void> {
     await this.chain;
   }
 
-  private putBytes(path: string, data: BlobPart): void {
+  /**
+   * Put bytes at a path, wherever this filesystem keeps them.
+   *
+   * The path stops being the client's the moment anything writes to it: a
+   * shipped file that has been written over is the player's file now.
+   */
+  private store(path: string, bytes: Uint8Array): void {
+    this.shipped.delete(path);
     if (!this.root) {
-      // Text is already in the tree; only bytes would be lost, and nothing
-      // calls this with bytes.
+      this.loose.set(path, bytes);
       return;
     }
     this.enqueue(async () => {
@@ -213,7 +189,7 @@ export class GameFs {
       if (!handle) throw new Error(`could not open ${path}`);
       const writable = await handle.createWritable();
       try {
-        await writable.write(data);
+        await writable.write(bytes as BlobPart);
       } finally {
         await writable.close();
       }
@@ -222,6 +198,7 @@ export class GameFs {
 
   private removeFile(path: string): void {
     this.loose.delete(path);
+    this.shipped.delete(path);
     const [parent, name] = splitParent(path);
     this.enqueue(async () => {
       const dir = await this.dirHandle(parent, false);
@@ -232,21 +209,14 @@ export class GameFs {
 
   // ---- loading ------------------------------------------------------------
 
-  /**
-   * Take up the shipped scripts, then whatever is on disk.
-   *
-   * The shipped ones are not written out: they are the client's, they are
-   * refetched every load, and saving four hundred of them would make every
-   * boot a write burst. What that means for a player is what it meant
-   * before -- edit one and the edit is saved over it; delete one and it
-   * comes back with the next load, because it was never the player's to
-   * delete.
-   */
+  /** Take up the shipped scripts, then whatever is on disk. */
   async load(shipped: Record<string, string>): Promise<number> {
     for (const [path, contents] of Object.entries(shipped)) {
       const folded = foldPath(path);
+      const bytes = encoder.encode(contents);
       this.makeParents(folded);
-      this.nodes.set(folded, { kind: "text", text: contents });
+      this.shipped.set(folded, bytes);
+      this.nodes.set(folded, bytes.length);
     }
     if (!this.root) return 0;
     let restored = 0;
@@ -258,10 +228,12 @@ export class GameFs {
           await walk(handle as FileSystemDirectoryHandle, path);
           continue;
         }
-        // Media is measured, not read: the point of keeping it out of the
-        // tree is that a boot does not pull an album into memory.
+        // Measured, never read: what the tree wants is a size, and a boot
+        // that read every file would be a boot that read the album.
         const file = await (handle as FileSystemFileHandle).getFile();
-        this.nodes.set(path, await classify(path, file));
+        // The player's copy of a shipped file wins, and stops being shipped.
+        this.shipped.delete(path);
+        this.nodes.set(path, file.size);
         this.makeParents(path);
         restored += 1;
       }
@@ -276,14 +248,9 @@ export class GameFs {
 
   /** Report a file as it now stands. */
   private note(path: string): void {
-    const node = this.nodes.get(path);
-    if (!node) return;
-    this.changes.push({
-      op: "file",
-      path,
-      size: node.kind === "text" ? byteLength(node.text) : node.size,
-      mediaType: node.kind === "text" ? "" : node.mediaType,
-    });
+    const size = this.nodes.get(path);
+    if (size === undefined) return;
+    this.changes.push({ op: "file", path, size });
   }
 
   /** Everything the panel has not been told yet. */
@@ -309,7 +276,11 @@ export class GameFs {
     }
   }
 
-  // ---- what a console asks (all synchronous, all on folded paths) ---------
+  // ---- what a console asks (all on folded paths) --------------------------
+  //
+  // Everything about the tree is answered at once, because the tree is in
+  // memory. Only the contents have to be waited for, and only where there is
+  // a disk to wait for.
 
   exists(path: string): boolean {
     return this.nodes.has(path) || this.dirs.has(path);
@@ -319,41 +290,75 @@ export class GameFs {
     return this.dirs.has(path);
   }
 
-  read(path: string): string {
+  /**
+   * A file's bytes.
+   *
+   * Queued writes are waited for first, so a script that writes a file and
+   * reads it back reads what it wrote rather than what was on disk before.
+   */
+  read(path: string, max = Infinity): Uint8Array | Promise<Uint8Array> {
     if (this.dirs.has(path)) throw isADirectory(path);
-    const node = this.nodes.get(path);
-    if (!node) throw notFound(path);
-    if (node.kind === "blob") throw new FsFail("notText", path);
-    return node.text;
+    if (!this.nodes.has(path)) throw notFound(path);
+    const held = this.loose.get(path) ?? this.shipped.get(path);
+    if (held) return held.slice(0, max);
+    // The tree knows the file is there; whoever holds the bytes has lost
+    // them, which is worth saying differently.
+    if (!this.root) throw new FsFail("io", `Missing contents for ${path}`);
+    return (async () => {
+      await this.settled();
+      const handle = await this.fileHandle(path, false);
+      if (!handle) throw new FsFail("io", `Missing contents for ${path}`);
+      const file = await handle.getFile();
+      const wanted = Math.min(max, file.size);
+      return new Uint8Array(await file.slice(0, wanted).arrayBuffer());
+    })();
   }
 
-  write(path: string, contents: string): void {
+  write(path: string, contents: Uint8Array): void {
     if (this.dirs.has(path)) throw isADirectory(path);
     this.makeParents(path);
     this.makeParentDirs(path);
-    // Text over a song is allowed: the file simply becomes another kind of
-    // file, and the bytes it held are overwritten by the text.
-    this.nodes.set(path, { kind: "text", text: contents });
-    this.putBytes(path, contents);
+    this.nodes.set(path, contents.length);
+    this.store(path, contents);
     this.note(path);
   }
 
-  append(path: string, contents: string): void {
+  /**
+   * Add to the end of a file, without reading the rest of it.
+   *
+   * The tree already knows how long the file is, so on disk this is a write
+   * at that offset -- appending to a forty-megabyte log costs what the line
+   * costs. A file still held in memory is joined there instead.
+   */
+  append(path: string, contents: Uint8Array): void {
     if (this.dirs.has(path)) throw isADirectory(path);
-    const node = this.nodes.get(path);
-    if (node && node.kind === "blob") {
-      // Unlike a write this would leave a file half text and half song, so
-      // it is refused rather than obeyed.
-      throw new FsFail("notText", path);
+    const held = this.loose.get(path) ?? this.shipped.get(path);
+    if (held || !this.root) {
+      this.write(path, concat(held ?? new Uint8Array(0), contents));
+      return;
     }
-    this.write(path, (node?.text ?? "") + contents);
+    const at = this.nodes.get(path) ?? 0;
+    this.makeParents(path);
+    this.makeParentDirs(path);
+    this.nodes.set(path, at + contents.length);
+    this.note(path);
+    this.enqueue(async () => {
+      const handle = await this.fileHandle(path, true);
+      if (!handle) throw new Error(`could not open ${path}`);
+      const writable = await handle.createWritable({ keepExistingData: true });
+      try {
+        await writable.write({ type: "write", position: at, data: contents as BlobPart });
+      } finally {
+        await writable.close();
+      }
+    });
   }
 
   len(path: string): number {
     if (this.dirs.has(path)) throw isADirectory(path);
-    const node = this.nodes.get(path);
-    if (!node) throw notFound(path);
-    return node.kind === "text" ? byteLength(node.text) : node.size;
+    const size = this.nodes.get(path);
+    if (size === undefined) throw notFound(path);
+    return size;
   }
 
   delete(path: string): void {
@@ -412,40 +417,30 @@ export class GameFs {
     });
   }
 
-  kind(path: string): { blob: BlobRef | null } {
-    if (this.dirs.has(path)) throw isADirectory(path);
-    const node = this.nodes.get(path);
-    if (!node) throw notFound(path);
-    if (node.kind === "text") return { blob: null };
-    return { blob: { id: path, size: node.size, mediaType: node.mediaType } };
-  }
-
   /**
-   * Point a path at bytes that are already somewhere in the tree.
+   * Copy a file, on disk, without its bytes passing through the engine.
    *
-   * This is what a `Copy` of a song comes down to. The bytes have no name of
-   * their own here, so `blob.id` is the path they are at now and copying
-   * means copying: the old store could alias one set of bytes under two
-   * names, which was cheaper but was also not what a filesystem does.
+   * The bytes here are songs: doing this the way the trait would -- read it
+   * out, hand it over, hand it back, write it -- would move forty megabytes
+   * through a console to give a file a second name.
    */
-  writeBlob(path: string, blob: BlobRef): void {
-    if (this.dirs.has(path)) throw isADirectory(path);
-    this.makeParents(path);
-    this.nodes.set(path, { kind: "blob", size: blob.size, mediaType: blob.mediaType });
-    this.note(path);
-    if (blob.id === path) return;
-    const from = blob.id;
-    if (!this.root) {
-      const bytes = this.loose.get(from);
-      if (bytes) this.loose.set(path, bytes);
+  copy(from: string, to: string): void {
+    if (!this.nodes.has(from)) throw notFound(from);
+    if (this.dirs.has(to)) throw isADirectory(to);
+    this.makeParents(to);
+    this.nodes.set(to, this.nodes.get(from) ?? 0);
+    this.note(to);
+    const held = this.loose.get(from) ?? this.shipped.get(from);
+    if (held) {
+      this.store(to, held);
       return;
     }
-    this.makeParentDirs(path);
+    this.makeParentDirs(to);
     this.enqueue(async () => {
       const source = await this.fileHandle(from, false);
       if (!source) throw new Error(`no bytes at ${from}`);
-      const handle = await this.fileHandle(path, true);
-      if (!handle) throw new Error(`could not open ${path}`);
+      const handle = await this.fileHandle(to, true);
+      if (!handle) throw new Error(`could not open ${to}`);
       const writable = await handle.createWritable();
       try {
         await writable.write(await source.getFile());
@@ -459,27 +454,23 @@ export class GameFs {
    * Move a file.
    *
    * One operation rather than a copy and a delete, so that renaming a song
-   * does not rewrite it. Text is held here anyway, so only a blob has to
-   * reach disk, and `move` is used where the browser has it.
+   * does not rewrite it: `move` is used where the browser has it.
    */
   rename(from: string, to: string): void {
-    const node = this.nodes.get(from);
-    if (!node) throw notFound(from);
+    const size = this.nodes.get(from);
+    if (size === undefined) throw notFound(from);
     if (this.dirs.has(to)) throw isADirectory(to);
     this.makeParents(to);
-    this.nodes.set(to, node);
+    this.nodes.set(to, size);
     this.nodes.delete(from);
     this.note(to);
     this.changes.push({ op: "gone", path: from });
-    if (node.kind === "text") {
-      this.putBytes(to, node.text);
-      this.removeFile(from);
-      return;
-    }
-    if (!this.root) {
-      const bytes = this.loose.get(from);
+
+    const held = this.loose.get(from) ?? this.shipped.get(from);
+    if (held) {
+      this.store(to, held);
       this.loose.delete(from);
-      if (bytes) this.loose.set(to, bytes);
+      this.shipped.delete(from);
       return;
     }
     this.makeParentDirs(to);
@@ -512,11 +503,7 @@ export class GameFs {
 
   /** The whole tree, for the file panel to draw. */
   tree(): Tree {
-    const files = [...this.nodes.entries()].map(([path, node]) => ({
-      path,
-      size: node.kind === "text" ? byteLength(node.text) : node.size,
-      mediaType: node.kind === "text" ? "" : node.mediaType,
-    }));
+    const files = [...this.nodes.entries()].map(([path, size]) => ({ path, size }));
     files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
     return { dirs: [...this.dirs].sort(), files };
   }
@@ -531,52 +518,22 @@ export class GameFs {
    *
    * A `File` is what `<audio>` and a download want: an object URL over one
    * streams off disk rather than pulling a whole song into memory. The type
-   * is reapplied from the tree because OPFS hands these out with an empty
-   * one, which leaves `<audio>` refusing to play a file it could play.
+   * is the one the name implies, because OPFS hands these out with an empty
+   * one and `<audio>` will not play a file it cannot pick a decoder for.
    */
   async fileAt(path: string): Promise<File | null> {
-    const node = this.nodes.get(path);
-    if (!node) return null;
-    if (node.kind === "text") {
-      return new File([node.text], splitParent(path)[1], { type: "text/plain" });
-    }
+    if (!this.nodes.has(path)) return null;
     const name = splitParent(path)[1];
-    const loose = this.loose.get(path);
-    if (loose) {
-      return new File([loose as BlobPart], name, { type: node.mediaType });
+    const type = mediaTypeFor(path);
+    const held = this.loose.get(path) ?? this.shipped.get(path);
+    if (held) {
+      return new File([held as BlobPart], name, { type });
     }
+    if (!this.root) return null;
+    await this.settled();
     const handle = await this.fileHandle(path, false);
     if (!handle) return null;
-    const file = await handle.getFile();
-    return new File([file], name, { type: node.mediaType });
-  }
-
-  /**
-   * A blob's bytes where they are held here rather than on disk.
-   *
-   * Only ever answers where there is no OPFS. It exists because that is the
-   * one case where bytes can be had without awaiting anything, which is what
-   * lets the smoke test drive a session without a worker under it.
-   */
-  looseBytesAt(path: string): Uint8Array | null {
-    return this.loose.get(path) ?? null;
-  }
-
-  /** The first `max` bytes at a path, for a console that asked to read it. */
-  async bytesAt(path: string, max: number): Promise<Uint8Array | null> {
-    const node = this.nodes.get(path);
-    if (!node) return null;
-    if (node.kind === "text") {
-      return encoder.encode(node.text).slice(0, max);
-    }
-    const loose = this.loose.get(path);
-    if (loose) {
-      return loose.slice(0, max);
-    }
-    const handle = await this.fileHandle(path, false);
-    if (!handle) return null;
-    const file = await handle.getFile();
-    return new Uint8Array(await file.slice(0, max).arrayBuffer());
+    return new File([await handle.getFile()], name, { type });
   }
 
   /**
@@ -589,13 +546,8 @@ export class GameFs {
    */
   async putFile(path: string, file: File): Promise<void> {
     if (this.dirs.has(path)) throw isADirectory(path);
-    const node = await classify(path, file);
     this.makeParents(path);
-    if (node.kind === "text") {
-      // A script, which lives in the tree like any other text.
-      this.write(path, node.text);
-      return;
-    }
+    this.shipped.delete(path);
     if (!this.root) {
       this.loose.set(path, new Uint8Array(await file.arrayBuffer()));
     } else {
@@ -609,7 +561,7 @@ export class GameFs {
         await writable.close();
       }
     }
-    this.nodes.set(path, node);
+    this.nodes.set(path, file.size);
     this.note(path);
   }
 
@@ -618,6 +570,7 @@ export class GameFs {
     this.nodes.clear();
     this.dirs = new Set(["/"]);
     this.loose.clear();
+    this.shipped.clear();
     await this.settled();
     if (!this.root) return;
     try {
@@ -631,11 +584,12 @@ export class GameFs {
 }
 
 /**
- * Answer one console's request, as JSON.
+ * Answer one console's request about the tree, as JSON.
  *
- * Every operation but a blob read is in here, and every one of them is
- * synchronous, because the tree is in memory. Reading a blob is not, and is
- * handled by the caller: only that one has to reach the disk.
+ * These are the ten calls that take a path and say nothing about contents,
+ * and every one of them is answered without awaiting anything, because the
+ * tree is in memory. The three that carry contents go through `handleRaw`
+ * instead: JSON has no way to carry bytes that is not base64.
  *
  * Shared with the smoke test, which runs a `GameFs` with no OPFS under it
  * and drives a session through this exactly as the worker does.
@@ -655,14 +609,6 @@ export function handle(fs: GameFs, request: string): string {
         return ok(fs.exists(path));
       case "isDir":
         return ok(fs.isDir(path));
-      case "read":
-        return ok(fs.read(path));
-      case "write":
-        fs.write(path, String(message.contents ?? ""));
-        return ok(null);
-      case "append":
-        fs.append(path, String(message.contents ?? ""));
-        return ok(null);
       case "len":
         return ok(fs.len(path));
       case "delete":
@@ -676,10 +622,8 @@ export function handle(fs: GameFs, request: string): string {
       case "removeDir":
         fs.removeDir(path);
         return ok(null);
-      case "kind":
-        return ok(fs.kind(path));
-      case "writeBlob":
-        fs.writeBlob(path, message.blob as BlobRef);
+      case "copy":
+        fs.copy(path, String(message.to ?? ""));
         return ok(null);
       case "rename":
         fs.rename(path, String(message.to ?? ""));
@@ -694,6 +638,73 @@ export function handle(fs: GameFs, request: string): string {
       return JSON.stringify({ err: { kind: err.kind, arg: err.arg } });
     }
     return JSON.stringify({ err: { kind: "io", arg: String(err) } });
+  }
+}
+
+/** An answer whose first byte says the rest is the contents. */
+const RAW_OK = 0;
+/** ...and one whose first byte says the rest is the complaint, as JSON. */
+const RAW_ERR = 1;
+
+function framed(tag: number, body: Uint8Array): Uint8Array {
+  const out = new Uint8Array(body.length + 1);
+  out[0] = tag;
+  out.set(body, 1);
+  return out;
+}
+
+function failure(err: unknown): Uint8Array {
+  const wire =
+    err instanceof FsFail
+      ? { kind: err.kind, arg: err.arg }
+      : { kind: "io", arg: String(err) };
+  return framed(RAW_ERR, encoder.encode(JSON.stringify(wire)));
+}
+
+/**
+ * Answer one console's request that carries contents.
+ *
+ * A read waits for the disk; a write and an append do not, because both are
+ * done with the tree the moment it is updated and the disk catches up behind
+ * them. So this answers at once where it can, and the caller awaits either
+ * way -- which is also what lets the smoke test, where there is no disk to
+ * wait for, drive it without a worker.
+ */
+export function handleRaw(
+  fs: GameFs,
+  request: string,
+  payload: Uint8Array | null,
+): Uint8Array | Promise<Uint8Array> {
+  let message: { op: string; [key: string]: unknown };
+  try {
+    message = JSON.parse(request);
+  } catch {
+    return failure("unreadable request");
+  }
+  const path = String(message.path ?? "");
+  const bytes = payload ?? new Uint8Array(0);
+  try {
+    switch (message.op) {
+      case "read": {
+        const max = message.max === null || message.max === undefined
+          ? Infinity
+          : Number(message.max);
+        const answer = fs.read(path, max);
+        return answer instanceof Promise
+          ? answer.then((b) => framed(RAW_OK, b), failure)
+          : framed(RAW_OK, answer);
+      }
+      case "write":
+        fs.write(path, bytes);
+        return framed(RAW_OK, new Uint8Array(0));
+      case "append":
+        fs.append(path, bytes);
+        return framed(RAW_OK, new Uint8Array(0));
+      default:
+        return failure(`unknown filesystem request ${message.op}`);
+    }
+  } catch (err) {
+    return failure(err);
   }
 }
 

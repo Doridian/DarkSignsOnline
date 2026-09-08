@@ -193,7 +193,7 @@ export class FileTree {
     this.dirs = new Set(tree.dirs);
     this.dirs.add("/");
     this.files = new Map(
-      tree.files.map((file) => [file.path, { size: file.size, mediaType: file.mediaType }]),
+      tree.files.map((file) => [file.path, { size: file.size }]),
     );
 
     const missed = this.pending;
@@ -225,7 +225,7 @@ export class FileTree {
   take(change: FileChange): void {
     switch (change.op) {
       case "file":
-        this.files.set(change.path, { size: change.size, mediaType: change.mediaType });
+        this.files.set(change.path, { size: change.size });
         // Writing a file makes the directories above it, so the panel makes
         // them too rather than waiting to be told about them.
         this.addParents(change.path);
@@ -709,8 +709,6 @@ export class FileTree {
 /** What the panel remembers about one file. */
 interface FileInfo {
   size: number;
-  /** Empty for text; names the kind for a file whose contents are bytes. */
-  mediaType: string;
 }
 
 // ---- paths ---------------------------------------------------------------

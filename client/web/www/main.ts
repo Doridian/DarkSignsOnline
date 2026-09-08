@@ -129,7 +129,6 @@ const FS_ASKS = new Set([
   "listFiles",
   "readFile",
   "writeFile",
-  "blobAt",
   "fileAt",
   "putFile",
 ]);

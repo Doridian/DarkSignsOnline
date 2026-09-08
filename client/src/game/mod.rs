@@ -35,7 +35,7 @@ use crate::interp::{ArgVal, Host, Interp};
 use crate::value::{VbArray, Value};
 
 use console::{Channel, Console, DrawMode};
-use fs::{FileSystem, FsError, NodeKind};
+use fs::{bytes_to_text, text_to_bytes, FileSystem, FsError};
 use server::{ApiRequest, GameServer};
 
 /// Where a bare command name is looked for, in order. The working
@@ -59,9 +59,9 @@ fn fs_error(e: FsError) -> VbError {
     // Map onto the VBScript file errors scripts already know how to handle.
     let number = match e {
         FsError::NotFound(_) => 53,
-        // 54 is "Bad file mode", which is what asking for a directory or
-        // for a song as though it were text both amount to.
-        FsError::NotADirectory(_) | FsError::IsADirectory(_) | FsError::NotText(_) => 54,
+        // 54 is "Bad file mode", which is what asking to read a directory
+        // amounts to.
+        FsError::NotADirectory(_) | FsError::IsADirectory(_) => 54,
         FsError::AlreadyExists(_) => 58,
         FsError::NotEmpty(_) => 75,
         FsError::Io(_) => 57,
@@ -482,13 +482,15 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             "overwrite" => {
                 self.assert_local()?;
                 let p = self.resolve(&arg_str(args, 0)?);
-                self.fs.borrow_mut().write(&p, &arg_str(args, 1)?).map_err(fs_error)?;
+                let bytes = text_to_bytes(&arg_str(args, 1)?);
+                self.fs.borrow_mut().write(&p, &bytes).map_err(fs_error)?;
                 Value::Empty
             }
             "append" => {
                 self.assert_local()?;
                 let p = self.resolve(&arg_str(args, 0)?);
-                self.fs.borrow_mut().append(&p, &arg_str(args, 1)?).map_err(fs_error)?;
+                let bytes = text_to_bytes(&arg_str(args, 1)?);
+                self.fs.borrow_mut().append(&p, &bytes).map_err(fs_error)?;
                 Value::Empty
             }
             "del" | "delete" => {
@@ -530,17 +532,12 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             "cat" | "display" => {
                 self.assert_local()?;
                 let p = self.resolve(&arg_str(args, 0)?);
-                let kind = self.fs.borrow().kind(&p).map_err(fs_error)?;
-                let text = match kind {
-                    NodeKind::Text => self.fs.borrow().read(&p).map_err(fs_error)?,
-                    // Reading a song at a terminal gets you what it has
-                    // always got you, which is noise.
-                    NodeKind::Blob(_) => {
-                        let mut bytes = self.fs.borrow().read_blob(&p).map_err(fs_error)?;
-                        bytes.truncate(CAT_BLOB_LIMIT);
-                        values::console_escape(&bytes_as_noise(&bytes))
-                    }
-                };
+                // One read for every file, because there is only one kind
+                // of file. A script gets its notes back; a script that reads
+                // a song gets what a terminal has always given for one,
+                // which is noise.
+                let bytes = self.fs.borrow().read_upto(&p, CAT_LIMIT).map_err(fs_error)?;
+                let text = bytes_to_text(&bytes);
                 Value::str(select_lines(
                     &text,
                     arg_int(args, 1, 0)?,
@@ -729,7 +726,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
             "include" => {
                 self.assert_local()?;
                 let p = self.resolve(&arg_str(args, 0)?);
-                let src = self.fs.borrow_mut().read(&p).map_err(fs_error)?;
+                let src = self.fs.borrow_mut().read_text(&p).map_err(fs_error)?;
                 let key = self.env.borrow().file_key.clone();
                 let src = crypto::decrypt_script(&src, &key)
                     .map_err(|e| misc_error(e.to_string()))?;
@@ -747,7 +744,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 let p = self
                     .resolve_command(&name)
                     .ok_or_else(|| fs_error(FsError::NotFound(name)))?;
-                let src = self.fs.borrow_mut().read(&p).map_err(fs_error)?;
+                let src = self.fs.borrow_mut().read_text(&p).map_err(fs_error)?;
                 let key = self.env.borrow().file_key.clone();
                 let src = crypto::decrypt_script(&src, &key)
                     .map_err(|e| misc_error(e.to_string()))?;
@@ -763,7 +760,7 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for GameHost<C, F, S> {
                 let p = self
                     .resolve_command(&name)
                     .ok_or_else(|| fs_error(FsError::NotFound(name)))?;
-                let src = self.fs.borrow_mut().read(&p).map_err(fs_error)?;
+                let src = self.fs.borrow_mut().read_text(&p).map_err(fs_error)?;
                 let key = self.env.borrow().file_key.clone();
                 let src = crypto::decrypt_script(&src, &key)
                     .map_err(|e| misc_error(e.to_string()))?;
@@ -1189,7 +1186,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
         }
 
         let path = format!("/system/libs/{name}.ds");
-        let source = self.fs.borrow_mut().read(&path).map_err(fs_error)?;
+        let source = self.fs.borrow_mut().read_text(&path).map_err(fs_error)?;
         let source = self.decrypt_library(&source)?;
         it.execute(&source, false)
     }
@@ -1206,7 +1203,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
         let hash = hash.to_lowercase();
         let path = format!("/system/libs/hash_{hash}.ds");
 
-        let cached = self.fs.borrow_mut().read(&path).unwrap_or_default();
+        let cached = self.fs.borrow_mut().read_text(&path).unwrap_or_default();
         let source = if crypto::sha256_hex(cached.as_bytes()) == hash {
             cached
         } else {
@@ -1223,7 +1220,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
             if crypto::sha256_hex(body.as_bytes()) != hash {
                 return Err(misc_error("Could not download hash library correctly :("));
             }
-            self.fs.borrow_mut().write(&path, &body).map_err(fs_error)?;
+            self.fs.borrow_mut().write_text(&path, &body).map_err(fs_error)?;
             body
         };
 
@@ -1253,7 +1250,7 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
     }
 
     pub(crate) fn read_ini(&self, file: &str, section: &str, key: &str) -> String {
-        match self.fs.borrow_mut().read(file) {
+        match self.fs.borrow_mut().read_text(file) {
             Ok(text) => fs::ini_get(&text, section, key),
             // A missing file reads as a missing key.
             Err(_) => String::new(),
@@ -1261,9 +1258,9 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
     }
 
     pub(crate) fn write_ini(&self, file: &str, section: &str, key: &str, value: &str) -> VbResult<()> {
-        let text = self.fs.borrow_mut().read(file).unwrap_or_default();
+        let text = self.fs.borrow_mut().read_text(file).unwrap_or_default();
         let updated = fs::ini_set(&text, section, key, value);
-        self.fs.borrow_mut().write(file, &updated).map_err(fs_error)
+        self.fs.borrow_mut().write_text(file, &updated).map_err(fs_error)
     }
 
     /// Run a nested script. `capture` redirects its output into a string
@@ -1596,34 +1593,28 @@ fn resolve_music(command: &str, resolve: impl Fn(&str) -> String) -> String {
     format!("{verb} {}", resolve(rest.trim()))
 }
 
-/// The most of a blob `Cat` will pour into the console.
+/// The most of a file `Cat` will read.
 ///
-/// Reading a song as though it were text is a real thing to do at a real
-/// terminal, and the answer there is a screenful of noise, so it is the
-/// answer here too. A whole album of it would wedge the console rather than
-/// amuse anyone, so the noise stops.
-const CAT_BLOB_LIMIT: usize = 64 * 1024;
+/// `Cat` is how a script reads a file at all, not merely how it shows one,
+/// so this has to be far above any data file a script would keep -- the
+/// largest thing the client ships is twenty kilobytes. It is here because a
+/// file may equally be a forty-megabyte song, and pulling an album into a
+/// string to show a screenful of it would wedge the console rather than
+/// amuse anyone.
+const CAT_LIMIT: usize = 4 * 1024 * 1024;
 
-/// Render bytes the way a terminal shows a file that is not text: printable
-/// ones as themselves, the rest as the Latin-1 characters their values name.
+/// The window of lines `Cat` was asked for, or the file itself.
 ///
-/// Control bytes become dots instead. They are what a real terminal would
-/// act on rather than print -- and acting on them here would mean a file
-/// deciding how the console draws, which is not a trick worth allowing.
-fn bytes_as_noise(bytes: &[u8]) -> String {
-    bytes
-        .iter()
-        .map(|b| match b {
-            b'\r' | b'\n' | b'\t' => *b as char,
-            0x00..=0x1f | 0x7f => '.',
-            // Anything else is its own code point, which for the high bytes
-            // an mp3 is mostly made of means accented letters and symbols.
-            _ => *b as char,
-        })
-        .collect()
-}
-
+/// Asked for the whole file -- which is what a script that names no window
+/// gets -- this hands back exactly what was read, byte for byte. That is the
+/// point of the byte convention: what `Cat` gives, `Overwrite` puts back.
+/// Picking lines out of it is a different question, and one only a caller
+/// that has decided the file is text can be asking, so there the line
+/// endings are normalised the way the client's own `cat` did.
 fn select_lines(text: &str, start: i64, max: i64) -> String {
+    if start <= 1 && max <= 0 {
+        return text.to_string();
+    }
     let start = start.max(1);
     let mut out = String::new();
     for (i, line) in text.lines().enumerate() {

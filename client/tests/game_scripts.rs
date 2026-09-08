@@ -163,7 +163,7 @@ fn corpus_fs() -> MemoryFs {
     let mut fs = MemoryFs::new();
     for f in scripts() {
         if let (Ok(text), Ok(rel)) = (std::fs::read_to_string(&f), f.strip_prefix(&root)) {
-            let _ = FileSystem::write(&mut fs, &format!("/{}", rel.display()), &text);
+            let _ = FileSystem::write_text(&mut fs, &format!("/{}", rel.display()), &text);
         }
     }
     fs

@@ -64,9 +64,11 @@ impl Session {
     ///
     /// `fs_call` is the filesystem: it takes one JSON request, blocks until
     /// the fs worker has answered, and hands back one JSON reply. There is
-    /// one tree and four consoles, so no console holds it. `read_blob` is
-    /// the same channel for a path's bytes, kept separate so that a song on
-    /// its way to a `Cat` does not have to be encoded into JSON.
+    /// one tree and four consoles, so no console holds it. `fs_raw` is the
+    /// same channel for the three calls that carry contents, which are
+    /// bytes: it takes a request and the bytes going out and answers with
+    /// the bytes coming back, so that a song on its way to a `Cat` does not
+    /// have to be encoded into JSON.
     ///
     /// `console_id` is which of the four this is, which scripts read as
     /// `ConsoleID`. `fonts` is the page's family-to-CSS-stack table, so that
@@ -77,12 +79,12 @@ impl Session {
         read_line: js_sys::Function,
         read_key: js_sys::Function,
         fs_call: js_sys::Function,
-        read_blob: js_sys::Function,
+        fs_raw: js_sys::Function,
         console_id: i32,
         fonts: JsValue,
     ) -> Session {
         let console = WorkerConsole::new(emit, read_line, read_key, TextMetrics::new(&fonts));
-        let inner = GameHost::new(console, RemoteFs::new(fs_call, read_blob), XhrServer::new(
+        let inner = GameHost::new(console, RemoteFs::new(fs_call, fs_raw), XhrServer::new(
             DEFAULT_API_ROOT.to_string(),
             Credentials::default(),
         ))
@@ -143,7 +145,7 @@ impl Session {
             .inner
             .fs
             .borrow_mut()
-            .write(path, contents)
+            .write_text(path, contents)
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
@@ -153,7 +155,7 @@ impl Session {
             .inner
             .fs
             .borrow()
-            .read(path)
+            .read_text(path)
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
@@ -337,7 +339,7 @@ impl Session {
             .inner
             .fs
             .borrow_mut()
-            .write(&path, &contents)
+            .write_text(&path, &contents)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
         json(&Download { path, bytes: contents.len() })
     }
@@ -379,7 +381,7 @@ impl Session {
             .inner
             .fs
             .borrow()
-            .read(&resolved)
+            .read_text(&resolved)
             .map_err(|_| JsValue::from_str(&format!("The file does not exist: {resolved}")))?;
 
         let response = self.request(ApiRequest::post(
@@ -440,7 +442,8 @@ impl Session {
     fn mail_store(&self) -> Vec<mail::Message> {
         // No file yet is an empty inbox, not a failure: it is written the
         // first time anything arrives.
-        let text = self.host.inner.fs.borrow().read(mail::STORE_PATH).unwrap_or_default();
+        let text =
+            self.host.inner.fs.borrow().read_text(mail::STORE_PATH).unwrap_or_default();
         mail::parse_store(&text)
     }
 
@@ -449,7 +452,7 @@ impl Session {
             .inner
             .fs
             .borrow_mut()
-            .write(mail::STORE_PATH, &mail::render_store(store))
+            .write_text(mail::STORE_PATH, &mail::render_store(store))
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
@@ -649,12 +652,14 @@ pub fn fold_path(path: &str) -> String {
     vbscript::game::path::fold_case(path)
 }
 
-/// The MIME type a name implies, or an empty string when it implies text.
+/// The MIME type a name implies, or an empty string when nothing about the
+/// name says.
 ///
-/// Exported so the fs worker classifies a file exactly as the engine does.
-/// It is the one thing both sides have to agree on -- a path the worker
-/// stores as bytes and the engine reads as text would be a file nobody can
-/// open -- and agreement is cheaper than a second table in TypeScript.
+/// Nothing is classified by this: a file is bytes and the engine never asks
+/// what kind. It exists because `<audio>` needs a type in order to pick a
+/// decoder and OPFS hands a file back with an empty one, so the page puts
+/// the type back on at the moment of playing. Exported rather than written
+/// again in TypeScript because the table is already here.
 #[wasm_bindgen(js_name = mediaTypeFor)]
 pub fn media_type_for_js(path: &str) -> String {
     vbscript::game::fs::media_type_for(path).unwrap_or_default().to_string()

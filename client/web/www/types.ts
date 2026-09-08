@@ -163,23 +163,9 @@ export type Said =
  * did without having to ask again.
  */
 export type FileChange =
-  | { op: "file"; path: string; size: number; mediaType: string }
+  | { op: "file"; path: string; size: number }
   | { op: "dir"; path: string }
   | { op: "gone"; path: string };
-
-/**
- * A file whose contents are bytes rather than text.
- *
- * `id` is the path the bytes are at. They have no other name: the tree is a
- * real directory tree in OPFS, so a file's name is where its bytes are, the
- * way it is in any filesystem.
- */
-export interface BlobRef {
-  id: string;
-  size: number;
-  /** `audio/mpeg` and the like; empty when nothing worked it out. */
-  mediaType: string;
-}
 
 /** One entry in a directory listing. */
 export interface Entry {
@@ -195,8 +181,7 @@ export interface Entry {
  */
 export interface Tree {
   dirs: string[];
-  /** `mediaType` is empty for a text file and names the kind for a blob. */
-  files: Array<{ path: string; size: number; mediaType: string }>;
+  files: Array<{ path: string; size: number }>;
 }
 
 /** One request to a worker, and the answer it resolves with. */
@@ -295,7 +280,6 @@ export type FsAsk =
   | { ask: "listFiles" }
   | { ask: "readFile"; path: string }
   | { ask: "writeFile"; path: string; contents: string }
-  | { ask: "blobAt"; path: string }
   | { ask: "fileAt"; path: string }
   | { ask: "putFile"; path: string; file: File }
   | { ask: "reset" };
