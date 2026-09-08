@@ -35,8 +35,8 @@ use server::XhrServer;
 
 /// How many statements a script may run before it is stopped.
 ///
-/// Player-authored scripts loop, and a worker that never returns cannot be
-/// asked to stop from the page.
+/// A backstop rather than the way out of a runaway loop: Ctrl+B stops a
+/// running script now, and this is what catches one nobody is watching.
 const STEP_BUDGET: u64 = 50_000_000;
 
 
@@ -60,7 +60,9 @@ impl Session {
     /// `emit` is called with one JSON console event. `read_line` and
     /// `read_key` must block until the page has an answer — inside a worker
     /// that means `Atomics.wait`, which needs the page to be cross-origin
-    /// isolated.
+    /// isolated. `stop_requested` answers whether the player has asked for
+    /// the running script to stop; it is read out of shared memory, since a
+    /// worker running a script is not draining its message queue.
     ///
     /// `fs_call` is the filesystem: it takes one JSON request, blocks until
     /// the fs worker has answered, and hands back one JSON reply. There is
@@ -78,6 +80,7 @@ impl Session {
         emit: js_sys::Function,
         read_line: js_sys::Function,
         read_key: js_sys::Function,
+        stop_requested: js_sys::Function,
         fs_call: js_sys::Function,
         fs_raw: js_sys::Function,
         console_id: i32,
@@ -98,7 +101,7 @@ impl Session {
         });
 
         Session {
-            host: Rc::new(BrowserHost::new(inner)),
+            host: Rc::new(BrowserHost::new(inner, stop_requested)),
             command_state: CommandState::console(),
             api_root: RefCell::new(DEFAULT_API_ROOT.to_string()),
             credentials: RefCell::new(Credentials::default()),

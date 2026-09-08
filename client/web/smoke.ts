@@ -48,6 +48,9 @@ const session = new Session(
   (json: string) => events.push(JSON.parse(json)),
   () => (queuedInput.length ? queuedInput.shift() : null),
   () => 121, // 'y'
+  // The worker's `stopRequested`, which in a browser reads the Ctrl+B flag
+  // out of shared memory. Nothing here presses it.
+  () => false,
   // The worker's `fsCall`: in a browser this parks on `Atomics.wait` while
   // the fs worker answers. Here the answer is simply returned.
   (request: string) => handle(files, request),

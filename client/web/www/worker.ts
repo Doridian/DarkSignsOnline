@@ -5,13 +5,13 @@
 // main thread. Here both are fine — a synchronous XMLHttpRequest works, and
 // `Atomics.wait` lets us park until the page sends input.
 
-import { CLOSED, FS_MORE, MORE, WAITING } from "./control.js";
+import { ABORT, CLOSED, FS_MORE, LENGTH, MORE, STATE, WAITING } from "./control.js";
 import { FONT_STACK } from "./fonts.js";
 import init, { Session, libraryCategories, textspaceChannels } from "./pkg/dso_web.js";
 import type { Asked, ToWorker } from "./types.js";
 
 /** Shared with the page so input can be delivered to a blocked worker. */
-let control: Int32Array | null = null; // [state, length]
+let control: Int32Array | null = null; // [state, length, abort]
 /** The encoded answer. */
 let answerBytes: Uint8Array | null = null;
 
@@ -60,13 +60,13 @@ function readLineSync(prompt: string, _rgb: number): string | null {
   // The prompt travels with the request so the page can set it beside the
   // caret instead of printing it as a finished line.
   postMessage({ type: "wantInput", mode: "line", prompt: prompt ?? "" });
-  Atomics.store(control, 0, WAITING);
-  Atomics.wait(control, 0, WAITING);
+  Atomics.store(control, STATE, WAITING);
+  Atomics.wait(control, STATE, WAITING);
 
-  if (Atomics.load(control, 0) === CLOSED) {
+  if (Atomics.load(control, STATE) === CLOSED) {
     return null;
   }
-  const length = Atomics.load(control, 1);
+  const length = Atomics.load(control, LENGTH);
   // `slice` and not `subarray`: the buffer is shared, and TextDecoder refuses
   // a view onto shared memory outright. A subarray is such a view, so decoding
   // one threw, the error unwound through the script, and every ReadLine ended
@@ -94,14 +94,14 @@ function fsCall(request: string): string {
   let out = "";
   let ask: string | null = request;
   for (;;) {
-    Atomics.store(fsControl, 0, WAITING);
+    Atomics.store(fsControl, STATE, WAITING);
     fsPort.postMessage(ask ?? FS_MORE);
-    Atomics.wait(fsControl, 0, WAITING);
-    const state = Atomics.load(fsControl, 0);
+    Atomics.wait(fsControl, STATE, WAITING);
+    const state = Atomics.load(fsControl, STATE);
     if (state === CLOSED) {
       return JSON.stringify({ err: { kind: "io", arg: "the filesystem went away" } });
     }
-    const length = Atomics.load(fsControl, 1);
+    const length = Atomics.load(fsControl, LENGTH);
     // `slice` and not `subarray`: TextDecoder refuses a view onto shared
     // memory, and a subarray is one. See the note in `readLineSync`.
     out += decoder.decode(fsBytes.slice(0, Math.max(length, 0)), { stream: true });
@@ -137,18 +137,18 @@ function fsRaw(request: string, payload: Uint8Array | null): Uint8Array {
   let total = 0;
   let ask: { json: string; payload: Uint8Array | null } | null = { json: request, payload };
   for (;;) {
-    Atomics.store(fsControl, 0, WAITING);
+    Atomics.store(fsControl, STATE, WAITING);
     if (ask) {
       fsPort.postMessage(ask);
     } else {
       fsPort.postMessage(FS_MORE);
     }
-    Atomics.wait(fsControl, 0, WAITING);
-    const state = Atomics.load(fsControl, 0);
+    Atomics.wait(fsControl, STATE, WAITING);
+    const state = Atomics.load(fsControl, STATE);
     if (state === CLOSED) {
       return withTag(1, encoder.encode('{"kind":"io","arg":"the filesystem went away"}'));
     }
-    const length = Math.max(Atomics.load(fsControl, 1), 0);
+    const length = Math.max(Atomics.load(fsControl, LENGTH), 0);
     // A copy, not a view: what the wasm is handed must not be a window onto
     // memory another thread can still write to.
     pieces.push(fsBytes.slice(0, length));
@@ -176,6 +176,18 @@ function withTag(tag: number, body: Uint8Array): Uint8Array {
   out[0] = tag;
   out.set(body, 1);
   return out;
+}
+
+/**
+ * Whether the player has asked for the running script to stop.
+ *
+ * Read straight out of shared memory: this thread is busy running the script
+ * the answer is about, so nothing it could be sent would arrive in time. The
+ * interpreter asks between statements, and again after every host call, so a
+ * script stuck waiting on one stops as soon as the wait is over.
+ */
+function stopRequested(): boolean {
+  return control !== null && Atomics.load(control, ABORT) !== 0;
 }
 
 /** Block until the page supplies a single key, returning its char code. */
@@ -206,6 +218,7 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
     emit,
     readLineSync,
     readKeySync,
+    stopRequested,
     fsCall,
     fsRaw,
     message.consoleId ?? 0,

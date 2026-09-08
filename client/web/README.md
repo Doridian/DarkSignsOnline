@@ -38,6 +38,32 @@ status bar. An inactive console is hidden but still laid out, so it keeps its
 scroll position and its scripts keep measuring against the width they will be
 shown at.
 
+## Stopping a script
+
+`Ctrl+B` stops whatever the console on screen is running, as it does in the
+original client, and it works whether the script is spinning in a loop of its
+own or parked waiting on something.
+
+It cannot be a message. A worker running a script is not draining its queue —
+that is the whole reason it can block — so a `postMessage` would not be read
+until the script it was meant to stop had already finished. What the page does
+instead is set a flag in the block it shares with the worker
+([`control.ts`](www/control.ts)), which is memory the worker can read without
+being idle. A console parked on `ReadLine` is woken as well, since it would
+otherwise not look at anything until someone typed a line the script is no
+longer going to use.
+
+The worker reads that flag through `Session`'s `stop_requested` callback, and
+the interpreter acts on it **between statements** — never inside a host call.
+A `Ctrl+B` during a write, a directory listing or a request lets that call
+finish and stops at the statement after it, so nothing is left half-done. Two
+things reach the interpreter, for the two shapes a script can have: it asks
+the host every so many statements, which catches a tight loop, and the host
+says so itself the moment a call it was blocked in returns, which catches a
+script that spends its time waiting rather than running. `On Error Resume
+Next` cannot swallow the stop; the script ends, `done` comes back as it would
+from any other ending, and the prompt returns.
+
 ## Layout
 
 | File | Role |
@@ -500,6 +526,3 @@ IRC's `353` and has no equivalent: the server tracks no presence.
 - **Music.** `Music` reaches the page and stops there. The original plays
   mp3s out of the player's own `/home/music`, and there are none in a
   browser to play.
-- **Stopping a running script.** `Ctrl+B` reaches a console that is waiting
-  for input, which is all a blocked worker can hear; one busy in a loop runs
-  until its step budget is spent.

@@ -30,7 +30,7 @@ pub mod values;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::error::{VbError, VbResult};
+use crate::error::{VbError, VbResult, ABORT_ERROR};
 use crate::interp::{ArgVal, Host, Interp};
 use crate::value::{VbArray, Value};
 
@@ -1408,6 +1408,10 @@ impl<C: Console, F: FileSystem, S: GameServer> GameHost<C, F, S> {
             Ok(()) => {}
             // A connected script that quits stops itself, not its caller.
             Err(e) if e.number == QUIT_ERROR => {}
+            // A stopped one stops the caller as well, and unlabelled: the
+            // player ended the whole thing, not the part furthest in, and
+            // `[RUNNING domain]` in front of it would suggest otherwise.
+            Err(e) if e.number == ABORT_ERROR => return Err(e),
             Err(e) => return Err(VbError::new(e.number, format!("[RUNNING {by_domain}] {e}"))),
         }
 
@@ -1656,6 +1660,9 @@ pub fn run_script(it: &mut Interp, source: &str) -> Result<(), VbError> {
     match it.run(&program) {
         Ok(()) => Ok(()),
         Err(e) if e.number == QUIT_ERROR => Ok(()),
+        // Being stopped is not a failure to report: whoever asked for it
+        // already knows, and `Interp::aborted` says so afterwards.
+        Err(e) if e.number == ABORT_ERROR => Ok(()),
         Err(e) => Err(e),
     }
 }

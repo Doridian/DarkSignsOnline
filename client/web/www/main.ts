@@ -13,7 +13,16 @@
 
 import { ChatPanel } from "./chat.js";
 import { CommView, ConsoleView } from "./console.js";
-import { CLOSED, ANSWER_CAPACITY, FS_ANSWER_CAPACITY, READY } from "./control.js";
+import {
+  ABORT,
+  ANSWER_CAPACITY,
+  CLOSED,
+  CONTROL_SLOTS,
+  FS_ANSWER_CAPACITY,
+  LENGTH,
+  READY,
+  STATE,
+} from "./control.js";
 import { EditorWindow } from "./editor.js";
 import { FileTree, PATH_DRAG, quotePath, TOGGLED } from "./filetree.js";
 import { LibraryWindow } from "./library.js";
@@ -243,7 +252,7 @@ class GameConsole {
     // One control block and one buffer per console, so a line typed here
     // wakes this worker and no other.
     this.control = new Int32Array(
-      new SharedArrayBuffer(2 * Int32Array.BYTES_PER_ELEMENT),
+      new SharedArrayBuffer(CONTROL_SLOTS * Int32Array.BYTES_PER_ELEMENT),
     );
     this.answerBytes = new Uint8Array(new SharedArrayBuffer(ANSWER_CAPACITY));
     this.fsControl = new Int32Array(
@@ -406,33 +415,57 @@ class GameConsole {
     const encoded = new TextEncoder().encode(text);
     const length = Math.min(encoded.length, ANSWER_CAPACITY);
     this.answerBytes.set(encoded.subarray(0, length));
-    Atomics.store(this.control, 1, length);
-    Atomics.store(this.control, 0, READY);
-    Atomics.notify(this.control, 0);
+    Atomics.store(this.control, LENGTH, length);
+    Atomics.store(this.control, STATE, READY);
+    Atomics.notify(this.control, STATE);
     this.awaitingInput = false;
   }
 
   /** Tell a blocked worker that no more input is coming. */
   closeInput(): void {
-    Atomics.store(this.control, 0, CLOSED);
-    Atomics.notify(this.control, 0);
+    Atomics.store(this.control, STATE, CLOSED);
+    Atomics.notify(this.control, STATE);
     this.awaitingInput = false;
   }
 
-  onKeyDown(e: KeyboardEvent): void {
-    // Ctrl+B stops a script in the original client. It only reaches one that
-    // is waiting for input: a script busy in a loop cannot be interrupted,
-    // since the worker running it is not listening for anything.
-    if (e.ctrlKey && e.key.toLowerCase() === "b") {
-      e.preventDefault();
-      if (this.awaitingInput) {
-        this.view.system("Script Stopped by User (CTRL + B)", "stopped");
-        this.input.value = "";
-        this.showEntry(false);
-        this.closeInput();
-      }
+  /**
+   * Stop whatever is running here, which is what Ctrl+B does.
+   *
+   * The flag is what reaches the worker: it is running the script, so it is
+   * not reading messages, and shared memory is the only thing it can be told
+   * anything through. The interpreter picks the flag up between two
+   * statements -- never inside a host call, so a write or a request that is
+   * already under way finishes rather than being torn in half -- and ends
+   * the script from there. `done` comes back as it would from any other
+   * ending, and puts the prompt back.
+   *
+   * A console parked on `ReadLine` is waiting rather than running, so it is
+   * also woken: without that, the flag would not be looked at until someone
+   * typed the line the script is no longer going to use.
+   */
+  stop(): void {
+    // Already asked, and the script has not got to a statement yet: saying
+    // so twice would put the notice on the console twice.
+    if ((!this.busy && !this.awaitingInput) || Atomics.load(this.control, ABORT) !== 0) {
       return;
     }
+    Atomics.store(this.control, ABORT, 1);
+    this.view.system("Script Stopped by User (CTRL + B)", "stopped");
+    this.input.value = "";
+    if (this.awaitingInput) {
+      this.showEntry(false);
+      this.closeInput();
+    }
+  }
+
+  /** Clear the stop flag, so a new run is not stopped by the last one's. */
+  clearStop(): void {
+    Atomics.store(this.control, ABORT, 0);
+  }
+
+  onKeyDown(e: KeyboardEvent): void {
+    // Ctrl+B is handled for the whole window: the input is disabled while a
+    // script runs, and a disabled field is sent no keys at all.
     if (e.key !== "Enter") {
       return;
     }
@@ -458,6 +491,10 @@ class GameConsole {
     }
     this.busy = true;
     this.showEntry(false);
+    // Cleared here rather than in the worker: a Ctrl+B pressed after this
+    // point is meant for the command about to run, and the worker would not
+    // reach the message that carries it until the run was over.
+    this.clearStop();
     this.post({ type: "command", line });
   }
 
@@ -467,6 +504,7 @@ class GameConsole {
   runFile(path: string): void {
     this.busy = true;
     this.showEntry(false);
+    this.clearStop();
     this.post({ type: "runFile", path });
   }
 }
@@ -511,6 +549,19 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     showAccountMenu(false);
     accountToggle.focus();
+    return;
+  }
+  // Ctrl+B stops the running script, as it does in the original client.
+  // Listened for on the window rather than on the console's input, because
+  // that input is disabled for as long as a script is running and a disabled
+  // field is sent no keys -- which is exactly the case this is for. Not while
+  // a window is up: whatever has the keyboard there should keep it.
+  if (e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === "b") {
+    if (accountMenuOpen() || windows.some((w) => w.open)) {
+      return;
+    }
+    e.preventDefault();
+    active.stop();
     return;
   }
   const match = /^F([1-5])$/.exec(e.key);

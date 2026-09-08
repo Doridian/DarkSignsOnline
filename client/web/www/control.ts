@@ -1,9 +1,26 @@
 // The control block a console and its worker share.
 //
-// One `SharedArrayBuffer` of two integers: the state, which the worker parks
-// on with `Atomics.wait`, and the length of whatever is waiting in the other
-// buffer. Both sides need the same numbers, so they are named once here
-// rather than twice.
+// One `SharedArrayBuffer` of three integers: the state, which the worker
+// parks on with `Atomics.wait`; the length of whatever is waiting in the
+// other buffer; and the stop flag, which is how Ctrl+B reaches a worker that
+// is not parked at all. Both sides need the same numbers, so they are named
+// once here rather than twice.
+
+/** Slot holding the state below, which the worker parks on. */
+export const STATE = 0;
+/** Slot holding the length of the answer in the other buffer. */
+export const LENGTH = 1;
+/**
+ * Slot holding the stop flag: non-zero once the player has pressed Ctrl+B.
+ *
+ * Shared memory rather than a message because a worker running a script is
+ * not draining its queue -- that is the whole reason it can block at all --
+ * so a `postMessage` would not be read until the script it was meant to stop
+ * had finished. The interpreter reads this between statements.
+ */
+export const ABORT = 2;
+/** How many integers the block holds. */
+export const CONTROL_SLOTS = 3;
 
 /** The worker is parked, waiting for an answer. */
 export const WAITING = 0;

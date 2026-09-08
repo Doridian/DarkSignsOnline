@@ -236,9 +236,25 @@ pub mod err {
     pub fn object_no_value() -> VbError {
         VbError::new(438, "Object doesn't support this property or method")
     }
+
+    /// The error a script stopped from outside reports.
+    ///
+    /// It is not a failure the script can see: the interpreter latches the
+    /// abort, so `On Error Resume Next` cannot swallow this and carry on.
+    pub fn aborted() -> VbError {
+        let mut e = VbError::new(super::ABORT_ERROR, "Script stopped");
+        e.source = std::rc::Rc::from("DarkSigns");
+        e
+    }
 }
 
 pub type VbResult<T> = Result<T, VbError>;
+
+/// `Err.Number` for a script the embedder stopped.
+///
+/// It sits in the `vbObjectError` range, beside the game's own `Quit`, since
+/// it is a host-raised condition rather than one of VBScript's own failures.
+pub const ABORT_ERROR: i32 = 0x8004_2001u32 as i32;
 
 /// Why a statement sequence stopped early.
 #[derive(Debug)]

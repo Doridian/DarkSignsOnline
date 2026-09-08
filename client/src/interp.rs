@@ -13,6 +13,14 @@ use crate::value::{slot, Slot, VbArray, Value};
 /// Maximum nested procedure calls before reporting "out of stack space".
 const MAX_DEPTH: usize = 512;
 
+/// Statements between [`Host::poll_abort`] calls.
+///
+/// Asking on every statement would put a host call -- in a browser, a hop out
+/// to JavaScript -- in the way of every line a script runs, for a question
+/// whose answer hardly ever changes. A loop tight enough for the interval to
+/// matter runs through it in well under a millisecond.
+const ABORT_POLL_STEPS: u64 = 64;
+
 /// Outcome of evaluating a control expression under `On Error Resume Next`.
 enum Ctrl<T> {
     Ok(T),
@@ -86,6 +94,18 @@ pub trait Host {
     }
     /// Destination for `MsgBox` and similar output.
     fn echo(&self, _text: &str) {}
+
+    /// Whether the embedder wants the running script stopped.
+    ///
+    /// Asked at statement boundaries and never in the middle of a host call,
+    /// so an interrupted script is torn out of its own code rather than out
+    /// of a write or a request that is halfway done. A host that learns of a
+    /// stop while it is blocked -- waiting on input, say -- says so with
+    /// [`Interp::request_abort`] instead, which takes effect at the very next
+    /// statement rather than at the next poll.
+    fn poll_abort(&self) -> bool {
+        false
+    }
 
     /// Milliseconds since the Unix epoch, for `Now`, `Date` and `Timer`.
     ///
@@ -202,6 +222,12 @@ pub struct Interp {
     /// An embedder running player-authored scripts uses this to bound a
     /// runaway loop.
     step_budget: Option<u64>,
+    /// Set once the embedder has asked for the script to stop. Latched, so
+    /// that the abort is raised again at every statement the unwinding
+    /// reaches and no `On Error Resume Next` can swallow it and carry on.
+    abort_requested: bool,
+    /// Statements since the host was last asked whether it wants a stop.
+    abort_poll: u64,
 }
 
 impl Default for Interp {
@@ -237,6 +263,8 @@ impl Interp {
             unit_consts: std::collections::HashSet::new(),
             unit_prior_arrays: std::collections::HashSet::new(),
             step_budget: None,
+            abort_requested: false,
+            abort_poll: 0,
         }
     }
 
@@ -245,6 +273,21 @@ impl Interp {
     /// little else.
     pub fn set_step_budget(&mut self, steps: u64) {
         self.step_budget = Some(steps);
+    }
+
+    /// Stop the script at its next statement.
+    ///
+    /// For a host that discovers the request while it is being called --
+    /// woken out of a blocking read, say -- rather than waiting to be asked
+    /// through [`Host::poll_abort`]. The stop lands between statements
+    /// either way: the call this was made from still returns normally.
+    pub fn request_abort(&mut self) {
+        self.abort_requested = true;
+    }
+
+    /// Whether the script was stopped rather than having run to its end.
+    pub fn aborted(&self) -> bool {
+        self.abort_requested
     }
 
     // ---- scopes ----------------------------------------------------------
@@ -410,6 +453,15 @@ impl Interp {
             match self.exec_stmt(s) {
                 Ok(()) => {}
                 Err(Flow::Error(e)) => {
+                    // A stopped script stays stopped. `On Error Resume Next`
+                    // is how a script handles its own failures, not a veto
+                    // over the player ending it, so the check comes first --
+                    // and it reports the stop rather than whatever the
+                    // statement it landed on was raising alongside it, which
+                    // is likely a request the host gave up on because of it.
+                    if self.abort_requested {
+                        return Err(Flow::Error(err::aborted()));
+                    }
                     // `On Error Resume Next` swallows the error and continues
                     // with the following statement.
                     if self.on_error_active() {
@@ -442,6 +494,21 @@ impl Interp {
     }
 
     fn exec_stmt(&mut self, s: &Stmt) -> ExecResult {
+        // Ahead of the statement, so a stop lands between two of them and
+        // never inside one. Once latched it is raised again at every
+        // statement the unwinding reaches, which is what carries it out of a
+        // nested `Run` or a procedure call rather than letting either resume.
+        if self.abort_requested {
+            return Err(Flow::Error(err::aborted()));
+        }
+        self.abort_poll += 1;
+        if self.abort_poll >= ABORT_POLL_STEPS {
+            self.abort_poll = 0;
+            if self.host.poll_abort() {
+                self.abort_requested = true;
+                return Err(Flow::Error(err::aborted()));
+            }
+        }
         if let Some(budget) = &mut self.step_budget {
             if *budget == 0 {
                 return Err(Flow::Error(VbError::new(
