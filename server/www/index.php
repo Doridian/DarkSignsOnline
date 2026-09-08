@@ -3,9 +3,9 @@
 
   <strong>September 6th 2026</strong><br /><span class="style9">
     We now have an experimental <a href="/game/">web client</a>.<br />
-    You can <a href="/dso-vb6-last.zip">download the last VB6 client archive</a><br />
-    <b>Disclosure:</b> The new web client is LLM-written / "vibecoded". Once it is in a good shape I will review the code<br />
-    as much as I can (not sure my competency in reviewing a VBScript lexer and interpreter)
+    You can <a href="/dso-vb6-last.zip">download the last VB6 client source</a><br />
+    <b>Disclosure:</b> The new web client heavily LLM-assisted at this point.<br />
+    I'll be reviewing the code more thoroughly I am happy with it as a "beta" stage.
     </span><br /><br />
 
   <strong>June 27th 2025</strong><br /><span class="style9">
