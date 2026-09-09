@@ -129,6 +129,43 @@ to do: 300,000 of them used to leave the script finished in 1.0s and the
 console printing for another 8.7s, and now the script takes 8.5s and the
 console is 0.6s behind it, which is the one batch it is holding.
 
+## How much the console keeps
+
+A log that keeps everything gets slower the longer it is: the page reads
+`scrollHeight` once a batch and that measures the whole log, and a log of a
+million lines is two million elements for the browser to hold, style and lay
+out. It never recovers, either — the console stays slow for the rest of the
+session. Now that a script is paced by the page, that is not only a display
+that falls behind but a script that runs slower the more it has printed.
+
+So the console keeps `SCROLLBACK` lines and drops the oldest past that
+([`console.ts`](www/console.ts)), and the communications log keeps 500 the
+same way. Dropping from the front is cheap: it is reading a height that
+forces a layout, not removing a node.
+
+The cap is what a printing script costs, near enough exactly. 300,000 lines
+in Chromium, by the number kept:
+
+| Kept | 500 | 2000 | 8000 | 32000 | everything |
+|---|---|---|---|---|---|
+| Script | 1.8s | 4.1s | 12.1s | 37.3s | 8.5s |
+| Console behind at the end | 0.03s | 0.07s | 0.22s | 0.75s | 0.58s |
+
+Keeping everything beats a large cap on that run — appending to the end is
+cheaper than dropping from the front, which moves every line that is left —
+but only until the log is big enough for its own size to be the problem, and
+that is a cliff rather than a slope. Three times the lines is nearly ten
+times the work: 1,000,000 of them take 83.2s with nothing dropped, against
+13.5s capped at 2000, which is exactly 3.3× the 300,000 above. A capped
+console has one speed and an uncapped one has whatever speed it has left.
+
+2000 is a terminal's usual scrollback, well past a screenful and past
+anything the game's own scripts print in one go. What it costs is history: a
+script that prints more than that has had its start dropped by the time it
+ends, and scrolled up while output is arriving, what is being read shifts up
+as the top is dropped. Putting the position back means measuring what went,
+which is the layout the batching is there to avoid.
+
 ## Layout
 
 | File | Role |

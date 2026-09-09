@@ -21,6 +21,51 @@ const FLASH_CLASS: Record<string, string | null> = {
   slow: "flash-slow",
 };
 
+/**
+ * How many lines a console keeps.
+ *
+ * A log that keeps everything gets slower the longer it is -- it is all held,
+ * styled and laid out, and the height the page reads at the end of a batch is
+ * the height of all of it -- and it never gets faster again. Since a script is
+ * paced by the page now (see `GameConsole.drawBatch`), that is not a display
+ * falling behind but the script itself slowing down as it prints. Dropping
+ * the oldest lines is what bounds that, and the memory with it.
+ *
+ * What is kept is very nearly what a printing script costs, so this is not a
+ * number to raise idly: in Chromium, 300,000 lines take 1.8s at 500 and 37.3s
+ * at 32,000. Keeping everything is not the cheap end of that -- appending
+ * beats dropping until the log is large enough to be its own problem, and
+ * then it falls off a cliff: 1,000,000 lines take 83.2s kept in full against
+ * 13.5s at 2000. The README has the table.
+ *
+ * 2000 is well past a screenful and past anything the game's own scripts
+ * print in one go, and it is the scrollback a terminal usually keeps.
+ */
+export const SCROLLBACK = 2000;
+
+/** The same for the communications log, which a whole session writes to. */
+const COMM_SCROLLBACK = 500;
+
+/**
+ * Drop the oldest lines until no more than `limit` are left.
+ *
+ * `anchor`, when there is one, is kept last and is not a line, so it is
+ * counted out rather than removed. Nothing is measured here, so nothing is
+ * laid out here either; what it costs is that the next layout has to move
+ * what is left up, which is why the limit is what a printing script costs.
+ */
+function trim(root: HTMLElement, limit: number, anchor: Element | null): void {
+  while (root.children.length > limit + (anchor ? 1 : 0)) {
+    const oldest = root.firstElementChild;
+    // The anchor is last, so it is only at the front when it is all there
+    // is; either way there is nothing left to drop.
+    if (!oldest || oldest === anchor) {
+      return;
+    }
+    oldest.remove();
+  }
+}
+
 export class ConsoleView {
   /** The most recent line, so `SayLine` can replace it and `Draw` reach it. */
   lastLine: HTMLElement | null = null;
@@ -42,11 +87,17 @@ export class ConsoleView {
   constructor(
     readonly root: HTMLElement,
     readonly anchor: HTMLElement | null = null,
+    readonly limit: number = SCROLLBACK,
   ) {}
 
-  /** Add a line, leaving the anchor last. */
+  /** Add a line, leaving the anchor last and the log within its limit. */
   add(el: HTMLElement): void {
     this.root.insertBefore(el, this.anchor);
+    // Scrolled up, this shifts what is being read up with it -- but a log
+    // that keeps everything cannot be read for long either, and correcting
+    // the position means measuring what was dropped, which is the layout
+    // this is here to avoid.
+    trim(this.root, this.limit, this.anchor);
   }
 
   clear(): void {
@@ -210,6 +261,7 @@ export class CommView {
 
     line.append(time, body);
     this.root.append(line);
+    trim(this.root, COMM_SCROLLBACK, null);
     this.root.scrollTop = this.root.scrollHeight;
   }
 }
