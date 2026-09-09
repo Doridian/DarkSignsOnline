@@ -1,6 +1,6 @@
 // The one filesystem.
 //
-// Four consoles share a filesystem, so somebody has to own it, and this is
+// Every terminal shares a filesystem, so somebody has to own it, and this is
 // that somebody: it holds the tree, it is the only thing that touches OPFS,
 // and the consoles ask it. That is why there is no syncing here. Nothing has
 // to be kept in step with anything, because there is only one of it.
@@ -24,6 +24,8 @@ interface Channel {
   bytes: Uint8Array;
   /** The tail of an answer too long for one bufferful. */
   pending: Uint8Array | null;
+  /** The port it asks down, so closing the console can close it. */
+  port: MessagePort;
 }
 
 const channels = new Map<number, Channel>();
@@ -126,6 +128,7 @@ function attach(id: number, port: MessagePort, control: SharedArrayBuffer, answe
     control: new Int32Array(control),
     bytes: new Uint8Array(answer),
     pending: null,
+    port,
   };
   channels.set(id, channel);
   port.onmessage = (e: MessageEvent<FsRequest>) => {
@@ -136,6 +139,16 @@ function attach(id: number, port: MessagePort, control: SharedArrayBuffer, answe
     }
     void serveRaw(channel, message.json, message.payload);
   };
+}
+
+/** Let go of a console that has been closed. */
+function detach(id: number): void {
+  const channel = channels.get(id);
+  if (!channel) {
+    return;
+  }
+  channels.delete(id);
+  channel.port.close();
 }
 
 onmessage = async (e: MessageEvent<ToFs>) => {
@@ -156,6 +169,13 @@ onmessage = async (e: MessageEvent<ToFs>) => {
 
       case "attach":
         attach(message.consoleId, message.port, message.control, message.answer);
+        break;
+
+      // A terminal that has been closed. Its worker is gone, so nothing is
+      // going to ask down this port again, and the buffers it shared are
+      // only reachable from here.
+      case "detach":
+        detach(message.consoleId);
         break;
 
       case "ask": {

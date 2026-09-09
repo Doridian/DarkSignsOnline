@@ -158,7 +158,7 @@ export type Said =
 /**
  * What became of one path.
  *
- * There is one tree, in the fs worker, so this is no longer how four copies
+ * There is one tree, in the fs worker, so this is no longer how copies
  * of it are kept in step. It is only how the file panel learns what a script
  * did without having to ask again.
  */
@@ -272,6 +272,7 @@ export type ToFs =
       control: SharedArrayBuffer;
       answer: SharedArrayBuffer;
     }
+  | { type: "detach"; consoleId: number }
   | ({ type: "ask"; token: number } & FsAsk);
 
 /** One question the page has about the tree. */

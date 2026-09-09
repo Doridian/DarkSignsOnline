@@ -1,17 +1,17 @@
 // The window manager.
 //
-// Everything the client shows that is not a console is a window: the
-// communications log, the file explorer, chat, mail, the editors and the
-// library. They float over the consoles, they can be moved and resized, and
-// several can be open at once -- which is the whole reason they are windows
-// rather than panels, and the reason none of them is modal any more.
+// Everything the client shows is a window: the terminals, the communications
+// log, the file explorers, chat, mail, the editors and the library. They
+// float over the desktop, they can be moved and resized, and several can be
+// open at once -- which is the whole reason they are windows rather than
+// panels, and the reason none of them is modal any more.
 //
-// Most windows are one of a kind and live in the page from the start. The
-// editors are not: there is one per file being edited, made when the file is
-// opened and thrown away when it is closed, which is what `store`, `offset`
-// and `unmanage` below are for -- a kind of window remembers one geometry
-// between them, each new one steps clear of the last, and a window that is
-// destroyed stops being tracked.
+// Some windows are one of a kind and live in the page from the start. The
+// terminals, the editors and the explorers are not: each is made when it is
+// asked for and thrown away when it is closed, which is what `store`,
+// `offset` and `unmanage` below are for -- a kind of window remembers one
+// geometry between them, each new one steps clear of the last, and a window
+// that is destroyed stops being tracked.
 //
 // A window is any element with `position: fixed` and the `window` class; the
 // three that were `<dialog>` still are, because `open`, `close()` and the
@@ -101,6 +101,13 @@ export interface Options {
   min?: { w: number; h: number };
   /** Windows that hold nothing worth resizing can say so. */
   resizable?: boolean;
+  /**
+   * Whether Escape closes it. True for everything that is a view of
+   * something; false for a terminal, which holds a session rather than a
+   * view of one -- Escape is pressed far too often for it to throw away a
+   * running script and everything printed above it.
+   */
+  dismissable?: boolean;
   /** What Escape does. Defaults to closing it the way its own bar would. */
   close?: () => void;
 }
@@ -109,6 +116,7 @@ interface Managed extends Options {
   el: HTMLElement;
   min: { w: number; h: number };
   resizable: boolean;
+  dismissable: boolean;
   store: string;
   offset: number;
   /** Watches `open`/`hidden`; disconnected when the window is unmanaged. */
@@ -146,6 +154,7 @@ export function manage(el: HTMLElement, options: Options): void {
     el,
     min: options.min ?? { w: 220, h: 120 },
     resizable: options.resizable ?? true,
+    dismissable: options.dismissable ?? true,
     store: options.store ?? el.id,
     offset: options.offset ?? 0,
     watch,
@@ -292,11 +301,6 @@ export function focusedWindow(): HTMLElement | null {
     }
   }
   return null;
-}
-
-/** Whether the keyboard is inside some window rather than on the page. */
-export function typingInWindow(): boolean {
-  return focusedWindow() !== null;
 }
 
 // ---- geometry --------------------------------------------------------------
@@ -559,7 +563,7 @@ window.addEventListener("keydown", (event) => {
   }
   const el = focusedWindow();
   const win = el ? managed.get(el) : null;
-  if (!el || !win) {
+  if (!el || !win || !win.dismissable) {
     return;
   }
   event.preventDefault();

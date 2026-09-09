@@ -338,6 +338,14 @@ dialog.window:not([open]) {
   background: transparent;
 }
 
+/* A terminal is the window the client's own keys act on -- `Ctrl+B` stops
+   what is running in it, and a file opened from an explorer runs there -- so
+   which one that is has to be visible even when the window in front is an
+   editor. `.front` is the top of the stack; this is the terminal last used. */
+.terminal.active > .win-bar .win-title {
+  color: var(--gold);
+}
+
 /* ---- a window's title bar ---------------------------------------------- */
 
 .win-bar {
@@ -644,17 +652,32 @@ dialog.window:not([open]) {
   outline-offset: -1px;
 }
 
-/* ---- console --------------------------------------------------------- */
+/* ---- the desktop ----------------------------------------------------- */
 
-/* The four consoles occupy one cell and are stacked in it, so switching
-   shows a different one without anything moving. */
-#consoles {
+/* The ground the windows float over. It holds nothing but the notice below,
+   so its whole job is to take the row between the title bar and the status
+   bar and be the colour of the client. */
+#desktop {
   display: grid;
-  /* `min-width: 0` as well as the height, so that a long line gives way
-     instead of holding the row open and pushing the status bar off. */
+  place-items: center;
+  /* `min-width: 0` as well as the height, so that a wide window cannot hold
+     the row open and push the status bar off. */
   min-width: 0;
   min-height: 0;
 }
+
+/* Shown only while there is no terminal at all, which is a desktop with
+   nothing on it and no obvious way on. */
+#desktop-hint {
+  margin: 0;
+  color: var(--dim);
+  font-size: 12px;
+}
+#desktop-hint b {
+  color: var(--accent);
+}
+
+/* ---- console --------------------------------------------------------- */
 
 /* A path from the tree is about to be typed here. */
 .console.drop-target {
@@ -662,8 +685,11 @@ dialog.window:not([open]) {
   outline-offset: -2px;
 }
 
+/* The body of a terminal window: the log, with the prompt as its last line.
+   It is what scrolls, and its width is what scripts measure against -- so
+   resizing the window changes what a script laid out before the drag, which
+   is what resizing a terminal has always done. */
 .console {
-  grid-area: 1 / 1;
   overflow-y: auto;
   /* The whole area is the terminal: a click in it takes the caret, so the
      cursor says so over the blank space below the last line too. */
@@ -673,14 +699,6 @@ dialog.window:not([open]) {
   white-space: pre-wrap;
   word-break: break-word;
   min-height: 0;
-  /* Hidden rather than `display: none`: an inactive console stays laid out,
-     so it keeps its scroll position and its scripts keep measuring against
-     the width they will be shown at. */
-  visibility: hidden;
-}
-
-.console.active {
-  visibility: visible;
 }
 
 /* Spacing measured off the client: lines sit 19px apart, output is indented
@@ -1360,8 +1378,9 @@ dialog.window:not([open]) {
 }
 
 /* The library has no command in the original either: it is opened from the
-   console's own furniture, which here is the status bar. The button that
-   opens a file explorer keeps it company. */
+   console's own furniture, which here is the status bar. The buttons that
+   open a terminal and a file explorer keep it company. */
+#open-terminal,
 #open-files,
 #open-library {
   padding: 0.05rem 0.4rem;
@@ -1370,27 +1389,9 @@ dialog.window:not([open]) {
   border-color: transparent;
   color: var(--dim);
 }
+#open-terminal:hover,
 #open-files:hover,
 #open-library:hover {
-  color: var(--gold);
-  border-color: var(--rule);
-}
-
-#tabs {
-  margin-left: auto;
-  display: flex;
-  gap: 0.15rem;
-}
-
-.tab {
-  min-width: 1.4rem;
-  padding: 0.05rem 0.3rem;
-  font-size: 11px;
-  background: transparent;
-  border-color: transparent;
-  color: var(--dim);
-}
-.tab.active {
   color: var(--gold);
   border-color: var(--rule);
 }

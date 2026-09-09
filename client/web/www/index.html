@@ -46,7 +46,7 @@
             The site's own pages, which are where an account is made and a
             password recovered. Root-relative because the client is served
             from `/game/` on that same site; a new tab because leaving this
-            one throws four consoles away.
+            one throws every terminal away.
           -->
           <nav id="account-links" aria-label="Account">
             <a href="/create_account.php" target="_blank" rel="noopener">Create an account</a>
@@ -58,33 +58,51 @@
 
 
     <!--
-      The consoles, which are the one thing that is not a window: they are
-      the desktop everything else floats over. Four of them, stacked with
-      only the active one shown, because each has a worker of its own and one
-      blocked on `ReadLine` must not stop the others.
+      The desktop: the ground the windows float over, and nothing else. It
+      says so once every terminal has been closed, which is the one state in
+      which the client has nothing to show and no obvious way on. Hidden to
+      begin with: the desktop is bare while the filesystem starts up too, and
+      that is a client still opening rather than one waiting to be told to.
     -->
-    <main id="consoles"></main>
+    <main id="desktop">
+      <p id="desktop-hint" hidden>
+        No terminals open. Press <b>Terminal</b> below to open one.
+      </p>
+    </main>
 
     <!--
-      Script output, with the prompt as its last line. The entry lives inside
-      the scrolling log rather than under it so that typing happens where the
-      text ends, the way a terminal behaves.
+      A terminal: script output, with the prompt as its last line. The entry
+      lives inside the scrolling log rather than under it so that typing
+      happens where the text ends, the way a terminal behaves.
+
+      A template rather than an element, because `Terminal` opens one of
+      these every time it is pressed and each carries a worker of its own --
+      a console blocked on `ReadLine` must not stop the others. `hidden` so
+      that a fresh clone is a window appearing, which is what `window.ts`
+      watches for.
     -->
-    <template id="console-template">
-      <section class="console" role="log" aria-live="polite">
-        <div class="line no-prespace entry idle">
-          <span class="prompt">/&gt;</span>
-          <input class="input" type="text" autocomplete="off" autocapitalize="off"
-                 spellcheck="false" disabled />
+    <template id="terminal-template">
+      <section class="window terminal" hidden aria-label="Terminal">
+        <header class="win-bar win-drag">
+          <strong class="win-title">Terminal</strong>
+          <span class="win-spacer"></span>
+          <button class="win-close" type="button" title="Close">Close</button>
+        </header>
+        <div class="console" role="log" aria-live="polite">
+          <div class="line no-prespace entry idle">
+            <span class="prompt">/&gt;</span>
+            <input class="input" type="text" autocomplete="off" autocapitalize="off"
+                   spellcheck="false" disabled />
+          </div>
         </div>
       </section>
     </template>
 
     <!--
-      The windows. Every one of them floats over the consoles, is dragged by
-      its title bar and is resized by its frame; several can be open at once,
-      which is why none of them is modal. `window.ts` owns where they sit and
-      which is in front.
+      The rest of the windows. Every one of them floats over the desktop, is
+      dragged by its title bar and is resized by its frame; several can be
+      open at once, which is why none of them is modal. `window.ts` owns
+      where they sit and which is in front.
     -->
 
     <!-- The communications log: server and client notices, newest last. -->
@@ -116,7 +134,7 @@
         </header>
         <!--
           Both panes are filled in by `filetree.ts`, and redrawn whenever any
-          of the four consoles writes, deletes, makes or removes anything.
+          terminal writes, deletes, makes or removes anything.
           Every window draws them from the one model, so they all say the same
           thing about the filesystem while each looks where it likes.
         -->
@@ -163,14 +181,14 @@
 
     <footer id="statusbar">
       <span id="hint">Type <b>HELP</b> for a list of commands.</span>
+      <button id="open-terminal" type="button"
+              title="Open a terminal -- one per press">Terminal</button>
       <button id="open-files" type="button"
               title="Open a file explorer -- one per press">Files</button>
       <button id="open-comm" type="button" title="Show or hide the communications log"
               aria-controls="comm">Comms</button>
       <button id="open-chat" type="button" title="Chat (F5)">Chat</button>
       <button id="open-library" type="button">File Library</button>
-      <!-- Filled in by the page, one per console, with F1-F4 as shortcuts. -->
-      <nav id="tabs" role="tablist" aria-label="Consoles"></nav>
     </footer>
 
     <script type="module" src="./main.js"></script>

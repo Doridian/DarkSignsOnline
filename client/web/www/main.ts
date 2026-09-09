@@ -4,12 +4,13 @@
 // only subtle part is input: a worker blocks on `Atomics.wait`, so a typed
 // line is written into a SharedArrayBuffer and the worker is woken.
 //
-// There are four consoles, as in the original client, and each has a worker
-// of its own. They cannot share one: a console blocked in `ReadLine` blocks
-// its whole worker, and the other three have to stay usable. What they do
+// A terminal is a window with a worker behind it, and there are as many as
+// the player opens -- one to begin with, another every time `Terminal` is
+// pressed. They cannot share a worker: a console blocked in `ReadLine`
+// blocks its whole worker, and the others have to stay usable. What they do
 // share -- the player's files -- is not shared at all any more: there is one
-// filesystem, in a worker of its own, and all four ask it. Nothing on this
-// page keeps copies of a tree in step, because there are no copies.
+// filesystem, in a worker of its own, and every terminal asks it. Nothing on
+// this page keeps copies of a tree in step, because there are no copies.
 
 import { ChatPanel } from "./chat.js";
 import { CommView, ConsoleView } from "./console.js";
@@ -30,19 +31,20 @@ import { LibraryWindow } from "./library.js";
 import { MailWindow } from "./mail.js";
 import { MusicPlayer } from "./music.js";
 import type { Asked, ConsoleEvent, FromFs, FromWorker, FsAsk, ToWorker } from "./types.js";
-import { draggable, manage, typingInWindow } from "./window.js";
-
-/** As many as the original client has, and the same F-keys select them. */
-const CONSOLE_COUNT = 4;
+import { centred, draggable, focusedWindow, manage, raise, unmanage } from "./window.js";
 
 /** The script each console opens with, following `Start_Console`. */
 const STARTUP_SCRIPT = "/system/startup.ds";
 const NEW_CONSOLE_SCRIPT = "/system/newconsole.ds";
 
+/** How far each terminal opens down and right of the one already there. */
+const CASCADE = 26;
+
+/** How many terminals the cascade steps through before starting over. */
+const CASCADE_STEPS = 6;
+
 const comm = new CommView(element("comm-log"));
-const container = element("consoles");
-const tabs = element("tabs");
-const template = element("console-template") as HTMLTemplateElement;
+const desktopHint = element("desktop-hint");
 const statusDot = element("status-dot");
 const statusText = element("status-text");
 const account = element("account");
@@ -76,11 +78,13 @@ const library = new LibraryWindow(dialog("library"), (request) => ask(request));
 // it here. An editor runs what it was editing in the console that opened it,
 // which is only possible when that console is not already busy.
 const editors = new Editors(document.body, (request) => ask(request), (id, path) => {
-  const target = consoles[id - 1] ?? consoles[0];
-  if (target.busy || target.awaitingInput) {
+  // The terminal it was opened from, if that one is still open; otherwise
+  // whichever is in front, since a script has to run somewhere visible.
+  const target = consoles.find((item) => item.id === id) ?? active;
+  if (!target || target.busy || target.awaitingInput) {
     return false;
   }
-  setActive(target);
+  setActive(target, true);
   target.view.echo(target.prompt.textContent ?? "", path, false);
   target.runFile(path);
   return true;
@@ -89,13 +93,13 @@ const editors = new Editors(document.body, (request) => ask(request), (id, path)
 /**
  * The filesystem, which is a worker of its own.
  *
- * It owns the tree and it is the only thing that touches storage. The four
- * consoles ask it over ports of their own; this page asks it here, for the
- * panel, the editors and whatever is about to play a song.
+ * It owns the tree and it is the only thing that touches storage. Every
+ * terminal asks it over a port of its own; this page asks it here, for the
+ * explorers, the editors and whatever is about to play a song.
  */
 const fsWorker = new Worker("./fsworker.js", { type: "module" });
 
-/** Settles when the tree has been read and the consoles can be started. */
+/** Settles when the tree has been read and the first terminal can open. */
 let fsReadyResolve: (report: { persistent: boolean; restored: number }) => void = () => {};
 const fsStarted = new Promise<{ persistent: boolean; restored: number }>((resolve) => {
   fsReadyResolve = resolve;
@@ -126,7 +130,7 @@ fsWorker.onmessage = (e: MessageEvent<FromFs>) => {
       fsReadyResolve(message);
       break;
 
-    // Whatever any console did to the tree. This is the only reason the
+    // Whatever any terminal did to the tree. This is the only reason the
     // explorers do not have to poll: the worker that made the change says
     // so, and every open window redraws from the one model.
     case "changed":
@@ -170,9 +174,9 @@ const files = new FileModel((request) => ask(request));
 const explorers = new Explorers(
   document.body,
   files,
-  // Double-clicking a file opens it where `EDIT` would, in the console on
-  // screen -- so running it from the editor runs it somewhere visible.
-  (path) => void editors.openFile(path, active.id),
+  // Double-clicking a file opens it where `EDIT` would, in the terminal in
+  // front -- so running it from the editor runs it somewhere visible.
+  (path) => void editors.openFile(path, active?.id ?? 0),
   (text) => comm.add(text),
 );
 
@@ -223,16 +227,18 @@ function setStatus(text: string, state: "offline" | "connecting" | "online"): vo
 }
 
 /**
- * One console: a worker, the log it writes to, and the line being typed.
+ * One terminal: a window, a worker, the log it writes to, and the line being
+ * typed.
  *
  * The state that used to be page-wide -- whether a command is running,
  * whether a script is waiting for input, what is half-typed at the prompt --
- * all belongs here, since switching consoles has to leave the other three
- * exactly as they were.
+ * all belongs here, since every other terminal has to be left exactly as it
+ * was whatever this one is doing.
  */
 class GameConsole {
-  /** The tab in the status bar that selects this console. */
-  tab = document.createElement("button");
+  /** The window, which is what is dragged, resized and closed. */
+  readonly window: HTMLElement;
+  /** The log inside it, which is what scrolls and what scripts measure. */
   readonly root: HTMLElement;
   readonly entry: HTMLElement;
   readonly prompt: HTMLElement;
@@ -252,6 +258,16 @@ class GameConsole {
   readonly fsAnswer: Uint8Array<SharedArrayBuffer>;
   readonly fsChannel = new MessageChannel();
   readonly worker: Worker;
+  /**
+   * Set once the worker has its wasm up and will answer a message.
+   *
+   * A terminal is a window before it is a session: it can be opened, and
+   * signed in behind, in the time its worker takes to fetch and start the
+   * interpreter. Anything sent before then is refused by the worker, so
+   * nothing is -- the credentials and the opening script both wait for the
+   * `ready` this sets.
+   */
+  ready = false;
   /** Set while the worker is blocked waiting for a line. */
   awaitingInput = false;
   /** Set while a command is running, so a second is not started. */
@@ -281,7 +297,7 @@ class GameConsole {
   private frame = 0;
   private releasing = false;
   /**
-   * What paces this console while its tab is in the background.
+   * What paces this console while the page is in the background.
    *
    * Frames stop there and scripts do not, so the worker would hold output
    * for a frame that is not coming and park for good. A message to itself is
@@ -292,16 +308,58 @@ class GameConsole {
   private readonly ticker = new MessageChannel();
   cwd = "/";
 
-  /** `id` is which of the four this is. */
-  constructor(readonly id: number) {
-    const fragment = template.content.cloneNode(true) as DocumentFragment;
-    this.root = fragment.querySelector(".console") as HTMLElement;
+  /**
+   * `id` is what scripts read as `ConsoleID`, and `offset` is how far this
+   * window opens from where a terminal was last left.
+   */
+  constructor(readonly id: number, offset: number) {
+    const source = document.getElementById("terminal-template");
+    const root =
+      source instanceof HTMLTemplateElement
+        ? source.content.firstElementChild?.cloneNode(true)
+        : null;
+    if (!(root instanceof HTMLElement)) {
+      throw new Error("the terminal's template is missing");
+    }
+    this.window = root;
+    this.root = root.querySelector(".console") as HTMLElement;
     this.entry = this.root.querySelector(".entry") as HTMLElement;
     this.prompt = this.root.querySelector(".prompt") as HTMLElement;
     this.input = this.root.querySelector(".input") as HTMLInputElement;
-    this.root.setAttribute("aria-label", `Console ${id}`);
-    this.input.setAttribute("aria-label", `Console ${id} input`);
-    container.append(this.root);
+    (root.querySelector(".win-title") as HTMLElement).textContent = `Terminal ${id}`;
+    root.setAttribute("aria-label", `Terminal ${id}`);
+    this.input.setAttribute("aria-label", `Terminal ${id} input`);
+    document.body.append(root);
+
+    // Shown before it is managed, rather than after as the explorers are:
+    // the manager places a window that is already visible there and then,
+    // and the width it is placed at is what this worker is booted with. Left
+    // to the observer that notices a window appearing, the placement would
+    // land a microtask after the boot message had gone with the width of an
+    // unplaced window.
+    root.hidden = false;
+    manage(root, {
+      rect: (desk) => centred(desk, 60 * 16, 34 * 16),
+      min: { w: 360, h: 180 },
+      // One geometry for all of them, as the editors and the explorers
+      // have: a terminal sized to suit the screen is the size the next one
+      // wants too, and the offset is what keeps them off each other.
+      store: "terminal",
+      offset,
+      // Escape belongs to whatever is running: a terminal holds a session
+      // rather than a view of one, and closing it throws the session away.
+      dismissable: false,
+    });
+    draggable(root, root.querySelector(".win-bar") as HTMLElement);
+    (root.querySelector(".win-close") as HTMLElement).addEventListener("click", () =>
+      this.destroy(),
+    );
+    // Whatever the pointer or the keyboard went on to do, this is now the
+    // terminal the client's own keys act on. Neither takes the caret: the
+    // click may be the start of a selection in the log, and a `focusin` is
+    // something already having taken it.
+    root.addEventListener("pointerdown", () => setActive(this), true);
+    root.addEventListener("focusin", () => setActive(this));
 
     this.view = new ConsoleView(this.root, this.entry);
 
@@ -331,6 +389,26 @@ class GameConsole {
     this.worker = new Worker("./worker.js", { type: "module" });
     this.worker.onmessage = (e: MessageEvent<FromWorker>) => handleMessage(this, e.data);
     this.ticker.port1.onmessage = () => this.releaseWorker();
+
+    // A resized window changes what fits on a line, which is what scripts
+    // lay their columns out against.
+    layoutWatch.observe(this.root);
+
+    // The filesystem is up before any terminal is made, so this can start
+    // now rather than waiting to be told to.
+    this.post(
+      {
+        type: "boot",
+        consoleId: id,
+        control: this.control.buffer,
+        answer: this.answerBytes.buffer,
+        fsPort: this.fsChannel.port1,
+        fsControl: this.fsControl.buffer,
+        fsAnswer: this.fsAnswer.buffer,
+        ...measure(this),
+      },
+      [this.fsChannel.port1],
+    );
 
     this.input.addEventListener("keydown", (e) => this.onKeyDown(e));
     this.root.addEventListener("click", (e) => this.onClick(e));
@@ -458,24 +536,25 @@ class GameConsole {
   }
 
   /**
-   * Take the caret, but only when this console is the one on screen.
+   * Take the caret, but only when this is the terminal being used.
    *
    * A script asking for a line is what usually calls this, and it can happen
-   * at any moment in a console nobody is looking at -- so it does not take
-   * the keyboard out of a window someone is typing in. While the windows
-   * were modal the browser refused that; now that they are not, refusing it
-   * is this. `force` is for the cases that are the player's own doing --
-   * clicking the console, or picking its tab -- where taking the keyboard
-   * back off a window is the whole point.
+   * at any moment in a terminal nobody is looking at -- so it takes the
+   * keyboard neither out of another terminal nor out of a window someone is
+   * typing in. While the windows were modal the browser refused that; now
+   * that they are not, refusing it is this. `force` is for the cases that
+   * are the player's own doing -- clicking the log, dropping a path on it,
+   * bringing the window to the front -- where taking the keyboard back is
+   * the whole point.
    */
   focus(force = false): void {
-    if (!force && typingInWindow()) {
+    if (!force && (active !== this || typingInPanel())) {
       return;
     }
-    if (this.root.classList.contains("active") && !this.input.disabled) {
+    if (!this.input.disabled) {
       // Without `preventScroll` the browser drags the prompt into view,
-      // which throws away the place a console was left at when it is
-      // switched back to. Whether to scroll is `showEntry`'s decision.
+      // which throws away wherever the log was left when a terminal is
+      // clicked back into. Whether to scroll is `showEntry`'s decision.
       this.input.focus({ preventScroll: true });
     }
   }
@@ -674,44 +753,124 @@ class GameConsole {
     this.clearStop();
     this.post({ type: "runFile", path });
   }
+
+  /**
+   * Close this terminal and throw it away.
+   *
+   * Whatever it was running goes with it. The worker is terminated rather
+   * than asked to stop: a stop is a courtesy to a console that is going to
+   * carry on afterwards, and there is nothing here left to print to. The
+   * filesystem is told as well, since the port and the buffers this console
+   * shared with it are reachable from nowhere else.
+   */
+  destroy(): void {
+    this.worker.terminate();
+    fsWorker.postMessage({ type: "detach", consoleId: this.id });
+    if (this.frame !== 0) {
+      cancelAnimationFrame(this.frame);
+    }
+    this.ticker.port1.close();
+    this.ticker.port2.close();
+    layoutWatch.unobserve(this.root);
+    unmanage(this.window);
+    this.window.remove();
+    forget(this);
+  }
 }
 
+/** Every open terminal, oldest first. */
 const consoles: GameConsole[] = [];
-for (let id = 1; id <= CONSOLE_COUNT; id += 1) {
-  consoles.push(new GameConsole(id));
+
+/**
+ * How many have been opened, which is what the cascade counts.
+ *
+ * Not how many are open, as the editors count: counting the open ones would
+ * drop a new terminal exactly onto one that outlived an earlier one.
+ */
+let opened = 0;
+
+/**
+ * The terminal the client's own keys act on: `Ctrl+B`, and where a file
+ * opened from an explorer is run. It is the last one touched rather than the
+ * front window, since the front window is as often an editor.
+ */
+let active: GameConsole | null = null;
+
+/** Open one, which is what `Terminal` does and what the client does once. */
+function openTerminal(): GameConsole {
+  // Clear of the last one, and back to the top once enough have been opened,
+  // so the cascade cannot walk a window off the desktop.
+  const item = new GameConsole(freeConsoleId(), (opened % CASCADE_STEPS) * CASCADE);
+  opened += 1;
+  consoles.push(item);
+  desktopHint.hidden = true;
+  setActive(item, true);
+  return item;
 }
 
-/** The console on screen; the other three keep running out of sight. */
-let active: GameConsole = consoles[0] as GameConsole;
+/**
+ * The lowest number no open terminal is using.
+ *
+ * Reused rather than counted up, because scripts print it: `ConsoleID` is
+ * what the opening banner says, and a player with three terminals open
+ * expects them to be 1, 2 and 3 however many have been closed on the way.
+ */
+function freeConsoleId(): number {
+  let id = 1;
+  while (consoles.some((item) => item.id === id)) {
+    id += 1;
+  }
+  return id;
+}
 
-function setActive(target: GameConsole): void {
+/** Drop a terminal that has been closed, and hand on what it was holding. */
+function forget(item: GameConsole): void {
+  const at = consoles.indexOf(item);
+  if (at !== -1) {
+    consoles.splice(at, 1);
+  }
+  // Its worker is gone, so anything it was asked is never coming back. The
+  // questions go to the back of nothing and the front of the queue: they
+  // were asked before whatever is still waiting.
+  requeue(item);
+  desktopHint.hidden = consoles.length > 0;
+  if (active === item) {
+    active = null;
+    const next = consoles[consoles.length - 1];
+    if (next) {
+      setActive(next, true);
+    }
+  }
+}
+
+/**
+ * Make a terminal the one in front, and the one the client's keys act on.
+ *
+ * `takeFocus` is for the cases that are the player's own doing -- opening
+ * one, or picking it with a function key. A click inside one does not take
+ * the caret here: it may be the start of a selection in the log, and the
+ * log's own click handler is what decides.
+ */
+function setActive(target: GameConsole, takeFocus = false): void {
   active = target;
   for (const other of consoles) {
-    const isActive = other === target;
-    other.root.classList.toggle("active", isActive);
-    other.tab.classList.toggle("active", isActive);
-    other.tab.setAttribute("aria-selected", String(isActive));
+    other.window.classList.toggle("active", other === target);
   }
-  // An inactive console is hidden but still laid out, so it keeps its scroll
-  // position and its width -- which is what its scripts measure against.
-  target.focus(true);
+  raise(target.window);
+  if (takeFocus) {
+    target.focus(true);
+  }
 }
 
-// The tabs, and the F1-F4 that select the same four consoles in the original.
-for (const item of consoles) {
-  const tab = item.tab;
-  tab.className = "tab";
-  tab.type = "button";
-  tab.textContent = String(item.id);
-  tab.setAttribute("role", "tab");
-  tab.title = `Console ${item.id} (F${item.id})`;
-  tab.addEventListener("click", () => setActive(item));
-  tabs.append(tab);
+/** Whether the keyboard is in a window that is not a terminal. */
+function typingInPanel(): boolean {
+  const el = focusedWindow();
+  return el !== null && !el.classList.contains("terminal");
 }
 
-// Frames stop while a tab is in the background, which is where the workers
-// are waiting for one. Each console hands its pending release to a task
-// instead, so a script writing to a console nobody is looking at keeps
+// Frames stop while the page is in the background, which is where the
+// workers are waiting for one. Each console hands its pending release to a
+// task instead, so a script writing to a terminal nobody is looking at keeps
 // running rather than stopping where it stood.
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
@@ -738,11 +897,11 @@ window.addEventListener("keydown", (e) => {
   // the keyboard is in a window: several can be open at once now, so what
   // matters is not whether one is up but whether one is being typed in.
   if (e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === "b") {
-    if (accountMenuOpen() || typingInWindow()) {
+    if (accountMenuOpen() || typingInPanel()) {
       return;
     }
     e.preventDefault();
-    active.stop();
+    active?.stop();
     return;
   }
   const match = /^F([1-5])$/.exec(e.key);
@@ -751,36 +910,44 @@ window.addEventListener("keydown", (e) => {
     e.ctrlKey ||
     e.altKey ||
     e.metaKey ||
-    // A console switch would take the caret out of the sign-in fields, or
+    // Raising a terminal would take the caret out of the sign-in fields, or
     // out of whichever window is being typed in.
     accountMenuOpen() ||
-    typingInWindow()
+    typingInPanel()
   ) {
     return;
   }
-  // F1 and F3 are the browser's otherwise; in a console they are the client's.
+  // F1 and F3 are the browser's otherwise; in a terminal they are the
+  // client's.
   e.preventDefault();
   // F5 raises chat, as `ShowChat` does. It no longer puts it away on the way
-  // to a console: chat is a window now and sits beside the console rather
-  // than over it, so switching consoles is no reason to close the room.
+  // to a terminal: chat is a window now and sits beside them rather than
+  // over them, so raising one is no reason to close the room.
   if (match[1] === "5") {
     chat.toggle();
     return;
   }
-  const chosen = consoles[Number(match[1]) - 1];
+  // F1-F4 pick a terminal by the number in its title, as they picked one of
+  // the four in the original. That is the number scripts print as
+  // `ConsoleID`, so it is the one to aim with; a terminal that is not open
+  // is not opened by pressing it.
+  const chosen = consoles.find((item) => item.id === Number(match[1]));
   if (chosen) {
-    setActive(chosen);
+    setActive(chosen, true);
   }
 });
 
-setActive(consoles[0]);
+// A terminal every press, the way `Files` opens an explorer every press.
+// There is no toggling and nothing to remember: the client opens the first
+// one itself, and every one after it is asked for.
+element("open-terminal").addEventListener("click", () => openTerminal());
 
 // The file library, which the original opens from a label on the console
 // rather than from a command. The status bar is where that label is here.
 element("open-library").addEventListener("click", () => void library.show());
 
-// The original raises chat with F5 alone. The button is here for the same
-// reason the console tabs are: a phone has no function keys.
+// The original raises chat with F5 alone. The button is here because a
+// function key is not the only way anyone should have to reach it.
 element("open-chat").addEventListener("click", () => chat.toggle());
 
 // The communications log. It is the one window that opens by default -- it
@@ -820,7 +987,7 @@ element("open-files").addEventListener("click", () => explorers.create());
 
 // A file dragged in from the desktop and dropped anywhere but a folder in
 // the tree would otherwise be opened by the browser, which navigates away
-// from the client and throws four consoles' worth of session away with it.
+// from the client and throws every terminal's worth of session away with it.
 // Refusing the drop outright is what says so, with the cursor, before it
 // happens.
 for (const kind of ["dragover", "drop"] as const) {
@@ -843,14 +1010,29 @@ for (const kind of ["dragover", "drop"] as const) {
 // the credentials and the connection are, so they go to whichever console is
 // free. A console blocked on `ReadLine` is not free: its worker is parked in
 // `Atomics.wait` and would not read the message until someone typed.
+//
+// Which console answered used to be nobody's business, since the four of
+// them outlived every question. Now a terminal can be closed with one still
+// out, so each question remembers where it went: a worker that is terminated
+// answers nothing, and the question goes back in the queue rather than
+// leaving whoever asked it waiting for ever. With no terminal open at all
+// there is nothing to ask, and the queue is what holds the question until
+// one is opened.
+
+/** One question, from `ask` until it is answered or handed on. */
+interface Question {
+  /** What to send, which is the window's own shape plus the token. */
+  request: Asked;
+  /** The console it was handed to, if it has been handed to one yet. */
+  at: GameConsole | null;
+  resolve: (value: unknown) => void;
+  reject: (err: Error) => void;
+}
 
 /** In-flight questions, by the token that identifies each answer. */
-const asked = new Map<
-  number,
-  { resolve: (value: unknown) => void; reject: (err: Error) => void }
->();
-/** Questions with no free console yet, in the order they were asked. */
-const waiting: Asked[] = [];
+const asked = new Map<number, Question>();
+/** Tokens with no free console yet, in the order they were asked. */
+const waiting: number[] = [];
 let nextToken = 1;
 
 /** Ask whichever console is free, and resolve with its answer. */
@@ -866,10 +1048,10 @@ function ask(request: { type: string } & Record<string, unknown>): Promise<any> 
   return new Promise((resolve, reject) => {
     const token = nextToken;
     nextToken += 1;
-    asked.set(token, { resolve, reject });
     // The shape is the window's; only the token is added here, and only the
     // worker reads the rest of it.
-    waiting.push({ ...request, token } as Asked);
+    asked.set(token, { request: { ...request, token } as Asked, at: null, resolve, reject });
+    waiting.push(token);
     dispatchAsked();
   });
 }
@@ -877,14 +1059,37 @@ function ask(request: { type: string } & Record<string, unknown>): Promise<any> 
 /** Hand out as many waiting questions as there are free consoles to take them. */
 function dispatchAsked(): void {
   while (waiting.length > 0) {
-    const free = consoles.find((c) => !c.busy && !c.awaitingInput);
-    const question = waiting[0];
-    if (!free || !question) {
+    const free = consoles.find((c) => c.ready && !c.busy && !c.awaitingInput);
+    const token = waiting[0];
+    if (!free || token === undefined) {
       return;
     }
     waiting.shift();
-    free.post(question);
+    const question = asked.get(token);
+    if (!question) {
+      continue;
+    }
+    question.at = free;
+    free.post(question.request);
   }
+}
+
+/** Put whatever a closed terminal was asked back at the front of the queue. */
+function requeue(from: GameConsole): void {
+  const orphaned: number[] = [];
+  for (const [token, question] of asked) {
+    if (question.at === from) {
+      question.at = null;
+      orphaned.push(token);
+    }
+  }
+  if (orphaned.length === 0) {
+    return;
+  }
+  // Ahead of anything still waiting, and in the order they were asked, which
+  // is the order the tokens are in.
+  waiting.unshift(...orphaned.sort((a, b) => a - b));
+  dispatchAsked();
 }
 
 function settleAsked(token: number, value?: unknown, error?: string): void {
@@ -904,21 +1109,38 @@ function settleAsked(token: number, value?: unknown, error?: string): void {
 function handleMessage(target: GameConsole, message: FromWorker): void {
   switch (message.type) {
     case "ready":
+      target.ready = true;
       target.setPrompt(message.cwd);
-      readyCount += 1;
-      if (readyCount === consoles.length) {
-        allReady();
+      // The first terminal of the session is the one that carries the
+      // client's own startup: the saved sign-in, what storage had to say,
+      // and the script that says all of it. Every one after it opens with
+      // the banner alone.
+      if (started) {
+        // Whatever the player is signed in as. `newconsole.ds` prints
+        // `Username`, so this has to be in before the script is.
+        if (credentials.username !== "") {
+          target.post({ type: "credentials", ...credentials });
+        }
+        target.runFile(NEW_CONSOLE_SCRIPT);
+      } else {
+        started = true;
+        firstTerminal(target);
       }
+      // A question asked while nothing was open to answer it -- chat polls
+      // whether or not there is a terminal -- has been waiting for this.
+      dispatchAsked();
       break;
 
     case "credentialsSet":
-      // All four are told; only one need say so -- and only when there is
-      // someone to greet, since signing out clears the credentials by
-      // handing over an empty pair the same way.
-      if (target.id === 1 && pendingUser !== "") {
+      // Every terminal is told, and so is every one opened afterwards; only
+      // the first of them need say so -- and only when there is someone to
+      // greet, since signing out clears the credentials by handing over an
+      // empty pair the same way.
+      if (!greeted && credentials.username !== "") {
+        greeted = true;
         setStatus("Online.", "online");
-        showAccount(pendingUser);
-        comm.add(`You have been authorized as ${pendingUser}.`);
+        showAccount(credentials.username);
+        comm.add(`You have been authorized as ${credentials.username}.`);
         comm.add("Welcome to the Dark Signs Network!");
         // The room can be read without an account; this is what opens the
         // box, as the original's connect-on-login did.
@@ -1050,43 +1272,47 @@ function renderEvent(target: GameConsole, event: ConsoleEvent): void {
 }
 
 /**
- * The room a line has for text, in CSS pixels.
+ * The room one terminal's lines have for text, in CSS pixels.
  *
  * Scripts subtract `PreSpaceWidth` from `ConsoleWidth` to decide where a
  * column ends, so both have to be the page's real measurements rather than
  * a guess. They are read from the stylesheet so that only one place decides
  * them.
+ *
+ * One measurement no longer serves them all: a terminal is a window, and two
+ * of them are hardly ever the same width. What a script laid out before its
+ * window was dragged narrower stays as it was drawn -- the lines are already
+ * on the screen and nothing redraws them -- which is what resizing a
+ * terminal has always done to what is above the prompt.
  */
-function measureLayout(): { width: number; preSpace: number } {
-  const [first] = consoles;
-  const style = getComputedStyle(first.entry);
+function measure(item: GameConsole): { width: number; preSpace: number } {
+  const style = getComputedStyle(item.entry);
   const gutter = parseFloat(style.paddingLeft) || 0;
   const trailing = parseFloat(style.paddingRight) || 0;
   const preSpace =
     parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue("--prespace"),
     ) || 0;
-  // All four panes are the same size, so one measurement serves them all.
   return {
-    width: Math.max(0, first.root.clientWidth - gutter - trailing),
+    width: Math.max(0, item.root.clientWidth - gutter - trailing),
     preSpace,
   };
 }
 
 function reportLayout(): void {
-  const layout = measureLayout();
   for (const item of consoles) {
-    item.post({ type: "layout", ...layout });
+    item.post({ type: "layout", ...measure(item) });
   }
 }
 
 /**
  * Report the layout once things have stopped moving.
  *
- * Dragging the browser's own edge changes the console's width every frame,
- * and each frame would otherwise be four messages carrying a measurement
- * nothing will lay anything out against. What a script wants is the width it
- * ends at, so only that one is sent.
+ * Dragging an edge changes a terminal's width every frame, and each frame
+ * would otherwise be a message carrying a measurement nothing will lay
+ * anything out against. What a script wants is the width the drag ends at,
+ * so only that one is sent -- and every terminal is told, since one message
+ * each is cheaper than working out which of them the observer meant.
  */
 let layoutTimer = 0;
 function reportLayoutSoon(): void {
@@ -1094,11 +1320,11 @@ function reportLayoutSoon(): void {
   layoutTimer = setTimeout(reportLayout, 120);
 }
 
-// A resized window changes what fits on a line, which is what scripts lay
-// their columns out against.
-new ResizeObserver(reportLayoutSoon).observe(container);
+/** Watches every open terminal; each adds itself as it is made. */
+const layoutWatch = new ResizeObserver(reportLayoutSoon);
 
-let readyCount = 0;
+/** Set once the first terminal has started, which happens once a session. */
+let started = false;
 /**
  * What the filesystem said about what it found, kept until the consoles are
  * up and there is somewhere to report it.
@@ -1106,13 +1332,13 @@ let readyCount = 0;
 let storageReport: { persistent: boolean; restored: number } | null = null;
 
 /**
- * Everything is up: sign in if we can, then open the four consoles.
+ * The first terminal is up: sign in if we can, then start it.
  *
  * The credentials go first so that a restored session is already authorized
  * by the time `startup.ds` runs -- it calls `LOGIN` and prints the player's
  * name, neither of which works before then.
  */
-function allReady(): void {
+function firstTerminal(item: GameConsole): void {
   if (storageReport && !storageReport.persistent) {
     comm.add("Storage is unavailable; this session will not be saved.");
   } else if (storageReport && storageReport.restored > 0) {
@@ -1126,42 +1352,31 @@ function allReady(): void {
     signIn(saved.username, saved.password);
   }
 
-  // `Start_Console`: the first console runs the startup script, which ends
-  // by including the new-console banner; the rest run that banner directly.
-  for (const item of consoles) {
-    item.runFile(item.id === 1 ? STARTUP_SCRIPT : NEW_CONSOLE_SCRIPT);
-  }
+  // `Start_Console`: the first terminal runs the startup script, which ends
+  // by including the new-console banner. Every one opened after it runs that
+  // banner directly.
+  item.runFile(STARTUP_SCRIPT);
 
-  // The first picture of the tree. Asked for after the startup scripts are
-  // away, so it waits for a free console rather than making four of them
-  // wait for it; anything they write in the meantime is reported and folded
-  // in. Read whether or not a window is open, so the first one to be opened
-  // is drawn immediately rather than after a request.
+  // The first picture of the tree. Asked for after the startup script is
+  // away, so it waits for a free console rather than making that one wait
+  // for it; anything written in the meantime is reported and folded in. Read
+  // whether or not a window is open, so the first explorer to be opened is
+  // drawn immediately rather than after a request.
   void files.load();
 }
 
-// Start the filesystem, then the consoles that will be asking it things.
+// Start the filesystem, then the terminal that will be asking it things.
 //
 // In that order, and waited for: a console that started first would run its
 // opening script against a tree that had not been read off disk yet, and
-// would find none of the player's files.
+// would find none of the player's files. It is also what lets a terminal
+// boot its own worker as it is made -- by the time one can be opened, the
+// filesystem it attaches to is already up.
 async function boot(): Promise<void> {
   fsWorker.postMessage({ type: "start", files: await loadStartupFiles() });
   storageReport = await fsStarted;
-
-  const layout = measureLayout();
-  for (const item of consoles) {
-    item.post({
-      type: "boot",
-      consoleId: item.id,
-      control: item.control.buffer,
-      answer: item.answerBytes.buffer,
-      fsPort: item.fsChannel.port1,
-      fsControl: item.fsControl.buffer,
-      fsAnswer: item.fsAnswer.buffer,
-      ...layout,
-    }, [item.fsChannel.port1]);
-  }
+  // The one the client opens by itself. Everything after it is `Terminal`.
+  openTerminal();
 }
 
 /**
@@ -1197,7 +1412,19 @@ async function loadStartupFiles(): Promise<Record<string, Uint8Array>> {
   return files;
 }
 
-let pendingUser = "";
+/**
+ * The sign-in every terminal is handed, and every one opened after it.
+ *
+ * The password stays here rather than being forgotten at the form, which is
+ * what it used to be: a terminal opened an hour into a session has a worker
+ * and a connection of its own, and it has to be authorized like the rest. It
+ * is in memory only -- saving it is the checkbox's business, below.
+ */
+let credentials = { username: "", password: "" };
+
+/** Whether this sign-in has been announced, so the next terminal does not
+    announce it again. */
+let greeted = false;
 
 // Saved sign-in, when the player asked for it.
 //
@@ -1240,15 +1467,21 @@ function forgetCredentials(): void {
 }
 
 /**
- * Hand every console the credentials and reflect them in the titlebar.
+ * Hand every terminal the credentials and reflect them in the titlebar.
  *
- * All four, because each has its own connection: they are separate sessions
- * that happen to belong to one player.
+ * Every one of them, because each has its own connection: they are separate
+ * sessions that happen to belong to one player. So is every terminal opened
+ * afterwards, which is why they are kept.
  */
 function signIn(username: string, password: string): void {
-  pendingUser = username;
+  credentials = { username, password };
+  greeted = false;
   for (const item of consoles) {
-    item.post({ type: "credentials", username, password });
+    // One still starting up is handed them when it reports `ready`, which
+    // is also the first moment it could take them.
+    if (item.ready) {
+      item.post({ type: "credentials", username, password });
+    }
   }
   // Not `as ${username}`: the bar is narrow on a phone, and the name is
   // about to appear on the other side of it anyway.
@@ -1256,7 +1489,7 @@ function signIn(username: string, password: string): void {
 }
 
 /**
- * Drop the credentials, here and in all four workers.
+ * Drop the credentials, here and in every worker.
  *
  * A sign-out is an empty pair sent the way a sign-in is: `Credentials` counts
  * as set only with both halves, so the sessions stop authorizing anything
@@ -1264,10 +1497,13 @@ function signIn(username: string, password: string): void {
  * the same as clearing them, which `reset` is.
  */
 function signOut(): void {
-  pendingUser = "";
+  credentials = { username: "", password: "" };
+  greeted = false;
   forgetCredentials();
   for (const item of consoles) {
-    item.post({ type: "credentials", username: "", password: "" });
+    if (item.ready) {
+      item.post({ type: "credentials", username: "", password: "" });
+    }
   }
   // The username is left in the form to sign back in with; the password is
   // not, and neither is the standing offer to remember it.
@@ -1280,7 +1516,7 @@ function signOut(): void {
   // the box you would say something in.
   chat.setSignedIn(false);
   comm.add("You have been signed out.");
-  active.focus();
+  active?.focus();
 }
 
 /**
@@ -1340,10 +1576,11 @@ element("login").addEventListener("submit", (e) => {
     forgetCredentials();
   }
   signIn(username, password);
-  // The password is handed to the workers and forgotten here.
+  // Out of the form, where anyone walking past can read it. It is still in
+  // `credentials`, which is where the next terminal gets it from.
   field("password").value = "";
   showAccountMenu(false);
-  active.focus();
+  active?.focus();
 });
 
 boot();

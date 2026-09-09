@@ -13,12 +13,19 @@ parks the worker until the page delivers a typed line.
 That is what lets [`GameServer`](../src/game/server.rs) stay synchronous and
 the interpreter stay straightforward.
 
-## Four consoles, four workers
+## Terminals, one worker each
 
-The client has four consoles, as the desktop one does, and each gets a worker
-and a `Session` of its own. They cannot share one: a console blocked in
-`ReadLine` blocks its whole worker, and the point of having four is that the
-other three keep working. Scripts read which one they are in as `ConsoleID`.
+A terminal is a window with a worker and a `Session` of its own. The client
+opens one, `Terminal` in the status bar opens another, and each is closed
+from its own bar; the original's four are the shape this generalizes, not a
+limit it keeps. They cannot share a worker: a console blocked in `ReadLine`
+blocks its whole worker, and the point of having more than one is that the
+others keep working. Scripts read which one they are in as `ConsoleID`.
+
+**Numbers are reused, not counted up.** `ConsoleID` is printed — it is the
+first thing the opening banner says — so a player with three terminals open
+expects them to be 1, 2 and 3 however many have been opened and closed on the
+way. A new one takes the lowest number nothing else is using.
 
 What they do share is the player's files, and they share them by not each
 having a copy. There is a fifth worker — `fsworker.ts` — which owns the tree
@@ -33,16 +40,38 @@ file explorer draws from — that is all the reporting is for now. Directories a
 in that stream along with files: writing `/a/b.ds` makes `/a` on the way, and
 `MD` on an empty directory is implied by nothing else.
 
-`F1`–`F4` select a console, as in the original, and so do the tabs in the
-status bar. An inactive console is hidden but still laid out, so it keeps its
-scroll position and its scripts keep measuring against the width they will be
-shown at.
+`F1`–`F4` raise the terminal with that number, as they selected one of the
+four in the original — that is the number in its title bar and the number its
+scripts print, so it is the one to aim with. A terminal that is not open is
+not opened by pressing it; that is what the button is for.
+
+The one the client's own keys act on is the last one used rather than the
+window in front, since the window in front is as often an editor. `Ctrl+B`
+stops what is running in that one, a file opened from an explorer runs there,
+and its title is gold to say so.
+
+**Every terminal is its own width**, which is what its scripts measure
+against: `main.ts` watches each of them and sends that one the width it ends
+a drag at. Text already on the screen stays as it was drawn — nothing redraws
+a line once it is printed — so narrowing a terminal wraps what a script laid
+out in columns, exactly as narrowing any terminal does to what is above the
+prompt.
+
+**Closing one throws the session away.** The worker is terminated rather than
+asked to stop: a stop is a courtesy to a console that carries on afterwards,
+and there is nothing left to print to. The filesystem is told, so the port
+and the buffers that terminal shared with it go too. Anything a window had
+asked it goes back to the front of the queue, since a terminated worker
+answers nothing and the mail window would otherwise wait for ever. With no
+terminal open at all there is nothing to ask and the queue simply holds, which
+is what the desktop says when it is bare.
 
 ## Stopping a script
 
-`Ctrl+B` stops whatever the console on screen is running, as it does in the
+`Ctrl+B` stops whatever the terminal last used is running, as it does in the
 original client, and it works whether the script is spinning in a loop of its
-own or parked waiting on something.
+own or parked waiting on something. Only that one: every other terminal is
+running its own script and can see for itself that it was not the one asked.
 
 It cannot be a message. A worker running a script is not draining its queue —
 that is the whole reason it can block — so a `postMessage` would not be read
@@ -176,7 +205,7 @@ which is the layout the batching is there to avoid.
 | [`src/server.rs`](src/server.rs) | The game API over synchronous `XMLHttpRequest` |
 | [`src/host.rs`](src/host.rs) | Supplies the clock, which wasm has no portable source for |
 | [`www/worker.ts`](www/worker.ts) | Runs the interpreter; blocks on `Atomics.wait` for input |
-| [`www/main.ts`](www/main.ts) | The page: the four consoles, keyboard, and waking a worker |
+| [`www/main.ts`](www/main.ts) | The page: the terminals, keyboard, and waking a worker |
 | [`www/console.ts`](www/console.ts) | Turns styled runs into elements |
 | [`www/filetree.ts`](www/filetree.ts) | The file explorers: the one model, the folder tree, the icons, and its three drags |
 | [`www/mail.ts`](www/mail.ts) | The DSMail reader |
@@ -289,7 +318,7 @@ worker inherits the document's embedder policy, and the browser refuses a
 worker script whose own response does not repeat it. WebKit applies that to
 the whole module graph: `control.js`, `fonts.js`, `storage.js` and
 `pkg/dso_web.js` are each refused without the header, the worker never starts,
-and all four consoles stay dead. Chromium and Firefox only enforce it on
+and every terminal stays dead. Chromium and Firefox only enforce it on
 `worker.js` itself, so a host that gets this wrong works everywhere except
 Safari -- which is to say everywhere except iOS, where WebKit is the only
 engine there is.
@@ -352,11 +381,11 @@ button gives way to the name and a way out.
 
 The two account pages are `/create_account.php` and `/forgot_password.php`,
 linked root-relative because the client is served from `/game/` on that same
-site, and opened in a new tab because leaving this one throws four consoles
+site, and opened in a new tab because leaving this one throws every terminal
 away.
 
 Signing out is an empty pair of credentials sent the way a sign-in is:
-`Credentials` counts as set only with both halves, so all four sessions stop
+`Credentials` counts as set only with both halves, so every session stops
 authorizing anything they send, and the saved sign-in is forgotten. The
 player's files stay — signing out is not clearing them.
 
@@ -373,19 +402,32 @@ thread, a worker cannot reach `localStorage` at all, and a password is not a
 file. They are stored as typed. There is
 nowhere on a page to hide a password from anyone holding the browser, so the
 box is the honest control, and it is off unless ticked. A remembered sign-in
-reaches all four workers before any startup script runs, so every console is
+reaches the first terminal's worker before its startup script runs, so it is
 already authorized by the time anything asks the server. Signing out forgets
 it: the next load comes back signed out, with the username still in the form
 and the password not.
 
+The page keeps the pair in memory as well, which it did not have to when
+there were four consoles and all of them outlived the sign-in. A terminal
+opened an hour into a session has a worker and a connection of its own and
+has to be authorized like the rest, so it is handed the credentials as it
+reports ready — before its opening script runs, since that script prints
+`Username`.
+
 ## Starting up
 
-`Start_Console` is followed exactly: console 1 runs `/system/startup.ds` and
-the other three run `/system/newconsole.ds`, both from the player's own
-filesystem, so an edited copy takes effect. A remembered sign-in is handed to
-all four workers first, which is what lets the `LOGIN` and the `Include
-"/system/newconsole.ds"` at the end of `startup.ds` do their job and greet the
-player by name.
+`Start_Console` is followed exactly: the first terminal of a session runs
+`/system/startup.ds` and every one opened after it runs
+`/system/newconsole.ds`, both from the player's own filesystem, so an edited
+copy takes effect. A remembered sign-in is handed to the worker first, which
+is what lets the `LOGIN` and the `Include "/system/newconsole.ds"` at the end
+of `startup.ds` do their job and greet the player by name.
+
+The filesystem is started and waited for before any terminal is made. A
+console that started first would run its opening script against a tree that
+had not been read off disk yet and would find none of the player's files —
+and it is also what lets a terminal boot its own worker as it is made, since
+by the time one can be opened the filesystem it attaches to is up.
 
 ## The file explorers
 
@@ -442,12 +484,12 @@ for: the answer becomes a blob and a link that is clicked and thrown away.
 *Files dropped onto a folder are written into it.* A dropped folder is walked
 through `webkitGetAsEntry`, and writing a file makes the directories above it,
 so the shape comes across. Two kinds are refused rather than mangled:
-anything over 512 KiB, since every one of the four sessions holds the whole
+anything over 512 KiB, since every session holds the whole
 tree in memory, and anything that is not valid UTF-8 or that carries a NUL —
 the game's filesystem holds strings, and a binary file has no honest
 representation in it. A file dropped anywhere else on the page is refused
-outright, because the browser would otherwise navigate to it and throw four
-consoles' worth of session away.
+outright, because the browser would otherwise navigate to it and throw every
+terminal's worth of session away.
 
 ## The filesystem
 
@@ -488,18 +530,18 @@ as long as the tab does, media included, and the page says so once at startup.
 
 ## The windows
 
-Everything the client shows that is not a console is a window: the
-communications log, the file explorers, chat, mail, the editors and the
-library. They float over the consoles, are dragged by their title bars and
-resized by their frames, and several can be open at once.
+Everything the client shows is a window: the terminals, the communications
+log, the file explorers, chat, mail, the editors and the library. They float
+over the desktop, are dragged by their title bars and resized by their
+frames, and several can be open at once.
 
 That last part is what decided the rest. Mail, the editor and the library
 were modal `<dialog>`s, and a modal dialog makes the whole of the rest of the
 page inert -- so opening the editor stopped chat, put the file explorer out
 of reach and left the console it was opened from unable to take a key. Three
 panels that were not windows made the same trade in the other direction: the
-file tree took width from the console for as long as it was out, and chat
-covered it entirely. A desktop is the arrangement that costs neither, and
+file tree took width from the consoles for as long as it was out, and chat
+covered them entirely. A desktop is the arrangement that costs neither, and
 [`window.ts`](www/window.ts) is what makes one.
 
 The three that were dialogs still are. `open`, `close()` and the `close`
@@ -519,10 +561,11 @@ against the room there is -- and where it was left last visit beats that,
 since geometry is remembered per window in `localStorage`. A double-click on
 a title bar forgets it and puts the window back.
 
-**Some windows are one of a kind; the editors and the file explorers are
-not.** There is one editor per file being edited and one explorer per press
-of `Files`, each made when it is asked for and destroyed when it is closed,
-which is the whole of what the last three things in `Options` are for.
+**Some windows are one of a kind; the terminals, the editors and the file
+explorers are not.** There is one editor per file being edited, one explorer
+per press of `Files` and one terminal per press of `Terminal`, each made when
+it is asked for and destroyed when it is closed, which is the whole of what
+the last few things in `Options` are for.
 `store` names where geometry is kept, so every editor remembers one size
 rather than each remembering its own -- an editor sized to suit the screen is
 the size the next file wants too, and an explorer the same. `offset` steps
@@ -532,10 +575,19 @@ after six so the cascade cannot walk off the desktop. `unmanage` is how a
 window that is being thrown away stops being visited by every sweep over the
 open ones.
 
-Neither kind is in `index.html` as an element. The editors build themselves;
-an explorer is a clone of `#filetree-template`, which is `hidden` in the
-markup so that showing the clone is a window appearing, which is what the
-manager watches for.
+None of the three is in `index.html` as an element. The editors build
+themselves; an explorer is a clone of `#filetree-template` and a terminal a
+clone of `#terminal-template`, both `hidden` in the markup so that showing
+the clone is a window appearing, which is what the manager watches for. A
+terminal is the one that is shown *before* it is managed rather than after:
+the manager places a window that is already visible there and then, and the
+width it lands at is what its worker is booted with, which a placement one
+microtask later would be too late for.
+
+**`Escape` closes a window, except a terminal.** A terminal holds a session
+rather than a view of one — a running script, and everything printed above it
+— and `Escape` is pressed far too often for that. `dismissable` is what says
+so.
 
 **The frame is what makes resizing work without a single extra element.**
 Every window carries `--win-frame` of padding, so its outermost few pixels
@@ -548,15 +600,17 @@ drawn a shade lighter than what it holds: the part that can be grabbed is the
 part that looks like chrome.
 
 **What has the keyboard decides what the keys mean.** `Ctrl+B` and `F1`–`F4`
-belong to the console, and while the windows were modal there was nothing to
-say: a modal dialog had every key or none. Now the question is not whether a
-window is open -- an explorer or the comm log usually is -- but whether one
-is being typed in, which is `typingInWindow()`. The same answer settles the other
-direction: a script asking for a line takes the caret back to its console,
-and it must not take it out of a window someone is using, so `focus()` on a
-console refuses unless the player asked for it by clicking the console or
-picking its tab. Escape closes the window holding the keyboard, which is what
-the browser did for a modal dialog.
+belong to the terminals, and while the windows were modal there was nothing
+to say: a modal dialog had every key or none. Now the question is not whether
+a window is open -- an explorer or the comm log usually is -- but whether a
+window that is *not* a terminal is being typed in, which is `typingInPanel()`.
+The same answer settles the other direction: a script asking for a line takes
+the caret back to its own terminal, and it must not take it out of a window
+someone is using, nor out of another terminal, so `focus()` refuses unless
+that terminal is the one being used or the player asked for it outright --
+clicking its log, dropping a path on it, or raising it with a function key.
+Escape closes the window holding the keyboard, which is what the browser did
+for a modal dialog, and is the one thing a terminal opts out of.
 
 ## The editors
 
@@ -617,8 +671,8 @@ The inbox is handed out incrementally — a request asks for everything newer
 than the highest id already held — so the client keeps its own copy in
 `/system/mail.dat`, the original's file in the original's format, complete
 with the read flag the server does not track. It is written through the
-filesystem like any other file, so it persists and the other three consoles
-see it. [`mail.rs`](../src/game/mail.rs) holds both formats and is where the
+filesystem like any other file, so it persists and every other terminal
+sees it. [`mail.rs`](../src/game/mail.rs) holds both formats and is where the
 tests are.
 
 Unlike the original, `MAIL` does not hold the script up while the window is
