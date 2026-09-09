@@ -21,3 +21,7 @@
 /result
 /client/web/node_modules
 /client/web/dist
+
+# Local WebKit/playwright rig, machine-specific (see CLAUDE.md).
+/.claude/webkit.md
+/.claude/webkit-env.sh
