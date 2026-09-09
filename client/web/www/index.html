@@ -99,27 +99,36 @@
 
     <!--
       The file explorer: folders on the left, the chosen folder's files on
-      the right as icons, the way a file manager is.
+      the right as icons, the way a file manager is. A template rather than
+      an element, because `Files` opens one of these every time it is
+      pressed and any number of them can be out at once -- so, like the
+      editors, there is none of it in the page until one is asked for.
+      `hidden` so that a fresh clone is a window appearing, which is what
+      `window.ts` watches for.
     -->
-    <aside id="filetree" class="window" hidden aria-label="Files">
-      <header class="win-bar win-drag">
-        <strong class="win-title">Files</strong>
-        <span class="tree-path" aria-live="polite">/</span>
-        <span class="win-spacer"></span>
-        <button class="win-close tree-hide" type="button" title="Close (Files)">Close</button>
-      </header>
-      <!--
-        Both panes are filled in by `filetree.ts`, and redrawn whenever any
-        of the four consoles writes, deletes, makes or removes anything.
-      -->
-      <div class="tree-panes">
-        <div class="tree-body" role="tree" aria-label="Folders"></div>
-        <div class="tree-split" role="separator" aria-orientation="vertical"
-             aria-label="Resize the folder list"></div>
-        <div class="tree-icons" role="listbox" aria-label="Files" tabindex="0"></div>
-      </div>
-      <p class="tree-status" role="status"></p>
-    </aside>
+    <template id="filetree-template">
+      <aside class="window filetree" hidden aria-label="Files">
+        <header class="win-bar win-drag">
+          <strong class="win-title">Files</strong>
+          <span class="tree-path" aria-live="polite">/</span>
+          <span class="win-spacer"></span>
+          <button class="win-close tree-hide" type="button" title="Close">Close</button>
+        </header>
+        <!--
+          Both panes are filled in by `filetree.ts`, and redrawn whenever any
+          of the four consoles writes, deletes, makes or removes anything.
+          Every window draws them from the one model, so they all say the same
+          thing about the filesystem while each looks where it likes.
+        -->
+        <div class="tree-panes">
+          <div class="tree-body" role="tree" aria-label="Folders"></div>
+          <div class="tree-split" role="separator" aria-orientation="vertical"
+               aria-label="Resize the folder list"></div>
+          <div class="tree-icons" role="listbox" aria-label="Files" tabindex="0"></div>
+        </div>
+        <p class="tree-status" role="status"></p>
+      </aside>
+    </template>
 
     <!--
       Chat. The original raises its ChatBox over the console with F5, and
@@ -154,8 +163,8 @@
 
     <footer id="statusbar">
       <span id="hint">Type <b>HELP</b> for a list of commands.</span>
-      <button id="open-files" type="button" title="Show or hide the file explorer"
-              aria-controls="filetree">Files</button>
+      <button id="open-files" type="button"
+              title="Open a file explorer -- one per press">Files</button>
       <button id="open-comm" type="button" title="Show or hide the communications log"
               aria-controls="comm">Comms</button>
       <button id="open-chat" type="button" title="Chat (F5)">Chat</button>

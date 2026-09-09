@@ -25,7 +25,7 @@ import {
   STATE,
 } from "./control.js";
 import { Editors } from "./editor.js";
-import { FileTree, PATH_DRAG, quotePath, TOGGLED } from "./filetree.js";
+import { Explorers, FileModel, PATH_DRAG, quotePath } from "./filetree.js";
 import { LibraryWindow } from "./library.js";
 import { MailWindow } from "./mail.js";
 import { MusicPlayer } from "./music.js";
@@ -127,10 +127,11 @@ fsWorker.onmessage = (e: MessageEvent<FromFs>) => {
       break;
 
     // Whatever any console did to the tree. This is the only reason the
-    // panel does not have to poll: the worker that made the change says so.
+    // explorers do not have to poll: the worker that made the change says
+    // so, and every open window redraws from the one model.
     case "changed":
       for (const change of message.changes) {
-        fileTree.apply(change);
+        files.apply(change);
       }
       break;
 
@@ -160,12 +161,15 @@ const FS_ASKS = new Set([
   "putFile",
 ]);
 
-// The file tree, which sits beside the consoles rather than over them. It
-// reads the filesystem through `ask` like the windows do, and keeps up
-// afterwards from what the fs worker reports as it changes.
-const fileTree = new FileTree(
-  element("filetree"),
-  (request) => ask(request),
+// The filesystem as the page sees it, read through `ask` like the windows
+// do and kept up afterwards from what the fs worker reports as it changes.
+// One copy, however many explorers are looking at it.
+const files = new FileModel((request) => ask(request));
+
+// The explorers themselves, of which `Files` opens one per press.
+const explorers = new Explorers(
+  document.body,
+  files,
   // Double-clicking a file opens it where `EDIT` would, in the console on
   // screen -- so running it from the editor runs it somewhere visible.
   (path) => void editors.openFile(path, active.id),
@@ -808,18 +812,11 @@ try {
 }
 commButton.setAttribute("aria-expanded", String(!commWindow.hidden));
 
-// The file tree, which is the client's own rather than anything the original
-// had. The switch says whether the panel is out, since the panel can also be
-// put away from its own bar.
-const filesButton = element("open-files");
-filesButton.addEventListener("click", () => fileTree.toggle());
-element("filetree").addEventListener(TOGGLED, (e) => {
-  filesButton.setAttribute("aria-expanded", String((e as CustomEvent<boolean>).detail));
-});
-// Last, so the state it restores is reflected in the switch as well. This is
-// before the page has been painted, so a panel left closed starts closed
-// instead of sliding shut in front of whoever opened the client.
-fileTree.restore();
+// The file explorer, which is the client's own rather than anything the
+// original had. Each press opens another window rather than toggling one:
+// two folders are often wanted at once, and a window that is in the way is
+// closed from its own bar. None is open until one is asked for.
+element("open-files").addEventListener("click", () => explorers.create());
 
 // A file dragged in from the desktop and dropped anywhere but a folder in
 // the tree would otherwise be opened by the browser, which navigates away
@@ -829,7 +826,7 @@ fileTree.restore();
 for (const kind of ["dragover", "drop"] as const) {
   window.addEventListener(kind, (event: DragEvent) => {
     const transfer = event.dataTransfer;
-    const inTree = (event.target as Element | null)?.closest?.("#filetree");
+    const inTree = (event.target as Element | null)?.closest?.(".filetree");
     if (!inTree && transfer && Array.from(transfer.types).includes("Files")) {
       event.preventDefault();
       if (event.type === "dragover") {
@@ -1086,10 +1083,10 @@ function reportLayout(): void {
 /**
  * Report the layout once things have stopped moving.
  *
- * A dragged window edge and the file tree's slide both change the console's
- * width every frame, and each frame would otherwise be four messages
- * carrying a measurement nothing will lay anything out against. What a
- * script wants is the width it ends at, so only that one is sent.
+ * Dragging the browser's own edge changes the console's width every frame,
+ * and each frame would otherwise be four messages carrying a measurement
+ * nothing will lay anything out against. What a script wants is the width it
+ * ends at, so only that one is sent.
  */
 let layoutTimer = 0;
 function reportLayoutSoon(): void {
@@ -1135,11 +1132,12 @@ function allReady(): void {
     item.runFile(item.id === 1 ? STARTUP_SCRIPT : NEW_CONSOLE_SCRIPT);
   }
 
-  // The panel's first picture of the tree. Asked for after the startup
-  // scripts are away, so it waits for a free console rather than making
-  // four of them wait for it; anything they write in the meantime is
-  // reported and folded in.
-  void fileTree.load();
+  // The first picture of the tree. Asked for after the startup scripts are
+  // away, so it waits for a free console rather than making four of them
+  // wait for it; anything they write in the meantime is reported and folded
+  // in. Read whether or not a window is open, so the first one to be opened
+  // is drawn immediately rather than after a request.
+  void files.load();
 }
 
 // Start the filesystem, then the consoles that will be asking it things.

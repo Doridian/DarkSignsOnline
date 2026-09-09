@@ -178,7 +178,7 @@ which is the layout the batching is there to avoid.
 | [`www/worker.ts`](www/worker.ts) | Runs the interpreter; blocks on `Atomics.wait` for input |
 | [`www/main.ts`](www/main.ts) | The page: the four consoles, keyboard, and waking a worker |
 | [`www/console.ts`](www/console.ts) | Turns styled runs into elements |
-| [`www/filetree.ts`](www/filetree.ts) | The file explorer: the folder tree, the icons, and its three drags |
+| [`www/filetree.ts`](www/filetree.ts) | The file explorers: the one model, the folder tree, the icons, and its three drags |
 | [`www/mail.ts`](www/mail.ts) | The DSMail reader |
 | [`www/chat.ts`](www/chat.ts) | The chat window: the poll, the history, and `/me` |
 | [`www/editor.ts`](www/editor.ts) | The editors, with the highlighter and the indenting |
@@ -387,10 +387,24 @@ all four workers first, which is what lets the `LOGIN` and the `Include
 "/system/newconsole.ds"` at the end of `startup.ds` do their job and greet the
 player by name.
 
-## The file explorer
+## The file explorers
 
 A window, which the original had no equivalent of. `Files` in the status bar
-opens and closes it, and which state it was left in is remembered.
+opens one, and opens another one every time it is pressed: looking in two
+folders at once — the script and the library it calls, the folder something
+is being dragged out of and the one it is going to — is common enough that
+one window was the wrong number. None is open until it is asked for, and a
+window that is in the way is closed from its own bar.
+
+**One model, any number of windows.** `FileModel` holds the tree, is read
+once and then kept up from the fs worker's reports; a window holds only
+where it is looking — the folder showing, the file picked out, which folders
+are unfolded. So a second window costs a render rather than a second copy of
+three hundred files, two of them cannot disagree about what is on disk, and
+a file written at console 3 appears in every one of them at once. `Explorers`
+owns the set, the way `Editors` owns the editors, and the windows share one
+remembered geometry and one remembered divider for the same reason the
+editors share theirs.
 
 It is two panes: the folders on the left, and the chosen folder's files on
 the right as icons. One tree holding both is what it was, and a tree is the
@@ -405,12 +419,11 @@ The icon is a character rather than artwork: it says script, text, song,
 image or archive, which is the distinction the game itself makes — `Music`
 plays one and `Run` runs the other — and it costs nothing to ship.
 
-It never polls. `listTree` gives it one picture of the filesystem, and after
-that it applies the changes the fs worker reports as it makes them, so a file
-written at console 3 appears here as it is written. Its model mirrors the
-filesystem rather than what looks tidy: a directory stays after the last file
-in it is deleted, because that is what the filesystem does and what `DIR` will
-say.
+It never polls. `listTree` gives the model one picture of the filesystem, and
+after that it applies the changes the fs worker reports as it makes them. The
+model mirrors the filesystem rather than what looks tidy: a directory stays
+after the last file in it is deleted, because that is what the filesystem
+does and what `DIR` will say.
 
 Three gestures hang off it, each a plain HTML5 drag:
 
@@ -476,7 +489,7 @@ as long as the tab does, media included, and the page says so once at startup.
 ## The windows
 
 Everything the client shows that is not a console is a window: the
-communications log, the file explorer, chat, mail, the editors and the
+communications log, the file explorers, chat, mail, the editors and the
 library. They float over the consoles, are dragged by their title bars and
 resized by their frames, and several can be open at once.
 
@@ -506,16 +519,23 @@ against the room there is -- and where it was left last visit beats that,
 since geometry is remembered per window in `localStorage`. A double-click on
 a title bar forgets it and puts the window back.
 
-**Most windows are one of a kind; the editors are not.** There is one per
-file being edited, made when the file is opened and destroyed when it is
-closed, which is the whole of what the last three things in `Options` are
-for. `store` names where geometry is kept, so every editor remembers one
-size rather than each remembering its own -- an editor sized to suit the
-screen is the size the next file wants too. `offset` steps each new one down
-and right of what is already open, since two windows sharing a `store` would
-otherwise land exactly on each other, and starts over after six so the
-cascade cannot walk off the desktop. `unmanage` is how a window that is
-being thrown away stops being visited by every sweep over the open ones.
+**Some windows are one of a kind; the editors and the file explorers are
+not.** There is one editor per file being edited and one explorer per press
+of `Files`, each made when it is asked for and destroyed when it is closed,
+which is the whole of what the last three things in `Options` are for.
+`store` names where geometry is kept, so every editor remembers one size
+rather than each remembering its own -- an editor sized to suit the screen is
+the size the next file wants too, and an explorer the same. `offset` steps
+each new one down and right of what is already open, since two windows
+sharing a `store` would otherwise land exactly on each other, and starts over
+after six so the cascade cannot walk off the desktop. `unmanage` is how a
+window that is being thrown away stops being visited by every sweep over the
+open ones.
+
+Neither kind is in `index.html` as an element. The editors build themselves;
+an explorer is a clone of `#filetree-template`, which is `hidden` in the
+markup so that showing the clone is a window appearing, which is what the
+manager watches for.
 
 **The frame is what makes resizing work without a single extra element.**
 Every window carries `--win-frame` of padding, so its outermost few pixels
@@ -530,8 +550,8 @@ part that looks like chrome.
 **What has the keyboard decides what the keys mean.** `Ctrl+B` and `F1`–`F4`
 belong to the console, and while the windows were modal there was nothing to
 say: a modal dialog had every key or none. Now the question is not whether a
-window is open -- the file explorer usually is -- but whether one is being
-typed in, which is `typingInWindow()`. The same answer settles the other
+window is open -- an explorer or the comm log usually is -- but whether one
+is being typed in, which is `typingInWindow()`. The same answer settles the other
 direction: a script asking for a line takes the caret back to its console,
 and it must not take it out of a window someone is using, so `focus()` on a
 console refuses unless the player asked for it by clicking the console or

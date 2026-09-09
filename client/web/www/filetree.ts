@@ -1,10 +1,18 @@
-// The file explorer.
+// The file explorers.
 //
 // There is one filesystem, in the fs worker, so there is one place to read
-// the tree from. The window asks for it once and then applies every change
-// the worker reports as it makes it, which is why nothing here polls: an
-// `MD` typed at console 3 goes through that worker and comes straight back
-// out as a change.
+// the tree from. `FileModel` is that place on this side: it is asked for the
+// tree once and then applies every change the worker reports as it makes it,
+// which is why nothing here polls -- an `MD` typed at console 3 goes through
+// that worker and comes straight back out as a change.
+//
+// `Files` in the status bar opens a window onto that model, and every click
+// opens another one: looking in two folders at once is common enough that
+// one window was the wrong number, and sharing the model is what makes the
+// second one nearly free. What a window owns is where it is looking -- the
+// folder showing, the file picked out, which folders are unfolded -- and
+// nothing else, so two of them never have to be kept in step. `Explorers`
+// owns the set, the way `Editors` owns the editors.
 //
 // It is two panes, as a file manager is: the folders on the left, and the
 // chosen folder's files on the right as icons. One tree holding both was
@@ -26,10 +34,10 @@
 //   - dropped onto, which writes what was dropped into that folder.
 
 import type { Ask, FileChange, Tree } from "./types.js";
-import { draggable, manage } from "./window.js";
+import { draggable, manage, unmanage } from "./window.js";
 
 /**
- * The drag type the panel's own drags carry.
+ * The drag type an explorer's own drags carry.
  *
  * A private type rather than `text/plain` alone, so a console can tell a
  * path dragged from here from any other text -- and can ignore a file being
@@ -48,17 +56,17 @@ export const PATH_DRAG = "application/x-dso-path";
  */
 const MAX_UPLOAD = 64 * 1024 * 1024;
 
-/** Where the window's open/closed state is remembered between visits. */
-const OPEN_KEY = "darksigns.filetree";
+/** How far each window opens down and right of the one already there. */
+const CASCADE = 26;
+
+/** How many windows the cascade steps through before starting over. */
+const CASCADE_STEPS = 6;
 
 /** Where the width of the folder pane is remembered. */
 const SPLIT_KEY = "darksigns.filetree.split";
 
 /** How narrow either pane may be dragged, in pixels. */
 const MIN_PANE = 90;
-
-/** Raised on the window whenever it opens or closes; the detail is `open`. */
-export const TOGGLED = "treetoggle";
 
 /**
  * What a file's name says it is.
@@ -100,19 +108,23 @@ interface TreeNode {
   size: number;
 }
 
-export class FileTree {
+/**
+ * The filesystem as the page sees it, and the one copy of it there is.
+ *
+ * Every window draws from this. It is read once and then kept up from what
+ * the fs worker reports, so opening a second window costs a render and
+ * nothing else -- and two windows cannot disagree about what is on disk,
+ * there being only one picture of it to disagree with.
+ */
+export class FileModel {
   /** Every directory, the root included. */
   dirs = new Set<string>(["/"]);
   /** Every file, by path, against its size in bytes. */
   files = new Map<string, FileInfo>();
-  /** Which directories are unfolded in the left pane. */
-  expanded = new Set<string>(["/", "/home"]);
-  /** The folder whose files are on the right. */
-  current = "/";
-  /** The file picked out on the right, if any. */
-  selected: string | null = null;
-  /** Set once the tree has been read, so the strip can say what it is doing. */
+  /** Set once the tree has been read, so a window can say what it is doing. */
   loaded = false;
+  /** What went wrong reading it, if it did. */
+  trouble: string | null = null;
   /**
    * Changes that arrived while `listTree` was in flight.
    *
@@ -123,8 +135,221 @@ export class FileTree {
    * harmless -- and it also serves as the flag that a load is in progress.
    */
   pending: FileChange[] | null = null;
-  /** How many uploads are in flight, so the panel can say so. */
+
+  /** The open windows, each of which redraws when this changes. */
+  readonly watchers = new Set<() => void>();
+
+  constructor(readonly ask: Ask) {}
+
+  /** Redraw that window from now on, until the returned function is called. */
+  watch(redraw: () => void): () => void {
+    this.watchers.add(redraw);
+    return () => {
+      this.watchers.delete(redraw);
+    };
+  }
+
+  /** Ask the filesystem for the whole tree. */
+  async load(): Promise<void> {
+    if (this.pending) {
+      return;
+    }
+    this.pending = [];
+    let tree: Tree;
+    try {
+      tree = await this.ask({ type: "listTree" });
+    } catch (err) {
+      this.pending = null;
+      this.trouble = err instanceof Error ? err.message : String(err);
+      this.changed();
+      return;
+    }
+    this.loaded = true;
+    this.trouble = null;
+    this.dirs = new Set(tree.dirs);
+    this.dirs.add("/");
+    this.files = new Map(
+      tree.files.map((file) => [file.path, { size: file.size }]),
+    );
+
+    const missed = this.pending;
+    this.pending = null;
+    for (const change of missed) {
+      this.take(change);
+    }
+    this.changed();
+  }
+
+  /**
+   * Take up one change the filesystem reported.
+   *
+   * Whatever any console did went through that one worker, so this is every
+   * change there is.
+   */
+  apply(change: FileChange): void {
+    if (this.pending) {
+      this.pending.push(change);
+      return;
+    }
+    this.take(change);
+    this.changed();
+  }
+
+  /** Fold one change in, without telling anyone. */
+  take(change: FileChange): void {
+    switch (change.op) {
+      case "file":
+        this.files.set(change.path, { size: change.size });
+        // Writing a file makes the directories above it, so the model makes
+        // them too rather than waiting to be told about them.
+        this.addParents(change.path);
+        break;
+      case "dir":
+        this.dirs.add(change.path);
+        this.addParents(change.path);
+        break;
+      case "gone":
+        // Whichever it was. The directories above a deleted file stay: the
+        // filesystem keeps them, and a model that dropped them would
+        // disagree with `DIR`.
+        this.files.delete(change.path);
+        this.dirs.delete(change.path);
+        break;
+    }
+  }
+
+  /** Record every directory on the way to `path`, but not `path` itself. */
+  addParents(path: string): void {
+    let at = parentOf(path);
+    while (!this.dirs.has(at)) {
+      this.dirs.add(at);
+      if (at === "/") {
+        return;
+      }
+      at = parentOf(at);
+    }
+  }
+
+  /** The folders directly inside `dir`, in the order `DIR` lists them. */
+  foldersIn(dir: string): TreeNode[] {
+    const out: TreeNode[] = [];
+    for (const path of this.dirs) {
+      if (path !== "/" && parentOf(path) === dir) {
+        out.push({ path, name: baseName(path), size: 0 });
+      }
+    }
+    return out.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /** The files directly inside `dir`, by name. */
+  filesIn(dir: string): TreeNode[] {
+    const out: TreeNode[] = [];
+    for (const [path, info] of this.files) {
+      if (parentOf(path) === dir) {
+        out.push({ path, name: baseName(path), size: info.size });
+      }
+    }
+    return out.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /** Redraw every window looking at this. */
+  changed(): void {
+    for (const redraw of this.watchers) {
+      redraw();
+    }
+  }
+}
+
+/** What `Explorers` hands a window when it makes one. */
+interface ExplorerOptions {
+  /** How far this window opens from where an explorer was last left. */
+  offset: number;
+  /** Told when the window has been closed and thrown away. */
+  closed: () => void;
+}
+
+/**
+ * Every open explorer, and the only way one is opened.
+ *
+ * Unlike an editor there is nothing here to open twice: a window is a place
+ * to look from rather than a document, and two of them on the same folder is
+ * a reasonable thing to ask for. So `Files` opens one every time, and the
+ * cascade is what stops the new one landing exactly on the last.
+ */
+export class Explorers {
+  readonly open = new Set<FileTree>();
+
+  /**
+   * How many have been opened, which is what the cascade counts.
+   *
+   * Not how many are open, as the editors count: an explorer is opened and
+   * closed far more freely than a file is edited, and counting what is open
+   * would drop a new window exactly onto one that outlived an earlier one.
+   */
+  made = 0;
+
+  /**
+   * `host` is what the windows are added to, `model` is the filesystem they
+   * all draw from, `edit` is what a double-click does with a file, and
+   * `notify` says something in the communications log.
+   */
+  constructor(
+    readonly host: HTMLElement,
+    readonly model: FileModel,
+    readonly edit: (path: string) => void,
+    readonly notify: (text: string) => void,
+  ) {}
+
+  create(): FileTree {
+    const source = document.getElementById("filetree-template");
+    const root =
+      source instanceof HTMLTemplateElement
+        ? source.content.firstElementChild?.cloneNode(true)
+        : null;
+    if (!(root instanceof HTMLElement)) {
+      throw new Error("the file explorer's template is missing");
+    }
+    this.host.append(root);
+    const tree = new FileTree(root, this.model, this.edit, this.notify, {
+      // Clear of the last one, and back to the top once enough have been
+      // opened, so the cascade cannot walk a window off the desktop.
+      offset: (this.made % CASCADE_STEPS) * CASCADE,
+      closed: () => this.open.delete(tree),
+    });
+    this.made += 1;
+    this.open.add(tree);
+    // Shown only now: the template's markup is `hidden`, so the manager sees
+    // the window appear and gives it a place and the front of the stack,
+    // which is the same route every other window takes.
+    root.hidden = false;
+
+    // Cheap insurance: the model keeps up through the change reports, so
+    // this should find nothing new. It costs one message and it means a
+    // report missed while something was starting up cannot leave a stale
+    // tree on screen for the rest of the session.
+    void this.model.load();
+    return tree;
+  }
+}
+
+/**
+ * One window onto the model: two panes, and where in them it is looking.
+ *
+ * Made by `Explorers` and thrown away when it is closed. Nothing outside of
+ * the drawing below is this window's own -- the tree itself belongs to the
+ * model, and every other window is drawing the same one.
+ */
+export class FileTree {
+  /** Which directories are unfolded in the left pane. */
+  expanded = new Set<string>(["/", "/home"]);
+  /** The folder whose files are on the right. */
+  current = "/";
+  /** The file picked out on the right, if any. */
+  selected: string | null = null;
+  /** How many uploads are in flight, so the strip can say so. */
   uploading = 0;
+  /** Stops this window redrawing once it has been thrown away. */
+  readonly unwatch: () => void;
 
   readonly body: HTMLElement;
   readonly icons: HTMLElement;
@@ -134,15 +359,16 @@ export class FileTree {
   readonly status: HTMLElement;
 
   /**
-   * `root` is the window, `ask` reaches a worker, `open` is what a
-   * double-click does with a file, and `notify` says something in the
+   * `root` is the window, `model` is the filesystem it draws, `open` is what
+   * a double-click does with a file, and `notify` says something in the
    * communications log.
    */
   constructor(
     readonly root: HTMLElement,
-    readonly ask: Ask,
+    readonly model: FileModel,
     readonly open: (path: string) => void,
     readonly notify: (text: string) => void,
+    readonly options: ExplorerOptions,
   ) {
     this.body = root.querySelector(".tree-body") as HTMLElement;
     this.icons = root.querySelector(".tree-icons") as HTMLElement;
@@ -153,8 +379,8 @@ export class FileTree {
 
     manage(root, {
       // Down the left, where the tree used to be docked, and as tall as
-      // there is room for: it is the one window that is worth having open
-      // for a whole session.
+      // there is room for: it is the window most likely to be left out for a
+      // whole session.
       rect: (desk) => ({
         x: desk.left + 12,
         y: desk.top + 12,
@@ -162,7 +388,12 @@ export class FileTree {
         h: Math.min(30 * 16, desk.bottom - desk.top - 24),
       }),
       min: { w: 320, h: 200 },
-      close: () => this.setOpen(false),
+      // One geometry for all of them, as the editors have: a window sized to
+      // suit the screen is the size the next one wants too, and the offset
+      // is what keeps them from landing on each other.
+      store: "filetree",
+      offset: options.offset,
+      close: () => this.destroy(),
     });
     draggable(root, root.querySelector(".win-bar") as HTMLElement);
 
@@ -180,68 +411,26 @@ export class FileTree {
     this.icons.addEventListener("keydown", (e) => this.onIconKey(e));
 
     (root.querySelector(".tree-hide") as HTMLElement).addEventListener("click", () =>
-      this.setOpen(false),
+      this.destroy(),
     );
     this.splitter();
-  }
 
-  // ---- showing and hiding ------------------------------------------------
-
-  get isOpen(): boolean {
-    return !this.root.hidden;
+    this.unwatch = this.model.watch(() => this.render());
+    this.render();
   }
 
   /**
-   * Put the window in a state, without remembering it.
+   * Close this window and throw it away.
    *
-   * The event is for whatever else shows the state -- the switch in the
-   * status bar does.
+   * Everything it holds goes with the element; what would outlive it is the
+   * entry in the model's watchers and the one in the window manager, and
+   * both of those are visited by every sweep the other windows make.
    */
-  show(open: boolean): void {
-    this.root.hidden = !open;
-    this.root.dispatchEvent(new CustomEvent(TOGGLED, { detail: open, bubbles: true }));
-  }
-
-  /** Open or close the window, and remember which. */
-  setOpen(open: boolean): void {
-    this.show(open);
-    try {
-      localStorage.setItem(OPEN_KEY, open ? "open" : "closed");
-    } catch {
-      // A private window refuses storage. The explorer still works; it just
-      // opens in its default state next time.
-    }
-    if (open) {
-      // Cheap insurance: the window keeps up through the change reports, so
-      // this should find nothing new. It costs one message and it means a
-      // report missed while something was starting up cannot leave a stale
-      // tree on screen for the rest of the session.
-      void this.load();
-    }
-  }
-
-  toggle(): void {
-    this.setOpen(!this.isOpen);
-  }
-
-  /**
-   * Open in whatever state the last visit left it in.
-   *
-   * Called before the page has been drawn, so a window that was left closed
-   * is never shown at all rather than being taken away again in front of
-   * whoever opened the client.
-   */
-  restore(): void {
-    let open = true;
-    try {
-      const saved = localStorage.getItem(OPEN_KEY);
-      if (saved !== null) {
-        open = saved !== "closed";
-      }
-    } catch {
-      // Storage denied; the default stands.
-    }
-    this.show(open);
+  destroy(): void {
+    this.unwatch();
+    unmanage(this.root);
+    this.root.remove();
+    this.options.closed();
   }
 
   // ---- the split between the panes ---------------------------------------
@@ -302,95 +491,12 @@ export class FileTree {
     this.split.addEventListener("pointercancel", stop);
   }
 
-  // ---- the model ---------------------------------------------------------
-
-  /** Ask the filesystem for the whole tree and draw it. */
-  async load(): Promise<void> {
-    if (this.pending) {
-      return;
-    }
-    this.pending = [];
-    let tree: Tree;
-    try {
-      tree = await this.ask({ type: "listTree" });
-    } catch (err) {
-      this.pending = null;
-      this.say(err instanceof Error ? err.message : String(err));
-      return;
-    }
-    this.loaded = true;
-    this.dirs = new Set(tree.dirs);
-    this.dirs.add("/");
-    this.files = new Map(
-      tree.files.map((file) => [file.path, { size: file.size }]),
-    );
-
-    const missed = this.pending;
-    this.pending = null;
-    for (const change of missed) {
-      this.take(change);
-    }
-    this.render();
-  }
-
-  /**
-   * Take up one change the filesystem reported.
-   *
-   * Whatever any console did went through that one worker, so this is every
-   * change there is.
-   */
-  apply(change: FileChange): void {
-    if (this.pending) {
-      this.pending.push(change);
-      return;
-    }
-    this.take(change);
-    // Redrawn even while closed, since it costs almost nothing and means an
-    // opening window is right immediately rather than after its request.
-    this.render();
-  }
-
-  /** Fold one change into the model, without redrawing. */
-  take(change: FileChange): void {
-    switch (change.op) {
-      case "file":
-        this.files.set(change.path, { size: change.size });
-        // Writing a file makes the directories above it, so the panel makes
-        // them too rather than waiting to be told about them.
-        this.addParents(change.path);
-        break;
-      case "dir":
-        this.dirs.add(change.path);
-        this.addParents(change.path);
-        break;
-      case "gone":
-        // Whichever it was. The directories above a deleted file stay: the
-        // filesystem keeps them, and a panel that dropped them would
-        // disagree with `DIR`.
-        this.files.delete(change.path);
-        this.dirs.delete(change.path);
-        break;
-    }
-  }
-
-  /** Record every directory on the way to `path`, but not `path` itself. */
-  addParents(path: string): void {
-    let at = parentOf(path);
-    while (!this.dirs.has(at)) {
-      this.dirs.add(at);
-      if (at === "/") {
-        return;
-      }
-      at = parentOf(at);
-    }
-  }
-
   // ---- drawing -----------------------------------------------------------
 
   render(): void {
     // A folder the last of whose files was deleted stays; one that is gone
     // altogether cannot be what is showing.
-    if (!this.dirs.has(this.current)) {
+    if (!this.model.dirs.has(this.current)) {
       this.current = "/";
     }
     this.drawTree();
@@ -432,7 +538,7 @@ export class FileTree {
       list.append(this.drawFolder({ path: "/", name: "/", size: 0 }, 0));
       return list;
     }
-    for (const node of this.foldersIn(dir)) {
+    for (const node of this.model.foldersIn(dir)) {
       list.append(this.drawFolder(node, depth));
     }
     return list;
@@ -457,7 +563,7 @@ export class FileTree {
     row.title = `${node.path} -- drop files here to add them`;
 
     const open = this.expanded.has(node.path);
-    const empty = this.foldersIn(node.path).length === 0;
+    const empty = this.model.foldersIn(node.path).length === 0;
     const twist = document.createElement("span");
     twist.className = "twist";
     twist.textContent = empty ? "" : open ? "▾" : "▸";
@@ -486,11 +592,11 @@ export class FileTree {
   /** The right pane: what is in the folder that is showing. */
   drawIcons(): void {
     const scroll = this.icons.scrollTop;
-    const tiles = this.filesIn(this.current).map((node) => this.drawTile(node));
+    const tiles = this.model.filesIn(this.current).map((node) => this.drawTile(node));
     if (tiles.length === 0) {
       const empty = document.createElement("p");
       empty.className = "tree-empty";
-      empty.textContent = this.loaded
+      empty.textContent = this.model.loaded
         ? "This folder holds no files. Drop some in to add them."
         : "Reading the filesystem...";
       this.icons.replaceChildren(empty);
@@ -539,28 +645,6 @@ export class FileTree {
     return tile;
   }
 
-  /** The folders directly inside `dir`, in the order `DIR` lists them. */
-  foldersIn(dir: string): TreeNode[] {
-    const out: TreeNode[] = [];
-    for (const path of this.dirs) {
-      if (path !== "/" && parentOf(path) === dir) {
-        out.push({ path, name: baseName(path), size: 0 });
-      }
-    }
-    return out.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  /** The files directly inside `dir`, by name. */
-  filesIn(dir: string): TreeNode[] {
-    const out: TreeNode[] = [];
-    for (const [path, info] of this.files) {
-      if (parentOf(path) === dir) {
-        out.push({ path, name: baseName(path), size: info.size });
-      }
-    }
-    return out.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
   /** The row drawn for a folder, if it is one that is on screen. */
   rowFor(path: string): HTMLElement | null {
     return this.body.querySelector(`.node[data-path="${cssEscape(path)}"]`);
@@ -581,11 +665,14 @@ export class FileTree {
     if (this.uploading > 0) {
       return `Adding ${this.uploading} file(s)...`;
     }
-    if (!this.loaded) {
+    if (this.model.trouble !== null) {
+      return this.model.trouble;
+    }
+    if (!this.model.loaded) {
       return "Reading the filesystem...";
     }
-    const here = this.filesIn(this.current).length;
-    const all = this.files.size;
+    const here = this.model.filesIn(this.current).length;
+    const all = this.model.files.size;
     return `${here} file${here === 1 ? "" : "s"} here, ${all} in all. ` +
       "Drag one onto a console to type its path.";
   }
@@ -866,7 +953,7 @@ export class FileTree {
   /**
    * Write what was dropped, one file at a time, and report what did not fit.
    *
-   * The panel does not decide what kind of file anything is. It hands the
+   * The window does not decide what kind of file anything is. It hands the
    * filesystem a name and a file, and the filesystem decides -- by the name
    * where the name says something, by the bytes where it does not. That is
    * the same decision it makes when it reads the tree back off disk at
@@ -882,7 +969,7 @@ export class FileTree {
         continue;
       }
       try {
-        await this.ask({ type: "putFile", path: target, file });
+        await this.model.ask({ type: "putFile", path: target, file });
         written += 1;
       } catch (err) {
         this.notify(`Could not write ${target}: ${err instanceof Error ? err.message : err}`);
@@ -905,7 +992,7 @@ export class FileTree {
     // through the page.
     let file: File | null;
     try {
-      file = await this.ask({ type: "fileAt", path });
+      file = await this.model.ask({ type: "fileAt", path });
     } catch (err) {
       this.notify(`Could not read ${path}: ${err instanceof Error ? err.message : err}`);
       return;
@@ -934,7 +1021,7 @@ export class FileTree {
   }
 }
 
-/** What the panel remembers about one file. */
+/** What the model remembers about one file. */
 interface FileInfo {
   size: number;
 }

@@ -1360,8 +1360,8 @@ dialog.window:not([open]) {
 }
 
 /* The library has no command in the original either: it is opened from the
-   console's own furniture, which here is the status bar. The file tree's
-   own switch keeps them company. */
+   console's own furniture, which here is the status bar. The button that
+   opens a file explorer keeps it company. */
 #open-files,
 #open-library {
   padding: 0.05rem 0.4rem;
@@ -1372,13 +1372,6 @@ dialog.window:not([open]) {
 }
 #open-files:hover,
 #open-library:hover {
-  color: var(--gold);
-  border-color: var(--rule);
-}
-
-/* The switch stays lit while the panel is out, the way the active console
-   tab does -- it is the same kind of statement about what is on screen. */
-#open-files[aria-expanded="true"] {
   color: var(--gold);
   border-color: var(--rule);
 }
