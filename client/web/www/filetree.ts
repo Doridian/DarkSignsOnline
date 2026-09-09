@@ -1,22 +1,32 @@
-// The file tree, beside the consoles.
+// The file explorer.
 //
 // There is one filesystem, in the fs worker, so there is one place to read
-// the tree from. The panel asks for it once and then applies every change
+// the tree from. The window asks for it once and then applies every change
 // the worker reports as it makes it, which is why nothing here polls: an
 // `MD` typed at console 3 goes through that worker and comes straight back
 // out as a change.
+//
+// It is two panes, as a file manager is: the folders on the left, and the
+// chosen folder's files on the right as icons. One tree holding both was
+// what this used to be, and a tree is the wrong shape for the job -- a
+// hundred files in `/system` push everything below them off the bottom, and
+// the thing being looked for is a file in a folder rather than a position in
+// an outline. Splitting them means the left pane is only ever as long as the
+// folders are, and the right one is a grid that uses the width.
 //
 // The model mirrors what the filesystem holds rather than what looks tidy. In
 // particular a directory stays after the last file in it is deleted, because
 // that is what the filesystem does -- writing `/a/b.ds` makes `/a`, and
 // deleting the file does not take it away again.
 //
-// Three things can be done with a row:
+// Four things can be done with what is drawn:
 //   - dragged onto a console, where it types its absolute path,
-//   - downloaded, from the button that appears on a file,
+//   - opened in the editor, by double-clicking a file,
+//   - downloaded, from the button on a file's icon,
 //   - dropped onto, which writes what was dropped into that folder.
 
 import type { Ask, FileChange, Tree } from "./types.js";
+import { draggable, manage } from "./window.js";
 
 /**
  * The drag type the panel's own drags carry.
@@ -38,17 +48,54 @@ export const PATH_DRAG = "application/x-dso-path";
  */
 const MAX_UPLOAD = 64 * 1024 * 1024;
 
-/** Where the panel's open/closed state is remembered between visits. */
+/** Where the window's open/closed state is remembered between visits. */
 const OPEN_KEY = "darksigns.filetree";
 
-/** Raised on the panel whenever it opens or closes; the detail is `open`. */
+/** Where the width of the folder pane is remembered. */
+const SPLIT_KEY = "darksigns.filetree.split";
+
+/** How narrow either pane may be dragged, in pixels. */
+const MIN_PANE = 90;
+
+/** Raised on the window whenever it opens or closes; the detail is `open`. */
 export const TOGGLED = "treetoggle";
 
-/** What one node needs to draw itself and be found again. */
+/**
+ * What a file's name says it is.
+ *
+ * The glyph is the whole of the icon: the client has no artwork of its own
+ * and a drawn one would be six more files to ship for something a character
+ * says as well. What it is for is telling a script from a song at a glance,
+ * which is the distinction the game actually makes -- `Music` plays one and
+ * `Run` runs the other.
+ */
+const KINDS: Array<[RegExp, string, string]> = [
+  [/\.ds$/, "script", "▸"],
+  [/\.(txt|log|md|ini|cfg|dat)$/, "text", "≡"],
+  [/\.(mp3|wav|ogg|mid|midi|m4a|flac)$/, "song", "♫"],
+  [/\.(png|jpe?g|gif|bmp|webp|svg)$/, "image", "▦"],
+  [/\.(zip|gz|tar|7z|rar)$/, "pack", "▣"],
+];
+
+/** What one file is drawn as. */
+interface Kind {
+  name: string;
+  glyph: string;
+}
+
+function kindOf(name: string): Kind {
+  for (const [pattern, kind, glyph] of KINDS) {
+    if (pattern.test(name.toLowerCase())) {
+      return { name: kind, glyph };
+    }
+  }
+  return { name: "other", glyph: "□" };
+}
+
+/** What one entry needs to draw itself and be found again. */
 interface TreeNode {
   path: string;
   name: string;
-  isDir: boolean;
   /** Bytes, for a file. */
   size: number;
 }
@@ -58,9 +105,11 @@ export class FileTree {
   dirs = new Set<string>(["/"]);
   /** Every file, by path, against its size in bytes. */
   files = new Map<string, FileInfo>();
-  /** Which directories are unfolded. */
+  /** Which directories are unfolded in the left pane. */
   expanded = new Set<string>(["/", "/home"]);
-  /** The row picked out, if any. */
+  /** The folder whose files are on the right. */
+  current = "/";
+  /** The file picked out on the right, if any. */
   selected: string | null = null;
   /** Set once the tree has been read, so the strip can say what it is doing. */
   loaded = false;
@@ -78,10 +127,14 @@ export class FileTree {
   uploading = 0;
 
   readonly body: HTMLElement;
+  readonly icons: HTMLElement;
+  readonly panes: HTMLElement;
+  readonly split: HTMLElement;
+  readonly pathLabel: HTMLElement;
   readonly status: HTMLElement;
 
   /**
-   * `root` is the panel, `ask` reaches a worker, `open` is what a
+   * `root` is the window, `ask` reaches a worker, `open` is what a
    * double-click does with a file, and `notify` says something in the
    * communications log.
    */
@@ -92,54 +145,74 @@ export class FileTree {
     readonly notify: (text: string) => void,
   ) {
     this.body = root.querySelector(".tree-body") as HTMLElement;
+    this.icons = root.querySelector(".tree-icons") as HTMLElement;
+    this.panes = root.querySelector(".tree-panes") as HTMLElement;
+    this.split = root.querySelector(".tree-split") as HTMLElement;
+    this.pathLabel = root.querySelector(".tree-path") as HTMLElement;
     this.status = root.querySelector(".tree-status") as HTMLElement;
 
-    // One listener on the body rather than one per row: the rows are rebuilt
+    manage(root, {
+      // Down the left, where the tree used to be docked, and as tall as
+      // there is room for: it is the one window that is worth having open
+      // for a whole session.
+      rect: (desk) => ({
+        x: desk.left + 12,
+        y: desk.top + 12,
+        w: Math.min(34 * 16, desk.right - desk.left - 24),
+        h: Math.min(30 * 16, desk.bottom - desk.top - 24),
+      }),
+      min: { w: 320, h: 200 },
+      close: () => this.setOpen(false),
+    });
+    draggable(root, root.querySelector(".win-bar") as HTMLElement);
+
+    // One listener per pane rather than one per row: the rows are rebuilt
     // whenever anything changes, and listeners on them would be too.
-    this.body.addEventListener("click", (e) => this.onClick(e));
-    this.body.addEventListener("dblclick", (e) => this.onDoubleClick(e));
-    this.body.addEventListener("dragstart", (e) => this.onDragStart(e));
-    this.body.addEventListener("dragover", (e) => this.onDragOver(e));
-    this.body.addEventListener("dragleave", (e) => this.onDragLeave(e));
-    this.body.addEventListener("drop", (e) => void this.onDrop(e));
-    this.body.addEventListener("keydown", (e) => this.onKeyDown(e));
+    for (const pane of [this.body, this.icons]) {
+      pane.addEventListener("click", (e) => this.onClick(e));
+      pane.addEventListener("dblclick", (e) => this.onDoubleClick(e));
+      pane.addEventListener("dragstart", (e) => this.onDragStart(e));
+      pane.addEventListener("dragover", (e) => this.onDragOver(e));
+      pane.addEventListener("dragleave", (e) => this.onDragLeave(e));
+      pane.addEventListener("drop", (e) => void this.onDrop(e));
+    }
+    this.body.addEventListener("keydown", (e) => this.onTreeKey(e));
+    this.icons.addEventListener("keydown", (e) => this.onIconKey(e));
 
     (root.querySelector(".tree-hide") as HTMLElement).addEventListener("click", () =>
       this.setOpen(false),
     );
+    this.splitter();
   }
 
   // ---- showing and hiding ------------------------------------------------
 
   get isOpen(): boolean {
-    return !this.root.classList.contains("closed");
+    return !this.root.hidden;
   }
 
   /**
-   * Put the panel in a state, without remembering it.
+   * Put the window in a state, without remembering it.
    *
-   * The slide itself is the stylesheet's; this only sets the class it hangs
-   * off and marks a closed panel inert, so what is off screen is not
-   * reachable by tab either. The event is for whatever else shows the
-   * state -- the switch in the status bar does.
+   * The event is for whatever else shows the state -- the switch in the
+   * status bar does.
    */
   show(open: boolean): void {
-    this.root.classList.toggle("closed", !open);
-    this.root.inert = !open;
+    this.root.hidden = !open;
     this.root.dispatchEvent(new CustomEvent(TOGGLED, { detail: open, bubbles: true }));
   }
 
-  /** Open or close the panel, and remember which. */
+  /** Open or close the window, and remember which. */
   setOpen(open: boolean): void {
     this.show(open);
     try {
       localStorage.setItem(OPEN_KEY, open ? "open" : "closed");
     } catch {
-      // A private window refuses storage. The panel still works; it just
+      // A private window refuses storage. The explorer still works; it just
       // opens in its default state next time.
     }
     if (open) {
-      // Cheap insurance: the panel keeps up through the change reports, so
+      // Cheap insurance: the window keeps up through the change reports, so
       // this should find nothing new. It costs one message and it means a
       // report missed while something was starting up cannot leave a stale
       // tree on screen for the rest of the session.
@@ -154,14 +227,12 @@ export class FileTree {
   /**
    * Open in whatever state the last visit left it in.
    *
-   * Called before the page has been drawn, so a panel that was left closed
-   * starts closed rather than sliding shut in front of the player.
+   * Called before the page has been drawn, so a window that was left closed
+   * is never shown at all rather than being taken away again in front of
+   * whoever opened the client.
    */
   restore(): void {
-    // On a phone the panel covers the console rather than sitting beside it,
-    // so opening by default would put it in front of the thing the client is
-    // for. On anything wider there is room for both.
-    let open = !window.matchMedia("(max-width: 34rem)").matches;
+    let open = true;
     try {
       const saved = localStorage.getItem(OPEN_KEY);
       if (saved !== null) {
@@ -171,6 +242,64 @@ export class FileTree {
       // Storage denied; the default stands.
     }
     this.show(open);
+  }
+
+  // ---- the split between the panes ---------------------------------------
+
+  /**
+   * Drag the divider between the folders and the files.
+   *
+   * The width is a property on the panes rather than an inline width on the
+   * left one, so the grid keeps deciding what the right pane gets -- which
+   * is what makes the whole window resizable without the split moving.
+   */
+  splitter(): void {
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(SPLIT_KEY);
+    } catch {
+      // Storage denied; the stylesheet's default width stands.
+    }
+    if (saved !== null && Number.isFinite(Number(saved))) {
+      this.panes.style.setProperty("--tree-pane", `${Number(saved)}px`);
+    }
+
+    let pointer: number | null = null;
+    this.split.addEventListener("pointerdown", (event) => {
+      pointer = event.pointerId;
+      this.split.setPointerCapture(event.pointerId);
+      this.split.classList.add("dragging");
+      event.preventDefault();
+      // A grab on the divider is not a grab on the window's frame.
+      event.stopPropagation();
+    });
+    this.split.addEventListener("pointermove", (event) => {
+      if (pointer !== event.pointerId) {
+        return;
+      }
+      const box = this.panes.getBoundingClientRect();
+      const width = Math.round(
+        Math.min(Math.max(event.clientX - box.left, MIN_PANE), box.width - MIN_PANE),
+      );
+      this.panes.style.setProperty("--tree-pane", `${width}px`);
+    });
+    const stop = (event: PointerEvent) => {
+      if (pointer !== event.pointerId) {
+        return;
+      }
+      pointer = null;
+      this.split.classList.remove("dragging");
+      try {
+        localStorage.setItem(
+          SPLIT_KEY,
+          String(parseInt(this.panes.style.getPropertyValue("--tree-pane"), 10)),
+        );
+      } catch {
+        // As above.
+      }
+    };
+    this.split.addEventListener("pointerup", stop);
+    this.split.addEventListener("pointercancel", stop);
   }
 
   // ---- the model ---------------------------------------------------------
@@ -217,7 +346,7 @@ export class FileTree {
     }
     this.take(change);
     // Redrawn even while closed, since it costs almost nothing and means an
-    // opening panel is right immediately rather than after its request.
+    // opening window is right immediately rather than after its request.
     this.render();
   }
 
@@ -259,7 +388,20 @@ export class FileTree {
   // ---- drawing -----------------------------------------------------------
 
   render(): void {
-    // Rebuilt whole. The tree is a few dozen rows, and the alternative --
+    // A folder the last of whose files was deleted stays; one that is gone
+    // altogether cannot be what is showing.
+    if (!this.dirs.has(this.current)) {
+      this.current = "/";
+    }
+    this.drawTree();
+    this.drawIcons();
+    this.pathLabel.textContent = this.current;
+    this.say(this.summary());
+  }
+
+  /** The left pane: the folders, and nothing else. */
+  drawTree(): void {
+    // Rebuilt whole. There are a few dozen folders, and the alternative --
     // patching it -- would have to get every case right for no gain anyone
     // could measure. The scroll position is the one thing worth carrying
     // over, since a write in a background console must not move the view.
@@ -269,57 +411,15 @@ export class FileTree {
     const focused =
       this.body.contains(document.activeElement) &&
       (document.activeElement as HTMLElement).dataset.path;
-    const children = this.index();
-    this.body.replaceChildren(this.drawList("/", children, 0));
+    this.body.replaceChildren(this.drawList("/", 0));
     this.body.scrollTop = scroll;
     if (focused) {
       this.rowFor(focused)?.focus();
     }
-    this.say(this.summary());
   }
 
-  /** The row drawn for a path, if it is one that is on screen. */
-  rowFor(path: string): HTMLElement | null {
-    return this.body.querySelector(`.node[data-path="${cssEscape(path)}"]`);
-  }
-
-  /** Every row now drawn, top to bottom -- which is how the arrows move. */
-  visibleRows(): HTMLElement[] {
-    return Array.from(this.body.querySelectorAll<HTMLElement>(".node"));
-  }
-
-  /** Every directory's children, worked out in one pass. */
-  index(): Map<string, TreeNode[]> {
-    const children = new Map<string, TreeNode[]>();
-    const put = (node: TreeNode) => {
-      const parent = parentOf(node.path);
-      const list = children.get(parent);
-      if (list) {
-        list.push(node);
-      } else {
-        children.set(parent, [node]);
-      }
-    };
-    for (const path of this.dirs) {
-      if (path !== "/") {
-        put({ path, name: baseName(path), isDir: true, size: 0 });
-      }
-    }
-    for (const [path, info] of this.files) {
-      put({ path, name: baseName(path), isDir: false, size: info.size });
-    }
-    // Directories first and then by name, which is how `DIR` orders a
-    // listing and how a file tree is expected to read.
-    for (const list of children.values()) {
-      list.sort((a, b) =>
-        a.isDir === b.isDir ? a.name.localeCompare(b.name) : a.isDir ? -1 : 1,
-      );
-    }
-    return children;
-  }
-
-  /** The `<ul>` for one directory's contents. */
-  drawList(dir: string, children: Map<string, TreeNode[]>, depth: number): HTMLElement {
+  /** The `<ul>` for one folder's subfolders. */
+  drawList(dir: string, depth: number): HTMLElement {
     const list = document.createElement("ul");
     list.className = "tree-list";
     // The list and the item it holds are scaffolding: the row is the tree
@@ -329,76 +429,154 @@ export class FileTree {
     if (depth === 0) {
       // The root is a row of its own, so that files can be dropped at the
       // top of the tree and so the whole thing can be folded away.
-      list.append(this.drawNode({ path: "/", name: "/", isDir: true, size: 0 }, children, 0));
+      list.append(this.drawFolder({ path: "/", name: "/", size: 0 }, 0));
       return list;
     }
-    for (const node of children.get(dir) ?? []) {
-      list.append(this.drawNode(node, children, depth));
+    for (const node of this.foldersIn(dir)) {
+      list.append(this.drawFolder(node, depth));
     }
     return list;
   }
 
-  /** One row, and the sub-list under it when it is an unfolded directory. */
-  drawNode(node: TreeNode, children: Map<string, TreeNode[]>, depth: number): HTMLElement {
+  /** One folder row, and the sub-list under it when it is unfolded. */
+  drawFolder(node: TreeNode, depth: number): HTMLElement {
     const item = document.createElement("li");
     item.role = "none";
     const row = document.createElement("div");
-    row.className = node.isDir ? "node dir" : "node file";
+    row.className = "node dir";
     row.dataset.path = node.path;
     row.draggable = true;
     row.role = "treeitem";
     row.setAttribute("aria-level", String(depth + 1));
-    // One tab stop for the whole tree, as a tree has: tab reaches the row
-    // last used and the arrows move from there. Three hundred shipped files
-    // are three hundred stops otherwise.
-    const chosen = this.selected ?? "/";
-    row.tabIndex = node.path === chosen ? 0 : -1;
+    // One tab stop for the whole tree, as a tree has: tab reaches the folder
+    // that is showing and the arrows move from there.
+    row.tabIndex = node.path === this.current ? 0 : -1;
     row.style.setProperty("--depth", String(depth));
-    row.classList.toggle("selected", this.selected === node.path);
-    row.setAttribute("aria-selected", String(this.selected === node.path));
+    row.classList.toggle("selected", this.current === node.path);
+    row.setAttribute("aria-selected", String(this.current === node.path));
+    row.title = `${node.path} -- drop files here to add them`;
 
     const open = this.expanded.has(node.path);
+    const empty = this.foldersIn(node.path).length === 0;
     const twist = document.createElement("span");
     twist.className = "twist";
-    if (node.isDir) {
-      const empty = (children.get(node.path) ?? []).length === 0;
-      twist.textContent = empty ? "" : open ? "▾" : "▸";
-      twist.classList.toggle("empty", empty);
-    }
+    twist.textContent = empty ? "" : open ? "▾" : "▸";
+    twist.classList.toggle("empty", empty);
     twist.setAttribute("aria-hidden", "true");
+
+    const icon = document.createElement("span");
+    icon.className = "folder-icon";
+    icon.textContent = "■";
+    icon.setAttribute("aria-hidden", "true");
 
     const name = document.createElement("span");
     name.className = "name";
     name.textContent = node.name;
 
-    row.append(twist, name);
-    if (node.isDir) {
-      row.setAttribute("aria-expanded", String(open));
-      row.title = `${node.path} -- drop files here to add them`;
-    } else {
-      const size = document.createElement("span");
-      size.className = "size";
-      size.textContent = formatSize(node.size);
-      // A button rather than a link: the contents live in a worker, so there
-      // is nothing to point an `href` at until it has been asked for.
-      const get = document.createElement("button");
-      get.type = "button";
-      get.className = "get";
-      get.title = `Download ${node.name}`;
-      get.setAttribute("aria-label", `Download ${node.name}`);
-      get.textContent = "⤓";
-      row.append(size, get);
-      row.title = node.path;
-    }
+    row.append(twist, icon, name);
+    row.setAttribute("aria-expanded", String(open));
 
     item.append(row);
-    if (node.isDir && open) {
-      item.append(this.drawList(node.path, children, depth + 1));
+    if (open && !empty) {
+      item.append(this.drawList(node.path, depth + 1));
     }
     return item;
   }
 
-  /** What the strip under the tree says when nothing else is happening. */
+  /** The right pane: what is in the folder that is showing. */
+  drawIcons(): void {
+    const scroll = this.icons.scrollTop;
+    const tiles = this.filesIn(this.current).map((node) => this.drawTile(node));
+    if (tiles.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "tree-empty";
+      empty.textContent = this.loaded
+        ? "This folder holds no files. Drop some in to add them."
+        : "Reading the filesystem...";
+      this.icons.replaceChildren(empty);
+      return;
+    }
+    this.icons.replaceChildren(...tiles);
+    this.icons.scrollTop = scroll;
+  }
+
+  /** One file, as an icon with its name under it. */
+  drawTile(node: TreeNode): HTMLElement {
+    const kind = kindOf(node.name);
+    const tile = document.createElement("div");
+    tile.className = `tile ${kind.name}`;
+    tile.dataset.path = node.path;
+    tile.draggable = true;
+    tile.role = "option";
+    tile.title = `${node.path} (${formatSize(node.size)})`;
+    const chosen = this.selected === node.path;
+    tile.classList.toggle("selected", chosen);
+    tile.setAttribute("aria-selected", String(chosen));
+
+    const glyph = document.createElement("span");
+    glyph.className = "tile-icon";
+    glyph.textContent = kind.glyph;
+    glyph.setAttribute("aria-hidden", "true");
+
+    const name = document.createElement("span");
+    name.className = "tile-name";
+    name.textContent = node.name;
+
+    const size = document.createElement("span");
+    size.className = "tile-size";
+    size.textContent = formatSize(node.size);
+
+    // A button rather than a link: the contents live in a worker, so there
+    // is nothing to point an `href` at until it has been asked for.
+    const get = document.createElement("button");
+    get.type = "button";
+    get.className = "get";
+    get.title = `Download ${node.name}`;
+    get.setAttribute("aria-label", `Download ${node.name}`);
+    get.textContent = "⤓";
+
+    tile.append(glyph, name, size, get);
+    return tile;
+  }
+
+  /** The folders directly inside `dir`, in the order `DIR` lists them. */
+  foldersIn(dir: string): TreeNode[] {
+    const out: TreeNode[] = [];
+    for (const path of this.dirs) {
+      if (path !== "/" && parentOf(path) === dir) {
+        out.push({ path, name: baseName(path), size: 0 });
+      }
+    }
+    return out.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /** The files directly inside `dir`, by name. */
+  filesIn(dir: string): TreeNode[] {
+    const out: TreeNode[] = [];
+    for (const [path, info] of this.files) {
+      if (parentOf(path) === dir) {
+        out.push({ path, name: baseName(path), size: info.size });
+      }
+    }
+    return out.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /** The row drawn for a folder, if it is one that is on screen. */
+  rowFor(path: string): HTMLElement | null {
+    return this.body.querySelector(`.node[data-path="${cssEscape(path)}"]`);
+  }
+
+  /** Every folder row now drawn, top to bottom -- which is how arrows move. */
+  visibleRows(): HTMLElement[] {
+    return Array.from(this.body.querySelectorAll<HTMLElement>(".node"));
+  }
+
+  /** Every file tile now drawn, in reading order. */
+  visibleTiles(): HTMLElement[] {
+    return Array.from(this.icons.querySelectorAll<HTMLElement>(".tile"));
+  }
+
+  /** What the strip along the bottom says when nothing else is happening. */
   summary(): string {
     if (this.uploading > 0) {
       return `Adding ${this.uploading} file(s)...`;
@@ -406,8 +584,10 @@ export class FileTree {
     if (!this.loaded) {
       return "Reading the filesystem...";
     }
-    const files = this.files.size;
-    return `${files} file${files === 1 ? "" : "s"}. Drag a name onto a console.`;
+    const here = this.filesIn(this.current).length;
+    const all = this.files.size;
+    return `${here} file${here === 1 ? "" : "s"} here, ${all} in all. ` +
+      "Drag one onto a console to type its path.";
   }
 
   say(text: string): void {
@@ -416,10 +596,10 @@ export class FileTree {
 
   // ---- what the rows do --------------------------------------------------
 
-  /** The row an event landed in, if it landed in one. */
+  /** The folder row or file tile an event landed in, if it landed in one. */
   rowOf(event: Event): HTMLElement | null {
     const target = event.target as Element | null;
-    return (target?.closest(".node") as HTMLElement | null) ?? null;
+    return (target?.closest(".node, .tile") as HTMLElement | null) ?? null;
   }
 
   onClick(event: MouseEvent): void {
@@ -433,59 +613,73 @@ export class FileTree {
       return;
     }
     if (row.classList.contains("dir")) {
-      this.selected = path;
-      this.fold(path, !this.expanded.has(path));
+      // The twist folds; the row itself is what opens the folder, which is
+      // the gesture a file manager answers to.
+      if ((event.target as Element).closest(".twist")) {
+        this.fold(path, !this.expanded.has(path));
+        return;
+      }
+      this.enter(path);
       return;
     }
-    // `select` and not `render`: a redraw here replaces the very row that
+    // `select` and not `render`: a redraw here replaces the very tile that
     // was clicked, and a browser will not raise `dblclick` when the second
     // click lands on an element that was not there for the first. Opening a
-    // file by double-clicking it depended on this row surviving the single
+    // file by double-clicking it depends on this tile surviving the single
     // click that precedes it.
     this.select(path);
   }
 
+  /** Show a folder's files, unfolding the path down to it. */
+  enter(dir: string): void {
+    this.current = dir;
+    this.selected = null;
+    // What was clicked is where the player is looking, so it opens.
+    this.expanded.add(dir);
+    for (let at = parentOf(dir); at !== "/"; at = parentOf(at)) {
+      this.expanded.add(at);
+    }
+    this.render();
+  }
+
   /**
-   * Pick out one row, patching the rows in place.
+   * Pick out one tile, patching the tiles in place.
    *
-   * Which row is chosen decides three things -- the highlight, what a screen
-   * reader calls selected, and where the tree's single tab stop sits -- and
-   * all three are attributes on rows that already exist.
+   * Which tile is chosen decides three things -- the highlight, what a
+   * screen reader calls selected, and what Enter would open -- and all three
+   * are attributes on tiles that already exist.
    */
   select(path: string): void {
     this.selected = path;
-    for (const row of this.visibleRows()) {
-      const chosen = row.dataset.path === path;
-      row.classList.toggle("selected", chosen);
-      row.setAttribute("aria-selected", String(chosen));
-      row.tabIndex = chosen ? 0 : -1;
+    for (const tile of this.visibleTiles()) {
+      const chosen = tile.dataset.path === path;
+      tile.classList.toggle("selected", chosen);
+      tile.setAttribute("aria-selected", String(chosen));
     }
   }
 
   /** A file opens in the editor, the way `EDIT` does; a folder unfolds. */
   onDoubleClick(event: MouseEvent): void {
     const row = this.rowOf(event);
-    if (row?.classList.contains("file") && row.dataset.path) {
+    if (row?.classList.contains("tile") && row.dataset.path) {
       this.open(row.dataset.path);
+      return;
+    }
+    if (row?.classList.contains("dir") && row.dataset.path) {
+      this.fold(row.dataset.path, !this.expanded.has(row.dataset.path));
     }
   }
 
-  onKeyDown(event: KeyboardEvent): void {
+  onTreeKey(event: KeyboardEvent): void {
     const row = this.rowOf(event);
     const path = row?.dataset.path;
     if (!row || !path) {
       return;
     }
-    const dir = row.classList.contains("dir");
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      this.selected = path;
-      if (dir) {
-        this.fold(path, !this.expanded.has(path));
-      } else {
-        this.select(path);
-        this.open(path);
-      }
+      this.enter(path);
+      this.rowFor(path)?.focus();
       return;
     }
     // Down and up walk the rows as they are drawn, which is the order they
@@ -499,16 +693,16 @@ export class FileTree {
       }
       return;
     }
-    // Right unfolds a folded directory; left folds an unfolded one and
-    // otherwise steps out to the one holding this, as a tree does elsewhere.
-    if (event.key === "ArrowRight" && dir && !this.expanded.has(path)) {
+    // Right unfolds a folded folder; left folds an unfolded one and
+    // otherwise steps out to the one holding it, as a tree does elsewhere.
+    if (event.key === "ArrowRight" && !this.expanded.has(path)) {
       event.preventDefault();
       this.fold(path, true);
       return;
     }
     if (event.key === "ArrowLeft") {
       event.preventDefault();
-      if (dir && this.expanded.has(path)) {
+      if (this.expanded.has(path)) {
         this.fold(path, false);
       } else if (path !== "/") {
         this.moveTo(parentOf(path));
@@ -516,9 +710,45 @@ export class FileTree {
     }
   }
 
-  /** Pick out a row and put the keyboard on it. */
+  /**
+   * The arrows in the icon pane.
+   *
+   * Left and right step through the files in order; up and down move by a
+   * row, and how many that is depends on how wide the window has been
+   * dragged -- so it is counted off the tiles as they are laid out rather
+   * than assumed.
+   */
+  onIconKey(event: KeyboardEvent): void {
+    const tiles = this.visibleTiles();
+    if (tiles.length === 0) {
+      return;
+    }
+    if (event.key === "Enter" && this.selected) {
+      event.preventDefault();
+      this.open(this.selected);
+      return;
+    }
+    const step = {
+      ArrowRight: 1,
+      ArrowLeft: -1,
+      ArrowDown: columns(tiles),
+      ArrowUp: -columns(tiles),
+    }[event.key];
+    if (step === undefined) {
+      return;
+    }
+    event.preventDefault();
+    const at = tiles.findIndex((tile) => tile.dataset.path === this.selected);
+    const next = tiles[Math.min(Math.max((at < 0 ? 0 : at) + step, 0), tiles.length - 1)];
+    if (next?.dataset.path) {
+      this.select(next.dataset.path);
+      next.scrollIntoView({ block: "nearest" });
+    }
+  }
+
+  /** Pick out a folder row and put the keyboard on it. */
   moveTo(path: string): void {
-    this.select(path);
+    this.enter(path);
     const row = this.rowFor(path);
     row?.focus();
     row?.scrollIntoView({ block: "nearest" });
@@ -532,7 +762,6 @@ export class FileTree {
     }
     this.render();
   }
-
 
   // ---- dragging a path out -----------------------------------------------
 
@@ -555,16 +784,23 @@ export class FileTree {
     return transfer !== null && Array.from(transfer.types).includes("Files");
   }
 
-  /** The folder a drop would land in: the row under it, or its parent. */
-  targetOf(event: DragEvent): { row: HTMLElement; dir: string } | null {
+  /**
+   * The folder a drop would land in.
+   *
+   * In the icon pane that is always the folder being shown, whatever the
+   * drop landed on -- the tiles are its contents, not places of their own.
+   * In the tree it is the folder under the pointer.
+   */
+  targetOf(event: DragEvent): { row: HTMLElement | null; dir: string } | null {
     const row = this.rowOf(event);
+    if (this.icons.contains(event.target as Node)) {
+      return { row: null, dir: this.current };
+    }
     const path = row?.dataset.path;
     if (!row || !path) {
       return null;
     }
-    // Dropping onto a file means the folder holding it, which is what every
-    // other file manager does and saves aiming at a one-line target.
-    return { row, dir: row.classList.contains("dir") ? path : parentOf(path) };
+    return { row, dir: path };
   }
 
   onDragOver(event: DragEvent): void {
@@ -581,31 +817,23 @@ export class FileTree {
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = target ? "copy" : "none";
     }
-    this.markTarget(target?.row ?? null);
+    this.markTarget(target ? (target.row ?? this.icons) : null);
   }
 
   onDragLeave(event: DragEvent): void {
     // `dragleave` fires on the way into a child as well, so a leave that is
-    // still inside the panel is not one.
-    if (!this.body.contains(event.relatedTarget as Node | null)) {
+    // still inside the window is not one.
+    if (!this.panes.contains(event.relatedTarget as Node | null)) {
       this.markTarget(null);
     }
   }
 
   /** Show which folder a drop would land in, and only that one. */
-  markTarget(row: HTMLElement | null): void {
-    for (const marked of this.body.querySelectorAll(".node.drop-target")) {
+  markTarget(target: HTMLElement | null): void {
+    for (const marked of this.panes.querySelectorAll(".drop-target")) {
       marked.classList.remove("drop-target");
     }
-    if (!row) {
-      return;
-    }
-    // The highlight belongs on the folder that would take the files, which
-    // for a file row is the row above it in the tree.
-    const dir = row.classList.contains("dir")
-      ? row
-      : this.rowFor(parentOf(row.dataset.path ?? "/"));
-    dir?.classList.add("drop-target");
+    target?.classList.add("drop-target");
   }
 
   async onDrop(event: DragEvent): Promise<void> {
@@ -830,3 +1058,16 @@ async function readDir(dir: FileSystemDirectoryEntry): Promise<FileSystemEntry[]
   }
 }
 
+
+/**
+ * How many tiles fit across the icon pane.
+ *
+ * Counted off the first row rather than worked out from the widths: the pane
+ * is a grid that reflows as the window is resized, and what the arrows have
+ * to agree with is what is on screen.
+ */
+function columns(tiles: HTMLElement[]): number {
+  const first = tiles[0]?.offsetTop;
+  const across = tiles.findIndex((tile) => tile.offsetTop !== first);
+  return across <= 0 ? tiles.length : across;
+}

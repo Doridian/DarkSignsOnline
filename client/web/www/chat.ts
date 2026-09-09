@@ -15,6 +15,7 @@
 // the work to whichever console is free.
 
 import type { Ask, ChatLine, Said } from "./types.js";
+import { draggable, manage } from "./window.js";
 
 // How often to ask for new lines, which depends on who is looking.
 //
@@ -100,6 +101,21 @@ export class ChatPanel {
     /** Called with the client's own complaints, which go to the comm log. */
     readonly complain: (text: string) => void,
   ) {
+    manage(root, {
+      // Off to one side rather than over the middle of the console: the room
+      // is watched while something else is being done, which is the whole
+      // reason it is a window now.
+      rect: (desk) => ({
+        x: Math.max(desk.left + 12, desk.right - 12 - 30 * 16),
+        y: Math.max(desk.top + 12, desk.bottom - 12 - 26 * 16),
+        w: Math.min(30 * 16, desk.right - desk.left - 24),
+        h: Math.min(26 * 16, desk.bottom - desk.top - 24),
+      }),
+      min: { w: 260, h: 180 },
+      close: () => this.hide(),
+    });
+    draggable(root, root.querySelector(".win-bar") as HTMLElement);
+
     this.log = root.querySelector(".chat-log") as HTMLElement;
     this.input = root.querySelector(".chat-input") as HTMLInputElement;
     this.submit = root.querySelector(".chat-send") as HTMLButtonElement;

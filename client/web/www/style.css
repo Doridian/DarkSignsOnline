@@ -22,11 +22,6 @@
 
   --gutter: 4px;
   --prespace: 40px;
-
-  /* How wide the file tree is when it is out. */
-  --tree-width: 15rem;
-  /* How long it takes to slide, shared by the panel and its button. */
-  --tree-slide: 0.22s;
 }
 
 * {
@@ -41,8 +36,10 @@ body {
 body {
   margin: 0;
   display: grid;
-  /* Title bar, comm log, console (the prompt is inside it), status bar. */
-  grid-template-rows: auto auto 1fr auto;
+  /* Title bar, the consoles (the prompt is inside them), status bar. The
+     windows are `position: fixed` and take no row of their own: they float
+     over the consoles, which is what makes them windows. */
+  grid-template-rows: auto 1fr auto;
   /* `minmax(0, 1fr)` rather than the default `auto`: the window is the whole
      of the page, so a row wide enough to overflow it has to be made to fit
      rather than pushing the others off the right edge -- which, with the
@@ -265,14 +262,131 @@ button:hover {
   color: var(--accent);
 }
 
-/* ---- communications log ---------------------------------------------- */
+/* ---- the windows ------------------------------------------------------ */
 
-#comm {
-  height: 7.5rem;
+/* Everything that is not a console is a window: the communications log, the
+   file explorer, chat, mail, the editor and the library. They float over the
+   consoles rather than taking room from them, and `window.ts` sets where
+   each one sits -- so the only geometry here is the frame itself.
+
+   The padding is that frame, and it is load-bearing: it is what makes the
+   outermost few pixels the window's own box rather than whatever is inside,
+   which is how a grab at the edge is told from a grab at a scrollbar sitting
+   against it. `--win-frame` and `FRAME` in `window.ts` are the same number. */
+.window {
+  --win-frame: 6px;
+
+  position: fixed;
+  /* The browser centres a `<dialog>` by itself, and these are placed by
+     hand. */
+  margin: 0;
+  inset: auto;
+  z-index: 30;
+
+  display: grid;
+  /* Title bar, body, and whatever the window puts along the bottom. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  padding: var(--win-frame);
+  /* The frame is chrome and the contents are not, so they are different
+     grounds -- which is also what makes the border a player can grab
+     visible before they grab it. */
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 0 0.5rem 1.5rem #0009;
+  color: var(--fg);
+  font-size: 12px;
+  /* A `<dialog>` is a max-content box by default, which would fight the
+     width it is given. */
+  max-width: none;
+  max-height: none;
+  overflow: hidden;
+}
+
+/* `display` above would otherwise outrank both of the ways a window is put
+   away -- the attribute on a panel, and `close()` on a dialog. */
+.window[hidden],
+dialog.window:not([open]) {
+  display: none;
+}
+
+/* The one in front is the one being used, and its frame says so. Everything
+   else is a window that happens to be open. */
+.window.front {
+  border-color: #38424f;
+  box-shadow: 0 0.5rem 2rem #000b;
+}
+
+/* A dialog takes the focus when it is shown, and a ring around the whole
+   window is not what that should look like: what is worth seeing is which
+   control inside it has the keyboard. */
+.window:focus {
+  outline: none;
+}
+
+/* Everything below the title bar sits on the window's ground rather than its
+   frame. `:where` so that a pane with a ground of its own -- the icons, the
+   status strips -- still wins on specificity alone. */
+.window > :where(:not(.win-bar)) {
+  background: var(--bg);
+}
+
+/* No backdrop: these are shown rather than modal, so there is nothing behind
+   them to dim -- the rest of the desktop is still live. */
+.window::backdrop {
+  background: transparent;
+}
+
+/* ---- a window's title bar ---------------------------------------------- */
+
+.win-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.3rem 0.25rem 0.5rem;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 2px 2px 0 0;
+}
+
+.window.front .win-bar {
+  background: #1f2733;
+}
+
+.win-title {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.win-spacer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.win-close {
+  font-size: 11px;
+  padding: 0.1rem 0.4rem;
+}
+
+/* The title bar is the handle. Nothing in it should select as it is
+   dragged, and the cursor says so before the drag starts. */
+.win-drag {
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+.win-drag.dragging {
+  cursor: grabbing;
+}
+
+/* ---- communications log ------------------------------------------------ */
+
+.comm-body {
   overflow-y: auto;
   padding: 0.3rem 0.6rem;
-  background: var(--panel);
-  border-bottom: 1px solid var(--rule);
   font-size: 11px;
   line-height: 1.45;
 }
@@ -294,96 +408,35 @@ button:hover {
   font-weight: 700;
 }
 
-/* ---- the workspace: the file tree, and the consoles beside it -------- */
+/* The log is two rows rather than three -- there is nothing along its
+   bottom -- so it says so. */
+#comm {
+  grid-template-rows: auto minmax(0, 1fr);
+}
 
-/* A flex row rather than a grid, because the panel is put away by sliding
-   it out past the left edge -- a negative margin -- and flexbox takes that
-   off the row's length in the way this needs. `overflow: hidden` is what
-   the panel disappears behind. */
-#workspace {
-  display: flex;
-  min-height: 0;
+/* ---- the file explorer ------------------------------------------------- */
+
+/* The path being shown, beside the title, so the window says where it is
+   without the tree having to be read. */
+.tree-path {
+  min-width: 0;
   overflow: hidden;
-}
-
-/* ---- the file tree ---------------------------------------------------- */
-
-#filetree {
-  flex: 0 0 var(--tree-width);
-  display: grid;
-  /* Bar, the tree itself, and the strip that says what it is doing. */
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  min-height: 0;
-  background: var(--panel);
-  border-right: 1px solid var(--rule);
-  transition: margin-left var(--tree-slide) ease;
-}
-
-/* Put away: slid out past the left edge, so the console grows into the room
-   it leaves rather than the panel being squashed into nothing. */
-#filetree.closed {
-  margin-left: calc(-1 * var(--tree-width));
-}
-
-/* Somebody who has asked not to be moved about gets the same panel without
-   the travel. */
-@media (prefers-reduced-motion: reduce) {
-  #filetree {
-    transition: none;
-  }
-}
-
-/* A phone has not the width for both, so there the panel covers the console
-   instead of shrinking it -- the same slide, over the top. It starts closed
-   there; see `restore` in `filetree.ts`. */
-@media (max-width: 34rem) {
-  #workspace {
-    position: relative;
-  }
-
-  #filetree {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 2;
-    width: min(var(--tree-width), 80vw);
-    box-shadow: 0 0 1.5rem #000a;
-  }
-
-  #filetree.closed {
-    margin-left: calc(-1 * min(var(--tree-width), 80vw));
-  }
-}
-
-.tree-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.3rem 0.25rem 0.6rem;
-  background: var(--titlebar);
-  border-bottom: 1px solid var(--rule);
-}
-
-.tree-title {
-  flex: 1 1 auto;
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-}
-
-.tree-hide {
-  padding: 0 0.35rem;
-  font-size: 13px;
-  line-height: 1.2;
-  background: transparent;
-  border-color: transparent;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--dim);
+  font-size: 11px;
 }
-.tree-hide:hover {
-  color: var(--gold);
-  border-color: var(--rule);
+
+/* The folders, the divider, and the files. The divider is dragged, so the
+   left column is a property rather than a length. */
+.tree-panes {
+  /* A proportion once the window has been dragged narrow enough that a
+     fixed width would leave the icons nowhere to go. */
+  --tree-pane: min(13rem, 45%);
+
+  display: grid;
+  grid-template-columns: minmax(0, var(--tree-pane)) auto minmax(0, 1fr);
+  min-height: 0;
 }
 
 .tree-body {
@@ -392,14 +445,50 @@ button:hover {
   font-size: 11px;
 }
 
+/* Wide enough to grab, drawn as a rule. */
+.tree-split {
+  width: 5px;
+  cursor: col-resize;
+  background: var(--rule);
+  touch-action: none;
+}
+.tree-split:hover,
+.tree-split.dragging {
+  background: var(--accent);
+}
+
+.tree-icons {
+  overflow: auto;
+  min-height: 0;
+  padding: 0.4rem;
+  display: grid;
+  /* As many as fit, which is what makes the pane worth widening. */
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  grid-auto-rows: min-content;
+  gap: 0.3rem;
+  align-content: start;
+  background: #0d1218;
+}
+.tree-icons:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.tree-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.6rem;
+  color: var(--dim);
+  font-size: 11px;
+}
+
 .tree-status {
   margin: 0;
   padding: 0.25rem 0.6rem;
-  border-top: 1px solid var(--rule);
   color: var(--dim);
   font-size: 10px;
   /* One line: the strip is furniture, and a long complaint belongs in the
-     communications log, which is where the panel puts one. */
+     communications log, which is where the window puts one. */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -411,8 +500,8 @@ button:hover {
   list-style: none;
 }
 
-/* One row. The indent is the depth rather than nested padding, so a name is
-   never squeezed to nothing by how deep it sits. */
+/* One folder. The indent is the depth rather than nested padding, so a name
+   is never squeezed to nothing by how deep it sits. */
 .node {
   display: flex;
   align-items: center;
@@ -435,38 +524,101 @@ button:hover {
   outline-offset: -1px;
 }
 
-/* The folding arrow, which keeps its room even on a file so that names line
-   up down the column. */
+/* The folding arrow, which keeps its room even on a folder with nothing
+   under it so that names line up down the column. */
 .twist {
   flex: 0 0 0.8rem;
   color: var(--dim);
   font-size: 9px;
   text-align: center;
+  cursor: pointer;
+}
+
+.folder-icon {
+  flex: 0 0 auto;
+  color: var(--gold);
+  font-size: 9px;
 }
 
 .node .name {
   flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.node.dir .name {
   color: var(--gold);
   font-weight: 700;
 }
-.node.file .name {
+
+/* ---- one file, as an icon ---------------------------------------------- */
+
+.tile {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  justify-items: center;
+  gap: 0.1rem;
+  padding: 0.35rem 0.2rem 0.3rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: default;
+  /* A tile is dragged onto a console, so it must not be selected by the
+     press that starts the drag. */
+  user-select: none;
+}
+.tile:hover {
+  background: #1e2530;
+}
+.tile.selected {
+  background: #24303c;
+  border-color: var(--rule);
+}
+
+.tile-icon {
+  font-size: 20px;
+  line-height: 1.1;
+  color: var(--dim);
+}
+/* What the game itself tells apart: a script is run, a song is played. */
+.tile.script .tile-icon {
+  color: var(--accent);
+}
+.tile.song .tile-icon {
+  color: var(--chat-emote);
+}
+.tile.text .tile-icon {
   color: var(--fg);
 }
-
-.node .size {
-  flex: 0 0 auto;
-  color: var(--dim);
-  font-size: 10px;
+.tile.image .tile-icon,
+.tile.pack .tile-icon {
+  color: var(--gold);
 }
 
-/* The download button, which is furniture until the row is pointed at. */
-.node .get {
-  flex: 0 0 auto;
-  padding: 0 0.25rem;
+.tile-name {
+  max-width: 100%;
+  /* Two lines' worth whether the name needs them or not, so a long name does
+     not stand its tile taller than the rest of the row. */
+  min-height: 2.4em;
+  font-size: 11px;
+  text-align: center;
+  /* Two lines and then an ellipsis: a name is what the tile is for, and one
+     line is not enough for the ones the game ships. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.tile-size {
+  color: var(--dim);
+  font-size: 9px;
+}
+
+/* The download button, which is furniture until the tile is pointed at. */
+.tile .get {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  padding: 0 0.2rem;
   font-size: 11px;
   line-height: 1.3;
   background: transparent;
@@ -474,18 +626,19 @@ button:hover {
   color: var(--dim);
   visibility: hidden;
 }
-.node:hover .get,
-.node:focus-within .get {
+.tile:hover .get,
+.tile:focus-within .get {
   visibility: visible;
 }
-.node .get:hover {
+.tile .get:hover {
   color: var(--accent);
   border-color: var(--rule);
 }
 
 /* The folder a drop would land in, and the console a path would be typed
    into. Both are the same promise, so both are drawn the same way. */
-.node.drop-target {
+.node.drop-target,
+.tree-icons.drop-target {
   background: #1d3324;
   outline: 1px dashed var(--accent);
   outline-offset: -1px;
@@ -497,12 +650,8 @@ button:hover {
    shows a different one without anything moving. */
 #consoles {
   display: grid;
-  /* The console is the flex item that takes whatever the panel is not using,
-     so it has to be told to grow: left at `auto` it is only as wide as the
-     longest line it happens to be holding, and the row's spare width goes
-     nowhere. `min-width: 0` as well as the height, so that a long line gives
-     way instead of holding the row open and pushing the panel off. */
-  flex: 1 1 auto;
+  /* `min-width: 0` as well as the height, so that a long line gives way
+     instead of holding the row open and pushing the status bar off. */
   min-width: 0;
   min-height: 0;
 }
@@ -655,75 +804,7 @@ button:hover {
   display: none;
 }
 
-/* ---- the sub-windows ------------------------------------------------- */
-
-/* Mail, the editor and the library share a frame: a title bar to drag them
-   by, a body, and a status line. */
-#mail,
-#editor,
-#library {
-  padding: 0;
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  background: var(--bg);
-  color: var(--fg);
-  font-size: 12px;
-  max-width: none;
-  max-height: none;
-}
-#mail:not([open]),
-#editor:not([open]),
-#library:not([open]) {
-  display: none;
-}
-#mail::backdrop,
-#editor::backdrop,
-#library::backdrop {
-  background: rgb(0 0 0 / 60%);
-}
-#mail[open],
-#editor[open],
-#library[open] {
-  display: grid;
-  /* Title bar, body, status line. */
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  min-height: 0;
-}
-
-#mail {
-  width: min(56rem, 90vw);
-  height: min(38rem, 85vh);
-}
-#editor {
-  width: min(72rem, 94vw);
-  height: min(46rem, 90vh);
-}
-#library {
-  width: min(72rem, 94vw);
-  height: min(42rem, 88vh);
-}
-
-/* The title bar is the handle. Nothing in it should select as it is
-   dragged, and the cursor says so before the drag starts. */
-.win-drag {
-  cursor: move;
-  user-select: none;
-  touch-action: none;
-}
-.win-drag.dragging {
-  cursor: grabbing;
-}
-
 /* ---- mail ------------------------------------------------------------ */
-
-.mail-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.6rem;
-  background: var(--titlebar);
-  border-bottom: 1px solid var(--rule);
-}
 
 .mail-spacer {
   flex: 1;
@@ -890,14 +971,6 @@ button:hover {
 
 /* ---- the editor ------------------------------------------------------ */
 
-.ed-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.6rem;
-  background: var(--titlebar);
-  border-bottom: 1px solid var(--rule);
-}
 .ed-title {
   color: var(--gold);
   overflow: hidden;
@@ -1331,39 +1404,15 @@ button:hover {
 
 /* ---- chat ------------------------------------------------------------ */
 
-/* Over the console, in the cell the four of them stack in -- the original's
-   `ChatBox.ZOrder 0`. It is opaque, so what it covers is covered. */
+/* A window now, where the original raises its ChatBox over the console with
+   `ZOrder 0`. Being a window is the difference worth having: the room can be
+   watched beside a script rather than instead of it. */
 #chat {
-  grid-area: 1 / 1;
-  z-index: 1;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  min-height: 0;
-  background: var(--bg);
-}
-/* `display` above would otherwise outrank the attribute, and the pane would
-   sit over the console for good with no way to put it away. */
-#chat[hidden] {
-  display: none;
-}
-
-.chat-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.6rem;
-  background: var(--titlebar);
-  border-bottom: 1px solid var(--rule);
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 .chat-title {
   color: var(--gold);
-  font-weight: 700;
-}
-
-.chat-close {
-  margin-left: auto;
-  font-size: 11px;
 }
 
 .chat-log {

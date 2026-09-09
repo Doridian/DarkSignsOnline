@@ -29,7 +29,7 @@ is asynchronous. Nothing is kept in step with anything, because there is only
 one of it.
 
 The fs worker reports every change it makes to the page, which is what the
-file panel draws from — that is all the reporting is for now. Directories are
+file explorer draws from — that is all the reporting is for now. Directories are
 in that stream along with files: writing `/a/b.ds` makes `/a` on the way, and
 `MD` on an empty directory is implied by nothing else.
 
@@ -178,13 +178,13 @@ which is the layout the batching is there to avoid.
 | [`www/worker.ts`](www/worker.ts) | Runs the interpreter; blocks on `Atomics.wait` for input |
 | [`www/main.ts`](www/main.ts) | The page: the four consoles, keyboard, and waking a worker |
 | [`www/console.ts`](www/console.ts) | Turns styled runs into elements |
-| [`www/filetree.ts`](www/filetree.ts) | The file tree beside the consoles, and its three drags |
+| [`www/filetree.ts`](www/filetree.ts) | The file explorer: the folder tree, the icons, and its three drags |
 | [`www/mail.ts`](www/mail.ts) | The DSMail reader |
-| [`www/chat.ts`](www/chat.ts) | The chat pane: the poll, the history, and `/me` |
+| [`www/chat.ts`](www/chat.ts) | The chat window: the poll, the history, and `/me` |
 | [`www/editor.ts`](www/editor.ts) | The editor, with the highlighter and the indenting |
 | [`www/vbs.ts`](www/vbs.ts) | What a line of VBScript is made of, and how far it is indented |
 | [`www/library.ts`](www/library.ts) | The file library and the text space |
-| [`www/window.ts`](www/window.ts) | Dragging a sub-window by its title bar |
+| [`www/window.ts`](www/window.ts) | The window manager: where each window sits, moving it, sizing it, stacking it |
 | [`www/types.ts`](www/types.ts) | Every message between the page, a worker and the wasm |
 | [`www/control.ts`](www/control.ts) | The shared control block's three states |
 | [`www/fonts.ts`](www/fonts.ts) | The font stacks, shared so text is measured in the face it is drawn in |
@@ -387,12 +387,23 @@ all four workers first, which is what lets the `LOGIN` and the `Include
 "/system/newconsole.ds"` at the end of `startup.ds` do their job and greet the
 player by name.
 
-## The file tree
+## The file explorer
 
-The panel to the left of the consoles, which the original had no equivalent
-of. `Files` in the status bar slides it in and out — a margin, so the console
-grows into the room rather than the panel being squeezed into nothing — and
-which state it was left in is remembered.
+A window, which the original had no equivalent of. `Files` in the status bar
+opens and closes it, and which state it was left in is remembered.
+
+It is two panes: the folders on the left, and the chosen folder's files on
+the right as icons. One tree holding both is what it was, and a tree is the
+wrong shape for the job — the three hundred files the client ships push
+everything below them off the bottom, and what is being looked for is a file
+in a folder rather than a position in an outline. Split, the left pane is
+only ever as long as the folders are and the right one is a grid that uses
+whatever width the window has been dragged to. The divider between them is
+draggable too, and remembered.
+
+The icon is a character rather than artwork: it says script, text, song,
+image or archive, which is the distinction the game itself makes — `Music`
+plays one and `Run` runs the other — and it costs nothing to ship.
 
 It never polls. `listTree` gives it one picture of the filesystem, and after
 that it applies the changes the fs worker reports as it makes them, so a file
@@ -411,7 +422,7 @@ path with a space in it is quoted the way [`game::cli`](../src/game/cli.rs)
 reads one back. The drag carries a private type as well as `text/plain`, so a
 console can tell it from a file being dragged in from the desktop.
 
-*A file is downloaded* from the button on its row. The contents live in a
+*A file is downloaded* from the button on its icon. The contents live in a
 worker, so there is nothing to point an `href` at until it has been asked
 for: the answer becomes a blob and a link that is clicked and thrown away.
 
@@ -462,13 +473,59 @@ lasts until the next load — it was never the player's file to delete.
 Where a browser has no OPFS the game still runs: the tree lives in memory for
 as long as the tab does, media included, and the page says so once at startup.
 
-## The sub-windows
+## The windows
 
-Mail, the editor and the library are each a `<dialog>`, which the browser
-centres and keeps modal -- and which covers the console underneath. So each
-is dragged by its title bar, the way the desktop client's windows are. The
-drag is an offset rather than a position, so the browser keeps deciding where
-a window opens and a double-click on the bar puts it back there.
+Everything the client shows that is not a console is a window: the
+communications log, the file explorer, chat, mail, the editor and the
+library. They float over the consoles, are dragged by their title bars and
+resized by their frames, and several can be open at once.
+
+That last part is what decided the rest. Mail, the editor and the library
+were modal `<dialog>`s, and a modal dialog makes the whole of the rest of the
+page inert -- so opening the editor stopped chat, put the file explorer out
+of reach and left the console it was opened from unable to take a key. Three
+panels that were not windows made the same trade in the other direction: the
+file tree took width from the console for as long as it was out, and chat
+covered it entirely. A desktop is the arrangement that costs neither, and
+[`window.ts`](www/window.ts) is what makes one.
+
+The three that were dialogs still are. `open`, `close()` and the `close`
+event are a serviceable window API and their owners already use it; what
+changed is `show()` in place of `showModal()`. The other three are ordinary
+elements put away with `hidden`. Either way the manager notices a window
+appearing with a `MutationObserver` on those two attributes, so opening one
+is still whatever it always was and nothing has to announce itself.
+
+**Geometry is `left`/`top`/`width`/`height` in pixels**, set in the manager
+and nowhere else. The drag used to be a transform over wherever the browser
+had centred a dialog, which was less code and could not survive resizing:
+pulling the top or the left edge moves a window as well as sizing it, and two
+mechanisms deciding where a window sits is one too many. Where a window opens
+when it has never been touched is the rect it was registered with, worked out
+against the room there is -- and where it was left last visit beats that,
+since geometry is remembered per window in `localStorage`. A double-click on
+a title bar forgets it and puts the window back.
+
+**The frame is what makes resizing work without a single extra element.**
+Every window carries `--win-frame` of padding, so its outermost few pixels
+are the window's own box rather than anything inside it, and a pointer there
+arrives with `event.target === el`. That one test is what tells a grab at the
+right edge from a grab at a scrollbar sitting against it. It also survives
+mail, the editor and the library rebuilding their entire contents on every
+render, which appended resize handles would not -- and it is why the frame is
+drawn a shade lighter than what it holds: the part that can be grabbed is the
+part that looks like chrome.
+
+**What has the keyboard decides what the keys mean.** `Ctrl+B` and `F1`–`F4`
+belong to the console, and while the windows were modal there was nothing to
+say: a modal dialog had every key or none. Now the question is not whether a
+window is open -- the file explorer usually is -- but whether one is being
+typed in, which is `typingInWindow()`. The same answer settles the other
+direction: a script asking for a line takes the caret back to its console,
+and it must not take it out of a window someone is using, so `focus()` on a
+console refuses unless the player asked for it by clicking the console or
+picking its tab. Escape closes the window holding the keyboard, which is what
+the browser did for a modal dialog.
 
 ## The editor
 
@@ -530,10 +587,12 @@ script, and blocking it would leave nothing able to answer the window.
 
 ## Chat
 
-`F5` raises it, as `ShowChat` does in the original, and it covers the console
-rather than sitting beside it — it shares the grid cell the four consoles
-stack in, which is that client's `ChatBox.ZOrder 0`. `F1`–`F4` put it away on
-their way to a console, as the original's handlers do.
+`F5` raises it, as `ShowChat` does in the original, where it covers the
+console — that client's `ChatBox.ZOrder 0`. Here it is a window, so it can be
+pushed aside instead, and `F1`–`F4` no longer put it away on their way to a
+console: the original closed it because it was in the way, and this one is
+not. What the original had no way to do at all is watch the room while a
+script runs, which is the whole of what being a window buys.
 
 The room is not the one the original used. That client opened a TLS socket to
 `irc.libera.chat:6697` and sat in `#darksignsonline`, which a browser cannot
@@ -578,11 +637,11 @@ answer:
 
 | State | Interval |
 |---|---|
-| Pane up, tab in front | 1s |
-| Pane away, `ChatView` mirroring into the comm log | 5s |
+| Window up, tab in front | 1s |
+| Window away, `ChatView` mirroring into the comm log | 5s |
 | Tab in the background, or nobody reading either way | never |
 
-Opening the pane, turning `ChatView` on and coming back to the tab each ask
+Opening the window, turning `ChatView` on and coming back to the tab each ask
 straight away, so none of those wait for a tick. A failure backs off to
 fifteen seconds. The fetch is incremental, so a tab left in the background
 costs nothing and catches up in one request.

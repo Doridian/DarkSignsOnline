@@ -30,6 +30,7 @@ import { LibraryWindow } from "./library.js";
 import { MailWindow } from "./mail.js";
 import { MusicPlayer } from "./music.js";
 import type { Asked, ConsoleEvent, FromFs, FromWorker, FsAsk, ToWorker } from "./types.js";
+import { draggable, manage, typingInWindow } from "./window.js";
 
 /** As many as the original client has, and the same F-keys select them. */
 const CONSOLE_COUNT = 4;
@@ -38,7 +39,7 @@ const CONSOLE_COUNT = 4;
 const STARTUP_SCRIPT = "/system/startup.ds";
 const NEW_CONSOLE_SCRIPT = "/system/newconsole.ds";
 
-const comm = new CommView(element("comm"));
+const comm = new CommView(element("comm-log"));
 const container = element("consoles");
 const tabs = element("tabs");
 const template = element("console-template") as HTMLTemplateElement;
@@ -50,6 +51,23 @@ const accountUser = element("account-user");
 const accountMenu = element("account-menu");
 const accountToggle = element("account-toggle") as HTMLButtonElement;
 const logoutButton = element("logout") as HTMLButtonElement;
+
+// The communications log. It has no module of its own -- `CommView` only
+// appends lines -- so its window is set up here.
+const commWindow = element("comm");
+manage(commWindow, {
+  // Top right, out of the way of the prompt, which is where a console starts
+  // writing.
+  rect: (desk) => ({
+    x: Math.max(desk.left + 12, desk.right - 12 - 30 * 16),
+    y: desk.top + 12,
+    w: Math.min(30 * 16, desk.right - desk.left - 24),
+    h: Math.min(10 * 16, desk.bottom - desk.top - 24),
+  }),
+  min: { w: 240, h: 90 },
+  close: () => showComm(false),
+});
+draggable(commWindow, commWindow.querySelector(".win-bar") as HTMLElement);
 
 const mail = new MailWindow(dialog("mail"), (request) => ask(request));
 const library = new LibraryWindow(dialog("library"), (request) => ask(request));
@@ -65,9 +83,6 @@ const editor = new EditorWindow(dialog("editor"), (request) => ask(request), (id
   target.runFile(path);
   return true;
 });
-
-/** The windows that cover the console, so a key can tell whether one is up. */
-const windows = [mail, library, editor];
 
 /**
  * The filesystem, which is a worker of its own.
@@ -371,7 +386,9 @@ class GameConsole {
     const lead = before === "" || /\s$/.test(before) ? "" : " ";
     this.input.value = before + lead + text + after;
     const caret = (before + lead + text).length;
-    this.focus();
+    // A path dropped here is aimed at this console, so it takes the caret
+    // even out of the window it was dragged from.
+    this.focus(true);
     this.input.setSelectionRange(caret, caret);
   }
 
@@ -431,11 +448,24 @@ class GameConsole {
     if (selection && !selection.isCollapsed) {
       return;
     }
-    this.focus();
+    this.focus(true);
   }
 
-  /** Take the caret, but only when this console is the one on screen. */
-  focus(): void {
+  /**
+   * Take the caret, but only when this console is the one on screen.
+   *
+   * A script asking for a line is what usually calls this, and it can happen
+   * at any moment in a console nobody is looking at -- so it does not take
+   * the keyboard out of a window someone is typing in. While the windows
+   * were modal the browser refused that; now that they are not, refusing it
+   * is this. `force` is for the cases that are the player's own doing --
+   * clicking the console, or picking its tab -- where taking the keyboard
+   * back off a window is the whole point.
+   */
+  focus(force = false): void {
+    if (!force && typingInWindow()) {
+      return;
+    }
     if (this.root.classList.contains("active") && !this.input.disabled) {
       // Without `preventScroll` the browser drags the prompt into view,
       // which throws away the place a console was left at when it is
@@ -658,7 +688,7 @@ function setActive(target: GameConsole): void {
   }
   // An inactive console is hidden but still laid out, so it keeps its scroll
   // position and its width -- which is what its scripts measure against.
-  target.focus();
+  target.focus(true);
 }
 
 // The tabs, and the F1-F4 that select the same four consoles in the original.
@@ -699,9 +729,10 @@ window.addEventListener("keydown", (e) => {
   // Listened for on the window rather than on the console's input, because
   // that input is disabled for as long as a script is running and a disabled
   // field is sent no keys -- which is exactly the case this is for. Not while
-  // a window is up: whatever has the keyboard there should keep it.
+  // the keyboard is in a window: several can be open at once now, so what
+  // matters is not whether one is up but whether one is being typed in.
   if (e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === "b") {
-    if (accountMenuOpen() || windows.some((w) => w.open)) {
+    if (accountMenuOpen() || typingInWindow()) {
       return;
     }
     e.preventDefault();
@@ -714,21 +745,22 @@ window.addEventListener("keydown", (e) => {
     e.ctrlKey ||
     e.altKey ||
     e.metaKey ||
-    // A console switch would take the caret out of the sign-in fields.
+    // A console switch would take the caret out of the sign-in fields, or
+    // out of whichever window is being typed in.
     accountMenuOpen() ||
-    windows.some((w) => w.open)
+    typingInWindow()
   ) {
     return;
   }
   // F1 and F3 are the browser's otherwise; in a console they are the client's.
   e.preventDefault();
-  // F5 raises chat, as `ShowChat` does. F1-F4 put it away again on their way
-  // to a console, which is what the original's handlers do before switching.
+  // F5 raises chat, as `ShowChat` does. It no longer puts it away on the way
+  // to a console: chat is a window now and sits beside the console rather
+  // than over it, so switching consoles is no reason to close the room.
   if (match[1] === "5") {
     chat.toggle();
     return;
   }
-  chat.hide();
   const chosen = consoles[Number(match[1]) - 1];
   if (chosen) {
     setActive(chosen);
@@ -744,6 +776,35 @@ element("open-library").addEventListener("click", () => void library.show());
 // The original raises chat with F5 alone. The button is here for the same
 // reason the console tabs are: a phone has no function keys.
 element("open-chat").addEventListener("click", () => chat.toggle());
+
+// The communications log. It is the one window that opens by default -- it
+// is where the server's notices land, and a notice nobody was shown is a
+// notice that did not happen -- so what is remembered is having closed it.
+const COMM_KEY = "darksigns.comm";
+const commButton = element("open-comm");
+
+function showComm(open: boolean): void {
+  commWindow.hidden = !open;
+  commButton.setAttribute("aria-expanded", String(open));
+  try {
+    localStorage.setItem(COMM_KEY, open ? "open" : "closed");
+  } catch {
+    // A private window refuses storage; the log just opens by default next
+    // time, which is the state it ships in anyway.
+  }
+}
+
+commButton.addEventListener("click", () => showComm(!!commWindow.hidden));
+(commWindow.querySelector(".win-close") as HTMLButtonElement).addEventListener(
+  "click",
+  () => showComm(false),
+);
+try {
+  commWindow.hidden = localStorage.getItem(COMM_KEY) === "closed";
+} catch {
+  // As above.
+}
+commButton.setAttribute("aria-expanded", String(!commWindow.hidden));
 
 // The file tree, which is the client's own rather than anything the original
 // had. The switch says whether the panel is out, since the panel can also be

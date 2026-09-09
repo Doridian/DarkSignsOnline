@@ -18,7 +18,7 @@
 import { API } from "./reference.js";
 import type { Ask } from "./types.js";
 import { INDENT, closesBlock, indentFor, indentOf, opensBlock, tokenize } from "./vbs.js";
-import { draggable } from "./window.js";
+import { centred, draggable, manage } from "./window.js";
 
 /** How long to wait after a keystroke before saving. */
 const AUTOSAVE_MS = 400;
@@ -65,6 +65,10 @@ export class EditorWindow {
     readonly ask: Ask,
     readonly run: (consoleId: number, path: string) => boolean,
   ) {
+    manage(root, {
+      rect: (desk) => centred(desk, 72 * 16, 46 * 16),
+      min: { w: 420, h: 260 },
+    });
     this.build();
     // Closing by any route -- the button, Escape, the browser -- saves what
     // is on screen, because the original never asks either.
@@ -84,7 +88,7 @@ export class EditorWindow {
     this.title.textContent = path;
     this.setStatus("Opening...");
     if (!this.root.open) {
-      this.root.showModal();
+      this.root.show();
     }
 
     try {
@@ -105,7 +109,7 @@ export class EditorWindow {
   // ---- the frame -------------------------------------------------------
 
   build(): void {
-    const bar = el("header", "ed-bar win-drag");
+    const bar = el("header", "win-bar ed-bar win-drag");
     bar.append(
       this.title,
       el("span", "ed-spacer"),

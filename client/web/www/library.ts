@@ -11,7 +11,7 @@
 // arrives here is already rows.
 
 import type { Ask } from "./types.js";
-import { draggable } from "./window.js";
+import { centred, draggable, manage } from "./window.js";
 
 /** One file in the library. */
 interface Entry {
@@ -72,7 +72,12 @@ export class LibraryWindow {
   constructor(
     readonly root: HTMLDialogElement,
     readonly ask: Ask,
-  ) {}
+  ) {
+    manage(root, {
+      rect: (desk) => centred(desk, 72 * 16, 42 * 16),
+      min: { w: 420, h: 260 },
+    });
+  }
 
   get open(): boolean {
     return this.root.open;
@@ -81,7 +86,7 @@ export class LibraryWindow {
   /** Show the window, filling in whatever it can without asking the server. */
   async show(): Promise<void> {
     if (!this.root.open) {
-      this.root.showModal();
+      this.root.show();
     }
     this.render();
     if (this.categories.length === 0) {
@@ -273,7 +278,7 @@ export class LibraryWindow {
   }
 
   header(): HTMLElement {
-    const bar = el("header", "mail-bar win-drag");
+    const bar = el("header", "win-bar mail-bar win-drag");
     bar.append(el("strong", null, "File Library"), el("span", "mail-spacer"));
     const tabs: Array<[string, Panel]> = [
       ["Browse", "browse"],

@@ -5,11 +5,11 @@
 // request to whichever console is free and resolves with its answer.
 //
 // The original is three windows -- an inbox, a reader and a composer. This is
-// one, because a browser dialog inside a dialog buys nothing: selecting a
-// message opens it below the list, and composing replaces the list.
+// one, because a window inside a window buys nothing: selecting a message
+// opens it below the list, and composing replaces the list.
 
 import type { Ask, MailMessage, MailView } from "./types.js";
-import { draggable } from "./window.js";
+import { centred, draggable, manage } from "./window.js";
 
 /** A message being written. */
 interface Draft {
@@ -38,6 +38,10 @@ export class MailWindow {
     readonly root: HTMLDialogElement,
     readonly ask: Ask,
   ) {
+    manage(root, {
+      rect: (desk) => centred(desk, 56 * 16, 38 * 16),
+      min: { w: 340, h: 240 },
+    });
     this.root.addEventListener("close", () => {
       // A half-written message is kept, so closing the window by accident
       // does not throw it away.
@@ -58,7 +62,7 @@ export class MailWindow {
    */
   async show(): Promise<void> {
     if (!this.root.open) {
-      this.root.showModal();
+      this.root.show();
     }
     this.render();
     await this.load("mailList");
@@ -169,7 +173,7 @@ export class MailWindow {
   }
 
   header(): HTMLElement {
-    const bar = el("header", "mail-bar win-drag");
+    const bar = el("header", "win-bar mail-bar win-drag");
     const title = el("strong", null, this.draft ? "New message" : "DSO Mail");
     bar.append(title, el("span", "mail-spacer"));
     if (!this.draft) {
