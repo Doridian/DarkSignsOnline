@@ -15,7 +15,7 @@
 // the work to whichever console is free.
 
 import type { Ask, ChatLine, Said } from "./types.js";
-import { draggable, manage } from "./window.js";
+import { draggable, manage, raise } from "./window.js";
 
 // How often to ask for new lines, which depends on who is looking.
 //
@@ -188,7 +188,11 @@ export class ChatPanel {
   }
 
   show(): void {
+    // Raised as well as shown: a room that is already up and buried is what
+    // the status bar's button is pressed to bring forward, and an element
+    // that was never hidden is not one the manager sees appear.
     this.root.hidden = false;
+    raise(this.root);
     this.input.focus();
     // Whatever arrived while it was down is at the bottom.
     this.log.scrollTop = this.log.scrollHeight;

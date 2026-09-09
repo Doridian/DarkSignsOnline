@@ -1377,23 +1377,85 @@ dialog.window:not([open]) {
   }
 }
 
-/* The library has no command in the original either: it is opened from the
-   console's own furniture, which here is the status bar. The buttons that
-   open a terminal and a file explorer keep it company. */
-#open-terminal,
-#open-files,
-#open-library {
+/* The apps. The library has no command in the original either: it is opened
+   from the console's own furniture, which here is the status bar, and the
+   rest keep it company. Furniture rather than something to press by
+   accident, which is the dress the account's buttons wear too. */
+#statusbar button {
   padding: 0.05rem 0.4rem;
   font-size: 11px;
   background: transparent;
   border-color: transparent;
   color: var(--dim);
 }
-#open-terminal:hover,
-#open-files:hover,
-#open-library:hover {
+#statusbar button:hover,
+#statusbar button.open {
   color: var(--gold);
   border-color: var(--rule);
+}
+
+/* ---- the app menu ---------------------------------------------------- */
+
+/* What an app with windows out drops up over the status bar: which of them,
+   or another. Fixed and hanging from the body, placed by `taskbar.ts`
+   against the button it belongs to -- the status bar is one line tall, and a
+   menu laid out inside it would be too. */
+#app-menu {
+  position: fixed;
+  /* A floor. `taskbar.ts` sets the real one when it places the menu, since
+     the windows' stack climbs and no number here would stay above it. */
+  z-index: 100;
+  min-width: 11rem;
+  max-width: min(22rem, calc(100vw - 1rem));
+  display: grid;
+  padding: 0.25rem;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 0 -8px 20px rgb(0 0 0 / 50%);
+  font-size: 11px;
+}
+/* `display` above would otherwise outrank the attribute. */
+#app-menu[hidden] {
+  display: none;
+}
+
+.app-menu-item {
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  background: transparent;
+  border-color: transparent;
+  color: var(--dim);
+  /* A window is named for where it is looking, and a deep path is longer
+     than the menu: it ellipsizes rather than widening or wrapping. */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.app-menu-item:hover,
+.app-menu-item:focus-visible {
+  color: var(--gold);
+  border-color: var(--rule);
+}
+
+/* Whichever window is already in front, so the menu says where a press would
+   take you before it takes you. */
+.app-menu-item.front {
+  color: var(--accent);
+}
+
+/* Opening another is a different kind of thing from picking one of these,
+   and is ruled off from them. */
+.app-menu-item.fresh {
+  margin-top: 0.25rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--rule);
+  border-radius: 0;
+}
+.app-menu-item.fresh:hover,
+.app-menu-item.fresh:focus-visible {
+  border-color: transparent;
+  border-top-color: var(--rule);
 }
 
 /* ---- chat ------------------------------------------------------------ */

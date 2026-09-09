@@ -11,7 +11,7 @@
 // arrives here is already rows.
 
 import type { Ask } from "./types.js";
-import { centred, draggable, manage } from "./window.js";
+import { centred, draggable, manage, raise } from "./window.js";
 
 /** One file in the library. */
 interface Entry {
@@ -88,6 +88,9 @@ export class LibraryWindow {
     if (!this.root.open) {
       this.root.show();
     }
+    // A window that was already open is one the manager did not see appear,
+    // so it is raised here: shown and brought forward are the same request.
+    raise(this.root);
     this.render();
     if (this.categories.length === 0) {
       // The tables live in Rust beside the requests they shape, and the page

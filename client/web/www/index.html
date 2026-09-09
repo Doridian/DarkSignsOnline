@@ -179,16 +179,24 @@
     <!-- The file library and the text space, opened from the status bar. -->
     <dialog id="library" class="window" aria-label="File Library"></dialog>
 
+    <!--
+      The status bar, which is where the apps are launched from. A button
+      opens its app or brings it forward and never closes it -- closing is
+      the job of a window's own bar. The two apps there can be several of
+      drop a menu up over this bar when they have windows out; that menu is
+      made by `taskbar.ts` and hangs from the body, since a menu laid out
+      inside this strip would be one line tall.
+    -->
     <footer id="statusbar">
       <span id="hint">Type <b>HELP</b> for a list of commands.</span>
       <button id="open-terminal" type="button"
-              title="Open a terminal -- one per press">Terminal</button>
+              title="Open a terminal, or pick one that is open">Terminal</button>
       <button id="open-files" type="button"
-              title="Open a file explorer -- one per press">Files</button>
-      <button id="open-comm" type="button" title="Show or hide the communications log"
-              aria-controls="comm">Comms</button>
-      <button id="open-chat" type="button" title="Chat (F5)">Chat</button>
-      <button id="open-library" type="button">File Library</button>
+              title="Open a file explorer, or pick one that is open">Files</button>
+      <button id="open-comm" type="button"
+              title="Show the communications log">Comms</button>
+      <button id="open-chat" type="button" title="Show chat (F5)">Chat</button>
+      <button id="open-library" type="button" title="Show the file library">File Library</button>
     </footer>
 
     <script type="module" src="./main.js"></script>

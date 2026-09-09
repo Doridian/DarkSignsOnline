@@ -277,6 +277,18 @@ export function raise(el: HTMLElement): void {
   }
 }
 
+/**
+ * A z-index clear of every window, for whatever floats over all of them.
+ *
+ * The stack climbs rather than being renumbered, so there is no fixed number
+ * the stylesheet could name that a long session would not eventually reach.
+ * Read at the moment it is needed: the status bar's menu is the only caller,
+ * and nothing raises a window while that menu is up.
+ */
+export function overlay(): number {
+  return top + 1;
+}
+
 /** Put a window back at the size and place it opens with. */
 export function reset(el: HTMLElement): void {
   const win = managed.get(el);

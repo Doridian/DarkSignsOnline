@@ -16,9 +16,9 @@ the interpreter stay straightforward.
 ## Terminals, one worker each
 
 A terminal is a window with a worker and a `Session` of its own. The client
-opens one, `Terminal` in the status bar opens another, and each is closed
-from its own bar; the original's four are the shape this generalizes, not a
-limit it keeps. They cannot share a worker: a console blocked in `ReadLine`
+opens one, `Terminal` in the status bar opens or picks out the rest, and each
+is closed from its own bar; the original's four are the shape this
+generalizes, not a limit it keeps. They cannot share a worker: a console blocked in `ReadLine`
 blocks its whole worker, and the point of having more than one is that the
 others keep working. Scripts read which one they are in as `ConsoleID`.
 
@@ -214,6 +214,7 @@ which is the layout the batching is there to avoid.
 | [`www/vbs.ts`](www/vbs.ts) | What a line of VBScript is made of, and how far it is indented |
 | [`www/library.ts`](www/library.ts) | The file library and the text space |
 | [`www/window.ts`](www/window.ts) | The window manager: where each window sits, moving it, sizing it, stacking it |
+| [`www/taskbar.ts`](www/taskbar.ts) | The status bar's apps, and the menu of open windows they drop up |
 | [`www/types.ts`](www/types.ts) | Every message between the page, a worker and the wasm |
 | [`www/control.ts`](www/control.ts) | The shared control block's three states |
 | [`www/fonts.ts`](www/fonts.ts) | The font stacks, shared so text is measured in the face it is drawn in |
@@ -432,11 +433,11 @@ by the time one can be opened the filesystem it attaches to is up.
 ## The file explorers
 
 A window, which the original had no equivalent of. `Files` in the status bar
-opens one, and opens another one every time it is pressed: looking in two
-folders at once — the script and the library it calls, the folder something
-is being dragged out of and the one it is going to — is common enough that
-one window was the wrong number. None is open until it is asked for, and a
-window that is in the way is closed from its own bar.
+opens one, and will open any number more: looking in two folders at once —
+the script and the library it calls, the folder something is being dragged
+out of and the one it is going to — is common enough that one window was the
+wrong number. None is open until it is asked for, and a window that is in the
+way is closed from its own bar.
 
 **One model, any number of windows.** `FileModel` holds the tree, is read
 once and then kept up from the fs worker's reports; a window holds only
@@ -611,6 +612,46 @@ that terminal is the one being used or the player asked for it outright --
 clicking its log, dropping a path on it, or raising it with a function key.
 Escape closes the window holding the keyboard, which is what the browser did
 for a modal dialog, and is the one thing a terminal opts out of.
+
+## The status bar
+
+Five apps along the foot of the page, and one rule between them:
+**a button opens its app or brings it forward, and never closes anything.**
+[`taskbar.ts`](www/taskbar.ts) is the whole of it.
+
+The rule is the interesting part, because the buttons did not start out with
+it. `Comms` and `Chat` were switches — press to show, press again to hide —
+which reads well enough with one window and stops reading at all once the
+window can be buried under six others. The press that was going to raise the
+log closes it instead, and nothing about the button says which of the two it
+is about to do. Closing wants the window it closes to be on screen while you
+decide, so closing is the job of a window's own bar and the status bar does
+not offer it. `F5` still puts chat away, because that is what `ShowChat` did
+and the key is the original's.
+
+**An app there can be several of drops a menu up instead.** `Terminal` and
+`Files` have more than one answer to "bring it forward", so with windows out
+they list them — a terminal by its `ConsoleID`, an explorer by the folder it
+is looking at, since that is the only thing that tells two of them apart —
+with the one already in front marked, and one more entry below the rule to
+open another. With nothing open there is nothing to choose between and the
+press just opens one, which is what it always did. Escape and the arrows work
+from the button as well as from inside the menu: a menu opened with the mouse
+leaves the keyboard where it was, so those keys are caught at the document
+rather than on the menu.
+
+One menu element serves every button. It hangs from the body rather than from
+the bar it drops out of — the bar is one line tall and would clip it — and it
+is placed against the button by hand. Its `z-index` comes from `overlay()` in
+the window manager rather than from the stylesheet: the window stack climbs
+as windows are raised and never renumbers, so there is no constant a long
+session would not eventually reach.
+
+**Showing a window that is already showing still raises it.** The manager
+notices a window appearing by watching `open` and `hidden`, and an element
+that was never hidden does not change either, so chat and the library raise
+themselves in their own `show()`. The editor already did this in `reopen()`
+for the same reason.
 
 ## The editors
 

@@ -30,6 +30,7 @@ import { Explorers, FileModel, PATH_DRAG, quotePath } from "./filetree.js";
 import { LibraryWindow } from "./library.js";
 import { MailWindow } from "./mail.js";
 import { MusicPlayer } from "./music.js";
+import { taskbar } from "./taskbar.js";
 import type { Asked, ConsoleEvent, FromFs, FromWorker, FsAsk, ToWorker } from "./types.js";
 import { centred, draggable, focusedWindow, manage, raise, unmanage } from "./window.js";
 
@@ -937,28 +938,14 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-// A terminal every press, the way `Files` opens an explorer every press.
-// There is no toggling and nothing to remember: the client opens the first
-// one itself, and every one after it is asked for.
-element("open-terminal").addEventListener("click", () => openTerminal());
-
-// The file library, which the original opens from a label on the console
-// rather than from a command. The status bar is where that label is here.
-element("open-library").addEventListener("click", () => void library.show());
-
-// The original raises chat with F5 alone. The button is here because a
-// function key is not the only way anyone should have to reach it.
-element("open-chat").addEventListener("click", () => chat.toggle());
-
 // The communications log. It is the one window that opens by default -- it
 // is where the server's notices land, and a notice nobody was shown is a
-// notice that did not happen -- so what is remembered is having closed it.
+// notice that did not happen -- so what is remembered is having closed it,
+// which is done from its own bar rather than from the status bar.
 const COMM_KEY = "darksigns.comm";
-const commButton = element("open-comm");
 
 function showComm(open: boolean): void {
   commWindow.hidden = !open;
-  commButton.setAttribute("aria-expanded", String(open));
   try {
     localStorage.setItem(COMM_KEY, open ? "open" : "closed");
   } catch {
@@ -967,7 +954,6 @@ function showComm(open: boolean): void {
   }
 }
 
-commButton.addEventListener("click", () => showComm(!!commWindow.hidden));
 (commWindow.querySelector(".win-close") as HTMLButtonElement).addEventListener(
   "click",
   () => showComm(false),
@@ -977,13 +963,78 @@ try {
 } catch {
   // As above.
 }
-commButton.setAttribute("aria-expanded", String(!commWindow.hidden));
 
-// The file explorer, which is the client's own rather than anything the
-// original had. Each press opens another window rather than toggling one:
-// two folders are often wanted at once, and a window that is in the way is
-// closed from its own bar. None is open until one is asked for.
-element("open-files").addEventListener("click", () => explorers.create());
+// The status bar. Every button there opens its app or brings it forward, and
+// none of them closes anything: a window is closed from its own bar, where
+// what is about to go is on screen to be looked at first. The two there can
+// be several of drop a menu up when they have windows out -- which one, or
+// another -- and open one straight away when they have none.
+taskbar([
+  {
+    button: element("open-terminal"),
+    another: "New terminal",
+    // Oldest first, as `consoles` holds them, so a terminal keeps its place
+    // in the menu for as long as it is open.
+    instances: () =>
+      consoles.map((item) => ({
+        label: `Terminal ${item.id}`,
+        el: item.window,
+        // Not just raised: this is also the terminal the client's own keys
+        // act on from here, which is what picking one out of a list means.
+        show: () => setActive(item, true),
+      })),
+    launch: () => {
+      openTerminal();
+    },
+  },
+  {
+    // The file explorer, which is the client's own rather than anything the
+    // original had. Any number can be out at once -- two folders are often
+    // wanted together -- so each is named in the menu by where it is
+    // looking, which is the only thing that tells them apart.
+    button: element("open-files"),
+    another: "New file explorer",
+    instances: () =>
+      [...explorers.open].map((tree) => ({
+        label: `Files: ${tree.current}`,
+        el: tree.root,
+        show: () => {
+          raise(tree.root);
+          tree.icons.focus();
+        },
+      })),
+    launch: () => {
+      explorers.create();
+    },
+  },
+  {
+    button: element("open-comm"),
+    instances: () =>
+      commWindow.hidden
+        ? []
+        : [{ label: "Communications", el: commWindow, show: () => raise(commWindow) }],
+    launch: () => showComm(true),
+  },
+  {
+    // The original raises chat with F5 alone. The button is here because a
+    // function key is not the only way anyone should have to reach it; F5
+    // still puts the room away again, as `ShowChat` does.
+    button: element("open-chat"),
+    instances: () =>
+      chat.visible ? [{ label: "Chat", el: chat.root, show: () => chat.show() }] : [],
+    launch: () => chat.show(),
+  },
+  {
+    // The file library, which the original opens from a label on the console
+    // rather than from a command. The status bar is where that label is here.
+    button: element("open-library"),
+    instances: () =>
+      library.open
+        ? [{ label: "File Library", el: library.root, show: () => void library.show() }]
+        : [],
+    launch: () => void library.show(),
+  },
+]);
 
 // A file dragged in from the desktop and dropped anywhere but a folder in
 // the tree would otherwise be opened by the browser, which navigates away
