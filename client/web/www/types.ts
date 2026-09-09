@@ -203,9 +203,9 @@ export interface WorkerFailure {
 
 /** What a worker sends the page. */
 export type FromWorker =
-  | { type: "ready"; cwd: string; persistent: boolean; restored: number }
+  | { type: "ready"; cwd: string }
   | { type: "credentialsSet" }
-  | { type: "console"; event: ConsoleEvent }
+  | { type: "console"; events: ConsoleEvent[] }
   | { type: "missingFile"; path: string }
   | { type: "wantInput"; mode: string; prompt: string }
   | { type: "done"; cwd: string }

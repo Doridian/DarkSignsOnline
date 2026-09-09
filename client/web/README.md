@@ -59,21 +59,75 @@ A `Ctrl+B` during a write, a directory listing or a request lets that call
 finish and stops at the statement after it, so nothing is left half-done. Two
 things reach the interpreter, for the two shapes a script can have: it asks
 the host every so many statements, which catches a tight loop, and the host
-says so itself the moment a call it was blocked in returns, which catches a
-script that spends its time waiting rather than running. `On Error Resume
+asks itself on both sides of every call it makes, which catches a script that
+spends its time waiting rather than running. `On Error Resume
 Next` cannot swallow the stop; the script ends, `done` comes back as it would
 from any other ending, and the prompt returns.
 
-The other half of making that visible is the backlog. A script outruns the
-page by a wide margin — a loop writing a counter posts tens of thousands of
-lines a second — so a page that drew each line as it landed fell steadily
-further behind, and a stop showed up seconds late with the counter still
-climbing in the meantime. The page therefore collects console events and
-draws them a frame at a time: one scroll for the batch instead of one per
-line, and a line the next event overwrites anyway is not built at all, which
-is the whole of a progress counter. A stopped console throws away what it has
-not drawn. Stopping is then immediate however long the script had been
-running, which is what `Ctrl+B` has to be to be worth having.
+The other half of making that visible is that there is nothing queued to
+draw when the stop lands — see below. A stopped console drops the batch it
+was sent and the worker drops what it was holding, so stopping is immediate
+however long the script had been running, which is what `Ctrl+B` has to be
+to be worth having.
+
+## What a frame shows
+
+A script outruns the page by a wide margin: a loop writing a counter says
+hundreds of thousands of lines a second and a browser draws sixty frames, so
+something has to hold the difference. Where it is held is the whole question,
+because it decides what a frame means.
+
+Held on the page — a message per line, a queue the page works through — a
+frame shows a position in that queue rather than the console. The queue only
+grows, so the position falls further behind the longer a script runs, and a
+console that is a minute behind is not a slow console but a wrong one: it
+goes on printing after the script that printed it has stopped, and `Ctrl+B`
+looks broken because the evidence of it arrives a minute late.
+
+So it is held in the worker, and the rule is the one that follows from that:
+**every frame draws the console as it stands, and a script says nothing the
+page has not drawn.** One batch is out with the page at a time. The worker
+posts it and marks the fourth slot of the shared control block; the page
+draws all of it as it arrives, and clears the slot on the frame that shows
+it. The worker hands over whatever has piled up since, and the cycle repeats
+one batch a frame. Nothing is queued on the page at all.
+
+What piles up in the worker is not what was said, but what is left of it. A
+line that only replaces the line the next one replaces again was never on
+screen, so only the last is kept — which is the whole of a progress counter,
+and the reason a counter costs one line a frame however fast it counts. A
+batch is drawn as one, so the log is laid out once rather than once a line.
+
+A script saying thousands of *distinct* lines between two frames is asking
+for more than any display can show, so past `MAX_PENDING` of them the worker
+parks on the same slot until the page has caught up. Blocking `Say` is the
+point: a script that says more than can be drawn then runs at the speed it
+can be drawn at, and the console is never a stale picture of it.
+
+Two things follow that are not obvious:
+
+*The stop poll is where output is handed over.* Asking whether the player has
+pressed Ctrl+B is the one thing a running script does that reaches the page,
+and the interpreter asks between statements and on both sides of every host
+call. That is where the worker gives up what it is holding, so a line said
+just before a request waits for a frame rather than for the request, and a
+script that says something and then computes for a second does not show it a
+second late.
+
+*A console in a background tab is paced by a message rather than a frame.*
+Frames stop there and scripts do not, so a worker would hold output for a
+frame that is not coming and park for good. The page posts itself a message
+instead — not a timer, which the browser throttles to one a second — so a
+hidden console keeps drawing at the speed it is written to and comes back
+with nothing to catch up on.
+
+Measured in Chromium. On a loop saying a counter, which costs the page one
+line a frame either way, thirty seconds of it drew 9.0M and now draws 14.3M,
+`Ctrl+B` answered in 24ms in both — that one was already immediate. The case
+that was not is a loop saying *distinct* lines, where the page has real work
+to do: 300,000 of them used to leave the script finished in 1.0s and the
+console printing for another 8.7s, and now the script takes 8.5s and the
+console is 0.6s behind it, which is the one batch it is holding.
 
 ## Layout
 

@@ -23,6 +23,12 @@ pub struct BrowserHost<C, F, S> {
     /// It reads a flag out of the block this worker shares with the page,
     /// which is the only channel that reaches a thread busy running a
     /// script: a `postMessage` would sit in a queue nothing is draining.
+    ///
+    /// Being the one call out of a running script, it is also where the
+    /// worker hands the page whatever the script has said since the page
+    /// last drew. Asking is therefore not free of consequence, which is why
+    /// it is asked at the points that suit both: often enough that held
+    /// output is never held long, rarely enough to cost nothing.
     stop_requested: js_sys::Function,
 }
 
@@ -52,13 +58,24 @@ impl<C: Console, F: FileSystem, S: GameServer> Host for BrowserHost<C, F, S> {
     }
 
     fn call(&self, it: &mut Interp, name: &str, args: &mut [ArgVal]) -> VbResult<Option<Value>> {
-        let result = self.inner.call(it, name, args);
-        // A host call may have parked this worker for as long as the player
-        // was willing to wait -- on a typed line, on a request. Latch the
-        // stop here rather than leaving it to the interpreter's own poll,
+        // Asked on both sides of the call, for two different reasons.
+        //
+        // Before it, because asking is the one thing a running script does
+        // that reaches the page at all, and the page uses it to collect the
+        // output it is owed. A call is about to park this worker for as long
+        // as a request takes, and a line said just before one should wait for
+        // a frame rather than for the answer.
+        //
+        // After it, because the call may have parked for as long as the
+        // player was willing to wait -- on a typed line, on a request -- and
+        // the stop would otherwise be left to the interpreter's own poll,
         // which counts statements and so is reached slowly by a script that
-        // spends its time waiting. The call itself still returns whatever it
-        // was going to; the stop lands at the next statement.
+        // spends its time waiting. The call still returns whatever it was
+        // going to; the stop lands at the next statement either way.
+        if self.poll_abort() {
+            it.request_abort();
+        }
+        let result = self.inner.call(it, name, args);
         if self.poll_abort() {
             it.request_abort();
         }

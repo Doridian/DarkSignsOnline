@@ -30,7 +30,7 @@ export class ConsoleView {
    * Reading `scrollHeight` forces the browser to lay the log out, so doing
    * it per line makes adding a hundred a hundred times the work of adding
    * them together. The page draws a frame's worth at a time; see
-   * `GameConsole.drawQueued`.
+   * `GameConsole.drawBatch`.
    */
   holdScroll = false;
 

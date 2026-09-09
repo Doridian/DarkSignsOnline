@@ -5,13 +5,13 @@
 // main thread. Here both are fine — a synchronous XMLHttpRequest works, and
 // `Atomics.wait` lets us park until the page sends input.
 
-import { ABORT, CLOSED, FS_MORE, LENGTH, MORE, STATE, WAITING } from "./control.js";
+import { ABORT, CLOSED, DRAWING, FS_MORE, LENGTH, MORE, STATE, WAITING } from "./control.js";
 import { FONT_STACK } from "./fonts.js";
 import init, { Session, libraryCategories, textspaceChannels } from "./pkg/dso_web.js";
-import type { Asked, ToWorker } from "./types.js";
+import type { Asked, ConsoleEvent, FromWorker, ToWorker } from "./types.js";
 
 /** Shared with the page so input can be delivered to a blocked worker. */
-let control: Int32Array | null = null; // [state, length, abort]
+let control: Int32Array | null = null; // [state, length, abort, drawing]
 /** The encoded answer. */
 let answerBytes: Uint8Array | null = null;
 
@@ -37,14 +37,128 @@ let fsBytes: Uint8Array | null = null;
  */
 let layout = { width: 960, preSpace: 40 };
 
-/** Send one console event to the page. */
+/**
+ * Console output the page has not been given yet.
+ *
+ * A script outruns the page by a wide margin -- a loop writing a counter
+ * says tens of thousands of lines a second, and a browser draws sixty
+ * frames -- so somebody has to hold the difference. It is held here, where
+ * the script is, rather than in a queue of messages the page works through:
+ * a queue only ever grows, and what it grows into is a console still
+ * printing seconds after the script that printed it has ended.
+ *
+ * Held here it can be dropped instead. A line that only replaces the line
+ * the next one replaces again was never on screen, so the batch keeps one of
+ * them, which is the whole of a progress counter. What the page is finally
+ * given is one message holding the terminal as it stands, and it is given it
+ * only when it is ready to draw it.
+ */
+let pending: ConsoleEvent[] = [];
+
+/**
+ * How much output is held before the script is made to wait for the page.
+ *
+ * Reached by a script saying thousands of distinct lines between two frames,
+ * which no display could show and no memory should have to hold. Past this
+ * the worker parks until the page has drawn what it already has, so a script
+ * that says more than can be drawn runs at the speed it can be drawn at.
+ */
+const MAX_PENDING = 4096;
+
+/** Whether the page still has a batch of output it has not drawn. */
+function drawing(): boolean {
+  return control !== null && Atomics.load(control, DRAWING) === 1;
+}
+
+/**
+ * Hand the page everything said since it last drew.
+ *
+ * One message for the batch, so what arrives is a frame's worth of console
+ * rather than a thousand separate things to be dispatched one at a time.
+ */
+function flush(): void {
+  if (pending.length === 0) {
+    return;
+  }
+  const events = pending;
+  pending = [];
+  if (control) {
+    Atomics.store(control, DRAWING, 1);
+  }
+  postMessage({ type: "console", events });
+}
+
+/**
+ * Park until the page has drawn what it was given.
+ *
+ * The wait has a timeout it does not need in order to be woken -- the page
+ * notifies -- but so that a page which has stopped drawing altogether leaves
+ * a script stalled rather than wedged: `stopRequested` is looked at every
+ * time round, so Ctrl+B still reaches a script parked here.
+ */
+function awaitDrawn(): void {
+  const block = control;
+  if (!block) {
+    return;
+  }
+  while (Atomics.load(block, DRAWING) === 1) {
+    // Which drops what is held, so there is nothing left to wait to send.
+    if (stopRequested()) {
+      return;
+    }
+    Atomics.wait(block, DRAWING, 1, 100);
+  }
+}
+
+/** Take one console event, to go to the page when the page is ready for it. */
 function emit(json: string): void {
-  postMessage({ type: "console", event: JSON.parse(json) });
+  // A stopped script's output is not drawn, so it is not carried either --
+  // and asking is what drops whatever was already held.
+  if (stopRequested()) {
+    return;
+  }
+  const event = JSON.parse(json) as ConsoleEvent;
+  const last = pending[pending.length - 1];
+  if (
+    event.kind === "line" &&
+    event.replace &&
+    last?.kind === "line" &&
+    last.replace &&
+    last.channel === event.channel
+  ) {
+    // The row it overwrites has not been drawn, so it is not kept: this is
+    // the difference between building a thousand counters a second and
+    // building one a frame.
+    pending[pending.length - 1] = event;
+  } else {
+    pending.push(event);
+  }
+
+  if (!drawing()) {
+    flush();
+    return;
+  }
+  if (pending.length >= MAX_PENDING) {
+    awaitDrawn();
+    flush();
+  }
+}
+
+/**
+ * Tell the page something, with whatever was said before it.
+ *
+ * Everything from here goes through this: a prompt, an ending, an error and
+ * a window's answer all belong after the output that led up to them, and
+ * output is not sent as it is made.
+ */
+function report(message: FromWorker): void {
+  flush();
+  postMessage(message);
 }
 
 /** Answer a window's question, with the token it asked under. */
 function answer(asked: Asked, value: unknown): void {
-  postMessage({ type: "answer", token: asked.token, value });
+  report({ type: "answer", token: asked.token, value });
 }
 
 /**
@@ -59,7 +173,7 @@ function readLineSync(prompt: string, _rgb: number): string | null {
   }
   // The prompt travels with the request so the page can set it beside the
   // caret instead of printing it as a finished line.
-  postMessage({ type: "wantInput", mode: "line", prompt: prompt ?? "" });
+  report({ type: "wantInput", mode: "line", prompt: prompt ?? "" });
   Atomics.store(control, STATE, WAITING);
   Atomics.wait(control, STATE, WAITING);
 
@@ -183,11 +297,25 @@ function withTag(tag: number, body: Uint8Array): Uint8Array {
  *
  * Read straight out of shared memory: this thread is busy running the script
  * the answer is about, so nothing it could be sent would arrive in time. The
- * interpreter asks between statements, and again after every host call, so a
- * script stuck waiting on one stops as soon as the wait is over.
+ * interpreter asks between statements, and on both sides of every host call,
+ * so a script stuck waiting on one stops as soon as the wait is over.
+ *
+ * Being asked is also the only moment a running script has in which it can
+ * do anything else, so it is where output held for the page is handed over
+ * once the page is ready for it. Without that a line said just before a
+ * request would be held for the length of the request rather than for a
+ * frame, and a script that says something and then computes for a second
+ * would show it a second late.
  */
 function stopRequested(): boolean {
-  return control !== null && Atomics.load(control, ABORT) !== 0;
+  const stop = control !== null && Atomics.load(control, ABORT) !== 0;
+  if (stop) {
+    // A stopped script's output is not drawn, so it is not carried either.
+    pending.length = 0;
+  } else if (!drawing()) {
+    flush();
+  }
+  return stop;
 }
 
 /** Block until the page supplies a single key, returning its char code. */
@@ -235,7 +363,7 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
   // Nothing is seeded and nothing is loaded. The tree was built once, by the
   // worker that owns it, before this console was told to start; there is no
   // copy here to fill.
-  postMessage({ type: "ready", cwd: session.currentDirectory() });
+  report({ type: "ready", cwd: session.currentDirectory() });
 }
 
 onmessage = async (e: MessageEvent<ToWorker>) => {
@@ -271,19 +399,19 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
     switch (message.type) {
       case "credentials":
         session.setCredentials(message.username, message.password);
-        postMessage({ type: "credentialsSet" });
+        report({ type: "credentialsSet" });
         break;
 
       case "command":
         // Runs to completion, blocking here as needed. The page stays
         // responsive because this is a worker.
         session.runCommand(message.line);
-        postMessage({ type: "done", cwd: session.currentDirectory() });
+        report({ type: "done", cwd: session.currentDirectory() });
         break;
 
       case "script":
         session.runScript(message.source, message.args ?? []);
-        postMessage({ type: "done", cwd: session.currentDirectory() });
+        report({ type: "done", cwd: session.currentDirectory() });
         break;
 
       case "runFile": {
@@ -293,13 +421,13 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
         try {
           source = session.readFile(message.path);
         } catch {
-          postMessage({ type: "missingFile", path: message.path });
-          postMessage({ type: "done", cwd: session.currentDirectory() });
+          report({ type: "missingFile", path: message.path });
+          report({ type: "done", cwd: session.currentDirectory() });
           break;
         }
         // ArgV(0) is the command, the way a script run from the prompt sees it.
         session.runScript(source, [message.path]);
-        postMessage({ type: "done", cwd: session.currentDirectory() });
+        report({ type: "done", cwd: session.currentDirectory() });
         break;
       }
 
@@ -384,7 +512,7 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
         // has been reloaded onto a newer build is not, so it says so rather
         // than being dropped.
         const unknown = message as { type: string };
-        postMessage({
+        report({
           type: "error",
           message: `unknown message ${unknown.type}`,
           cwd: session.currentDirectory(),
@@ -396,11 +524,11 @@ onmessage = async (e: MessageEvent<ToWorker>) => {
     // A window's failure belongs in that window, not in the console log:
     // nothing was running there.
     if ("token" in message) {
-      postMessage({ type: "failed", token: message.token, message: text });
+      report({ type: "failed", token: message.token, message: text });
       return;
     }
     // A script error is normal: report it and let the page carry on.
-    postMessage({
+    report({
       type: "error",
       message: text,
       cwd: session ? session.currentDirectory() : "/",

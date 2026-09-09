@@ -1,10 +1,10 @@
 // The control block a console and its worker share.
 //
-// One `SharedArrayBuffer` of three integers: the state, which the worker
+// One `SharedArrayBuffer` of four integers: the state, which the worker
 // parks on with `Atomics.wait`; the length of whatever is waiting in the
-// other buffer; and the stop flag, which is how Ctrl+B reaches a worker that
-// is not parked at all. Both sides need the same numbers, so they are named
-// once here rather than twice.
+// other buffer; the stop flag, which is how Ctrl+B reaches a worker that is
+// not parked at all; and whether output is out with the page. Both sides
+// need the same numbers, so they are named once here rather than twice.
 
 /** Slot holding the state below, which the worker parks on. */
 export const STATE = 0;
@@ -19,8 +19,22 @@ export const LENGTH = 1;
  * had finished. The interpreter reads this between statements.
  */
 export const ABORT = 2;
+/**
+ * Slot holding whether a batch of console output is out with the page.
+ *
+ * The worker sets it as it posts one and the page clears it once it has
+ * drawn it, on the frame that shows it. That is the whole of the pacing: a
+ * worker with output the page has not drawn holds on to it rather than
+ * posting more, so what a frame draws is everything said up to that frame
+ * and nothing is ever queued behind it.
+ *
+ * Shared memory rather than a message for the same reason `ABORT` is: the
+ * worker reads it in the middle of a running script, which is not a moment
+ * at which it is reading messages.
+ */
+export const DRAWING = 3;
 /** How many integers the block holds. */
-export const CONTROL_SLOTS = 3;
+export const CONTROL_SLOTS = 4;
 
 /** The worker is parked, waiting for an answer. */
 export const WAITING = 0;
