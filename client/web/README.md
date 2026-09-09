@@ -181,7 +181,7 @@ which is the layout the batching is there to avoid.
 | [`www/filetree.ts`](www/filetree.ts) | The file explorer: the folder tree, the icons, and its three drags |
 | [`www/mail.ts`](www/mail.ts) | The DSMail reader |
 | [`www/chat.ts`](www/chat.ts) | The chat window: the poll, the history, and `/me` |
-| [`www/editor.ts`](www/editor.ts) | The editor, with the highlighter and the indenting |
+| [`www/editor.ts`](www/editor.ts) | The editors, with the highlighter and the indenting |
 | [`www/vbs.ts`](www/vbs.ts) | What a line of VBScript is made of, and how far it is indented |
 | [`www/library.ts`](www/library.ts) | The file library and the text space |
 | [`www/window.ts`](www/window.ts) | The window manager: where each window sits, moving it, sizing it, stacking it |
@@ -476,7 +476,7 @@ as long as the tab does, media included, and the page says so once at startup.
 ## The windows
 
 Everything the client shows that is not a console is a window: the
-communications log, the file explorer, chat, mail, the editor and the
+communications log, the file explorer, chat, mail, the editors and the
 library. They float over the consoles, are dragged by their title bars and
 resized by their frames, and several can be open at once.
 
@@ -506,6 +506,17 @@ against the room there is -- and where it was left last visit beats that,
 since geometry is remembered per window in `localStorage`. A double-click on
 a title bar forgets it and puts the window back.
 
+**Most windows are one of a kind; the editors are not.** There is one per
+file being edited, made when the file is opened and destroyed when it is
+closed, which is the whole of what the last three things in `Options` are
+for. `store` names where geometry is kept, so every editor remembers one
+size rather than each remembering its own -- an editor sized to suit the
+screen is the size the next file wants too. `offset` steps each new one down
+and right of what is already open, since two windows sharing a `store` would
+otherwise land exactly on each other, and starts over after six so the
+cascade cannot walk off the desktop. `unmanage` is how a window that is
+being thrown away stops being visited by every sweep over the open ones.
+
 **The frame is what makes resizing work without a single extra element.**
 Every window carries `--win-frame` of padding, so its outermost few pixels
 are the window's own box rather than anything inside it, and a pointer there
@@ -527,14 +538,23 @@ console refuses unless the player asked for it by clicking the console or
 picking its tab. Escape closes the window holding the keyboard, which is what
 the browser did for a modal dialog.
 
-## The editor
+## The editors
 
-`EDIT <file>` opens it, as in the original, and it saves as you type -- the
+`EDIT <file>` opens one, as in the original, and it saves as you type -- the
 original's `AutoSave` on every keystroke, debounced. "Run (F5)" is its "Test
 Script": the file is saved, the window closes, and the console that opened
 the editor runs it.
 
-Two things the original did not have:
+**One window per file, not one editor.** A script being written is usually
+read next to another one -- the library it calls, or the one it was copied
+from -- and a single editor made that a matter of closing one file to look at
+the other. `Editors` owns the set: it makes a window when a file is opened,
+raises the window a file already has rather than opening a second view of the
+same text, which two windows autosaving over each other would be, and throws
+the window away when it is closed. Whether a file is already open is decided
+on the path folded to lower case, because the filesystem folds it too.
+
+Two more things the original did not have:
 
 *The text is coloured.* A line is tokenised in [`vbs.ts`](www/vbs.ts) and
 drawn into a `<pre>` behind a transparent textarea, which keeps the caret,

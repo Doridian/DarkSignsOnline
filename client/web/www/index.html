@@ -142,14 +142,13 @@
     </section>
 
     <!--
-      The three that fill themselves in. Each is still a `<dialog>` -- for
+      The two that fill themselves in. Each is still a `<dialog>` -- for
       `open`, `close()` and the `close` event -- but shown rather than
-      modal, so the rest of the desktop stays live behind it.
+      modal, so the rest of the desktop stays live behind it. The editors are
+      dialogs too, and are not here: `EDIT` makes one per file it opens.
     -->
     <!-- DSMail, opened by the console's `mail` command. -->
     <dialog id="mail" class="window" aria-label="DSO Mail"></dialog>
-    <!-- The editor, opened by `EDIT <file>`. -->
-    <dialog id="editor" class="window" aria-label="Editor"></dialog>
     <!-- The file library and the text space, opened from the status bar. -->
     <dialog id="library" class="window" aria-label="File Library"></dialog>
 

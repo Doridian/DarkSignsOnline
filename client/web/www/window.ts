@@ -1,10 +1,17 @@
 // The window manager.
 //
 // Everything the client shows that is not a console is a window: the
-// communications log, the file explorer, chat, mail, the editor and the
+// communications log, the file explorer, chat, mail, the editors and the
 // library. They float over the consoles, they can be moved and resized, and
 // several can be open at once -- which is the whole reason they are windows
 // rather than panels, and the reason none of them is modal any more.
+//
+// Most windows are one of a kind and live in the page from the start. The
+// editors are not: there is one per file being edited, made when the file is
+// opened and thrown away when it is closed, which is what `store`, `offset`
+// and `unmanage` below are for -- a kind of window remembers one geometry
+// between them, each new one steps clear of the last, and a window that is
+// destroyed stops being tracked.
 //
 // A window is any element with `position: fixed` and the `window` class; the
 // three that were `<dialog>` still are, because `open`, `close()` and the
@@ -76,6 +83,20 @@ export function centred(desk: Desktop, w: number, h: number): Rect {
 export interface Options {
   /** The size and place a window takes when it has never been moved. */
   rect: (desk: Desktop) => Rect;
+  /**
+   * Where its geometry is remembered, if not under its own id.
+   *
+   * Windows there can be several of share one key, so a second editor opens
+   * the size the last one was left at rather than the size in the code.
+   */
+  store?: string;
+  /**
+   * How far to step it from where its kind was last left, in pixels.
+   *
+   * Two windows sharing a `store` would otherwise land exactly on each
+   * other, and the one underneath would be invisible.
+   */
+  offset?: number;
   /** How small it may be dragged, in pixels. */
   min?: { w: number; h: number };
   /** Windows that hold nothing worth resizing can say so. */
@@ -88,6 +109,10 @@ interface Managed extends Options {
   el: HTMLElement;
   min: { w: number; h: number };
   resizable: boolean;
+  store: string;
+  offset: number;
+  /** Watches `open`/`hidden`; disconnected when the window is unmanaged. */
+  watch: MutationObserver;
   /** Whether it has been given a place yet. Deferred until it is first shown:
       a window sized from a viewport it was never displayed in is centred on
       the wrong thing. */
@@ -110,11 +135,20 @@ let top = 30;
  * still `dialog.show()` or `hidden = false` wherever it happens.
  */
 export function manage(el: HTMLElement, options: Options): void {
+  const watch = new MutationObserver(() => {
+    if (visible(el)) {
+      place(win);
+      raise(el);
+    }
+  });
   const win: Managed = {
     ...options,
     el,
     min: options.min ?? { w: 220, h: 120 },
     resizable: options.resizable ?? true,
+    store: options.store ?? el.id,
+    offset: options.offset ?? 0,
+    watch,
     placed: false,
     moved: false,
   };
@@ -136,12 +170,7 @@ export function manage(el: HTMLElement, options: Options): void {
 
   // `open` for the dialogs, `hidden` for the panels: either way the window
   // has just appeared and wants a place and the front of the stack.
-  new MutationObserver(() => {
-    if (visible(el)) {
-      place(win);
-      raise(el);
-    }
-  }).observe(el, { attributes: true, attributeFilter: ["open", "hidden"] });
+  watch.observe(el, { attributes: true, attributeFilter: ["open", "hidden"] });
 
   if (visible(el)) {
     place(win);
@@ -215,6 +244,18 @@ export function draggable(el: HTMLElement, handle: HTMLElement): void {
   });
 }
 
+/**
+ * Forget a window that is being destroyed.
+ *
+ * The listeners go with the element; what would outlive it is the entry in
+ * the map, which every window-wide sweep -- raising, `focusedWindow`, the
+ * viewport resize -- would go on visiting.
+ */
+export function unmanage(el: HTMLElement): void {
+  managed.get(el)?.watch.disconnect();
+  managed.delete(el);
+}
+
 /** Bring a window to the front, if it is not there already. */
 export function raise(el: HTMLElement): void {
   if (!managed.has(el) || el.style.zIndex === String(top)) {
@@ -279,10 +320,10 @@ function place(win: Managed): void {
   const saved = recall(win);
   if (saved) {
     win.moved = true;
-    move(win, fit(win, saved, desk));
+    move(win, fit(win, step(saved, win.offset), desk));
     return;
   }
-  move(win, fit(win, win.rect(desk), desk));
+  move(win, fit(win, step(win.rect(desk), win.offset), desk));
 }
 
 /** Set the geometry, in the one place that does. */
@@ -292,6 +333,11 @@ function move(win: Managed, rect: Rect): void {
   style.top = `${Math.round(rect.y)}px`;
   style.width = `${Math.round(rect.w)}px`;
   style.height = `${Math.round(rect.h)}px`;
+}
+
+/** The same rect, moved down and right by however much it steps clear. */
+function step(rect: Rect, offset: number): Rect {
+  return offset === 0 ? rect : { ...rect, x: rect.x + offset, y: rect.y + offset };
 }
 
 /** Trim a rect to the desktop, keeping it at least its minimum size. */
@@ -441,10 +487,13 @@ function beginResize(win: Managed, event: PointerEvent): void {
 
 function remember(win: Managed): void {
   win.moved = true;
+  if (win.store === "") {
+    return;
+  }
   const box = win.el.getBoundingClientRect();
   try {
     localStorage.setItem(
-      STORE + win.el.id,
+      STORE + win.store,
       JSON.stringify({ x: box.left, y: box.top, w: box.width, h: box.height }),
     );
   } catch {
@@ -454,9 +503,12 @@ function remember(win: Managed): void {
 }
 
 function recall(win: Managed): Rect | null {
+  if (win.store === "") {
+    return null;
+  }
   let saved: string | null = null;
   try {
-    saved = localStorage.getItem(STORE + win.el.id);
+    saved = localStorage.getItem(STORE + win.store);
   } catch {
     return null;
   }
@@ -473,8 +525,11 @@ function recall(win: Managed): Rect | null {
 }
 
 function forget(win: Managed): void {
+  if (win.store === "") {
+    return;
+  }
   try {
-    localStorage.removeItem(STORE + win.el.id);
+    localStorage.removeItem(STORE + win.store);
   } catch {
     // As above: nothing to forget if nothing could be stored.
   }

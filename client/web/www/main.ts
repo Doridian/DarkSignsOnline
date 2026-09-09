@@ -24,7 +24,7 @@ import {
   READY,
   STATE,
 } from "./control.js";
-import { EditorWindow } from "./editor.js";
+import { Editors } from "./editor.js";
 import { FileTree, PATH_DRAG, quotePath, TOGGLED } from "./filetree.js";
 import { LibraryWindow } from "./library.js";
 import { MailWindow } from "./mail.js";
@@ -71,9 +71,11 @@ draggable(commWindow, commWindow.querySelector(".win-bar") as HTMLElement);
 
 const mail = new MailWindow(dialog("mail"), (request) => ask(request));
 const library = new LibraryWindow(dialog("library"), (request) => ask(request));
-// The editor runs what it was editing in the console that opened it, which
-// is only possible when that console is not already busy with something.
-const editor = new EditorWindow(dialog("editor"), (request) => ask(request), (id, path) => {
+// The editors. There is one window per file being edited, made when the
+// file is opened, so they are not in the page to begin with and are added to
+// it here. An editor runs what it was editing in the console that opened it,
+// which is only possible when that console is not already busy.
+const editors = new Editors(document.body, (request) => ask(request), (id, path) => {
   const target = consoles[id - 1] ?? consoles[0];
   if (target.busy || target.awaitingInput) {
     return false;
@@ -89,7 +91,7 @@ const editor = new EditorWindow(dialog("editor"), (request) => ask(request), (id
  *
  * It owns the tree and it is the only thing that touches storage. The four
  * consoles ask it over ports of their own; this page asks it here, for the
- * panel, the editor and whatever is about to play a song.
+ * panel, the editors and whatever is about to play a song.
  */
 const fsWorker = new Worker("./fsworker.js", { type: "module" });
 
@@ -166,7 +168,7 @@ const fileTree = new FileTree(
   (request) => ask(request),
   // Double-clicking a file opens it where `EDIT` would, in the console on
   // screen -- so running it from the editor runs it somewhere visible.
-  (path) => void editor.openFile(path, active.id),
+  (path) => void editors.openFile(path, active.id),
   (text) => comm.add(text),
 );
 
@@ -1018,7 +1020,7 @@ function renderEvent(target: GameConsole, event: ConsoleEvent): void {
       // `EDIT` opens the editor. Like mail it does not hold the script up:
       // the worker that raised this is the one still running it, and it is
       // also the one the editor asks to read and write the file.
-      void editor.openFile(event.path, target.id);
+      void editors.openFile(event.path, target.id);
       break;
     case "mail":
       // `MAIL` opens the reader. Unlike the original it does not hold the

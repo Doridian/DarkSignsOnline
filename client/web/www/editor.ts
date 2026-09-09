@@ -1,9 +1,17 @@
-// The editor, which `EDIT <file>` opens.
+// The editors, which `EDIT <file>` opens.
 //
 // The original is a text box with a list of commands beside it and an
 // autosave on every keystroke. This keeps all three and adds what someone
 // writing a script now expects: the text is coloured, and the indent carries
 // from one line to the next instead of being retyped.
+//
+// There is one window per file rather than one editor. A script being
+// written is usually read alongside another one -- the library it calls, or
+// the one it was copied from -- and a single editor made that a matter of
+// closing one file to look at the other. `Editors` below owns the set: it
+// makes a window when a file is opened, hands back the window a file already
+// has instead of opening it twice, and throws the window away when it is
+// closed.
 //
 // It is a textarea with a highlighted `<pre>` behind it, drawn in the same
 // metrics so the two line up exactly. The textarea keeps the caret, the
@@ -18,16 +26,76 @@
 import { API } from "./reference.js";
 import type { Ask } from "./types.js";
 import { INDENT, closesBlock, indentFor, indentOf, opensBlock, tokenize } from "./vbs.js";
-import { centred, draggable, manage } from "./window.js";
+import { centred, draggable, manage, raise, unmanage } from "./window.js";
 
 /** How long to wait after a keystroke before saving. */
 const AUTOSAVE_MS = 400;
+
+/** How far each editor opens down and right of the one already there. */
+const CASCADE = 26;
+
+/** How many editors the cascade steps through before starting over. */
+const CASCADE_STEPS = 6;
+
+/** Runs a file in a console, and says whether that console was free to. */
+type Run = (consoleId: number, path: string) => boolean;
 
 /** What the worker answers a `readFile` with. */
 interface OpenedFile {
   path: string;
   contents: string;
   exists: boolean;
+}
+
+/**
+ * Every open editor, and the only way one is opened.
+ *
+ * A file gets one window: asking for a file that is already open raises the
+ * window it is in rather than opening a second view of the same text, which
+ * two windows autosaving over each other would be. Paths are folded to lower
+ * case to decide that, because the filesystem folds them too.
+ */
+export class Editors {
+  /** The window each open file is in, by its folded path. */
+  readonly open = new Map<string, EditorWindow>();
+
+  /**
+   * `host` is what the windows are added to, `ask` reaches the filesystem,
+   * and `run` runs a file in the console that asked for the editor.
+   */
+  constructor(
+    readonly host: HTMLElement,
+    readonly ask: Ask,
+    readonly run: Run,
+  ) {}
+
+  async openFile(path: string, consoleId: number): Promise<void> {
+    const key = path.toLowerCase();
+    const already = this.open.get(key);
+    if (already) {
+      already.reopen(consoleId);
+      return;
+    }
+
+    const root = document.createElement("dialog");
+    root.className = "window";
+    const editor = new EditorWindow(root, this.ask, this.run, {
+      // Clear of whatever is already open, and back to the top once enough
+      // are, so the cascade cannot walk a window off the desktop.
+      offset: (this.open.size % CASCADE_STEPS) * CASCADE,
+      closed: () => this.open.delete(key),
+    });
+    this.host.append(root);
+    this.open.set(key, editor);
+    await editor.openFile(path, consoleId);
+  }
+}
+
+interface EditorOptions {
+  /** How far this window opens from where an editor was last left. */
+  offset: number;
+  /** Told when the window has been closed and thrown away. */
+  closed: () => void;
 }
 
 export class EditorWindow {
@@ -63,20 +131,21 @@ export class EditorWindow {
   constructor(
     readonly root: HTMLDialogElement,
     readonly ask: Ask,
-    readonly run: (consoleId: number, path: string) => boolean,
+    readonly run: Run,
+    readonly options: EditorOptions,
   ) {
     manage(root, {
       rect: (desk) => centred(desk, 72 * 16, 46 * 16),
       min: { w: 420, h: 260 },
+      // One geometry for all of them: an editor sized to suit the screen is
+      // the size the next file wants too, and the offset keeps them apart.
+      store: "editor",
+      offset: options.offset,
     });
     this.build();
     // Closing by any route -- the button, Escape, the browser -- saves what
     // is on screen, because the original never asks either.
-    this.root.addEventListener("close", () => void this.save());
-  }
-
-  get open(): boolean {
-    return this.root.open;
+    this.root.addEventListener("close", () => void this.closed());
   }
 
   /**
@@ -86,6 +155,7 @@ export class EditorWindow {
     this.path = path;
     this.consoleId = consoleId;
     this.title.textContent = path;
+    this.root.setAttribute("aria-label", `Editor: ${path}`);
     this.setStatus("Opening...");
     if (!this.root.open) {
       this.root.show();
@@ -104,6 +174,39 @@ export class EditorWindow {
     this.input.setSelectionRange(0, 0);
     this.input.focus();
     this.input.scrollTop = 0;
+  }
+
+  /**
+   * `EDIT` again on a file that is already open.
+   *
+   * The text is left exactly as it is -- it is the same buffer, and rereading
+   * the file would throw away whatever has been typed since the last save --
+   * so all this does is bring the window forward and put the caret back in
+   * it. The console changes, though: Run goes back to whoever asked last.
+   */
+  reopen(consoleId: number): void {
+    this.consoleId = consoleId;
+    raise(this.root);
+    this.input.focus();
+  }
+
+  /**
+   * Closed: save, and go.
+   *
+   * The window goes with the file -- there is no empty editor to come back
+   * to -- so this is where the text stops existing, and it must not stop
+   * existing unsaved. A write that failed leaves the only copy of it in this
+   * textarea, so the window comes back up saying so instead.
+   */
+  async closed(): Promise<void> {
+    await this.save();
+    if (this.dirty) {
+      this.root.show();
+      return;
+    }
+    unmanage(this.root);
+    this.root.remove();
+    this.options.closed();
   }
 
   // ---- the frame -------------------------------------------------------
