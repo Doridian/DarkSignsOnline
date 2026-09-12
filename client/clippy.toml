@@ -1,0 +1,3 @@
+# `Session::new` takes the eight JS callbacks and values the worker hands in;
+# the default of seven would have it split for the sake of the count alone.
+too-many-arguments-threshold = 8
