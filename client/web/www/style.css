@@ -1428,6 +1428,36 @@ dialog.window:not([open]) {
   border-color: var(--rule);
 }
 
+/* A notice arriving while its window is closed, which is what the
+   communications log now is to begin with. The button is the only thing left
+   pointing at it, so it goes on pointing until the log has been looked at
+   rather than blinking once and stopping: nothing here is urgent enough to
+   interrupt, and nothing here should be missed either.
+
+   A pulse rather than a static colour because the bar already has one in it
+   -- `:hover` and an open menu are both gold -- and because movement is what
+   a glance catches. Where the player has asked for less of it, the lit half
+   of the pulse is simply held. */
+#statusbar button.attention {
+  color: var(--gold);
+  animation: attention 1.8s ease-in-out infinite;
+}
+@keyframes attention {
+  50% {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--bg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #statusbar button.attention {
+    animation: none;
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--bg);
+  }
+}
+
 /* ---- the app menu ---------------------------------------------------- */
 
 /* What an app with windows out drops up over the status bar: which of them,

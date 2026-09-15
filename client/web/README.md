@@ -640,7 +640,7 @@ part that looks like chrome.
 **What has the keyboard decides what the keys mean.** `Ctrl+B` and `F1`–`F4`
 belong to the terminals, and while the windows were modal there was nothing
 to say: a modal dialog had every key or none. Now the question is not whether
-a window is open -- an explorer or the comm log usually is -- but whether a
+a window is open -- an explorer or chat usually is -- but whether a
 window that is *not* a terminal is being typed in, which is `typingInPanel()`.
 The same answer settles the other direction: a script asking for a line takes
 the caret back to its own terminal, and it must not take it out of a window
@@ -676,6 +676,18 @@ press just opens one, which is what it always did. Escape and the arrows work
 from the button as well as from inside the menu: a menu opened with the mouse
 leaves the keyboard where it was, so those keys are caught at the document
 rather than on the menu.
+
+**A button can also point at a window nobody has opened.** The
+communications log starts closed: most of a session puts nothing in it, and a
+window held open for notices that never come is a window in the way of the
+terminal underneath. But a notice nobody was shown is a notice that did not
+happen, which is what kept it open before — so `Comms` lights up when one
+lands while the log is away, and stays lit until the log has been looked at.
+Lit rather than blinking once, because nothing that goes in there is urgent
+enough to interrupt and nothing in there should be missed either; a slow
+pulse, since movement is what a glance catches, held still where the player
+has asked for less of it. What is remembered between visits is therefore
+having *opened* the log, where it used to be having closed it.
 
 One menu element serves every button. It hangs from the body rather than from
 the bar it drops out of — the bar is one line tall and would clip it — and it

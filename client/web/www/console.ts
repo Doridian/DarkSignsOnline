@@ -241,7 +241,18 @@ export class ConsoleView {
 
 /** The communications log along the top of the window. */
 export class CommView {
-  constructor(readonly root: HTMLElement) {}
+  constructor(
+    readonly root: HTMLElement,
+    /**
+     * Called for every notice, so that the status bar can say one arrived.
+     *
+     * The log does not open by default, and a notice nobody was shown is a
+     * notice that did not happen -- so something has to point at it. What
+     * that something is belongs to the page, which knows whether the window
+     * is on screen; all this knows is that there is something new in it.
+     */
+    private readonly arrived: () => void = () => {},
+  ) {}
 
   add(text: string): void {
     const line = document.createElement("div");
@@ -263,5 +274,6 @@ export class CommView {
     this.root.append(line);
     trim(this.root, COMM_SCROLLBACK, null);
     this.root.scrollTop = this.root.scrollHeight;
+    this.arrived();
   }
 }

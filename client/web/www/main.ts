@@ -45,7 +45,11 @@ const CASCADE = 26;
 /** How many terminals the cascade steps through before starting over. */
 const CASCADE_STEPS = 6;
 
-const comm = new CommView(element("comm-log"));
+// The communications log, and the button that points at it. It does not
+// open by default any more, so the button is how a notice announces
+// itself -- see `commArrived`.
+const commButton = element("open-comm");
+const comm = new CommView(element("comm-log"), () => commArrived());
 const desktopHint = element("desktop-hint");
 const statusDot = element("status-dot");
 const statusText = element("status-text");
@@ -946,19 +950,39 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-// The communications log. It is the one window that opens by default -- it
-// is where the server's notices land, and a notice nobody was shown is a
-// notice that did not happen -- so what is remembered is having closed it,
+// The communications log. It starts closed: it is where the server's
+// notices land, and most of a session has none, so a window held open for
+// them is a window in the way of the terminal underneath. What is
+// remembered is therefore having opened it -- and having closed it again,
 // which is done from its own bar rather than from the status bar.
 const COMM_KEY = "darksigns.comm";
 
+/**
+ * What a notice does while the log is not on screen.
+ *
+ * A notice nobody was shown is a notice that did not happen, which is why
+ * the log used to be open whether or not it had anything in it. Closed by
+ * default, the button that opens it is what has to say so instead: it lights
+ * up and stays lit until the log is looked at, so an unread notice is
+ * something the page goes on saying rather than something it said once.
+ */
+function commArrived(): void {
+  if (commWindow.hidden) {
+    commButton.classList.add("attention");
+  }
+}
+
 function showComm(open: boolean): void {
   commWindow.hidden = !open;
+  if (open) {
+    // Whatever it was lit for is now on screen.
+    commButton.classList.remove("attention");
+  }
   try {
     localStorage.setItem(COMM_KEY, open ? "open" : "closed");
   } catch {
-    // A private window refuses storage; the log just opens by default next
-    // time, which is the state it ships in anyway.
+    // A private window refuses storage; the log just stays closed next time,
+    // which is the state it ships in anyway.
   }
 }
 
@@ -967,7 +991,7 @@ function showComm(open: boolean): void {
   () => showComm(false),
 );
 try {
-  commWindow.hidden = localStorage.getItem(COMM_KEY) === "closed";
+  commWindow.hidden = localStorage.getItem(COMM_KEY) !== "open";
 } catch {
   // As above.
 }
@@ -1016,7 +1040,7 @@ taskbar([
     },
   },
   {
-    button: element("open-comm"),
+    button: commButton,
     instances: () =>
       commWindow.hidden
         ? []

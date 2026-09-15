@@ -112,8 +112,12 @@
       where they sit and which is in front.
     -->
 
-    <!-- The communications log: server and client notices, newest last. -->
-    <section id="comm" class="window" aria-label="Communications">
+    <!--
+      The communications log: server and client notices, newest last. Closed
+      to begin with -- most of a session has nothing to put in it -- so a
+      notice arriving while it is away lights the `Comms` button instead.
+    -->
+    <section id="comm" class="window" hidden aria-label="Communications">
       <header class="win-bar win-drag">
         <strong class="win-title">Communications</strong>
         <span class="win-spacer"></span>
