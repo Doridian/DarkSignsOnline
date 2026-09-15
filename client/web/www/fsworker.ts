@@ -158,12 +158,12 @@ onmessage = async (e: MessageEvent<ToFs>) => {
       case "start": {
         await ready();
         fs = await GameFs.open();
-        const restored = await fs.load(message.files);
+        await fs.load(message.files);
         // Ask to keep it: without this the browser may evict the whole tree
         // when it wants the space, which for this game is the save file.
         void navigator.storage?.persist?.().catch(() => false);
         fs.drain();
-        post({ type: "fsReady", persistent: fs.persistent, restored });
+        post({ type: "fsReady", persistent: fs.persistent });
         break;
       }
 

@@ -113,8 +113,8 @@ const editors = new Editors(document.body, (request) => ask(request), (id, path)
 const fsWorker = new Worker("./fsworker.js", { type: "module" });
 
 /** Settles when the tree has been read and the first terminal can open. */
-let fsReadyResolve: (report: { persistent: boolean; restored: number }) => void = () => {};
-const fsStarted = new Promise<{ persistent: boolean; restored: number }>((resolve) => {
+let fsReadyResolve: (report: { persistent: boolean }) => void = () => {};
+const fsStarted = new Promise<{ persistent: boolean }>((resolve) => {
   fsReadyResolve = resolve;
 });
 
@@ -1419,7 +1419,7 @@ let started = false;
  * What the filesystem said about what it found, kept until the consoles are
  * up and there is somewhere to report it.
  */
-let storageReport: { persistent: boolean; restored: number } | null = null;
+let storageReport: { persistent: boolean } | null = null;
 
 /**
  * The first terminal is up: sign in if we can, then start it.
@@ -1431,8 +1431,6 @@ let storageReport: { persistent: boolean; restored: number } | null = null;
 function firstTerminal(item: GameConsole): void {
   if (storageReport && !storageReport.persistent) {
     comm.add("Storage is unavailable; this session will not be saved.");
-  } else if (storageReport && storageReport.restored > 0) {
-    comm.add(`Restored ${storageReport.restored} saved file(s).`);
   }
 
   const saved = loadSavedCredentials();

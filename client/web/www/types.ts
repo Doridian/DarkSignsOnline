@@ -287,7 +287,7 @@ export type FsAsk =
 
 /** What the filesystem sends the page. */
 export type FromFs =
-  | { type: "fsReady"; persistent: boolean; restored: number }
+  | { type: "fsReady"; persistent: boolean }
   | { type: "changed"; changes: FileChange[] }
   | WorkerAnswer
   | WorkerFailure;

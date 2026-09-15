@@ -210,15 +210,14 @@ export class GameFs {
   // ---- loading ------------------------------------------------------------
 
   /** Take up the shipped scripts, then whatever is on disk. */
-  async load(shipped: Record<string, Uint8Array>): Promise<number> {
+  async load(shipped: Record<string, Uint8Array>): Promise<void> {
     for (const [path, bytes] of Object.entries(shipped)) {
       const folded = foldPath(path);
       this.makeParents(folded);
       this.shipped.set(folded, bytes);
       this.nodes.set(folded, bytes.length);
     }
-    if (!this.root) return 0;
-    let restored = 0;
+    if (!this.root) return;
     const walk = async (dir: FileSystemDirectoryHandle, at: string): Promise<void> => {
       for await (const [name, handle] of dir.entries()) {
         const path = at === "/" ? `/${name}` : `${at}/${name}`;
@@ -234,7 +233,6 @@ export class GameFs {
         this.shipped.delete(path);
         this.nodes.set(path, file.size);
         this.makeParents(path);
-        restored += 1;
       }
     };
     try {
@@ -242,7 +240,6 @@ export class GameFs {
     } catch (err) {
       console.warn("could not read the saved filesystem:", err);
     }
-    return restored;
   }
 
   /** Report a file as it now stands. */
