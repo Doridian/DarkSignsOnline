@@ -689,6 +689,15 @@ pulse, since movement is what a glance catches, held still where the player
 has asked for less of it. What is remembered between visits is therefore
 having *opened* the log, where it used to be having closed it.
 
+That made the log's opening greetings worth their cost for the first time,
+and they were not worth it. `startup.ds` said "Welcome to Dark Signs Delta."
+and signing in added "You have been authorized as ⟨name⟩." and "Welcome to
+the Dark Signs Network!", all three of which are furniture rather than
+notices: the title bar already carries the name and a green dot beside it.
+Lighting the button for them would have meant every session starting with
+something blinking to be dismissed, which is how an indicator stops being
+read. They are gone, and the log now opens empty on an ordinary start.
+
 One menu element serves every button. It hangs from the body rather than from
 the bar it drops out of — the bar is one line tall and would clip it — and it
 is placed against the button by hand. Its `z-index` comes from `overlay()` in

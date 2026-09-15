@@ -1219,15 +1219,19 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
 
     case "credentialsSet":
       // Every terminal is told, and so is every one opened afterwards; only
-      // the first of them need say so -- and only when there is someone to
-      // greet, since signing out clears the credentials by handing over an
-      // empty pair the same way.
+      // the first of them need act on it -- and only when there is someone
+      // to greet, since signing out clears the credentials by handing over
+      // an empty pair the same way.
+      //
+      // Nothing is said in the communications log about it. The log is
+      // closed until something needs saying and its button lights up when
+      // something does, so a greeting there is an interruption that says
+      // less than the title bar it is repeating: the name is in the bar, and
+      // the dot beside it is already green.
       if (!greeted && credentials.username !== "") {
         greeted = true;
         setStatus("Online.", "online");
         showAccount(credentials.username);
-        comm.add(`You have been authorized as ${credentials.username}.`);
-        comm.add("Welcome to the Dark Signs Network!");
         // The room can be read without an account; this is what opens the
         // box, as the original's connect-on-login did.
         chat.setSignedIn(true);

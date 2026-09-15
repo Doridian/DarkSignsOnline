@@ -20,7 +20,6 @@ SAY ""
 SAY "It is " & Time & " on the " & Date & ".{{grey}}"
 SAY "You can EDIT this startup script file by typing: EDIT system\startup.ds{{lgrey}}"
 SAY ""
-SAYcomm "Welcome to Dark Signs Delta."
 LOGIN
 
 If FileExists("/home/startup.ds") Then
