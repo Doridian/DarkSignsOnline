@@ -1550,6 +1550,8 @@ dialog.window:not([open]) {
    own lines are the one addition: it had no way to pick them out, and in a
    room where everyone is named by their account it is worth having. */
 .chat-line {
+  display: flex;
+  gap: 0.6rem;
   color: #ffffff;
 }
 .chat-line.emote {
@@ -1557,6 +1559,45 @@ dialog.window:not([open]) {
 }
 .chat-line.own {
   color: var(--accent);
+}
+
+/* The time, in a column of its own for the same reason the communications
+   log puts one there: a fixed width right against the text lines every
+   message up, and a wrapped one hangs under itself rather than under the
+   clock. Dim, because it is the least of what a line says. */
+.chat-time {
+  flex: 0 0 4.5rem;
+  color: var(--dim);
+  text-align: right;
+  /* It is furniture, not something said: the message's own spacing is
+     `pre-wrap` and this has none to keep. */
+  white-space: nowrap;
+}
+
+.chat-text {
+  min-width: 0;
+}
+
+/* The day, ruled across the log where it changes. The rules are the
+   pseudo-elements either side, so the date sits in a gap in one line rather
+   than on top of one -- and they take whatever width is left, so the date
+   stays centred as the window is dragged. */
+.chat-day {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.5rem 0 0.2rem;
+  color: var(--dim);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.chat-day::before,
+.chat-day::after {
+  content: "";
+  flex: 1 1 0;
+  border-top: 1px solid var(--rule);
 }
 
 .chat-entry {

@@ -10,6 +10,12 @@
 // `/me` is an emote, `//` escapes a leading slash, and Up and Down walk back
 // through the last fifty things typed.
 //
+// What the original had no use for is when a line was said: it saw the room
+// only from the moment it joined, so everything in the pane had just
+// happened. Here the pane opens on a hundred lines of backlog that may be a
+// week old, so each carries the time and the day is drawn across the log
+// where it changes.
+//
 // Like mail, the connection belongs to a worker -- credentials never leave
 // them -- so both the polling and the sending go through `ask`, which hands
 // the work to whichever console is free.
@@ -67,6 +73,15 @@ export class ChatPanel {
   private history: string[] = [];
   /** Where Up and Down are in that list; -1 is the line being typed. */
   private historyAt = -1;
+  /**
+   * The day the last line placed belongs to, on the reader's own clock.
+   *
+   * A rule is drawn whenever this changes, which covers the ordinary case of
+   * a backlog spanning several days and the odd one of a window left open
+   * over midnight. Empty means nothing has been placed yet, and the first
+   * line always brings its own day with it.
+   */
+  private day = "";
 
   private timer: number | undefined;
   /** Set while a fetch is out, so a slow one does not stack up behind it. */
@@ -234,7 +249,9 @@ export class ChatPanel {
     this.shown.add(id);
     // Always the player's own, and never an emote: `ChatSend` is the
     // original's, which only ever sent a PRIVMSG. `/me` is the chat box's.
-    this.append(text, "own");
+    // The server has stamped it, but the stamp is not on this event and the
+    // line was said just now, which is near enough the same thing.
+    this.append(text, "own", new Date());
     if (this.view) {
       this.mirror(text);
     }
@@ -324,7 +341,7 @@ export class ChatPanel {
       this.shown.add(line.id);
       const text = render(line);
       // An emote keeps its own colour whoever sent it, as in the original.
-      this.append(text, line.action ? "emote" : own ? "own" : "said");
+      this.append(text, line.action ? "emote" : own ? "own" : "said", said(line));
       // The opening backlog is not news, so it is not mirrored; what the
       // player just said is, however early it happens.
       if (this.view && (this.caughtUp || own)) {
@@ -333,10 +350,21 @@ export class ChatPanel {
     }
   }
 
-  private append(text: string, kind: "said" | "emote" | "own"): void {
+  private append(text: string, kind: "said" | "emote" | "own", at: Date): void {
+    this.openDay(at);
     const row = document.createElement("div");
     row.className = `chat-line ${kind}`;
-    row.textContent = text;
+    const time = document.createElement("span");
+    time.className = "chat-time";
+    time.textContent = at.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    const body = document.createElement("span");
+    body.className = "chat-text";
+    body.textContent = text;
+    row.append(time, body);
     this.log.append(row);
     while (this.log.childElementCount > SCROLLBACK) {
       this.log.firstElementChild?.remove();
@@ -348,6 +376,32 @@ export class ChatPanel {
     if (atBottom) {
       this.log.scrollTop = this.log.scrollHeight;
     }
+  }
+
+  /**
+   * Rule off the log and name the day, when the day has changed.
+   *
+   * The day is the reader's, not the server's: the stamp arrives in UTC
+   * precisely so that this can be the date on the clock the player is
+   * looking at. It counts as a line for the scrollback, which means a long
+   * enough run of messages eventually drops the rule above them -- the same
+   * trade every line in a capped log makes.
+   */
+  private openDay(at: Date): void {
+    const day = at.toDateString();
+    if (day === this.day) {
+      return;
+    }
+    this.day = day;
+    const rule = document.createElement("div");
+    rule.className = "chat-day";
+    rule.textContent = at.toLocaleDateString([], {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+    this.log.append(rule);
   }
 
   /** Push a typed line onto the history, as `IRCTxtList` does. */
@@ -378,6 +432,33 @@ export class ChatPanel {
     this.input.value = next === -1 || recalled === undefined ? "" : `${recalled} `;
     this.input.setSelectionRange(this.input.value.length, this.input.value.length);
   }
+}
+
+/**
+ * When a line was said, on the reader's own clock.
+ *
+ * `chat.php` stamps a record `dd.mm.yyyy HH:MM:SS` in UTC, which is what
+ * makes it a moment rather than a reading of somebody else's wall clock. A
+ * line echoed before the poll brings it round carries no stamp at all, and
+ * one that does not parse is a server saying something unexpected: both were
+ * said as near to now as makes no difference.
+ */
+function said(line: ChatLine): Date {
+  const parts = /^(\d+)\.(\d+)\.(\d+) (\d+):(\d+):(\d+)$/.exec(line.date.trim());
+  if (!parts) {
+    return new Date();
+  }
+  const at = new Date(
+    Date.UTC(
+      Number(parts[3]),
+      Number(parts[2]) - 1,
+      Number(parts[1]),
+      Number(parts[4]),
+      Number(parts[5]),
+      Number(parts[6]),
+    ),
+  );
+  return Number.isNaN(at.getTime()) ? new Date() : at;
 }
 
 /** `<who>  text`, or `* who text` for an emote, as the original wrote them. */

@@ -36,7 +36,12 @@ pub struct Line {
     pub text: String,
     /// A `/me`, which the original sent as a CTCP `ACTION`.
     pub action: bool,
-    /// As the server formatted it: `dd.mm.yyyy HH:MM:SS`.
+    /// As the server formatted it: `dd.mm.yyyy HH:MM:SS`, in UTC.
+    ///
+    /// `chat.php` writes it with `gmdate` rather than `date` so that it says
+    /// which moment it means. That is what lets a client show the room on
+    /// the reader's own clock, which the browser one does. Empty on a line
+    /// echoed before the server has stamped it.
     pub date: String,
 }
 
@@ -188,7 +193,8 @@ pub fn merge(held: &mut Vec<Line>, incoming: Vec<Line>) -> usize {
     added
 }
 
-/// `X_<id>:--:<from>:--:<0|1>:--:<text>:--:<date>`, with the text base64'd.
+/// `X_<id>:--:<from>:--:<0|1>:--:<text>:--:<date>`, with the text base64'd
+/// and the date in UTC.
 fn parse_record(line: &str) -> Option<Line> {
     let fields: Vec<&str> = line.split(SEPARATOR).collect();
     if fields.len() != 5 {

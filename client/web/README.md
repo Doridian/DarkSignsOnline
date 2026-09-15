@@ -838,6 +838,23 @@ finished rather than edited. `/nick` and `/msg` are gone with IRC: a name
 here is the account's and cannot be changed, and there is nobody to open a
 query with, so both answer "Command not found" rather than pretending.
 
+### When a line was said
+
+The original had no use for that. It saw the room only from the moment it
+joined, so everything in its pane had just happened. This one opens on a
+hundred lines of backlog that may be a week old, so each line carries the
+time and the day is ruled across the log where it changes — the date in a
+gap in the rule, and nothing repeated on a line that belongs to the same day
+as the one above it.
+
+Both are on the reader's clock, which is the whole reason `chat.php` stamps
+a record with `gmdate` rather than `date`: `dd.mm.yyyy HH:MM:SS` in UTC says
+which moment it means, where a server's wall clock only says what the server
+read. A client anywhere can turn the first into a local time and a local
+date; the second it can only repeat. A line echoed before the poll brings it
+round has no stamp at all and is shown at the moment it was said, which is
+the same thing to within the round trip.
+
 The two script functions are the original's two, and
 [`game::chat`](../src/game/chat.rs) is where the rules they share live:
 

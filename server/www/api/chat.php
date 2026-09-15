@@ -55,13 +55,20 @@ function chat_clean($msg) {
     return $msg;
 }
 
-/** One record, in the `:--:` format the rest of the API uses. */
+/**
+ * One record, in the `:--:` format the rest of the API uses.
+ *
+ * The stamp is `gmdate` rather than `date`: the client shows chat on the
+ * reader's own clock, and it can only do that if the record says which
+ * moment it means rather than what the server's wall clock happened to
+ * read. UTC by construction, not by whatever `date.timezone` is set to.
+ */
 function chat_record($row) {
     return 'X_' . $row['id']
         . ':--:' . $row['username']
         . ':--:' . ($row['action'] ? '1' : '0')
         . ':--:' . dso_b64_encode($row['message'])
-        . ':--:' . date('d.m.Y H:i:s', $row['time'])
+        . ':--:' . gmdate('d.m.Y H:i:s', $row['time'])
         . "\r\n";
 }
 
