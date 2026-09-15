@@ -131,6 +131,17 @@ impl Session {
         self.reconnect();
     }
 
+    /// Where this session's requests go.
+    ///
+    /// The page has one thing it asks the server directly rather than
+    /// through a worker -- the round trip it shows in the title bar -- and
+    /// it has to be told where, since the root is this crate's constant and
+    /// a second copy of it on the page is a second thing to get wrong.
+    #[wasm_bindgen(js_name = apiRoot)]
+    pub fn api_root(&self) -> String {
+        self.api_root.borrow().clone()
+    }
+
     /// Report the console's measurements, in CSS pixels.
     ///
     /// `width` is the room a line has for text and `pre_space` the indent an

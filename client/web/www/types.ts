@@ -203,7 +203,7 @@ export interface WorkerFailure {
 
 /** What a worker sends the page. */
 export type FromWorker =
-  | { type: "ready"; cwd: string }
+  | { type: "ready"; cwd: string; apiRoot: string }
   | { type: "credentialsSet" }
   | { type: "console"; events: ConsoleEvent[] }
   | { type: "missingFile"; path: string }

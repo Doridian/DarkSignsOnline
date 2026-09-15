@@ -14,6 +14,13 @@
       <span id="status-text">Not signed in.</span>
 
       <!--
+        The round trip to the server, measured by the page itself against
+        `time.php`. The dot says whether there is an account; this says
+        whether there is still anything on the other end.
+      -->
+      <span id="ping" class="unknown" aria-label="Round trip to the server">--</span>
+
+      <!--
         The account. Signed in it is a name and a way out; signed out it is a
         button holding the form, so the sign-in fields do not sit across the
         bar for the whole of a session that is already authorized.

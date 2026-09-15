@@ -107,6 +107,40 @@ body {
   white-space: nowrap;
 }
 
+/* The round trip, which is a number that changes every few seconds: it sits
+   in the console face so the digits do not shift the things beside it as it
+   goes from 9 ms to 140, and it is given the width of the longest reading
+   worth reading so that it does not shift them either. */
+#ping {
+  flex: 0 0 auto;
+  min-width: 4.5em;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--rule);
+  font-family: "Courier New", "Liberation Mono", monospace;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--dim);
+}
+#ping.good {
+  color: var(--accent);
+}
+#ping.fair {
+  color: var(--gold);
+}
+#ping.poor,
+#ping.lost {
+  color: var(--error);
+}
+
+/* A phone loses it along with the brand: the account and the sign-in state
+   are what the bar is for, and a latency reading is not worth the row. */
+@media (max-width: 34rem) {
+  #ping {
+    display: none;
+  }
+}
+
 /* ---- the account ------------------------------------------------------ */
 
 /* Signed out this is one button; signed in it is a name and a way out. The

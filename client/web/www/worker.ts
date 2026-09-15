@@ -363,7 +363,13 @@ async function boot(message: Extract<ToWorker, { type: "boot" }>): Promise<void>
   // Nothing is seeded and nothing is loaded. The tree was built once, by the
   // worker that owns it, before this console was told to start; there is no
   // copy here to fill.
-  report({ type: "ready", cwd: session.currentDirectory() });
+  // The API root comes back with the ready: the page pings the server
+  // itself for the title bar, and this is where that address is kept.
+  report({
+    type: "ready",
+    cwd: session.currentDirectory(),
+    apiRoot: session.apiRoot(),
+  });
 }
 
 onmessage = async (e: MessageEvent<ToWorker>) => {

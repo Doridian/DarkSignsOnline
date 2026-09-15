@@ -30,6 +30,7 @@ import { Explorers, FileModel, PATH_DRAG, quotePath } from "./filetree.js";
 import { LibraryWindow } from "./library.js";
 import { MailWindow } from "./mail.js";
 import { MusicPlayer } from "./music.js";
+import { PingMeter } from "./ping.js";
 import { taskbar } from "./taskbar.js";
 import type { Asked, ConsoleEvent, FromFs, FromWorker, FsAsk, ToWorker } from "./types.js";
 import { centred, draggable, focusedWindow, manage, raise, unmanage } from "./window.js";
@@ -48,6 +49,13 @@ const comm = new CommView(element("comm-log"));
 const desktopHint = element("desktop-hint");
 const statusDot = element("status-dot");
 const statusText = element("status-text");
+/**
+ * The round trip to the server, which the page measures itself.
+ *
+ * It has nothing to ask until a session says where the API is, which
+ * the first worker to come ready does.
+ */
+const ping = new PingMeter(element("ping"));
 const account = element("account");
 const accountLabel = element("account-label");
 const accountUser = element("account-user");
@@ -1162,6 +1170,9 @@ function handleMessage(target: GameConsole, message: FromWorker): void {
     case "ready":
       target.ready = true;
       target.setPrompt(message.cwd);
+      // Where this session's requests go, which is the one thing the page
+      // needs to ask the server anything on its own account.
+      ping.setApiRoot(message.apiRoot);
       // The first terminal of the session is the one that carries the
       // client's own startup: the saved sign-in, what storage had to say,
       // and the script that says all of it. Every one after it opens with

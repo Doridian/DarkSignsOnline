@@ -10,30 +10,12 @@
 // password check it may not need. That check is bcrypt, and bcrypt is
 // deliberately expensive.
 //
-// This is not the website's header. `_function_base.php` is what the pages
-// use; anything that declares `text/plain` belongs here and not there.
+// The headers are `function_cors.php`, which is this without the database:
+// `time.php` is asked every few seconds as the client's ping and cannot
+// afford a MySQL connection to answer with the time.
 
 require_once('function_base.php');
-
-header('Content-Type: text/plain');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-// These have to be named rather than wildcarded. The `*` value does not
-// cover Authorization -- the Fetch standard excludes it -- so a browser
-// client sending Basic auth fails the preflight and never makes the call.
-// DSO-Protocol-Version is a custom header, so it is not safelisted either.
-header('Access-Control-Allow-Headers: Authorization, Content-Type, DSO-Protocol-Version');
-header('Access-Control-Expose-Headers: *');
-// Basic auth makes a preflight unavoidable for a cross-origin browser
-// client, so let it cache the answer rather than asking before every call.
-header('Access-Control-Max-Age: 86400');
-// Deliberately no Access-Control-Allow-Credentials: a browser rejects it
-// outright alongside a wildcard origin, and the clients send Authorization
-// as an ordinary header rather than using credentials mode.
-if (strtoupper($_SERVER['REQUEST_METHOD']) === 'OPTIONS') {
-    // Preflight CORS request, just smile and 200
-    exit;
-}
+require_once('function_cors.php');
 
 // The wire format's base64: the URL-safe alphabet with the padding stripped.
 $BASE64_DSO_ENCODE = array(

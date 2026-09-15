@@ -206,6 +206,7 @@ which is the layout the batching is there to avoid.
 | [`src/host.rs`](src/host.rs) | Supplies the clock, which wasm has no portable source for |
 | [`www/worker.ts`](www/worker.ts) | Runs the interpreter; blocks on `Atomics.wait` for input |
 | [`www/main.ts`](www/main.ts) | The page: the terminals, keyboard, and waking a worker |
+| [`www/ping.ts`](www/ping.ts) | The round trip to the server, in the title bar |
 | [`www/console.ts`](www/console.ts) | Turns styled runs into elements |
 | [`www/filetree.ts`](www/filetree.ts) | The file explorers: the one model, the folder tree, the icons, and its three drags |
 | [`www/mail.ts`](www/mail.ts) | The DSMail reader |
@@ -394,6 +395,42 @@ The page never grows wider than the window: `body` is a grid of one
 `minmax(0, 1fr)` column, so a row too wide for the viewport is made to fit
 rather than pushing the rest past an `overflow: hidden` edge. The title bar is
 the row that would, and the account is what sat on the far side of it.
+
+### The ping
+
+The dot says whether there is an account, which the client knows without
+asking anyone. Whether the server is still there is not something it knows:
+a session can sit at a prompt for an hour and nothing on the page changes
+when the connection behind it has gone. So the number beside the dot is a
+round trip the page measures itself, every five seconds while the tab is in
+front — green under 150ms, gold under 400, red past that or when there was
+no answer at all, with the reason in the tooltip.
+
+Two decisions in [`ping.ts`](www/ping.ts) are worth naming, because the
+obvious answer is wrong on both.
+
+*It is not the chat poll,* which already asks the server about once a
+second. That poll runs only while somebody is reading the room — the pane
+up, or `ChatView` on — so a player who never opens chat would have an
+indicator that never moved. And it would measure the wrong thing: a window's
+question goes to whichever console is free, and a console blocked in
+`ReadLine` is not free, so the reading would be of how busy the terminals
+are rather than of the network. The ping is the one request the page makes
+itself, with `fetch`, which nothing can be queued in front of.
+
+*It is `time.php`,* because it is the cheapest thing the server can be
+asked: no account, no database, no bcrypt, `die('' . time())`. It is asked
+every five seconds by everyone watching, and `pm.max_children` is 5 for the
+whole site, so that matters as much as it does for chat. For the same reason
+it includes `function_cors.php` — the CORS headers alone — rather than
+`function_public.php`, which would open a MySQL connection to tell you the
+time. A plain GET with no headers of its own is a simple request, so there
+is no preflight in front of it either, which would otherwise be half of what
+was being measured.
+
+The page has no address of its own to ask: the API root is the interpreter's
+constant, and a worker reports it in the `ready` message so that there is one
+copy of it rather than one here and one in Rust.
 
 ## Remembering a sign-in
 
