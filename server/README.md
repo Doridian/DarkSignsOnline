@@ -3,12 +3,17 @@
 The API the clients talk to and the website's account pages, in Rust. It
 replaced a PHP server and answers at the same `.php` paths with the same
 statuses, headers and bodies, so neither the clients nor any link changed.
+It also serves the website's static files and the browser client, so the
+binary and a database are the whole site.
 How closely it matches is not a claim: [the parity test](#parity-with-the-php)
 checks it, case by case, against what the PHP answered.
 
-nginx stays in front. It serves the static files in `www/` and the browser
-client under `/game/`, and hands every `/<name>.php` and `/api/<name>.php` to
-this server on a unix socket. See `rootfs/etc/nginx/server.conf`.
+Nothing has to be in front of it. For TLS, put any reverse proxy there (and
+send HSTS from it); it routes nothing and serves nothing, it only passes
+requests on. `src/www.rs` is what nginx's `server.conf` used to be: the
+cross-origin isolation headers on everything under `/game/`, the page
+`no-cache` with no validators, the hashed assets `immutable`, `/game`
+redirected to `/game/`.
 
 ## Layout
 
@@ -19,8 +24,9 @@ this server on a unix socket. See `rootfs/etc/nginx/server.conf`.
 | `src/php.rs` | The PHP semantics the endpoints depend on: `(int)`, `empty()`, lenient base64, `preg_replace` back-references |
 | `src/ctx.rs` | One request: output buffer, status, headers, `die`, the database connection |
 | `src/request.rs` | `$_GET`/`$_POST`/`$_REQUEST`, Basic auth, the protocol version |
+| `src/www.rs` | The static files: the website's, and the browser client under `/game/` |
 | `tests/parity/` | The parity test, its seed, and the goldens recorded from the PHP |
-| `rootfs/` | nginx, s6 and cron configuration for a container, and the schema |
+| `database.sql` | The schema |
 
 ## Running it
 
@@ -31,24 +37,31 @@ Configuration is the environment, under the names the PHP deployment used:
 | `MYSQL_HOST`, `MYSQL_PORT` (3306), `MYSQL_USERNAME`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` | The database. `MYSQL_SOCKET` instead of host and port for a unix socket |
 | `JWT_PRIVATE_KEY`, `JWT_PUBLIC_KEY` | PEM, base64-encoded, for `domain_token.php` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, `SMTP_USERNAME`, `SMTP_PASSWORD` | Outgoing mail. With a username, STARTTLS is required |
-| `DSO_LISTEN` | `unix:/path` (default `unix:/run/darksignsonline/server.sock`) or `host:port` |
+| `DSO_LISTEN` | `host:port` (default `0.0.0.0:8080`) or `unix:/path` |
+| `DSO_WWW` | The web root to serve static files from. Unset, only the API and pages answer. The `darksignsonline` package sets it |
+| `DSO_TRUSTED_PROXIES` | Addresses and CIDRs, space- or comma-separated, whose `X-Real-IP` is believed (default `127.0.0.0/8 ::1`). A unix socket's peer always is |
 | `DSO_GITREV` | The commit in the site's footer; `nix build` bakes it in |
 
-`darksignsonline-server tasks` does what `_tasks.php` did (drops expired
-password-reset codes) and exits; cron runs it every 15 minutes.
+What `_tasks.php` did under cron (drop expired password-reset codes) the
+server does itself every 15 minutes. `/readyz` answers `OK` for a health
+check. `SIGTERM` and `SIGINT` stop it.
 
-nginx has to pass the caller's address as `X-Real-IP`, which the server
-trusts, so it must only be reachable through nginx.
+The caller's address, recorded against transactions and uploads, is the
+socket's peer unless that peer is a trusted proxy, in which case it is the
+proxy's `X-Real-IP`. A proxy in front has to set that header (nginx:
+`proxy_set_header X-Real-IP $remote_addr;`), and if it is not on this
+machine, has to be named in `DSO_TRUSTED_PROXIES`.
 
 ```sh
-nix build .#darksignsonline-server     # the binary
-nix build .#darksignsonline            # the static site, with the client under game/
+nix build .#darksignsonline            # the server, with the site baked in as DSO_WWW
+nix run   .#darksignsonline            # ...and run it, on :8080
+nix build .#darksignsonline-server     # the bare binary
+nix build .#darksignsonline-site       # the web root alone, with the client under game/
 ```
 
 ## Parity with the PHP
 
-`tests/parity/` sends 274 requests through a real nginx to the server, in
-order, against a fresh MariaDB seeded from `seed.sql`, with the clock frozen
+`tests/parity/` sends 274 requests to the server, in order, against a fresh MariaDB seeded from `seed.sql`, with the clock frozen
 by libfaketime and mail caught by an SMTP sink. For each request it records
 the status, the headers, the body, every row that changed, and every mail
 sent. It compares all of that with `golden.jsonl`, which is the same run
@@ -63,6 +76,9 @@ codes, bcrypt salts) are learned from the database and replaced with numbered
 placeholders, so a goldens line reads `<rand3>` where the run had a keycode.
 Header names compare without regard to case, and `Date`, `Content-Length`,
 `Transfer-Encoding`, `Connection` and `X-Powered-By` are not compared.
+The PHP was recorded through nginx, so where its goldens had nginx's
+`Server` header they now have the two this server sends on everything
+(`X-Content-Type-Options`, `X-Frame-Options`), which that nginx added too.
 
 The goldens are the PHP's answers, so they only change when the cases do or
 when behaviour is deliberately changed. A deliberate change of behaviour
@@ -92,6 +108,11 @@ DSO_PARITY_RECORD=1 \
 - **Only endpoints and pages answer.** The PHP's include files, `phpinfo.php`
   and `_tasks.php` were reachable as URLs; they are now 404s like any other
   missing script.
+- **No nginx in front.** A request nginx refused never reached the PHP; now
+  the server sees it. The one case where that shows is a lower-case method:
+  nginx answered `options` with its own `400`, and the endpoint, which
+  compares methods without regard to case as the PHP did, now answers it as
+  a preflight.
 - **Mail goes out through lettre** rather than PHPMailer: the same sender,
   recipient, subject and body, in different headers.
 - **Passwords verify as bcrypt** (`$2y$`, `$2b$`, `$2a$`), which is all

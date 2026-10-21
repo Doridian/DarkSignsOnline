@@ -1,6 +1,6 @@
 //! The machinery behind the parity test: a throwaway MariaDB, the server
-//! under test behind a real nginx, frozen time, an SMTP sink, and a raw HTTP
-//! client that sees exactly what nginx sent.
+//! under test, frozen time, an SMTP sink, and a raw HTTP client that sees
+//! exactly what the server sent.
 
 use std::collections::BTreeMap;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -132,7 +132,7 @@ impl Db {
     pub fn reset(&self) {
         self.sql("DROP DATABASE IF EXISTS dso; CREATE DATABASE dso");
         for file in [
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("rootfs/etc/database.sql"),
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("database.sql"),
             fixture("seed.sql"),
         ] {
             let out = self
@@ -271,10 +271,10 @@ impl Site {
             String::from_utf8(out.wait_with_output().unwrap().stdout).unwrap()
         };
 
-        let sock = dir.join("server.sock");
+        let port = free_port();
         procs.push(spawn(
             faketime(&mut Command::new(env!("CARGO_BIN_EXE_darksignsonline-server")))
-                .env("DSO_LISTEN", format!("unix:{}", sock.display()))
+                .env("DSO_LISTEN", format!("127.0.0.1:{port}"))
                 .env("MYSQL_SOCKET", &db.socket)
                 .env("MYSQL_USERNAME", "root")
                 .env("MYSQL_DATABASE", "dso")
@@ -286,48 +286,7 @@ impl Site {
                 .env("DSO_GITREV", GITREV),
             &dir.join("server.out"),
         ));
-        wait_for("the server", || sock.exists());
-        // The same proxying as `rootfs/etc/nginx/server.conf`.
-        let location = format!(
-            "proxy_pass http://unix:{}:$uri$is_args$args;\nproxy_set_header X-Real-IP $remote_addr;\n",
-            sock.display()
-        );
-        let root = dir.join("www");
-        std::fs::create_dir_all(&root).unwrap();
-
-        let port = free_port();
-        let tmp = dir.join("nginx-tmp");
-        std::fs::create_dir_all(&tmp).unwrap();
-        let conf = dir.join("nginx.conf");
-        std::fs::write(
-            &conf,
-            format!(
-                "daemon off;\npid {dir}/nginx.pid;\nerror_log {dir}/nginx-error.log notice;\nworker_processes 1;\n\
-                 events {{ worker_connections 64; }}\n\
-                 http {{\n  access_log off;\n\
-                 client_body_temp_path {tmp}/body; proxy_temp_path {tmp}/proxy; fastcgi_temp_path {tmp}/fastcgi;\n\
-                 uwsgi_temp_path {tmp}/uwsgi; scgi_temp_path {tmp}/scgi;\n\
-                 proxy_http_version 1.1; proxy_request_buffering off; proxy_buffering off;\n\
-                 server {{\n    listen 127.0.0.1:{port};\n    root {root};\n    index index.php index.htm index.html;\n\
-                 location = / {{ rewrite ^ /index.php last; }}\n\
-                 location ~ ^/(api/)?[a-z0-9_]+\\.php$ {{\n{location}}}\n  }}\n}}\n",
-                dir = dir.display(),
-                tmp = tmp.display(),
-                root = root.display(),
-            ),
-        )
-        .unwrap();
-        procs.push(spawn(
-            Command::new("nginx")
-                .arg("-e")
-                .arg(dir.join("nginx-error.log"))
-                .arg("-p")
-                .arg(dir)
-                .arg("-c")
-                .arg(&conf),
-            &dir.join("nginx.out"),
-        ));
-        wait_for("nginx", || TcpStream::connect(("127.0.0.1", port)).is_ok());
+        wait_for("the server", || TcpStream::connect(("127.0.0.1", port)).is_ok());
         Site { port, _procs: procs }
     }
 }

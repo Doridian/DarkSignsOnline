@@ -330,18 +330,18 @@ never showed this. The page says so plainly if it finds itself not
 cross-origin isolated, but a page that *is* isolated can still have a worker
 refused, and that failure is silent unless the console is open.
 
-In production the page is `/game/` on the game server's own origin. The
-`darksignsonline` package puts the two web roots together, giving the client
-the `game/` directory to itself, and `server.conf` sends both headers for
-everything under that prefix. The client is static: the page is the
-directory's `index.html`, and nginx redirects `/game` to `/game/` and serves
-it from there. Same origin means the API calls need no CORS at all. Every
+In production the page is `/game/` on the game server's own origin, and the
+game server serves it. The `darksignsonline` package puts the two web roots
+together, giving the client the `game/` directory to itself, and
+`server/src/www.rs` sends both headers for everything under that prefix. The
+client is static: the page is the directory's `index.html`, and the server
+redirects `/game` to `/game/` and serves it from there. Same origin means the API calls need no CORS at all. Every
 asset sits under the same prefix, because a document at `/game/` resolves the
 page's own `./main.<hash>.js` to `/game/main.<hash>.js`.
 
 The one thing a host must get right besides the headers is that the page is
 not cached the way its assets are. Their names are content hashes, so
-`server.conf` marks them `immutable` and a browser never asks about them
+the server marks them `immutable` and a browser never asks about them
 again; `index.html` is the name that stays put, so it is served `no-cache` and
 revalidated on every load. Getting that backwards is not a stale page but a
 broken one: the deployed files come out of the nix store, where every mtime is
@@ -353,18 +353,18 @@ browser calling the new `pkg/dso_web.js` into the old wasm module.
 worth knowing because content hashing is what hides it. `no-cache` means
 revalidate, not refetch, and the browser revalidates with whatever validator
 it was given — so those validators have to be able to say *no*. Neither of
-nginx's can here. It builds an `ETag` from the file's mtime and size, every
-file has mtime 1, and `index.html` does not change size when a deploy changes
-what it points at: `stamp.ts` writes a digest of fixed width, so
+nginx's could, back when nginx served this. It built an `ETag` from the
+file's mtime and size, every file has mtime 1, and `index.html` does not
+change size when a deploy changes what it points at: `stamp.ts` writes a digest of fixed width, so
 `style.<12 hex>.css` becomes `style.<12 hex>.css` and the page stays the same
 number of bytes it was. Same size, same mtime, same ETag.
 
-So the browser asks politely, nginx answers `304 Not Modified`, and the page
-it keeps naming the previous build's assets — which are `immutable`, and
-answered from cache for a year. The deploy is invisible to everyone who had
-ever loaded the page, and the only cure is a hard reload nobody thinks to do.
-`etag off` and `if_modified_since off` on that one location are what make
-`no-cache` mean what it is there for.
+So the browser asked politely, nginx answered `304 Not Modified`, and the
+page it kept named the previous build's assets — which are `immutable`, and
+answered from cache for a year. The deploy was invisible to everyone who had
+ever loaded the page, and the only cure was a hard reload nobody thinks to
+do. The server sends no validator on anything, which is what makes
+`no-cache` mean what it is there for; a TLS proxy in front must not add one.
 
 `serve.ts` sends `no-store` for everything and no validators at all, which is
 why development never showed this either.

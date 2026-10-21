@@ -70,8 +70,8 @@
         };
 
         # The game server: the API and the account pages, at the `.php`
-        # paths nginx hands it. The commit goes into the binary for the
-        # site's footer.
+        # paths the PHP answered at, and whatever static files `DSO_WWW`
+        # names. The commit goes into the binary for the site's footer.
         server = pkgs.rustPlatform.buildRustPackage {
           pname = "darksignsonline-server";
           version = "0.1.0";
@@ -81,7 +81,7 @@
             DSO_GITREV = gitrev;
             PCRE2_SYS_STATIC = "1";
           };
-          # The parity test needs a database and nginx; CI runs it in the
+          # The parity test needs a database; CI runs it in the
           # `server` shell instead. The unit tests still run here.
           checkFlags = [ "--skip=parity" ];
         };
@@ -147,37 +147,46 @@
         };
 
         # One web root holding both. The client gets `game/` to itself: the
-        # page is that directory's `index.html`, so `/game` (which nginx
+        # page is that directory's `index.html`, so `/game` (which the server
         # redirects to `/game/`) is the whole address a player needs, and
         # every asset the client ships sits under the same prefix rather than
-        # scattered through the site's root.
-        #
-        # The client is static, all of it. The two headers that make the page
-        # cross-origin isolated -- without which the browser withholds
-        # SharedArrayBuffer and the workers cannot block waiting for input --
-        # come from nginx, which sends them for everything under `/game/`.
-        # See `server.conf` for why it has to be everything and not just the
-        # page. The page addresses its assets relatively, so a document at
-        # `/game/` resolves `./main.js` to `/game/main.js` with nothing to
-        # rewrite.
-        site = pkgs.runCommand "darksignsonline" { } ''
+        # scattered through the site's root. The page addresses its assets
+        # relatively, so a document at `/game/` resolves `./main.js` to
+        # `/game/main.js` with nothing to rewrite.
+        site = pkgs.runCommand "darksignsonline-site" { } ''
           root="$out/var/www/darksignsonline"
           mkdir -p "$out/var/www"
           cp -r --no-preserve=mode,ownership ${www}/var/www/darksignsonline "$root"
           mkdir -p "$root/game"
           cp -r --no-preserve=mode,ownership ${client}/var/www/darksignsonline/. "$root/game/"
         '';
+
+        # The whole site as one program: the server, pointed at the web root
+        # above. It serves the files itself, with the headers the client
+        # needs (see `server/src/www.rs`), so all a deployment adds is a
+        # database and, if it wants TLS, a proxy in front.
+        darksignsonline = pkgs.runCommand "darksignsonline"
+          {
+            nativeBuildInputs = [ pkgs.makeWrapper ];
+            meta.mainProgram = "darksignsonline-server";
+          }
+          ''
+            mkdir -p "$out/bin"
+            ln -s ${site}/var "$out/var"
+            makeWrapper ${server}/bin/darksignsonline-server "$out/bin/darksignsonline-server" \
+              --set-default DSO_WWW ${site}/var/www/darksignsonline
+          '';
       in
       {
         packages = {
-          default = site;
-          darksignsonline = site;
+          default = darksignsonline;
+          inherit darksignsonline;
+          darksignsonline-site = site;
           darksignsonline-server = server;
           darksignsonline-client = client;
         };
 
-        # The server's parity test: a database, nginx in front, and a frozen
-        # clock.
+        # The server's parity test: a database and a frozen clock.
         devShells.server = pkgs.mkShell {
           packages = [
             pkgs.cargo
@@ -185,7 +194,6 @@
             pkgs.clippy
             pkgs.rustfmt
             pkgs.mariadb
-            pkgs.nginx
           ];
           env = {
             DSO_FAKETIME_LIB = "${pkgs.libfaketime}/lib/libfaketime.so.1";

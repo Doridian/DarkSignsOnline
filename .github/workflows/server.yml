@@ -25,8 +25,8 @@ jobs:
         cargo clippy --manifest-path server/Cargo.toml --all-targets
         -- -D warnings
 
-    # Including the parity test: every case in tests/parity run through
-    # nginx against a real MariaDB, and compared with the goldens the PHP
+    # Including the parity test: every case in tests/parity run against a
+    # real MariaDB, and compared with the goldens the PHP
     # server it replaced recorded.
     - name: Test
       run: >

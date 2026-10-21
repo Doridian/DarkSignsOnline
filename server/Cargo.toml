@@ -15,12 +15,12 @@ pcre2 = "0.2.11"
 rand = "0.10.3"
 rsa = { version = "0.9.10", features = ["sha2"] }
 sha2 = "0.11"
-tokio = { version = "1.54.0", features = ["rt-multi-thread", "net", "macros", "signal", "time", "io-util", "sync"] }
+tokio = { version = "1.54.0", features = ["rt-multi-thread", "net", "macros", "signal", "time", "io-util", "sync", "fs"] }
 
 [dev-dependencies]
 serde_json = "1"
 
-# Ignored by default: it needs MariaDB, nginx and libfaketime, which
+# Ignored by default: it needs MariaDB and libfaketime, which
 # `nix develop .#server` provides. See tests/parity/main.rs.
 [[test]]
 name = "parity"

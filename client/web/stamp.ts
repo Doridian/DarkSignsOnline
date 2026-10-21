@@ -2,10 +2,11 @@
 // Copy the built page into dist/, naming every asset for what is in it.
 //
 // The deployed client is served out of the nix store, where every file's
-// mtime is the epoch. nginx builds `Last-Modified` and `ETag` out of that
-// mtime, so neither says which build a file came from, and a browser given
-// no `Cache-Control` guesses a freshness lifetime of a tenth of the age it
-// reads off `Last-Modified` -- a tenth of fifty-six years. It stops asking.
+// mtime is the epoch. nginx, which served it then, built `Last-Modified`
+// and `ETag` out of that mtime, so neither said which build a file came
+// from, and a browser given no `Cache-Control` guesses a freshness lifetime
+// of a tenth of the age it reads off `Last-Modified` -- a tenth of
+// fifty-six years. It stops asking.
 // A cached `pkg/dso_web_bg.wasm` was still being handed to the next build's
 // `pkg/dso_web.js`, which showed up as a missing export rather than as
 // anything to do with caching.

@@ -8,7 +8,7 @@
 // module worker imports unless that response repeats the embedder policy, so
 // a server that sends them only for the page and worker.js leaves the client
 // dead on iOS. Sending them for everything, as below, is the simple way to be
-// right; `server.conf` does the same for the deployed site.
+// right; the game server (`server/src/www.rs`) does the same deployed.
 
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
@@ -44,8 +44,8 @@ createServer(async (req, res) => {
   // lands on the game the way `/game` does on the deployed site. Bare
   // `/game` is redirected rather than served, because the page's relative
   // asset URLs resolve against the document's own address: only a trailing
-  // slash makes `./main.js` mean `/game/main.js`. nginx redirects it for the
-  // same reason, being a directory.
+  // slash makes `./main.js` mean `/game/main.js`. The game server redirects
+  // it for the same reason, being a directory.
   if (!requested.startsWith(`${PREFIX}/`)) {
     res.writeHead(302, { Location: `${PREFIX}/` }).end();
     return;

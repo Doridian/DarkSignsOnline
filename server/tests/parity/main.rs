@@ -1,12 +1,12 @@
 //! Parity with the PHP server this one replaced.
 //!
-//! Every case in `cases.rs` is a request sent through a real nginx, in
+//! Every case in `cases.rs` is a request sent to the server, in
 //! order, against a database seeded from `seed.sql`, with the clock frozen.
 //! What comes back -- status, headers, body -- and what it did -- the rows
 //! it changed, the mail it sent -- is compared with `golden.jsonl`, which
 //! was recorded by running the same cases against the PHP.
 //!
-//! It needs MariaDB, nginx and libfaketime, which `nix develop .#server`
+//! It needs MariaDB and libfaketime, which `nix develop .#server`
 //! provides, so it is ignored by default:
 //!
 //! ```sh
@@ -182,7 +182,7 @@ fn run() -> Vec<Value> {
 }
 
 #[test]
-#[ignore = "needs MariaDB, nginx and libfaketime: run in `nix develop .#server` with --ignored"]
+#[ignore = "needs MariaDB and libfaketime: run in `nix develop .#server` with --ignored"]
 fn parity() {
     let golden_path = harness::fixture("golden.jsonl");
     let results = run();

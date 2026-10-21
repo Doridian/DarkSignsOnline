@@ -15,10 +15,10 @@ halves live here.
 | `client/web/dist/` | What is served. Written by `stamp.ts`, every asset named for its content hash |
 | `client/user/` | The shipped player filesystem, bundled into `www/scripts` at build time |
 | `client/tests/` | `wine.rs` (wine's VBScript conformance suite), `game_api.rs`, `game_scripts.rs`, `live_server.rs` |
-| `server/src/` | The game server: `api/` one module per endpoint (still at its old `.php` path), `site/` the account pages |
+| `server/src/` | The game server: `api/` one module per endpoint (still at its old `.php` path), `site/` the account pages, `www.rs` the static files and the client's serving rules |
 | `server/tests/parity/` | The parity test: every case against the goldens the PHP server recorded (the PHP is gone; last at `91612d0`) |
 | `server/www/` | The website's static files |
-| `server/rootfs/` | nginx, s6, cron — including `server.conf`, which sends COOP/COEP and proxies `.php` to the server |
+| `server/database.sql` | The schema |
 
 ## Read these before asking the code
 
@@ -54,13 +54,14 @@ npm test                          # the editor's highlighting and indenting rule
 node smoke.ts                     # drives the built wasm the way the worker does, no browser
 node serve.ts                     # http://localhost:8080/game/  (sends COOP/COEP and no-store)
 
-# The server: MariaDB, nginx and libfaketime come with the `server` shell
+# The server: MariaDB and libfaketime come with the `server` shell
 nix develop .#server --command cargo clippy --manifest-path server/Cargo.toml --all-targets -- -D warnings
 nix develop .#server --command cargo test   --manifest-path server/Cargo.toml -- --include-ignored
 
 nix build .#darksignsonline-server   # the server binary
 nix build .#darksignsonline-client   # the page as CI builds it
-nix build .#darksignsonline          # the whole site, client under game/
+nix build .#darksignsonline          # the whole site: the server with the web root baked in
+nix run   .#darksignsonline          # ...on :8080, given MYSQL_* in the environment
 ```
 
 `build.sh` is the whole loop: editing `www/*.ts` alone changes nothing that is
@@ -82,10 +83,15 @@ DSO_USER=... DSO_PASS=... cargo test --test live_server -- --ignored --nocapture
 - **COOP/COEP on every file the client ships**, not just the page. WebKit
   enforces the embedder policy across the whole module graph, so a host that
   gets this wrong works everywhere except Safari — which is to say iOS.
-- **The page is `no-cache`, its assets are `immutable`.** nginx also needs
-  `etag off` and `if_modified_since off` on that location: nix store mtimes
-  are the epoch and `index.html` never changes size, so nginx would answer
-  `304` to a genuinely new build. See `client/web/README.md`.
+- **The page is `no-cache`, its assets are `immutable`**, and nothing sends
+  a validator: nix store mtimes are the epoch and `index.html` never changes
+  size, so an mtime-and-size `ETag` answers `304` to a genuinely new build.
+  `server/src/www.rs` does all this; a TLS proxy in front must not add its
+  own caching. See `client/web/README.md`.
+- **The server is the whole site.** No nginx, s6 or cron in the repo: it
+  serves the static files (`DSO_WWW`) and runs its own cleanup. A proxy for
+  TLS is optional and has to send `X-Real-IP`; see `DSO_TRUSTED_PROXIES` in
+  `server/README.md`.
 - **wasm has no native host.** No `std::fs` on the hot path (`MemoryFs` yes,
   `DiskFs` no), no `SystemTime::now`, no `/dev/urandom`; `getrandom` needs its
   `wasm_js` feature and `zstd-sys` needs clang for the target.
