@@ -1,0 +1,94 @@
+
+<font face="Georgia, Times New Roman, Times, serif" size="+3">Create a new account</font><br />
+<br />
+
+
+<form action="create_account.php" method="post">
+    <table width="546" border="0" cellpadding="10" cellspacing="0" bgcolor="#003366">
+        <tr>
+            <td width="281">
+                <div align="left">
+                    <label for="username">
+                        <font face='verdana'><strong>Username</strong><br />
+                            <font size="2">Try to be unique.<br />
+                                Do not use spaces, underscores, or other strange characters. You may use dashes.</font>
+                        </font><br />
+                    </label>
+                </div>
+            </td>
+            <td width="245">
+                <div align="left"><input type="text" id="username" name="username" required="required" /></div>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="#004488">
+                <div align="left">
+                    <label for="password">
+                        <font face='verdana'><strong>Password</strong></font>
+                    </label>
+                </div>
+            </td>
+            <td bgcolor="#004488">
+                <div align="left"><input type="password" id="password" name="password" required="required" /></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div align="left">
+                    <label for="email">
+                        <font face='verdana'><strong>E-Mail Address</strong>
+                            <font size="2"><br />
+                                This must be a valid e-mail address, or you will not be able to log in. </font>
+                        </font>
+                    </label>
+                </div>
+            </td>
+            <td>
+                <div align="left"><input name="email" id="email" type="email" required="required" /></div>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="#004488">
+                <div align="left">
+                    <label for="agreetos">
+                        <font face="Verdana" size="2"><strong>I have read and agree to the <a
+                                    href="termsofuse.php" target="_blank" style="color:#DDE8F9">Dark Signs Online Terms of Use</a></strong></font>
+                    </label>
+                </div>
+            </td>
+            <td bgcolor="#004488">
+                <div align="left">
+                    <input type="checkbox" id="agreetos" name="agreetos" value="yes" required="required" />
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div align="left">
+                    <label for="agecheck">
+                        <font face="Verdana" size="2"><strong>I am at least 13 years old</strong></font>
+                    </label>
+                </div>
+            </td>
+            <td>
+                <div align="left">
+                    <input type="checkbox" id="agecheck" name="agecheck" value="yes" required="required" />
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="#004488">
+                <div align="left">
+                    <font face='verdana'></font>
+                </div>
+            </td>
+            <td bgcolor="#004488">
+                <div align="left">
+                    <input type="submit" value="Create the account..." />
+                </div>
+            </td>
+        </tr>
+    </table>
+</form>
+<br />
+<br />

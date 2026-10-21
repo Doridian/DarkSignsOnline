@@ -1,7 +1,8 @@
 # DarkSigns Online
 
 A VB6 game client rewritten as a Rust VBScript interpreter, compiled to WASM
-and run in a browser, against the original PHP server. Both halves live here.
+and run in a browser, against a Rust port of the original PHP server. Both
+halves live here.
 
 ## Where things are
 
@@ -14,17 +15,21 @@ and run in a browser, against the original PHP server. Both halves live here.
 | `client/web/dist/` | What is served. Written by `stamp.ts`, every asset named for its content hash |
 | `client/user/` | The shipped player filesystem, bundled into `www/scripts` at build time |
 | `client/tests/` | `wine.rs` (wine's VBScript conformance suite), `game_api.rs`, `game_scripts.rs`, `live_server.rs` |
-| `server/www/api/` | The PHP endpoints, 28 of them |
-| `server/rootfs/` | nginx, php-fpm, s6 — including `server.conf`, which sends COOP/COEP |
+| `server/src/` | The game server: `api/` one module per endpoint (still at its old `.php` path), `site/` the account pages |
+| `server/tests/parity/` | The parity test: every case against the goldens the PHP server recorded |
+| `server/www/` | The website's static files |
+| `server/rootfs/` | nginx, s6, cron — including `server.conf`, which sends COOP/COEP and proxies `.php` to the server |
 
 ## Read these before asking the code
 
-Both READMEs are long and current — they explain *why*, which the code does
+The READMEs are long and current — they explain *why*, which the code does
 not. Read the relevant section rather than re-deriving it.
 
 - [`client/README.md`](client/README.md) — the interpreter, the three host
   traits (`Console`/`FileSystem`/`GameServer`), the wire protocol, the `*B`
   string limitation and why it stays.
+- [`server/README.md`](server/README.md) — the server's configuration, the
+  parity test and how to re-record it, and where it differs from the PHP.
 - [`client/web/README.md`](client/web/README.md) — the worker architecture,
   `Ctrl+B`, OPFS, the editor, chat, mail, the library, and the serving rules.
 - `client/docs/` — four design notes, each a decision with measurements:
@@ -49,6 +54,11 @@ npm test                          # the editor's highlighting and indenting rule
 node smoke.ts                     # drives the built wasm the way the worker does, no browser
 node serve.ts                     # http://localhost:8080/game/  (sends COOP/COEP and no-store)
 
+# The server: MariaDB, nginx and libfaketime come with the `server` shell
+nix develop .#server --command cargo clippy --manifest-path server/Cargo.toml --all-targets -- -D warnings
+nix develop .#server --command cargo test   --manifest-path server/Cargo.toml -- --include-ignored
+
+nix build .#darksignsonline-server   # the server binary
 nix build .#darksignsonline-client   # the page as CI builds it
 nix build .#darksignsonline          # the whole site, client under game/
 ```
@@ -88,9 +98,10 @@ DSO_USER=... DSO_PASS=... cargo test --test live_server -- --ignored --nocapture
 ## Conventions
 
 - **Commit straight to `main`** and push there. No feature branches.
-- **PHP diagnostics are server bugs.** Never teach the Rust or TypeScript
-  client to parse around a notice or warning — fix the endpoint in
-  `server/www/api/`. The usual cause is an unguarded `$_REQUEST['x']`.
+- **Server quirks are server bugs.** Never teach the Rust or TypeScript
+  client to parse around something odd in a response — fix the endpoint in
+  `server/src/api/`, and update `server/tests/parity/golden.jsonl` by hand
+  so the diff shows what clients will see change.
 - Stage precisely; the working tree usually carries unrelated changes.
 
 ## Testing in WebKit

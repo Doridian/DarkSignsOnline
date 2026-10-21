@@ -1,0 +1,4 @@
+[env]
+# Build PCRE2 from the bundled source and link it in, rather than finding
+# whatever libpcre2 the build machine has and depending on it at runtime.
+PCRE2_SYS_STATIC = "1"

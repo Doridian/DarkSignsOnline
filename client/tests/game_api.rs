@@ -1627,7 +1627,7 @@ fn chatview_toggles_the_mirror_and_says_so() {
 }
 
 /// Signing out is the one refusal the endpoint does not word itself: it
-/// never runs, and `function.php` answers 401 with the bare code `1002`.
+/// never runs, and the account check answers 401 with the bare code `1002`.
 #[test]
 fn chatsend_says_you_are_signed_out_rather_than_showing_a_code() {
     let server = ScriptedServer::new().answer_with(

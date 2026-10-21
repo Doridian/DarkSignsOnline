@@ -419,12 +419,9 @@ are rather than of the network. The ping is the one request the page makes
 itself, with `fetch`, which nothing can be queued in front of.
 
 *It is `time.php`,* because it is the cheapest thing the server can be
-asked: no account, no database, no bcrypt, `die('' . time())`. It is asked
-every five seconds by everyone watching, and `pm.max_children` is 5 for the
-whole site, so that matters as much as it does for chat. For the same reason
-it includes `function_cors.php` — the CORS headers alone — rather than
-`function_public.php`, which would open a MySQL connection to tell you the
-time. A plain GET with no headers of its own is a simple request, so there
+asked: no account, no database, no bcrypt — the CORS headers and the clock.
+It is asked every five seconds by everyone watching, so that matters as much
+as it does for chat. A plain GET with no headers of its own is a simple request, so there
 is no preflight in front of it either, which would otherwise be half of what
 was being measured.
 
@@ -797,7 +794,7 @@ mean every player reaching Libera from the game server's single IP, which is
 what their staff ask to be told about in advance because it trips the
 network's anti-abuse limits.
 
-So the room is the game server's own: [`api/chat.php`](../../server/www/api/chat.php),
+So the room is the game server's own: [`api/chat.php`](../../server/src/api/chat.rs),
 one table, and a client that asks for whatever is newer than the last line it
 holds — the same incremental shape `dsmail.php` has, for the same reason.
 `chatlog.php`, which has said "not yet implemented" since the site went up, is
@@ -805,20 +802,20 @@ the same rows without an account.
 
 ### Why it polls, and why that is affordable
 
-A held connection is not available here. `pm.max_children` is 5 for the whole
-site, and long-polling pins one of those five per waiting client, so a handful
-of players sitting in chat would be the whole server — the game API and the
-website with it. Server-sent events have the same shape and the same problem.
+A held connection was not available when this was written: the server was
+PHP under php-fpm with `pm.max_children` at 5 for the whole site, and
+long-polling pins one of those five per waiting client, so a handful of
+players sitting in chat would have been the whole server. The Rust server
+that replaced it is asynchronous and could hold them; the polling stayed
+because it works and the cost below is what keeps it cheap.
 
 What makes polling cheap enough to do properly is that **reading the room
-needs no account**. `function.php` authenticates at include time, and that
-check is a bcrypt: ~130ms of CPU at the deployed cost factor, paid by every
-request that includes it. A one-second poll paying that would be 13% of a core
-per player, watching or not. So `chat.php` includes `function_public.php` —
-the database, the headers and the base64, without the password — answers the
-read, and returns *before* `function.php` is ever pulled in. Anything after
-that include is authenticated by construction, which is what makes the split
-safe to extend: a new action added below it cannot forget to require an
+needs no account**. Authenticating is a bcrypt: ~130ms of CPU at the
+deployed cost factor, paid by every request that does it. A one-second poll
+paying that would be 13% of a core per player, watching or not. So the chat
+endpoint answers the read and returns *before* it authenticates; everything
+after that point is authenticated by construction, which is what makes the
+split safe to extend: a new action added below it cannot forget to require an
 account. Measured locally, the read went from 132ms to 3ms.
 
 Reading being public is not a concession, either. It is what `chatlog.php`
