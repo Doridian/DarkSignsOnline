@@ -27,6 +27,10 @@ use std::path::PathBuf;
 use harness::{Db, Masker, Site, SmtpSink, http};
 use serde_json::{Value, json};
 
+/// The home page's news, which is content rather than behaviour: the goldens
+/// hold a marker where it goes, so a new post does not need them edited.
+const NEWS: &str = include_str!("../../src/site/templates/index.0.html");
+
 /// Headers that say how the bytes travelled rather than what they were, and
 /// the one that named the old server's language.
 const IGNORED_HEADERS: &[&str] = &[
@@ -160,7 +164,7 @@ fn run() -> Vec<Value> {
             .map(|(k, v)| json!([k.to_ascii_lowercase(), v]))
             .collect();
         let body = match String::from_utf8(resp.body.clone()) {
-            Ok(s) => json!(masker.apply(&s)),
+            Ok(s) => json!(masker.apply(&s.replace(NEWS, "<!-- news -->"))),
             Err(_) => json!({ "hex": resp.body.iter().map(|b| format!("{b:02x}")).collect::<String>() }),
         };
         results.push(json!({
