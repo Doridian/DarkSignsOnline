@@ -83,7 +83,7 @@
           };
           # The parity test needs a database and nginx; CI runs it in the
           # `server` shell instead. The unit tests still run here.
-          checkFlags = [ "--skip=parity_with_php" ];
+          checkFlags = [ "--skip=parity" ];
         };
 
         client = pkgs.stdenv.mkDerivation {
@@ -177,7 +177,7 @@
         };
 
         # The server's parity test: a database, nginx in front, and a frozen
-        # clock. php-fpm is only for recording the goldens again.
+        # clock.
         devShells.server = pkgs.mkShell {
           packages = [
             pkgs.cargo
@@ -186,7 +186,6 @@
             pkgs.rustfmt
             pkgs.mariadb
             pkgs.nginx
-            pkgs.php84
           ];
           env = {
             DSO_FAKETIME_LIB = "${pkgs.libfaketime}/lib/libfaketime.so.1";

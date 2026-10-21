@@ -16,7 +16,7 @@ halves live here.
 | `client/user/` | The shipped player filesystem, bundled into `www/scripts` at build time |
 | `client/tests/` | `wine.rs` (wine's VBScript conformance suite), `game_api.rs`, `game_scripts.rs`, `live_server.rs` |
 | `server/src/` | The game server: `api/` one module per endpoint (still at its old `.php` path), `site/` the account pages |
-| `server/tests/parity/` | The parity test: every case against the goldens the PHP server recorded |
+| `server/tests/parity/` | The parity test: every case against the goldens the PHP server recorded (the PHP is gone; last at `91612d0`) |
 | `server/www/` | The website's static files |
 | `server/rootfs/` | nginx, s6, cron — including `server.conf`, which sends COOP/COEP and proxies `.php` to the server |
 

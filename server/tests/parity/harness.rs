@@ -250,21 +250,13 @@ impl SmtpSink {
     }
 }
 
-/// Which server is behind nginx.
-pub enum Backend {
-    /// The old PHP tree, under php-fpm, configured as production was.
-    Php { www: PathBuf },
-    /// The Rust server.
-    Rust,
-}
-
 pub struct Site {
     pub port: u16,
     _procs: Vec<Proc>,
 }
 
 impl Site {
-    pub fn start(dir: &Path, backend: &Backend, db: &Db, smtp_port: u16) -> Site {
+    pub fn start(dir: &Path, db: &Db, smtp_port: u16) -> Site {
         let mut procs = Vec::new();
         let private_pem = std::fs::read_to_string(fixture("jwt-private.pem")).unwrap();
         let public_pem = std::fs::read_to_string(fixture("jwt-public.pem")).unwrap();
@@ -279,125 +271,29 @@ impl Site {
             String::from_utf8(out.wait_with_output().unwrap().stdout).unwrap()
         };
 
-        let (root, location) = match backend {
-            Backend::Php { www } => {
-                // A copy of the tree, pointed at a config file of our own
-                // instead of the one under /run.
-                let root = dir.join("www");
-                let status = Command::new("cp").arg("-r").arg(www).arg(&root).status().unwrap();
-                assert!(status.success());
-                Command::new("chmod").args(["-R", "u+w"]).arg(&root).status().unwrap();
-                let config = dir.join("dso-config.php");
-                for f in ["api/function_base.php", "api/domain_token_public.php"] {
-                    let p = root.join(f);
-                    let src = std::fs::read_to_string(&p).unwrap();
-                    std::fs::write(
-                        &p,
-                        src.replace("/run/darksignsonline/dso-config.php", config.to_str().unwrap()),
-                    )
-                    .unwrap();
-                }
-                std::fs::write(root.join("api/gitrev.txt"), format!("{GITREV}\n")).unwrap();
-                std::fs::write(
-                    &config,
-                    format!(
-                        "<?php\n$MYSQL_HOST = 'localhost';\n$MYSQL_USERNAME = 'root';\n$MYSQL_PASSWORD = '';\n$MYSQL_DATABASE = 'dso';\n\
-                         $JWT_PRIVATE_KEY = base64_decode('{}');\n$JWT_PUBLIC_KEY = base64_decode('{}');\n\
-                         $SMTP_HOST = '127.0.0.1';\n$SMTP_PORT = '{smtp_port}';\n$SMTP_FROM = 'noreply@darksignsonline.com';\n\
-                         $SMTP_USERNAME = '';\n$SMTP_PASSWORD = '';\n",
-                        b64(&private_pem),
-                        b64(&public_pem)
-                    ),
-                )
-                .unwrap();
-
-                // The settings of Alpine's php.ini-production that the
-                // scripts can tell apart from PHP's built-in defaults.
-                let ini = dir.join("php.ini");
-                std::fs::write(
-                    &ini,
-                    format!(
-                        "output_buffering = 4096\nexpose_php = On\nrequest_order = \"GP\"\nvariables_order = \"GPCS\"\n\
-                         date.timezone = UTC\nmysqli.default_socket = {}\n",
-                        db.socket.display()
-                    ),
-                )
-                .unwrap();
-                let sock = dir.join("php-fpm.sock");
-                let conf = dir.join("php-fpm.conf");
-                std::fs::write(
-                    &conf,
-                    format!(
-                        "[global]\nerror_log = {dir}/php-fpm.log\ndaemonize = no\n\
-                         [www]\nlisten = {sock}\npm = static\npm.max_children = 2\ncatch_workers_output = yes\n\
-                         php_flag[display_errors] = off\nphp_admin_value[error_log] = {dir}/php-error.log\nphp_admin_flag[log_errors] = on\n",
-                        dir = dir.display(),
-                        sock = sock.display()
-                    ),
-                )
-                .unwrap();
-                procs.push(spawn(
-                    faketime(
-                        Command::new("php-fpm")
-                            .arg("-F")
-                            .arg("-y")
-                            .arg(&conf)
-                            .arg("-c")
-                            .arg(&ini),
-                    ),
-                    &dir.join("php-fpm.out"),
-                ));
-                wait_for("php-fpm", || sock.exists());
-                let location = format!(
-                    "fastcgi_pass unix:{sock};\n\
-                     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n\
-                     fastcgi_param SCRIPT_NAME $fastcgi_script_name;\n\
-                     fastcgi_param QUERY_STRING $query_string;\n\
-                     fastcgi_param REQUEST_METHOD $request_method;\n\
-                     fastcgi_param CONTENT_TYPE $content_type;\n\
-                     fastcgi_param CONTENT_LENGTH $content_length;\n\
-                     fastcgi_param REQUEST_URI $request_uri;\n\
-                     fastcgi_param DOCUMENT_URI $document_uri;\n\
-                     fastcgi_param DOCUMENT_ROOT $document_root;\n\
-                     fastcgi_param SERVER_PROTOCOL $server_protocol;\n\
-                     fastcgi_param GATEWAY_INTERFACE CGI/1.1;\n\
-                     fastcgi_param REMOTE_ADDR $remote_addr;\n\
-                     fastcgi_param REMOTE_PORT $remote_port;\n\
-                     fastcgi_param SERVER_ADDR $server_addr;\n\
-                     fastcgi_param SERVER_PORT $server_port;\n\
-                     fastcgi_param SERVER_NAME $server_name;\n\
-                     fastcgi_param REDIRECT_STATUS 200;\n",
-                    sock = sock.display()
-                );
-                (root, location)
-            }
-            Backend::Rust => {
-                let sock = dir.join("server.sock");
-                procs.push(spawn(
-                    faketime(&mut Command::new(env!("CARGO_BIN_EXE_darksignsonline-server")))
-                        .env("DSO_LISTEN", format!("unix:{}", sock.display()))
-                        .env("MYSQL_SOCKET", &db.socket)
-                        .env("MYSQL_USERNAME", "root")
-                        .env("MYSQL_DATABASE", "dso")
-                        .env("JWT_PRIVATE_KEY", b64(&private_pem))
-                        .env("JWT_PUBLIC_KEY", b64(&public_pem))
-                        .env("SMTP_HOST", "127.0.0.1")
-                        .env("SMTP_PORT", smtp_port.to_string())
-                        .env("SMTP_FROM", "noreply@darksignsonline.com")
-                        .env("DSO_GITREV", GITREV),
-                    &dir.join("server.out"),
-                ));
-                wait_for("the server", || sock.exists());
-                // The same proxying as `rootfs/etc/nginx/server.conf`.
-                let location = format!(
-                    "proxy_pass http://unix:{}:$uri$is_args$args;\nproxy_set_header X-Real-IP $remote_addr;\n",
-                    sock.display()
-                );
-                let root = dir.join("www");
-                std::fs::create_dir_all(&root).unwrap();
-                (root, location)
-            }
-        };
+        let sock = dir.join("server.sock");
+        procs.push(spawn(
+            faketime(&mut Command::new(env!("CARGO_BIN_EXE_darksignsonline-server")))
+                .env("DSO_LISTEN", format!("unix:{}", sock.display()))
+                .env("MYSQL_SOCKET", &db.socket)
+                .env("MYSQL_USERNAME", "root")
+                .env("MYSQL_DATABASE", "dso")
+                .env("JWT_PRIVATE_KEY", b64(&private_pem))
+                .env("JWT_PUBLIC_KEY", b64(&public_pem))
+                .env("SMTP_HOST", "127.0.0.1")
+                .env("SMTP_PORT", smtp_port.to_string())
+                .env("SMTP_FROM", "noreply@darksignsonline.com")
+                .env("DSO_GITREV", GITREV),
+            &dir.join("server.out"),
+        ));
+        wait_for("the server", || sock.exists());
+        // The same proxying as `rootfs/etc/nginx/server.conf`.
+        let location = format!(
+            "proxy_pass http://unix:{}:$uri$is_args$args;\nproxy_set_header X-Real-IP $remote_addr;\n",
+            sock.display()
+        );
+        let root = dir.join("www");
+        std::fs::create_dir_all(&root).unwrap();
 
         let port = free_port();
         let tmp = dir.join("nginx-tmp");
@@ -412,7 +308,6 @@ impl Site {
                  client_body_temp_path {tmp}/body; proxy_temp_path {tmp}/proxy; fastcgi_temp_path {tmp}/fastcgi;\n\
                  uwsgi_temp_path {tmp}/uwsgi; scgi_temp_path {tmp}/scgi;\n\
                  proxy_http_version 1.1; proxy_request_buffering off; proxy_buffering off;\n\
-                 fastcgi_request_buffering off; fastcgi_buffering off;\n\
                  server {{\n    listen 127.0.0.1:{port};\n    root {root};\n    index index.php index.htm index.html;\n\
                  location = / {{ rewrite ^ /index.php last; }}\n\
                  location ~ ^/(api/)?[a-z0-9_]+\\.php$ {{\n{location}}}\n  }}\n}}\n",

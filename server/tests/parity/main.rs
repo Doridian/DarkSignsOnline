@@ -13,20 +13,22 @@
 //! nix develop .#server --command cargo test --manifest-path server/Cargo.toml -- --ignored
 //! ```
 //!
-//! To record the goldens again, point `DSO_PARITY_RECORD` at the PHP tree
-//! (`server/www` as of the last commit that had it) with php-fpm on PATH.
-//! A recorded run is the reference by definition, so it compares nothing.
+//! A deliberate change of behaviour is an edit to the goldens by hand, so
+//! the diff says what clients will see change. For a new case, setting
+//! `DSO_PARITY_RECORD` writes this server's answers as the goldens instead
+//! of comparing; check the diff before believing it. The PHP that recorded
+//! the rest was last in the tree at `91612d0`.
 
 mod cases;
 mod harness;
 
 use std::path::PathBuf;
 
-use harness::{Backend, Db, Masker, Site, SmtpSink, http};
+use harness::{Db, Masker, Site, SmtpSink, http};
 use serde_json::{Value, json};
 
 /// Headers that say how the bytes travelled rather than what they were, and
-/// the one that names the old server's language.
+/// the one that named the old server's language.
 const IGNORED_HEADERS: &[&str] = &[
     "date",
     "content-length",
@@ -98,18 +100,15 @@ fn normalize_mail(mail: &harness::Mail) -> Value {
     })
 }
 
-fn run(backend: &Backend) -> Vec<Value> {
-    let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(match backend {
-        Backend::Php { .. } => "parity-php",
-        Backend::Rust => "parity-rust",
-    });
+fn run() -> Vec<Value> {
+    let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("parity");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
 
     let db = Db::start(&dir);
     db.reset();
     let smtp = SmtpSink::start();
-    let site = Site::start(&dir, backend, &db, smtp.port);
+    let site = Site::start(&dir, &db, smtp.port);
 
     let mut before = db.dump();
     let mut masker = Masker::new(&before);
@@ -180,12 +179,10 @@ fn run(backend: &Backend) -> Vec<Value> {
 
 #[test]
 #[ignore = "needs MariaDB, nginx and libfaketime: run in `nix develop .#server` with --ignored"]
-fn parity_with_php() {
+fn parity() {
     let golden_path = harness::fixture("golden.jsonl");
-    if let Some(www) = std::env::var_os("DSO_PARITY_RECORD") {
-        let results = run(&Backend::Php {
-            www: PathBuf::from(www),
-        });
+    let results = run();
+    if std::env::var_os("DSO_PARITY_RECORD").is_some() {
         let lines: Vec<String> = results.iter().map(|r| serde_json::to_string(r).unwrap()).collect();
         std::fs::write(&golden_path, lines.join("\n") + "\n").unwrap();
         eprintln!("recorded {} cases to {}", results.len(), golden_path.display());
@@ -197,7 +194,6 @@ fn parity_with_php() {
         .lines()
         .map(|l| serde_json::from_str(l).unwrap())
         .collect();
-    let results = run(&Backend::Rust);
     assert_eq!(
         golden.len(),
         results.len(),
@@ -212,7 +208,7 @@ fn parity_with_php() {
         );
         if want != got {
             failures.push(format!(
-                "{}\n  php:  {}\n  rust: {}",
+                "{}\n  want: {}\n  got:  {}",
                 want["case"].as_str().unwrap(),
                 serde_json::to_string(want).unwrap(),
                 serde_json::to_string(got).unwrap()

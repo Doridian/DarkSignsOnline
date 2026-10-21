@@ -20,7 +20,6 @@ this server on a unix socket. See `rootfs/etc/nginx/server.conf`.
 | `src/ctx.rs` | One request: output buffer, status, headers, `die`, the database connection |
 | `src/request.rs` | `$_GET`/`$_POST`/`$_REQUEST`, Basic auth, the protocol version |
 | `tests/parity/` | The parity test, its seed, and the goldens recorded from the PHP |
-| `migrations/utf8mb4.sql` | One-off repair for text the PHP stored double-encoded |
 | `rootfs/` | nginx, s6 and cron configuration for a container, and the schema |
 
 ## Running it
@@ -66,26 +65,24 @@ Header names compare without regard to case, and `Date`, `Content-Length`,
 `Transfer-Encoding`, `Connection` and `X-Powered-By` are not compared.
 
 The goldens are the PHP's answers, so they only change when the cases do or
-when behaviour is deliberately changed. To record them again from the PHP,
-which was last in the tree at `91612d0`:
+when behaviour is deliberately changed. A deliberate change of behaviour
+means editing the goldens by hand, which is the point: the diff says what
+changed for clients. The PHP itself was last in the tree at `91612d0`.
+
+For a new case, `DSO_PARITY_RECORD=1` writes this server's answers over the
+goldens instead of comparing. That makes them true by definition, so read the
+diff: every line in it should be the new case.
 
 ```sh
-git worktree add ../dso-php 91612d0
-DSO_PARITY_RECORD=$PWD/../dso-php/server/www \
+DSO_PARITY_RECORD=1 \
   nix develop .#server --command cargo test --manifest-path server/Cargo.toml --test parity -- --ignored
 ```
-
-A deliberate change of behaviour means editing the goldens by hand, which is
-the point: the diff says what changed for clients.
 
 ## Where it differs on purpose
 
 - **The database is always spoken to in utf8mb4.** PHP used whatever the
-  server announced, which before MariaDB 11.6 is latin1, so anything
-  non-ASCII went into the utf8mb4 columns double-encoded. If the production
-  database ran that way, run `migrations/utf8mb4.sql` once, with the server
-  stopped. Its header says how to check first. It only rewrites text that
-  repairs losslessly and is safe to run twice.
+  server announced. Production's MariaDB announces utf8mb4, so the data was
+  already stored that way.
 - **Request parsing is plain form-urlencoding.** No PHP array syntax
   (`a[]=`), no `.`-to-`_` renaming of variable names, and no
   `multipart/form-data`. The clients send none of these.

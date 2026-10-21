@@ -26,8 +26,8 @@ jobs:
         -- -D warnings
 
     # Including the parity test: every case in tests/parity run through
-    # nginx against a real MariaDB, and compared with what the PHP server
-    # it replaced answered.
+    # nginx against a real MariaDB, and compared with the goldens the PHP
+    # server it replaced recorded.
     - name: Test
       run: >
         nix develop .#server --command
