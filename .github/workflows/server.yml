@@ -18,5 +18,20 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: cachix/install-nix-action@v31
+
+    - name: Clippy
+      run: >
+        nix develop .#server --command
+        cargo clippy --manifest-path server/Cargo.toml --all-targets
+        -- -D warnings
+
+    # Including the parity test: every case in tests/parity run through
+    # nginx against a real MariaDB, and compared with what the PHP server
+    # it replaced answered.
+    - name: Test
+      run: >
+        nix develop .#server --command
+        cargo test --manifest-path server/Cargo.toml -- --include-ignored
+
     - name: Build
       run: nix build --print-build-logs .#darksignsonline-server

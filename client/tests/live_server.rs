@@ -183,7 +183,7 @@ fn chatsend_reaches_the_room_and_reads_back() {
 }
 
 /// Reading the room takes no account at all: `chat.php` answers the read
-/// before it includes `function.php`, and the client knows not to insist on
+/// before it authenticates anyone, and the client knows not to insist on
 /// credentials for it. This is the whole reason a client can ask once a
 /// second -- an authenticated read would be a bcrypt every second.
 #[test]

@@ -154,8 +154,8 @@ pub fn parse_log(body: &str) -> Vec<Line> {
 ///
 /// The endpoint says why it refused in plain words -- "You are talking too
 /// fast." -- so most of the time the complaint is its own. A 401 is the
-/// exception, because that is `function.php` answering rather than
-/// `chat.php`, and all it says is the code `1002`.
+/// exception, because that is the server's account check answering rather
+/// than chat itself, and all it says is the code `1002`.
 pub fn send_result(response: &ServerResponse) -> Result<i64, String> {
     let text = response.body.trim();
     if response.is_success() {
@@ -338,7 +338,7 @@ mod tests {
         );
     }
 
-    /// A 401 is `function.php` refusing before `chat.php` is reached, and
+    /// A 401 is the account check refusing before chat is reached, and
     /// all it says is `1002`, which is no use to a player.
     #[test]
     fn being_signed_out_is_said_in_words() {

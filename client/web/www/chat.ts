@@ -25,12 +25,11 @@ import { draggable, manage, raise } from "./window.js";
 
 // How often to ask for new lines, which depends on who is looking.
 //
-// The read is answered before `chat.php` includes `function.php`, so it
-// costs a query and not a password check -- which is the difference between
-// a second's latency being affordable and not. `function.php` authenticates
-// at include time with bcrypt, around 130ms of CPU at the cost factor in
-// use, and `pm.max_children` is 5 for the whole site; a poll paying that
-// could not be run at this rate by more than a handful of players.
+// The read is answered before the server looks at an account, so it costs a
+// query and not a password check -- which is the difference between a
+// second's latency being affordable and not. The check is bcrypt, around
+// 130ms of CPU at the cost factor in use; a poll paying that could not be
+// run at this rate by more than a handful of players.
 //
 // Cheap is not free, so it still only asks when somebody is reading the
 // answer: the pane is up, or `ChatView` is mirroring the room into the comm

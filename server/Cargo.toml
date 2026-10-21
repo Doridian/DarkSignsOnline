@@ -1,0 +1,27 @@
+[package]
+name = "darksignsonline-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bcrypt = "0.19.3"
+bytes = "1.12.1"
+http-body-util = "0.1.5"
+hyper = { version = "1.12.0", features = ["server", "http1"] }
+hyper-util = { version = "0.1.21", features = ["tokio"] }
+lettre = { version = "0.11.23", default-features = false, features = ["tokio1", "smtp-transport", "builder", "tokio1-rustls", "rustls-native-certs", "ring"] }
+mysql_async = { version = "0.37.1", default-features = false, features = ["minimal-rust"] }
+pcre2 = "0.2.11"
+rand = "0.10.3"
+rsa = { version = "0.9.10", features = ["sha2"] }
+sha2 = "0.10"
+tokio = { version = "1.54.0", features = ["rt-multi-thread", "net", "macros", "signal", "time", "io-util", "sync"] }
+
+[dev-dependencies]
+serde_json = "1"
+
+# Ignored by default: it needs MariaDB, nginx and libfaketime, which
+# `nix develop .#server` provides. See tests/parity/main.rs.
+[[test]]
+name = "parity"
+path = "tests/parity/main.rs"

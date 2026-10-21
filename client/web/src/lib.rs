@@ -310,7 +310,7 @@ impl Session {
         };
         let response = self.request(ApiRequest::post("chat.php", chat::send_body(&text, emote)));
         // `send_result` reads the refusals too -- the endpoint's own words,
-        // and the 401 that `function.php` answers with a bare code.
+        // and the 401 the account check answers with a bare code.
         let id = chat::send_result(&response).map_err(|e| JsValue::from_str(&e))?;
         json(&SaidView::Sent {
             line: ChatLine::from(&chat::Line {

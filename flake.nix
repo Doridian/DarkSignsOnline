@@ -1,5 +1,5 @@
 {
-  description = "Dark Signs Online: the PHP game server and the browser client";
+  description = "Dark Signs Online: the game server and the browser client";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
@@ -53,8 +53,10 @@
           inherit (pkgs) nodejs;
         };
 
-        server = pkgs.stdenvNoCC.mkDerivation {
-          name = "darksignsonline-server";
+        # The website's static files: the images, the stylesheet, the old
+        # client downloads. Everything dynamic is the server below.
+        www = pkgs.stdenvNoCC.mkDerivation {
+          name = "darksignsonline-www";
           src = ./server/www;
           dontUnpack = true;
           installPhase = ''
@@ -63,9 +65,25 @@
             cp -r "$src" "$out/var/www/darksignsonline"
             chmod -R u+w "$out/var/www/darksignsonline"
             cp ${./LICENSE} "$out/var/www/darksignsonline/LICENSE"
-            echo '${gitrev}' > "$out/var/www/darksignsonline/api/gitrev.txt"
             runHook postInstall
           '';
+        };
+
+        # The game server: the API and the account pages, at the `.php`
+        # paths nginx hands it. The commit goes into the binary for the
+        # site's footer.
+        server = pkgs.rustPlatform.buildRustPackage {
+          pname = "darksignsonline-server";
+          version = "0.1.0";
+          src = ./server;
+          cargoLock.lockFile = ./server/Cargo.lock;
+          env = {
+            DSO_GITREV = gitrev;
+            PCRE2_SYS_STATIC = "1";
+          };
+          # The parity test needs a database and nginx; CI runs it in the
+          # `server` shell instead. The unit tests still run here.
+          checkFlags = [ "--skip=parity_with_php" ];
         };
 
         client = pkgs.stdenv.mkDerivation {
@@ -145,7 +163,7 @@
         site = pkgs.runCommand "darksignsonline" { } ''
           root="$out/var/www/darksignsonline"
           mkdir -p "$out/var/www"
-          cp -r --no-preserve=mode,ownership ${server}/var/www/darksignsonline "$root"
+          cp -r --no-preserve=mode,ownership ${www}/var/www/darksignsonline "$root"
           mkdir -p "$root/game"
           cp -r --no-preserve=mode,ownership ${client}/var/www/darksignsonline/. "$root/game/"
         '';
@@ -156,6 +174,25 @@
           darksignsonline = site;
           darksignsonline-server = server;
           darksignsonline-client = client;
+        };
+
+        # The server's parity test: a database, nginx in front, and a frozen
+        # clock. php-fpm is only for recording the goldens again.
+        devShells.server = pkgs.mkShell {
+          packages = [
+            pkgs.cargo
+            pkgs.rustc
+            pkgs.clippy
+            pkgs.rustfmt
+            pkgs.mariadb
+            pkgs.nginx
+            pkgs.php84
+          ];
+          env = {
+            DSO_FAKETIME_LIB = "${pkgs.libfaketime}/lib/libfaketime.so.1";
+            # Link the bundled PCRE2 rather than whatever pkg-config finds.
+            PCRE2_SYS_STATIC = "1";
+          };
         };
 
         devShells.default = pkgs.mkShell {
