@@ -13,7 +13,7 @@ lettre = { version = "0.11.23", default-features = false, features = ["tokio1", 
 mysql_async = { version = "0.37.1", default-features = false, features = ["minimal-rust"] }
 pcre2 = "0.2.11"
 rand = "0.10.3"
-rsa = { version = "0.9.10", features = ["sha2"] }
+rsa = { version = "0.10.0", features = ["sha2"] }
 sha2 = "0.11"
 tokio = { version = "1.54.0", features = ["rt-multi-thread", "net", "macros", "signal", "time", "io-util", "sync", "fs"] }
 
