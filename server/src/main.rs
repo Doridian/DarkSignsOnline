@@ -29,7 +29,7 @@ use hyper::service::service_fn;
 use hyper::{Request as HttpRequest, Response, StatusCode};
 use hyper_util::rt::{TokioIo, TokioTimer};
 use mysql_async::prelude::Queryable;
-use rsa::RsaPrivateKey;
+use rsa::PrivateKey;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs8::DecodePrivateKey;
 use tokio::net::{TcpListener, UnixListener};
@@ -48,7 +48,7 @@ pub struct SmtpConfig {
 
 pub struct App {
     pub pool: mysql_async::Pool,
-    pub jwt_key: Option<RsaPrivateKey>,
+    pub jwt_key: Option<PrivateKey>,
     pub jwt_public_key: Vec<u8>,
     pub smtp: SmtpConfig,
     pub gitrev: String,
@@ -132,8 +132,8 @@ impl App {
         } else {
             let pem = String::from_utf8(private_pem).map_err(|e| format!("JWT_PRIVATE_KEY: {e}"))?;
             Some(
-                RsaPrivateKey::from_pkcs8_pem(&pem)
-                    .or_else(|_| RsaPrivateKey::from_pkcs1_pem(&pem))
+                PrivateKey::from_pkcs8_pem(&pem)
+                    .or_else(|_| PrivateKey::from_pkcs1_pem(&pem))
                     .map_err(|e| format!("JWT_PRIVATE_KEY: {e}"))?,
             )
         };
