@@ -95,6 +95,10 @@
           src = ./client;
 
           cargoDeps = pkgs.rustPlatform.importCargoLock { lockFile = ./client/Cargo.lock; };
+          # cargoSetupHook points the -sys crates at system libraries via
+          # pkg-config (ZSTD_SYS_USE_PKG_CONFIG and friends). There are none
+          # for wasm32: zstd-sys has to build its bundled copy.
+          dontCargoUseSystemLibs = true;
 
           nativeBuildInputs = [
             pkgs.rustPlatform.cargoSetupHook
