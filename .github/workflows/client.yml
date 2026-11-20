@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
-    - uses: cachix/install-nix-action@v31
+    - uses: cachix/install-nix-action@v32
 
     # Through the dev shell, so the rustc and clippy answered to here are the
     # ones flake.lock pins and the ones `nix build` uses.
